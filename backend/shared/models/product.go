@@ -5,31 +5,25 @@ import (
 	"time"
 )
 
+// Variant represents a specific version of a product.
+// The Options map can hold any variant attribute such as "color", "size", "capacity", etc.
 type Variant struct {
-	Color     string `bson:"color"`
-	Size      string `bson:"size"`
-	Capacity  string `bson:"capacity"`
-	Price     float64 `bson:"price"`
-	Stock     int     `bson:"stock"`
-	Image     string  `bson:"image"`
+	Options map[string]string `bson:"options" json:"options"` // e.g., {"color": "Red", "size": "M"} or {"capacity": "128GB"}
+	Price   float64           `bson:"price" json:"price"`     // Price for this specific variant
+	Stock   int               `bson:"stock" json:"stock"`     // Available stock
+	Image   string            `bson:"image,omitempty" json:"image,omitempty"` // Optional image for the variant
 }
 
+// Product represents the main product entity.
+// It can have multiple variants with different options, prices, and stock levels.
 type Product struct {
-	ID            primitive.ObjectID `bson:"_id,omitempty"`
-	Name          string             `bson:"name"`
-	Description   string             `bson:"description"`
-	Images        []string           `bson:"images"` 
-	Category      string             `bson:"category"`
-	Source        string             `bson:"source"` // 'user' or 'aliexpress'
-	CreatedBy     primitive.ObjectID `bson:"createdBy,omitempty"` // If the product was added by a user
-	Variants      []Variant          `bson:"variants"`
-	AliExpressData AliExpressData    `bson:"aliexpressData,omitempty"`
-	CreatedAt     time.Time          `bson:"createdAt,omitempty"`
-	UpdatedAt     time.Time          `bson:"updatedAt,omitempty"`
-}
-
-type AliExpressData struct {
-	ProductID   string `bson:"productId"`
-	SellerName  string `bson:"sellerName"`
-	AliUrl      string `bson:"aliUrl"`
+	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	Name        string             `bson:"name" json:"name"`
+	Description string             `bson:"description" json:"description"`
+	Images      []string           `bson:"images" json:"images"` // General images for the product
+	Category    string             `bson:"category" json:"category"`
+	CreatedBy   primitive.ObjectID `bson:"createdBy,omitempty" json:"createdBy,omitempty"`
+	Variants    []Variant          `bson:"variants" json:"variants"` // List of variants with flexible options
+	CreatedAt   time.Time          `bson:"createdAt,omitempty" json:"createdAt,omitempty"`
+	UpdatedAt   time.Time          `bson:"updatedAt,omitempty" json:"updatedAt,omitempty"`
 }

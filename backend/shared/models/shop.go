@@ -15,7 +15,7 @@ type Shop struct {
 	Orders         []primitive.ObjectID `bson:"orders"`   // Order IDs linked to this shop
 	CreatedAt      time.Time            `bson:"createdAt"`
 	UpdatedAt      time.Time            `bson:"updatedAt"`
-	ShopSettings   ShopSettings         `bson:"shopSettings"`
+	//ShopSettings   ShopSettings         `bson:"shopSettings"`
 	ShopFeatures   ShopFeatures         `bson:"shopFeatures"`
 	ShopAnalytics  ShopAnalytics        `bson:"shopAnalytics"`
 	ShopCustomization ShopCustomization `bson:"shopCustomization"`
