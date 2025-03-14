@@ -22,6 +22,7 @@ type Product struct {
 	Description string             `bson:"description" json:"description"`
 	Images      []string           `bson:"images" json:"images"` // General images for the product
 	Category    string             `bson:"category" json:"category"`
+	Price       float64            `bson:"price" json:"price"` // Default price for products without variants
 	CreatedBy   primitive.ObjectID `bson:"createdBy,omitempty" json:"createdBy,omitempty"`
 	Variants    []Variant          `bson:"variants" json:"variants"` // List of variants with flexible options
 	CreatedAt   time.Time          `bson:"createdAt,omitempty" json:"createdAt,omitempty"`
