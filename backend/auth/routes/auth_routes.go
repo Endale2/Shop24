@@ -8,9 +8,12 @@ import (
 // RegisterAuthRoutes registers all authentication-related routes.
 func RegisterAuthRoutes(r *gin.Engine) {
 	authGroup := r.Group("/auth")
-	{
+	
+	{   // Admin authentication routes.
 		authGroup.POST("/admin/login", controllers.AdminLogin)
 		authGroup.POST("/admin/register", controllers.AdminRegister)
-		// You can add routes for sellers and customers as needed.
+		// Seller authentication routes.
+	    authGroup.POST("/seller/register", controllers.SellerRegister)
+	    authGroup.POST("/seller/login", controllers.SellerLogin)
 	}
 }
