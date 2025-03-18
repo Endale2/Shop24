@@ -14,8 +14,11 @@ func main() {
 
 	// Create a new Gin router
 	r := gin.Default()
+	
     //routes
 	routes.RegisterAuthRoutes(r)
+
+
 	r.GET("/", func(c *gin.Context) {
 		c.JSON(200, gin.H{"message": "MongoDB connected!"})
 	})

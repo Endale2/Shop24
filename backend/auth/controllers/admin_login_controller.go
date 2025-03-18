@@ -10,17 +10,21 @@ import (
 
 // AdminLogin handles admin login requests.
 func AdminLogin(c *gin.Context) {
-	var admin models.Admin
-	if err := c.ShouldBindJSON(&admin); err != nil {
+	var req models.AuthAdmin
+	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	// Use the service to handle the login logic
-	if err := services.AdminLoginService(&admin); err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+	authData, adminData, err := services.AdminLoginService(&req)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "Admin logged in successfully"})
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Admin logged in successfully",
+		"auth":    authData,
+		"admin":   adminData,
+	})
 }

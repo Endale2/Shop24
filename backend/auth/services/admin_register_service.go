@@ -4,22 +4,46 @@ import (
 	"errors"
 
 	"github.com/Endale2/DRPS/auth/models"
-	"github.com/Endale2/DRPS/auth/repositories"
+	authRepo "github.com/Endale2/DRPS/auth/repositories"
+	adminModels "github.com/Endale2/DRPS/admin/models"
+	adminRepo "github.com/Endale2/DRPS/admin/repositories"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 
-// AdminRegisterService handles new admin registration.
-func AdminRegisterService(admin *models.Admin) error {
+
+// AdminRegisterService handles new admin registration by creating both an Admin record (detailed data)
+// and an AuthAdmin record (credentials), linking them with AdminID.
+func AdminRegisterService(authAdmin *models.AuthAdmin) error {
 	// Validate required fields.
-	if admin.Email == "" || admin.Password == "" || admin.Username == "" {
+	if authAdmin.Email == "" || authAdmin.Password == "" || authAdmin.Username == "" {
 		return errors.New("missing required fields")
 	}
 
-	// Optional: Check if the admin already exists.
-	if existingAdmin, err := repositories.FindAdminByEmail(admin.Email); err == nil && existingAdmin != nil {
+	// Check if an authentication record already exists.
+	if existing, _ := authRepo.FindAuthAdminByEmail(authAdmin.Email); existing != nil {
 		return errors.New("admin already exists")
 	}
 
-	// Insert the new admin.
-	return repositories.InsertAdmin(admin)
+	// Create a new detailed admin record.
+	newAdmin := &adminModels.Admin{
+		Name:    authAdmin.Username, // Use the username as the name by default.
+		Phone:   "",
+		Address: "",
+		Role:    "admin",
+	}
+
+	// Insert the new admin into the Admin collection.
+	res, err := adminRepo.CreateAdmin(newAdmin)
+	if err != nil {
+		return err
+	}
+	// Set the new admin's ID.
+	newAdmin.ID = res.InsertedID.(primitive.ObjectID)
+	// Link the AuthAdmin record to the new Admin.
+	authAdmin.AdminID = newAdmin.ID
+
+	// Create the AuthAdmin record.
+	_, err = authRepo.CreateAuthAdmin(authAdmin)
+	return err
 }

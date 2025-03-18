@@ -4,19 +4,32 @@ import (
 	"errors"
 
 	"github.com/Endale2/DRPS/auth/models"
-	"github.com/Endale2/DRPS/auth/repositories"
+	authRepo "github.com/Endale2/DRPS/auth/repositories"
+	adminModels "github.com/Endale2/DRPS/admin/models"
+	adminRepo "github.com/Endale2/DRPS/admin/repositories"
+	
 )
 
-// AdminLoginService validates admin credentials.
-func AdminLoginService(admin *models.Admin) error {
-	foundAdmin, err := repositories.FindAdminByEmail(admin.Email)
+
+
+// AdminLoginService validates login credentials and returns both authentication and detailed admin data.
+func AdminLoginService(authAdmin *models.AuthAdmin) (*models.AuthAdmin, *adminModels.Admin, error) {
+	// Look up the AuthAdmin record by email.
+	foundAuth, err := authRepo.FindAuthAdminByEmail(authAdmin.Email)
 	if err != nil {
-		return err
+		return nil, nil, errors.New("admin not found")
 	}
-	// For demo purposes, a plain text password comparison is shown.
-	// In production, use hashed passwords and secure comparisons.
-	if admin.Password != foundAdmin.Password {
-		return errors.New("password mismatch")
+
+	// Compare passwords (in production, use a secure hash comparison).
+	if authAdmin.Password != foundAuth.Password {
+		return nil, nil, errors.New("password mismatch")
 	}
-	return nil
+
+	// Retrieve the detailed admin record using the stored AdminID.
+	adminData, err := adminRepo.GetAdminByID(foundAuth.AdminID)
+	if err != nil {
+		return nil, nil, errors.New("admin details not found")
+	}
+
+	return foundAuth, adminData, nil
 }
