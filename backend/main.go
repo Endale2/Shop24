@@ -1,18 +1,25 @@
 package main
 
 import (
+	"log"
+
 	"github.com/gin-gonic/gin"
-	"net/http"
+	"github.com/Endale2/DRPS/config"
+	"github.com/Endale2/DRPS/auth/routes" //auth routes
 )
 
 func main() {
-	r := gin.Default()
+	// Connect to MongoDB
+	config.ConnectDB()
 
+	// Create a new Gin router
+	r := gin.Default()
+    //routes
+	routes.RegisterAuthRoutes(r)
 	r.GET("/", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{
-			"message": "Hello, Gin!",
-		})
+		c.JSON(200, gin.H{"message": "MongoDB connected!"})
 	})
 
-	r.Run(":8080") // Start server on port 8080
+	log.Println("Server running on port 8080")
+	r.Run(":8080")
 }
