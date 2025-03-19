@@ -11,6 +11,10 @@ import (
 
 var DB *mongo.Client
 
+func init() {
+	ConnectDB()
+}
+
 func ConnectDB() {
 	client, err := mongo.NewClient(options.Client().ApplyURI("mongodb://localhost:27017"))
 	if err != nil {
@@ -30,5 +34,8 @@ func ConnectDB() {
 }
 
 func GetCollection(dbName, collectionName string) *mongo.Collection {
+	if DB == nil {
+		log.Fatal("MongoDB client is not initialized. Call ConnectDB() first.")
+	}
 	return DB.Database(dbName).Collection(collectionName)
 }
