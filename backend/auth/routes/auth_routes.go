@@ -11,7 +11,7 @@ func AuthRoutes(r *gin.Engine) {
 	
 	{   // Admin authentication routes.
 		authGroup.POST("/admin/login", controllers.AdminLogin)
-		authGroup.POST("/admin/register", controllers.AdminRegister)
+		authGroup.POST("/admin/register/", controllers.AdminRegister)
 		// Seller authentication routes.
 	    authGroup.POST("/seller/register", controllers.SellerRegister)
 	    authGroup.POST("/seller/login", controllers.SellerLogin)
