@@ -16,7 +16,7 @@ func main() {
 	r := gin.Default()
 	
     //routes
-	routes.RegisterAuthRoutes(r)
+	routes.AuthRoutes(r)
 
 
 	r.GET("/", func(c *gin.Context) {

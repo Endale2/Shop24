@@ -6,7 +6,7 @@ import (
 )
 
 // RegisterAuthRoutes registers all authentication-related routes.
-func RegisterAuthRoutes(r *gin.Engine) {
+func AuthRoutes(r *gin.Engine) {
 	authGroup := r.Group("/auth")
 	
 	{   // Admin authentication routes.
@@ -15,5 +15,9 @@ func RegisterAuthRoutes(r *gin.Engine) {
 		// Seller authentication routes.
 	    authGroup.POST("/seller/register", controllers.SellerRegister)
 	    authGroup.POST("/seller/login", controllers.SellerLogin)
+
+		// Customer authentication routes.
+	    authGroup.POST("/customer/register", controllers.CustomerRegister)
+	    authGroup.POST("/customer/login", controllers.CustomerLogin)
 	}
 }
