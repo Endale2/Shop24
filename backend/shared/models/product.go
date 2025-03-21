@@ -18,6 +18,7 @@ type Variant struct {
 // It can have multiple variants with different options, prices, and stock levels.
 type Product struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	ShopID      primitive.ObjectID `bson:"shop_id,omitempty" json:"shop_id"`
 	Name        string             `bson:"name" json:"name"`
 	Description string             `bson:"description" json:"description"`
 	Images      []string           `bson:"images" json:"images"` // General images for the product
