@@ -25,7 +25,7 @@ func CreateProduct(c *gin.Context) {
 	c.JSON(http.StatusOK, result)
 }
 
-// GetProduct retrieves a single product by its ID.
+// GetProduct retrieves a single product by its ID.(for admin)
 func GetProduct(c *gin.Context) {
 	id := c.Param("id")
 
