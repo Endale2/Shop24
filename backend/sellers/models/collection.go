@@ -6,7 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// Collection represents a group of products that are organized together.
+// Collection represents a group of products that are organized together.(for seller)
 // This model can be used to represent both manual collections (where products are explicitly added)
 // and smart collections (where products are automatically included based on defined filters).
 type Collection struct {
