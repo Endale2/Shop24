@@ -6,6 +6,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+
 // Order represents a customer's order
 type Order struct {
 	ID             primitive.ObjectID `bson:"_id,omitempty" json:"id"`
@@ -21,6 +22,7 @@ type Order struct {
 	UpdatedAt      time.Time          `bson:"updated_at,omitempty" json:"updated_at,omitempty"`
 }
 
+
 // OrderItem represents a single product item in an order
 type OrderItem struct {
 	ProductID      primitive.ObjectID `bson:"product_id,omitempty" json:"product_id,omitempty"` // ID of the ordered product
@@ -31,6 +33,7 @@ type OrderItem struct {
 	VariantOptions map[string]string  `bson:"variant_options" json:"variant_options"`           // Flexible variant options snapshot (e.g., {"color": "Red", "size": "M"} or {"capacity": "128GB"})
 	VariantImage   string             `bson:"variant_image,omitempty" json:"variant_image,omitempty"` // Optional: snapshot image of the variant if available
 }
+
 
 // ShippingDetails holds the shipping address and tracking information
 type ShippingDetails struct {
