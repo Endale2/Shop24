@@ -10,4 +10,6 @@ type AuthAdmin struct {
 	Email    string `json:"email" bson:"email"`
 	Password string `json:"password" bson:"password"`
 	AdminID  primitive.ObjectID `bson:"admin_id,omitempty" json:"admin_id"` // Reference to Admin model
+	AccessToken  string `json:"access_token,omitempty"`
+    RefreshToken string `json:"refresh_token,omitempty"`
 }
