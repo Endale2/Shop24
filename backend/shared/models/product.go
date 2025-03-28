@@ -19,6 +19,7 @@ type Variant struct {
 type Product struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	ShopID      primitive.ObjectID `bson:"shop_id,omitempty" json:"shop_id"`
+	UserID      primitive.ObjectID `bson:"user_id,omitempty" json:"user_id"`
 	Name        string             `bson:"name" json:"name"`
 	Description string             `bson:"description" json:"description"`
 	Images      []string           `bson:"images" json:"images"` // General images for the product
