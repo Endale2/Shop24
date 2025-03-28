@@ -5,6 +5,8 @@ import (
 	"time"
 )
 
+
+
 // Variant represents a specific version of a product.
 // The Options map can hold any variant attribute such as "color", "size", "capacity", etc.
 
@@ -14,6 +16,8 @@ type Variant struct {
 	Stock   int               `bson:"stock" json:"stock"`     // Available stock
 	Image   string            `bson:"image,omitempty" json:"image,omitempty"` // Optional image for the variant
 }
+
+
 
 // Product represents the main product entity.
 // It can have multiple variants with different options, prices, and stock levels.
