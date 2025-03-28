@@ -16,6 +16,7 @@ func AdminRoutes(r *gin.Engine) {
 		productGroup.POST("/create-product", controllers.CreateProduct)
 	}
 
+	
 	// // Customers sub-group (Example)
 	// customerGroup := adminGroup.Group("/customers")
 	// {
