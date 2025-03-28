@@ -7,6 +7,7 @@ import (
 
 // Variant represents a specific version of a product.
 // The Options map can hold any variant attribute such as "color", "size", "capacity", etc.
+
 type Variant struct {
 	Options map[string]string `bson:"options" json:"options"` // e.g., {"color": "Red", "size": "M"} or {"capacity": "128GB"}
 	Price   float64           `bson:"price" json:"price"`     // Price for this specific variant
