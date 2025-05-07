@@ -2,6 +2,8 @@ package routes
 
 import (
 	"github.com/Endale2/DRPS/admin/controllers"
+	"github.com/Endale2/DRPS/auth/middlewares"
+
 	"github.com/gin-gonic/gin"
 )
 
@@ -12,7 +14,7 @@ func AdminRoutes(r *gin.Engine) {
 	// Products sub-group
 	productGroup := adminGroup.Group("/products")
 	{
-		productGroup.GET("/", controllers.GetProducts)
+		productGroup.GET("/", middlewares.AdminAuthMiddleware(), controllers.GetProducts)
 		productGroup.POST("/create-product", controllers.CreateProduct)
 	}
 

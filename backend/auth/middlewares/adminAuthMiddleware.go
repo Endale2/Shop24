@@ -42,7 +42,7 @@ func ValidateToken(tokenStr string) (*Claims, error) {
 }
 
 // AuthMiddleware is a Gin middleware that protects routes requiring authentication
-func AuthMiddleware() gin.HandlerFunc {
+func AdminAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Extract token from HTTP-only cookie
 		token, err := c.Cookie("access_token")
