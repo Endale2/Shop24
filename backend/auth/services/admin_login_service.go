@@ -56,9 +56,6 @@ func AdminLoginService(authAdmin *models.AuthAdmin) (*models.AuthAdmin, *adminMo
 	if err != nil {
 		return nil, nil, errors.New("failed to generate refresh token")
 	}
-
-	// Attach tokens to the auth response.
-	// Note: These fields should be part of your models.AuthAdmin struct.
 	foundAuth.AccessToken = accessTokenString
 	foundAuth.RefreshToken = refreshTokenString
 
