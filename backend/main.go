@@ -20,7 +20,7 @@ func main() {
 
 	// Configure CORS
 	corsConfig := cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000"},
+		AllowOrigins:     []string{"http://localhost:5173"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
@@ -29,6 +29,7 @@ func main() {
 	}
 	r.Use(cors.New(corsConfig))
 
+	
 	// Routes 
 	authRoutes.AuthRoutes(r)   
 	adminRoutes.AdminRoutes(r) 
