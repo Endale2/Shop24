@@ -12,8 +12,7 @@ import (
 
 
 
-// AdminRegisterService handles new admin registration by creating both an Admin record (detailed data)
-// and an AuthAdmin record (credentials), linking them with AdminID.
+
 func AdminRegisterService(authAdmin *models.AuthAdmin) error {
 	// Validate required fields.
 	if authAdmin.Email == "" || authAdmin.Password == "" || authAdmin.Username == "" {
