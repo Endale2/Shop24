@@ -11,8 +11,6 @@ import (
 	"github.com/golang-jwt/jwt/v4"
 )
 
-// jwtSecret is the secret key used to sign tokens.
-// In production, load this from a secure configuration.
 var jwtSecret = []byte("your_secret_key")
 
 // AdminLoginService validates login credentials, generates JWT access and refresh tokens,
