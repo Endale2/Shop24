@@ -13,8 +13,7 @@ import (
 
 var jwtSecret = []byte("your_secret_key")
 
-// AdminLoginService validates login credentials, generates JWT access and refresh tokens,
-// and returns both authentication data (with tokens) and detailed admin data.
+
 func AdminLoginService(authAdmin *models.AuthAdmin) (*models.AuthAdmin, *adminModels.Admin, error) {
 	// Look up the AuthAdmin record by email.
 	foundAuth, err := authRepo.FindAuthAdminByEmail(authAdmin.Email)
