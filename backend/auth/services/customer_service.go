@@ -14,6 +14,7 @@ import (
 // and an AuthCustomer record (authentication data), linking them via CustomerID.
 
 func CustomerRegisterService(authCustomer *models.AuthCustomer) error {
+	
 	// Validate required fields.
 	if authCustomer.Email == "" || authCustomer.Password == "" || authCustomer.Username == "" {
 		return errors.New("missing required fields")
