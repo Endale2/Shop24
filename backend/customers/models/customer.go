@@ -2,7 +2,7 @@ package models
 
 import "go.mongodb.org/mongo-driver/bson/primitive"
 
-// Customer represents the detailed data for a customer.
+
 type Customer struct {
 	ID      primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	Name    string             `bson:"name" json:"name"`
