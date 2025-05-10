@@ -12,6 +12,7 @@ import (
 
 // CustomerRegisterService registers a new customer by creating both a Customer record (detailed data)
 // and an AuthCustomer record (authentication data), linking them via CustomerID.
+
 func CustomerRegisterService(authCustomer *models.AuthCustomer) error {
 	// Validate required fields.
 	if authCustomer.Email == "" || authCustomer.Password == "" || authCustomer.Username == "" {
