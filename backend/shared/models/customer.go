@@ -9,7 +9,7 @@ import (
 
 
 // Shop-Customer :  stores customer's data in the specific shop
-type ShopCustomer struct {
+type Customer struct {
 	ID             primitive.ObjectID   `bson:"_id,omitempty"`
 	ShopID         primitive.ObjectID   `bson:"_id,omitempty"`
 	CustomerID     primitive.ObjectID   `bson:"_id,omitempty"`
