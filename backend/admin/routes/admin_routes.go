@@ -19,17 +19,18 @@ func AdminRoutes(r *gin.Engine) {
 	}
 
 	
-	// // Customers sub-group (Example)
-	// customerGroup := adminGroup.Group("/customers")
-	// {
-	// 	customerGroup.GET("/", controllers.GetCustomers)
-	// 	customerGroup.POST("/create-customer", controllers.CreateCustomer)
-	// }
+	// // // Customers sub-group (Example)
+	//  customerGroup := adminGroup.Group("/customers")
+	//  {
+	//  	customerGroup.GET("/", controllers.GetCustomers)
+	//  	customerGroup.POST("/create-customer", controllers.CreateCustomer)
+	//  }
 
-	// // Shops sub-group (Example)
-	// shopGroup := adminGroup.Group("/shops")
-	// {
-	// 	shopGroup.GET("/", controllers.GetShops)
-	// 	shopGroup.POST("/create-shop", controllers.CreateShop)
-	// }
+	// Shops sub-group (Example)
+	 shopGroup := adminGroup.Group("/shops")
+	 {
+	 	shopGroup.GET("/", controllers.GetShops)
+	 	shopGroup.POST("/create-shop", controllers.CreateShop)
+		//shopGroup.PATCH("/update-shop", controllers.UpdateShop)
+	 }
 }
