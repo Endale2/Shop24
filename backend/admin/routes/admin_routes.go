@@ -19,12 +19,12 @@ func AdminRoutes(r *gin.Engine) {
 	}
 
 	
-	// // // Customers sub-group (Example)
-	//  customerGroup := adminGroup.Group("/customers")
-	//  {
-	//  	customerGroup.GET("/", controllers.GetCustomers)
-	//  	customerGroup.POST("/create-customer", controllers.CreateCustomer)
-	//  }
+	//  Customers sub-group (Example)
+	 customerGroup := adminGroup.Group("/customers")
+	 {
+	 	customerGroup.GET("/", controllers.GetCustomers)
+	 	customerGroup.POST("/create-customer", controllers.CreateCustomer)
+	 }
 
 	// Shops sub-group (Example)
 	 shopGroup := adminGroup.Group("/stores")
