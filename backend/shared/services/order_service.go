@@ -1,26 +1,35 @@
 package services
 
 import (
-    "github.com/Endale2/DRPS/shared/models"
-    "github.com/Endale2/DRPS/shared/repositories"
-    "go.mongodb.org/mongo-driver/bson"
-    "go.mongodb.org/mongo-driver/mongo"
+	"github.com/Endale2/DRPS/shared/models"
+	"github.com/Endale2/DRPS/shared/repositories"
+	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
+// CreateOrderService creates a new order.
 func CreateOrderService(order *models.Order) (*mongo.InsertOneResult, error) {
-    // e.g. validate stock, calculate totals
-    return repositories.CreateOrder(order)
+	// Place for business validations (e.g., inventory check, price calculation)
+	return repositories.CreateOrder(order)
 }
 
+// GetOrderByIDService retrieves a single order by its ID.
 func GetOrderByIDService(id string) (*models.Order, error) {
-    return repositories.GetOrderByID(id)
+	return repositories.GetOrderByID(id)
 }
 
-func GetOrdersByUserService(userID string) ([]models.Order, error) {
-    return repositories.GetOrdersByUser(userID)
+// GetAllOrdersService returns all orders.
+func GetAllOrdersService() ([]models.Order, error) {
+	return repositories.GetAllOrders()
 }
 
-func UpdateOrderStatusService(id string, statusUpdate bson.M) (*mongo.UpdateResult, error) {
-    // e.g. validate status transitions
-    return repositories.UpdateOrderStatus(id, statusUpdate)
+// UpdateOrderService updates fields of an order identified by its ID.
+func UpdateOrderService(id string, updatedData bson.M) (*mongo.UpdateResult, error) {
+	// Place for business rules (e.g., status transition validation)
+	return repositories.UpdateOrder(id, updatedData)
+}
+
+// DeleteOrderService removes an order by its ID.
+func DeleteOrderService(id string) (*mongo.DeleteResult, error) {
+	return repositories.DeleteOrder(id)
 }
