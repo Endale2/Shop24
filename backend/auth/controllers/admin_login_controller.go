@@ -23,7 +23,7 @@ func AdminLogin(c *gin.Context) {
 	}
 
 	// Set the access token as an HTTP-only cookie (expires in 15 minutes = 900 seconds)
-	c.SetCookie("access_token", authData.AccessToken, 900, "/", "", true, true)
+	c.SetCookie("access_token", authData.AccessToken, 300, "/", "", true, true)
 	// Set the refresh token as an HTTP-only cookie (expires in 7 days)
 	c.SetCookie("refresh_token", authData.RefreshToken, 7*24*3600, "/", "", true, true)
 
