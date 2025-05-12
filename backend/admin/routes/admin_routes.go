@@ -30,7 +30,7 @@ func AdminRoutes(r *gin.Engine) {
 	 shopGroup := adminGroup.Group("/stores")
 	 {
 	 	shopGroup.GET("/", controllers.GetShops)
-	 	shopGroup.POST("/create-shop", controllers.CreateShop)
+	 	shopGroup.POST("/create-store", controllers.CreateShop)
 		//shopGroup.PATCH("/update-shop", controllers.UpdateShop)
 	 }
 }
