@@ -35,7 +35,7 @@ func AdminRoutes(r *gin.Engine) {
 	 }
 
 	// Order sub-group (Example)
-	 orderGroup := adminGroup.Group("/stores")
+	 orderGroup := adminGroup.Group("/orders")
 	 {
 	 	orderGroup.GET("/", controllers.GetOrders)
 	 	orderGroup.POST("/create-store", controllers.CreateOrder)
