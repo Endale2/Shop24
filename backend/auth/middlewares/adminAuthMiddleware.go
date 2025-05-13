@@ -1,47 +1,14 @@
 package middlewares
 
 import (
-	"errors"
 	"net/http"
 	"strings"
-	"time"
 
+	"github.com/Endale2/DRPS/auth/utils"
 	"github.com/gin-gonic/gin"
-	"github.com/golang-jwt/jwt/v4"
 )
 
-// Secret key for signing JWTs (use env var or config in production)
-var jwtKey = []byte("your_secret_key")
-
-// Custom claims structure
-type Claims struct {
-	AdminID string `json:"admin_id"`
-	jwt.RegisteredClaims
-}
-
-// ValidateToken checks if the token is valid and returns the claims
-func ValidateToken(tokenStr string) (*Claims, error) {
-	token, err := jwt.ParseWithClaims(tokenStr, &Claims{}, func(token *jwt.Token) (interface{}, error) {
-		return jwtKey, nil
-	})
-
-	if err != nil {
-		return nil, err
-	}
-
-	claims, ok := token.Claims.(*Claims)
-	if !ok || !token.Valid {
-		return nil, errors.New("invalid token")
-	}
-
-	if claims.ExpiresAt.Time.Before(time.Now()) {
-		return nil, errors.New("token expired")
-	}
-
-	return claims, nil
-}
-
-// AuthMiddleware is a Gin middleware that protects routes requiring authentication
+// AdminAuthMiddleware ensures access_token is valid and extracts the admin ID.
 func AdminAuthMiddleware() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		// Extract token from HTTP-only cookie
@@ -51,15 +18,15 @@ func AdminAuthMiddleware() gin.HandlerFunc {
 			return
 		}
 
-		// Validate the token
-		claims, err := ValidateToken(token)
+		// Validate the token using utils.ParseToken
+		claims, err := utils.ParseToken(token)
 		if err != nil {
-			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized - invalid token"})
+			c.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized - invalid or expired token"})
 			return
 		}
 
-		// Store the admin ID in context for access in handlers
-		c.Set("admin_id", claims.AdminID)
+		// Set admin_id into context
+		c.Set("admin_id", claims.UserID) // UserID in claims maps to AdminID
 		c.Next()
 	}
 }
