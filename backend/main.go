@@ -2,16 +2,31 @@ package main
 
 import (
 	"log"
+	"os"
 	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+
+	"github.com/joho/godotenv"
+
 	"github.com/Endale2/DRPS/config"
-	authRoutes "github.com/Endale2/DRPS/auth/routes"   // Rename auth routes
-	adminRoutes "github.com/Endale2/DRPS/admin/routes" // Rename admin routes
+	authRoutes "github.com/Endale2/DRPS/auth/routes"
+	adminRoutes "github.com/Endale2/DRPS/admin/routes"
 )
 
 func main() {
+	// ✅ Load environment variables from .env
+	if err := godotenv.Load(); err != nil {
+		log.Println("⚠️  No .env file found or failed to load. Using system environment variables.")
+	}
+
+	// Example: Access env variable
+	jwtSecret := os.Getenv("JWT_SECRET")
+	if jwtSecret == "" {
+		log.Fatal("❌ JWT_SECRET is not set in .env or environment")
+	}
+
 	// Connect to MongoDB
 	config.ConnectDB()
 
@@ -29,10 +44,9 @@ func main() {
 	}
 	r.Use(cors.New(corsConfig))
 
-	
-	// Routes 
-	authRoutes.AuthRoutes(r)   
-	adminRoutes.AdminRoutes(r) 
+	// Routes
+	authRoutes.AuthRoutes(r)
+	adminRoutes.AdminRoutes(r)
 
 	// Test route
 	r.GET("/", func(c *gin.Context) {
@@ -40,6 +54,6 @@ func main() {
 	})
 
 	// Start the server
-	log.Println("Server running on port 8080")
+	log.Println("🚀 Server running on port 8080")
 	r.Run(":8080")
 }
