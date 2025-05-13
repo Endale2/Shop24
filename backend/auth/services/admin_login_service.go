@@ -8,53 +8,36 @@ import (
 	authRepo "github.com/Endale2/DRPS/auth/repositories"
 	adminModels "github.com/Endale2/DRPS/admin/models"
 	adminRepo "github.com/Endale2/DRPS/admin/repositories"
-	"github.com/golang-jwt/jwt/v4"
+	"github.com/Endale2/DRPS/auth/utils"
 )
 
-var jwtSecret = []byte("your_secret_key")
-
-
-func AdminLoginService(authAdmin *models.AuthAdmin) (*models.AuthAdmin, *adminModels.Admin, error) {
-	// Look up the AuthAdmin record by email.
-	foundAuth, err := authRepo.FindAuthAdminByEmail(authAdmin.Email)
+// AdminLoginService authenticates an admin and issues tokens.
+func AdminLoginService(req *models.AuthAdmin) (*models.AuthAdmin, *adminModels.Admin, error) {
+	// 1. Retrieve credential record
+	cred, err := authRepo.FindAuthAdminByEmail(req.Email)
 	if err != nil {
 		return nil, nil, errors.New("admin not found")
 	}
-
-	// Compare passwords (in production, use a secure hash comparison).
-	if authAdmin.Password != foundAuth.Password {
+	// 2. Validate password
+	if req.Password != cred.Password {
 		return nil, nil, errors.New("password mismatch")
 	}
-
-	// Retrieve the detailed admin record using the stored AdminID.
-	adminData, err := adminRepo.GetAdminByID(foundAuth.AdminID)
+	// 3. Fetch admin profile
+	adminData, err := adminRepo.GetAdminByID(cred.AdminID)
 	if err != nil {
 		return nil, nil, errors.New("admin details not found")
 	}
-
-	// Generate Access Token (expires in 15 minutes)
-	accessToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"admin_id": foundAuth.AdminID,
-		"email":    foundAuth.Email,
-		"exp":      time.Now().Add(15 * time.Minute).Unix(),
-	})
-	accessTokenString, err := accessToken.SignedString(jwtSecret)
+	// 4. Issue tokens
+	accessToken, err := utils.CreateToken(cred.AdminID.Hex(), 5*time.Minute)
 	if err != nil {
-		return nil, nil, errors.New("failed to generate access token")
+		return nil, nil, errors.New("could not create access token")
 	}
-
-	// Generate Refresh Token (expires in 7 days)
-	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"admin_id": foundAuth.AdminID,
-		"email":    foundAuth.Email,
-		"exp":      time.Now().Add(7 * 24 * time.Hour).Unix(),
-	})
-	refreshTokenString, err := refreshToken.SignedString(jwtSecret)
+	refreshToken, err := utils.CreateToken(cred.AdminID.Hex(), 7*24*time.Hour)
 	if err != nil {
-		return nil, nil, errors.New("failed to generate refresh token")
+		return nil, nil, errors.New("could not create refresh token")
 	}
-	foundAuth.AccessToken = accessTokenString
-	foundAuth.RefreshToken = refreshTokenString
-
-	return foundAuth, adminData, nil
+	// 5. Attach tokens
+	cred.AccessToken = accessToken
+	cred.RefreshToken = refreshToken
+	return cred, adminData, nil
 }
