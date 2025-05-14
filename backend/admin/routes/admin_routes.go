@@ -36,7 +36,7 @@ func AdminRoutes(r *gin.Engine) {
 	 {
 	 	shopGroup.GET("/", middlewares.AdminAuthMiddleware(), controllers.GetShops)
 	 	shopGroup.POST("/create-store",middlewares.AdminAuthMiddleware(),  controllers.CreateShop)
-		//shopGroup.PATCH("/update-shop", controllers.UpdateShop)
+		shopGroup.PATCH("/update-shop", middlewares.AdminAuthMiddleware(), controllers.UpdateShop)
 	 }
 
 	// Order sub-group (Example)
@@ -44,7 +44,7 @@ func AdminRoutes(r *gin.Engine) {
 	 {
 	 	orderGroup.GET("/",middlewares.AdminAuthMiddleware(),  controllers.GetOrders)
 	 	orderGroup.POST("/create-order", middlewares.AdminAuthMiddleware(),  controllers.CreateOrder)
-		//orderGroup.PATCH("/update-order", controllers.UpdateOrder)
+		orderGroup.PATCH("/update-order", middlewares.AdminAuthMiddleware(), controllers.UpdateOrder)
 	 }
 
     // Sellers  sub-group (Example)
