@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/Endale2/DRPS/shared/models"
 	"github.com/Endale2/DRPS/config"
+	"github.com/Endale2/DRPS/shared/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -81,4 +81,40 @@ func DeleteProduct(id string) (*mongo.DeleteResult, error) {
 	}
 
 	return productCollection.DeleteOne(context.Background(), bson.M{"_id": objID})
+}
+
+// CountProducts returns the total number of products matching the given filter.
+func CountProducts(filter bson.M) (int64, error) {
+	count, err := productCollection.CountDocuments(context.Background(), filter)
+	if err != nil {
+		return 0, err
+	}
+	return count, nil
+}
+
+// CountByCategory returns a map of category names to counts.
+func CountByCategory() (map[string]int64, error) {
+	// MongoDB aggregation pipeline: group by category
+	pipeline := mongo.Pipeline{
+		{{"$group", bson.D{{"_id", "$category"}, {"count", bson.D{{"$sum", 1}}}}}},
+	}
+	cursor, err := productCollection.Aggregate(context.Background(), pipeline)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.Background())
+
+	results := make(map[string]int64)
+	for cursor.Next(context.Background()) {
+		var doc struct {
+			ID    string `bson:"_id"`
+			Count int64  `bson:"count"`
+		}
+
+		if err := cursor.Decode(&doc); err != nil {
+			return nil, err
+		}
+		results[doc.ID] = doc.Count
+	}
+	return results, nil
 }

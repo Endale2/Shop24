@@ -6,6 +6,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/Endale2/DRPS/shared/models"
 	"github.com/Endale2/DRPS/shared/services"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -76,4 +77,33 @@ func DeleteProduct(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, result)
+}
+
+
+
+// GetProductCount handles GET /admin/products/count?shop_id=xxx
+func GetProductCount(c *gin.Context) {
+    // Build filter from query parameters
+    filter := bson.M{}
+    if shopID := c.Query("shop_id"); shopID != "" {
+        if obj, err := primitive.ObjectIDFromHex(shopID); err == nil {
+            filter["shop_id"] = obj
+        }
+    }
+    count, err := services.CountProductsService(filter)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Error counting products"})
+        return
+    }
+    c.JSON(http.StatusOK, gin.H{"count": count})
+}
+
+// GetProductsByCategoryCount handles GET /admin/products/count-by-category
+func GetProductsByCategoryCount(c *gin.Context) {
+    data, err := services.CountByCategoryService()
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "Error computing analytics"})
+        return
+    }
+    c.JSON(http.StatusOK, data)
 }

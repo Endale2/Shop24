@@ -33,3 +33,15 @@ func UpdateProductService(id string, updatedData bson.M) (*mongo.UpdateResult, e
 func DeleteProductService(id string) (*mongo.DeleteResult, error) {
 	return repositories.DeleteProduct(id)
 }
+
+
+
+// CountProductsService returns the total number of products matching the given filter.
+func CountProductsService(filter bson.M) (int64, error) {
+    return repositories.CountProducts(filter)
+}
+
+// CountByCategoryService returns counts of products grouped by category.
+func CountByCategoryService() (map[string]int64, error) {
+    return repositories.CountByCategory()
+}
