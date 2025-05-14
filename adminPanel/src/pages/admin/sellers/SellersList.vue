@@ -2,9 +2,9 @@
   <div>
     <h2 class="text-2xl mb-4">Sellers</h2>
     <ul>
-      <li v-for="c in sellers" :key="c.id">
-        <router-link :to="`/sellers/${c.id}`">
-          {{ c.firstName }} {{ c.lastName }}
+      <li v-for="seller in sellers" :key="seller.id">
+        <router-link :to="`/sellers/${seller.id}`">
+          {{ seller.name }} ({{ seller.email }})
         </router-link>
       </li>
     </ul>
@@ -22,30 +22,29 @@ export default {
   data() {
     return {
       sellers: []
-    }
+    };
   },
   async created() {
     try {
       const res = await axios.get('/admin/sellers/', {
         withCredentials: true
       });
-      // Normalize uppercase JSON keys (from Go structs) to lowercase
-      this.sellers = res.data.map(c => ({
-        id:        c.ID          || c.id,
-        firstName: c.FirstName   || c.firstName,
-        lastName:  c.LastName    || c.lastName,
-        email:     c.Email       || c.email,
-        phone:     c.Phone       || c.phone,
-        address:   c.Address     || c.address,
-        city:      c.City        || c.city,
-        state:     c.State       || c.state,
-        postalCode:c.PostalCode  || c.postalCode,
-        country:   c.Country     || c.country,
-        createdAt: c.CreatedAt   || c.createdAt,
+      this.sellers = res.data.map(s => ({
+        id: s.id || s.ID,
+        name: s.name || s.Name,
+        email: s.email || s.Email,
+        phone: s.phone || s.Phone,
+        address: s.address || s.Address,
+        businessName: s.business_name || s.BusinessName,
+        ratings: s.ratings || s.Ratings,
+        totalSales: s.total_sales || s.TotalSales,
+        reviewsCount: s.reviews_count || s.ReviewsCount,
+        createdAt: s.created_at || s.CreatedAt,
+        updatedAt: s.updated_at || s.UpdatedAt
       }));
     } catch (err) {
       console.error('Error fetching sellers:', err);
     }
   }
-}
+};
 </script>
