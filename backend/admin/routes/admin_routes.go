@@ -30,8 +30,8 @@ func AdminRoutes(r *gin.Engine) {
 	 	customerGroup.GET("/", middlewares.AdminAuthMiddleware(), controllers.GetCustomers)
 		customerGroup.GET("/:id",  middlewares.AdminAuthMiddleware(), controllers.GetCustomer)
 		customerGroup.POST("/create-customer", middlewares.AdminAuthMiddleware(),  controllers.CreateCustomer)
-		customerGroup.PATCH("/:id",  middlewares.AdminAuthMiddleware(),  controllers.UpdateCustomer)
-		customerGroup.DELETE("/:id",  middlewares.AdminAuthMiddleware(), controllers.DeleteCustomer)
+		customerGroup.PATCH("/update/:id",  middlewares.AdminAuthMiddleware(),  controllers.UpdateCustomer)
+		customerGroup.DELETE("/delete/:id",  middlewares.AdminAuthMiddleware(), controllers.DeleteCustomer)
 	 	
 	 }
 
