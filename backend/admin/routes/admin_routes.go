@@ -51,7 +51,7 @@ func AdminRoutes(r *gin.Engine) {
 	 sellerGroup := adminGroup.Group("/sellers")
 	 {
 	 	sellerGroup.GET("/",middlewares.AdminAuthMiddleware(),  controllers.GetSellers)
-	 	sellerGroup.POST("/create-order", middlewares.AdminAuthMiddleware(),  controllers.CreateSeller)
+	 	sellerGroup.POST("/create-seller", middlewares.AdminAuthMiddleware(),  controllers.CreateSeller)
 		//sellerGroup.PATCH("/update-shop", controllers.UpdateSeller)
 	 }
 }
