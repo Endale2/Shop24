@@ -28,7 +28,11 @@ func AdminRoutes(r *gin.Engine) {
 	 customerGroup := adminGroup.Group("/customers")
 	 {
 	 	customerGroup.GET("/", middlewares.AdminAuthMiddleware(), controllers.GetCustomers)
-	 	customerGroup.POST("/create-customer", middlewares.AdminAuthMiddleware(),  controllers.CreateCustomer)
+		customerGroup.GET("/:id",  middlewares.AdminAuthMiddleware(), controllers.GetCustomer)
+		customerGroup.POST("/create-customer", middlewares.AdminAuthMiddleware(),  controllers.CreateCustomer)
+		customerGroup.PATCH("/:id",  middlewares.AdminAuthMiddleware(),  controllers.UpdateCustomer)
+		customerGroup.DELETE("/:id",  middlewares.AdminAuthMiddleware(), controllers.DeleteCustomer)
+	 	
 	 }
 
 	// Shops sub-group (Example)
