@@ -26,7 +26,7 @@ func AdminRoutes(r *gin.Engine) {
 	}
 
 	
-	//  Customers sub-group (Example)
+	//  Customers sub-group 
 	 customerGroup := adminGroup.Group("/customers")
 	 {
 	 	customerGroup.GET("/", middlewares.AdminAuthMiddleware(), controllers.GetCustomers)
