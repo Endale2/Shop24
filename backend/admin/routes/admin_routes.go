@@ -37,7 +37,7 @@ func AdminRoutes(r *gin.Engine) {
 	 	
 	 }
 
-	// Shops sub-group (Example)
+	// Shops sub-group 
 	 shopGroup := adminGroup.Group("/stores")
 	 {
 	 	shopGroup.GET("/", middlewares.AdminAuthMiddleware(), controllers.GetShops)
@@ -48,12 +48,14 @@ func AdminRoutes(r *gin.Engine) {
 
 	 }
 
-	// Order sub-group (Example)
+	// Order sub-group 
 	 orderGroup := adminGroup.Group("/orders")
 	 {
 	 	orderGroup.GET("/",middlewares.AdminAuthMiddleware(),  controllers.GetOrders)
-	 	orderGroup.POST("/create-order", middlewares.AdminAuthMiddleware(),  controllers.CreateOrder)
-		orderGroup.PATCH("/update-order", middlewares.AdminAuthMiddleware(), controllers.UpdateOrder)
+		orderGroup.GET("/:id", middlewares.AdminAuthMiddleware(), controllers.GetOrder)
+	 	orderGroup.POST("/create", middlewares.AdminAuthMiddleware(),  controllers.CreateOrder)
+		orderGroup.PATCH("/update/:id", middlewares.AdminAuthMiddleware(), controllers.UpdateOrder)
+		orderGroup.DELETE("/delete/:id", middlewares.AdminAuthMiddleware(), controllers.DeleteOrder)
 	 }
 
     // Sellers  sub-group (Example)
