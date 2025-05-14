@@ -15,38 +15,38 @@ func AdminRoutes(r *gin.Engine) {
 	productGroup := adminGroup.Group("/products")
 	{
 		productGroup.GET("/", middlewares.AdminAuthMiddleware(), controllers.GetProducts)
-		productGroup.POST("/create-product", controllers.CreateProduct)
+		productGroup.POST("/create-product", middlewares.AdminAuthMiddleware(), controllers.CreateProduct)
 	}
 
 	
 	//  Customers sub-group (Example)
 	 customerGroup := adminGroup.Group("/customers")
 	 {
-	 	customerGroup.GET("/", controllers.GetCustomers)
-	 	customerGroup.POST("/create-customer", controllers.CreateCustomer)
+	 	customerGroup.GET("/", middlewares.AdminAuthMiddleware(), controllers.GetCustomers)
+	 	customerGroup.POST("/create-customer", middlewares.AdminAuthMiddleware(),  controllers.CreateCustomer)
 	 }
 
 	// Shops sub-group (Example)
 	 shopGroup := adminGroup.Group("/stores")
 	 {
-	 	shopGroup.GET("/", controllers.GetShops)
-	 	shopGroup.POST("/create-store", controllers.CreateShop)
+	 	shopGroup.GET("/", middlewares.AdminAuthMiddleware(), controllers.GetShops)
+	 	shopGroup.POST("/create-store",middlewares.AdminAuthMiddleware(),  controllers.CreateShop)
 		//shopGroup.PATCH("/update-shop", controllers.UpdateShop)
 	 }
 
 	// Order sub-group (Example)
 	 orderGroup := adminGroup.Group("/orders")
 	 {
-	 	orderGroup.GET("/", controllers.GetOrders)
-	 	orderGroup.POST("/create-order", controllers.CreateOrder)
+	 	orderGroup.GET("/",middlewares.AdminAuthMiddleware(),  controllers.GetOrders)
+	 	orderGroup.POST("/create-order", middlewares.AdminAuthMiddleware(),  controllers.CreateOrder)
 		//orderGroup.PATCH("/update-order", controllers.UpdateOrder)
 	 }
 
     // Sellers  sub-group (Example)
 	 sellerGroup := adminGroup.Group("/sellers")
 	 {
-	 	sellerGroup.GET("/", controllers.GetSellers)
-	 	sellerGroup.POST("/create-order", controllers.CreateSeller)
+	 	sellerGroup.GET("/",middlewares.AdminAuthMiddleware(),  controllers.GetSellers)
+	 	sellerGroup.POST("/create-order", middlewares.AdminAuthMiddleware(),  controllers.CreateSeller)
 		//sellerGroup.PATCH("/update-shop", controllers.UpdateSeller)
 	 }
 }
