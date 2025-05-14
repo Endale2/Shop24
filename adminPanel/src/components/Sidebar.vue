@@ -11,6 +11,12 @@
           <router-link to="/stores" class="block py-2" active-class="font-bold">Stores</router-link>
         </li>
         <li>
+          <router-link to="/staffs" class="block py-2" active-class="font-bold">Staffs</router-link>
+        </li>
+        <li>
+          <router-link to="/Sellers" class="block py-2" active-class="font-bold">Sellers</router-link>
+        </li>
+        <li>
           <router-link to="/customers" class="block py-2" active-class="font-bold">Customers</router-link>
         </li>
       </ul>

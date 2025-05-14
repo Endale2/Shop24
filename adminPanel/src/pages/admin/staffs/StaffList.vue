@@ -1,15 +1,15 @@
 <template>
   <div>
-    <h2 class="text-2xl mb-4">Sellers</h2>
+    <h2 class="text-2xl mb-4">Staffs</h2>
     <ul>
-      <li v-for="c in sellers" :key="c.id">
-        <router-link :to="`/sellers/${c.id}`">
+      <li v-for="c in staffList" :key="c.id">
+        <router-link :to="`/staffs/${c.id}`">
           {{ c.firstName }} {{ c.lastName }}
         </router-link>
       </li>
     </ul>
-    <div v-if="sellers.length === 0" class="text-gray-600 mt-4">
-      No sellers available.
+    <div v-if="staffList.length === 0" class="text-gray-600 mt-4">
+      No staffList available.
     </div>
   </div>
 </template>
@@ -18,19 +18,19 @@
 import axios from 'axios';
 
 export default {
-  name: 'SellersList',
+  name: 'StaffList',
   data() {
     return {
-      sellers: []
+      staffList: []
     }
   },
   async created() {
     try {
-      const res = await axios.get('/admin/sellers/', {
+      const res = await axios.get('/admin/staffs/', {
         withCredentials: true
       });
       // Normalize uppercase JSON keys (from Go structs) to lowercase
-      this.sellers = res.data.map(c => ({
+      this.staffList = res.data.map(c => ({
         id:        c.ID          || c.id,
         firstName: c.FirstName   || c.firstName,
         lastName:  c.LastName    || c.lastName,
@@ -44,7 +44,7 @@ export default {
         createdAt: c.CreatedAt   || c.createdAt,
       }));
     } catch (err) {
-      console.error('Error fetching sellers:', err);
+      console.error('Error fetching staffList:', err);
     }
   }
 }

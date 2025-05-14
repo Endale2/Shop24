@@ -11,6 +11,8 @@ import CustomerDetail from '../pages/admin/customers/CustomerDetail.vue';
 import StoresList from '../pages/admin/stores/StoresList.vue';
 import StoreDetail from '../pages/admin/stores/StoreDetail.vue';
 import auth from '../services/auth';
+import SellersList from '@/pages/admin/sellers/SellersList.vue';
+import StaffList from '@/pages/admin/staffs/StaffList.vue';
 
 const routes = [
   // Public
@@ -33,6 +35,10 @@ const routes = [
       { path: 'products/:id', name: 'ProductDetail', component: ProductDetail, props: true },
       { path: 'customers', name: 'CustomersList', component: CustomersList },
       { path: 'customers/:id', name: 'CustomerDetail', component: CustomerDetail, props: true },
+      { path: 'staffs', name: 'StaffList', component: StaffList },
+      { path: 'staffs/:id', name: 'CustomerDetail', component: CustomerDetail, props: true },
+      { path: 'sellers', name: 'SellersList', component: SellersList },
+      { path: 'sellers/:id', name: 'CustomerDetail', component: CustomerDetail, props: true },
       { path: 'stores', name: 'StoresList', component: StoresList },
       { path: 'stores/:id', name: 'StoreDetail', component: StoreDetail, props: true }
     ]
