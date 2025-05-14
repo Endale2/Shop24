@@ -48,7 +48,20 @@ func AdminRoutes(r *gin.Engine) {
 
 	 }
 
-	// Order sub-group 
+	
+
+    // Sellers  sub-group 
+	 sellerGroup := adminGroup.Group("/sellers")
+	 {
+	 	sellerGroup.GET("/",middlewares.AdminAuthMiddleware(),  controllers.GetSellers)
+		sellerGroup.GET("/:id", middlewares.AdminAuthMiddleware(), controllers.GetSeller)
+	 	sellerGroup.POST("/create", middlewares.AdminAuthMiddleware(),  controllers.CreateSeller)
+		sellerGroup.PATCH("/update/:id", middlewares.AdminAuthMiddleware(), controllers.UpdateSeller)
+		sellerGroup.DELETE("/delete/:id",  middlewares.AdminAuthMiddleware(), controllers.DeleteSeller)
+	 }
+
+
+	 // Order sub-group 
 	 orderGroup := adminGroup.Group("/orders")
 	 {
 	 	orderGroup.GET("/",middlewares.AdminAuthMiddleware(),  controllers.GetOrders)
@@ -56,13 +69,5 @@ func AdminRoutes(r *gin.Engine) {
 	 	orderGroup.POST("/create", middlewares.AdminAuthMiddleware(),  controllers.CreateOrder)
 		orderGroup.PATCH("/update/:id", middlewares.AdminAuthMiddleware(), controllers.UpdateOrder)
 		orderGroup.DELETE("/delete/:id", middlewares.AdminAuthMiddleware(), controllers.DeleteOrder)
-	 }
-
-    // Sellers  sub-group (Example)
-	 sellerGroup := adminGroup.Group("/sellers")
-	 {
-	 	sellerGroup.GET("/",middlewares.AdminAuthMiddleware(),  controllers.GetSellers)
-	 	sellerGroup.POST("/create-seller", middlewares.AdminAuthMiddleware(),  controllers.CreateSeller)
-		sellerGroup.PATCH("/update-shop", middlewares.AdminAuthMiddleware(), controllers.UpdateSeller)
 	 }
 }
