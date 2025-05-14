@@ -15,8 +15,10 @@ func AdminRoutes(r *gin.Engine) {
 	productGroup := adminGroup.Group("/products")
 	{
 		productGroup.GET("/", middlewares.AdminAuthMiddleware(), controllers.GetProducts)
-		productGroup.POST("/create-product", middlewares.AdminAuthMiddleware(), controllers.CreateProduct)
-		
+		productGroup.GET("/:id", middlewares.AdminAuthMiddleware(), controllers.GetProduct)
+		productGroup.POST("/create", middlewares.AdminAuthMiddleware(), controllers.CreateProduct)
+        productGroup.PATCH("/update/:id", middlewares.AdminAuthMiddleware(), controllers.UpdateProduct)
+		productGroup.DELETE("/delete/:id", middlewares.AdminAuthMiddleware(), controllers.DeleteProduct)
 		productGroup.GET("/count", middlewares.AdminAuthMiddleware(), controllers.GetProductCount)
 		productGroup.GET("/count-by-category", middlewares.AdminAuthMiddleware(), controllers.GetProductsByCategoryCount)
 
