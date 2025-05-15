@@ -14,6 +14,7 @@ import auth from '../services/auth';
 import SellersList from '@/pages/admin/sellers/SellersList.vue';
 import StaffList from '@/pages/admin/staffs/StaffList.vue';
 import SellerDetail from '@/pages/admin/sellers/SellerDetail.vue';
+import StaffDetail from '@/pages/admin/staffs/StaffDetail.vue';
 
 const routes = [
   // Public
@@ -37,7 +38,7 @@ const routes = [
       { path: 'customers', name: 'CustomersList', component: CustomersList },
       { path: 'customers/:id', name: 'CustomerDetail', component: CustomerDetail, props: true },
       { path: 'staffs', name: 'StaffList', component: StaffList },
-      { path: 'staffs/:id', name: 'CustomerDetail', component: CustomerDetail, props: true },
+      { path: 'staffs/:id', name: 'StaffDetail', component: StaffDetail, props: true },
       { path: 'sellers', name: 'SellersList', component: SellersList },
       { path: 'sellers/:id', name: 'SellerDetail', component: SellerDetail, props: true },
       { path: 'stores', name: 'StoresList', component: StoresList },
