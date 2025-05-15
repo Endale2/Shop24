@@ -1,133 +1,133 @@
 <template>
-  <div class="max-w-6xl mx-auto p-6 bg-white rounded shadow">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-2xl font-semibold">Stores</h2>
+  <div class="container mx-auto">
+    <div class="mb-6 flex justify-between items-center">
+      <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Stores</h1>
       <router-link
-        to="/stores/create"
-        class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-      >
-        + Create Store
-      </router-link>
-    </div>
-    <table class="min-w-full bg-white border rounded">
-      <thead class="bg-gray-100">
-        <tr>
-          <th class="px-4 py-2 border">ID</th>
-          <th class="px-4 py-2 border">Name</th>
-          <th class="px-4 py-2 border">Owner ID</th>
-          <th class="px-4 py-2 border">Description</th>
-          <th class="px-4 py-2 border">Created At</th>
-          <th class="px-4 py-2 border">Actions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="s in stores"
-          :key="s.id"
-          class="hover:bg-gray-50 border-b"
-        >
-          <td class="px-4 py-2 border text-sm text-gray-600">{{ s.id }}</td>
-          <td class="px-4 py-2 border">
-            <router-link :to="`/stores/${s.id}`" class="text-blue-600 hover:underline">
-              {{ s.name || '—' }}
-            </router-link>
-          </td>
-          <td class="px-4 py-2 border text-sm text-gray-600">{{ s.ownerId }}</td>
-          <td class="px-4 py-2 border text-sm">{{ s.description || '—' }}</td>
-          <td class="px-4 py-2 border text-sm text-gray-500">
-            {{ formatDate(s.createdAt) }}
-          </td>
-          <td class="px-4 py-2 border flex space-x-2">
-            <router-link
-              :to="`/stores/${s.id}/edit`"
-              class="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-sm"
-            >
-              Edit
-            </router-link>
-            <button
-              @click="confirmDelete(s.id)"
-              class="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-sm"
-            >
-              Delete
-            </button>
-          </td>
-        </tr>
-      </tbody>
-    </table>
-    <div v-if="stores.length === 0" class="text-gray-600 mt-4">
-      No stores available.
+         to="/stores/create"
+         class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 dark:focus:ring-offset-gray-800"
+       >
+         Create New Store
+       </router-link>
     </div>
 
-    <!-- Delete Confirmation Modal -->
-    <div
-      v-if="showConfirm"
-      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
-    >
-      <div class="bg-white rounded p-6 w-full max-w-sm">
-        <h3 class="text-lg font-semibold mb-4">Delete Store?</h3>
-        <p class="mb-6">Are you sure you want to delete this store? This action cannot be undone.</p>
-        <div class="flex justify-end space-x-2">
-          <button
-            @click="showConfirm = false"
-            class="px-4 py-2 bg-gray-300 rounded hover:bg-gray-400"
-          >
-            Cancel
-          </button>
-          <button
-            @click="deleteStore"
-            class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700"
-          >
-            Yes, Delete
-          </button>
-        </div>
+    <div v-if="loading" class="flex items-center justify-center h-64 text-gray-500 dark:text-gray-400">
+      <svg class="animate-spin h-8 w-8 text-blue-600 dark:text-blue-400 mr-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 0116 0H4z"></path>
+      </svg>
+      Loading stores...
+    </div>
+
+    <div v-else-if="error" class="flex items-center justify-center h-64 text-red-600 dark:text-red-400">
+      <p>Error loading stores: {{ error }}</p>
+    </div>
+
+    <div v-else>
+      <div v-if="stores.length === 0" class="flex items-center justify-center h-64 text-gray-600 dark:text-gray-400">
+        <p>No stores available.</p>
+      </div>
+
+      <div v-else class="overflow-x-auto bg-white dark:bg-gray-800 shadow-md rounded-lg">
+         <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+           <thead class="bg-gray-50 dark:bg-gray-700">
+             <tr>
+               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                 ID
+               </th>
+               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                 Name
+               </th>
+               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                 Owner ID
+               </th>
+               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                 Description
+               </th>
+               <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">
+                 Created At
+               </th>
+               </tr>
+           </thead>
+           <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+             <tr v-for="s in stores" :key="s.id" class="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                 {{ s.id || '—' }}
+               </td>
+               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                 <router-link :to="`/stores/${s.id}`" class="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300">
+                    {{ s.name || '—' }}
+                 </router-link>
+               </td>
+               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                 {{ s.ownerId || '—' }}
+               </td>
+               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                 {{ s.description || '—' }}
+               </td>
+               <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                 {{ formatDate(s.createdAt) }}
+               </td>
+               </tr>
+           </tbody>
+         </table>
       </div>
     </div>
-  </div>
+
+    </div>
 </template>
 
 <script>
 import axios from 'axios';
+
 export default {
   name: 'StoresList',
   data() {
     return {
       stores: [],
-      showConfirm: false,
-      toDeleteId: null,
+      loading: true, // Added loading state
+      error: null,   // Added error state
+      // Removed showConfirm and toDeleteId
     };
   },
   async created() {
-    try {
-      const res = await axios.get('/admin/stores/');
-      this.stores = res.data.map(s => ({
-        id:          s.ID || s.id,
-        name:        s.Name || s.name,
-        ownerId:     s.OwnerID || s.ownerId,
-        description: s.Description || s.description,
-        createdAt:   s.CreatedAt || s.createdAt,
-      }));
-    } catch (e) {
-      console.error('Error fetching stores:', e);
-    }
+    await this.fetchStores();
   },
   methods: {
-    formatDate(dateStr) {
-      return new Date(dateStr).toLocaleString();
+    async fetchStores() {
+       this.loading = true;
+       this.error = null; // Clear previous errors
+       try {
+         const res = await axios.get('/admin/stores/', { withCredentials: true });
+         // Map potentially different casing and ensure objects have standard keys
+         this.stores = res.data.map(s => ({
+           id:          s.ID || s.id || null, // Handle potential nulls
+           name:        s.Name || s.name || '',
+           ownerId:     s.OwnerID || s.ownerId || null,
+           description: s.Description || s.description || '',
+           createdAt:   s.CreatedAt || s.createdAt || null,
+           updatedAt:   s.UpdatedAt || s.updatedAt || null, // Added updatedAt if available
+           // Map other fields if they exist in your API response
+           // e.g., status: s.Status || s.status || 'unknown'
+         }));
+       } catch (e) {
+         console.error('Error fetching stores:', e);
+         this.error = e.message || 'An error occurred while fetching stores.'; // Set user-friendly error message
+         this.stores = []; // Clear stores on error
+       } finally {
+         this.loading = false; // Hide loading indicator
+       }
     },
-    confirmDelete(id) {
-      this.toDeleteId = id;
-      this.showConfirm = true;
-    },
-    async deleteStore() {
-      try {
-        await axios.delete(`/admin/stores/${this.toDeleteId}`);
-        this.stores = this.stores.filter(s => s.id !== this.toDeleteId);
-      } catch (e) {
-        console.error('Delete failed:', e);
-      } finally {
-        this.showConfirm = false;
-      }
-    }
+     formatDate(dateStr) {
+       if (!dateStr) return '—';
+        try {
+            const options = { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' };
+            return new Date(dateStr).toLocaleString(undefined, options);
+        } catch (e) {
+            console.error('Error formatting date:', dateStr, e);
+            return 'Invalid Date';
+        }
+     },
+     // Removed confirmDelete and deleteStore methods
   }
 };
 </script>
