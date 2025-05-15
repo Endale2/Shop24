@@ -11,7 +11,8 @@ func AuthRoutes(r *gin.Engine) {
 	{
 		// Admin authentication routes
 		authGroup.POST("/admin/login", controllers.AdminLogin)
-		authGroup.POST("/admin/register", controllers.AdminRegister)
+		authGroup.POST("/admin/create", controllers.AdminRegister)
+        authGroup.POST("/admin/logout", controllers.AdminLogout)
 		// Refresh access token using refresh token
 		authGroup.POST("/admin/refresh", controllers.RefreshToken)
 		authGroup.GET("/admin/me", controllers.GetAuthAdminMe)
