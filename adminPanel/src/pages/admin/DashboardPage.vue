@@ -1,9 +1,14 @@
 <template>
-  <div class="p-0">
+  <div>
     <div class="mb-6">
-      <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Dashboard Overview</h1>
-      <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">Get a quick look at your key metrics.</p>
-    </div>
+      <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Dashboard</h1>
+      </div>
+
+    <div class="mb-6">
+       <h2 class="text-xl font-semibold text-gray-800 dark:text-white">Dashboard Overview</h2>
+       <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">Get a quick look at your key metrics.</p>
+     </div>
+
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
 
@@ -73,7 +78,7 @@
       </div>
 
     <div class="mt-8 bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
-       <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Activity (Placeholder)</h3>
+       <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 border-b border-gray-200 dark:border-gray-700 pb-2">Recent Activity (Placeholder)</h3>
        <p class="text-gray-600 dark:text-gray-300">This area could contain tables, charts, or lists of recent actions.</p>
         </div>
 
@@ -112,3 +117,10 @@ export default {
 };
 </script>
 
+<style scoped>
+/* No specific styles needed if using Tailwind for everything */
+/* Ensure .container styles are removed from here if they existed */
+/* .container {
+    max-width: ...;
+} */
+</style>

@@ -23,22 +23,19 @@
 import axios from 'axios';
 
 export default {
-  name: 'NavbarDesktop', // Explicitly name for clarity
+  name: 'NavbarDesktop',
   props: {
-    user: Object, // Expecting the user object
+    user: Object,
   },
-  // Removed emits declaration
-
   methods: {
     async logout() {
       try {
-        // This already sends to /auth/admin/logout as requested
         await axios.post('/auth/admin/logout', null, { withCredentials: true });
         console.log('Logged out successfully');
       } catch (error) {
         console.error('Logout failed:', error);
       } finally {
-         this.$router.replace({ name: 'Login' }); // Redirect to your login route
+         this.$router.replace({ name: 'Login' });
       }
     }
   }
