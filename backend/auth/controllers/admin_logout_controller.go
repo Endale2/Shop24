@@ -1,3 +1,4 @@
+// File: auth/controllers/admin_logout_controller.go
 package controllers
 
 import (
@@ -6,11 +7,29 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func AdminLogout(ctx *gin.Context) {
-	// Clear the JWT cookie by setting it to an empty value and immediate expiration
-	ctx.SetCookie("admin_token", "", -1, "/", "", true, true)
+// AdminLogout clears the authentication cookies.
+func AdminLogout(c *gin.Context) {
+	// Invalidate the access_token cookie
+	c.SetCookie(
+		"access_token",   // name
+		"",               // value
+		-1,               // maxAge < 0 means delete now
+		"/",              // path
+		"",               // domain (same as login)
+		false,            // secure (same as login)
+		true,             // httpOnly
+	)
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"message": "Admin logged out successfully",
-	})
+	// Invalidate the refresh_token cookie
+	c.SetCookie(
+		"refresh_token",
+		"",
+		-1,
+		"/",
+		"",
+		false,
+		true,
+	)
+
+	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
 }
