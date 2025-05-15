@@ -10,20 +10,42 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 )
 
-// CreateProduct handles the creation of a new product.(for  admin)
 func CreateProduct(c *gin.Context) {
-	var product models.Product
-	if err := c.ShouldBindJSON(&product); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
-		return
-	}
+  var product models.Product
 
-	result, err := services.CreateProductService(&product)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error creating product"})
-		return
-	}
-	c.JSON(http.StatusOK, result)
+  // 1) Extract user_id from context
+  uidVal, exists := c.Get("user_id")
+  if !exists {
+    c.JSON(http.StatusUnauthorized, gin.H{"error": "Unauthorized"})
+    return
+  }
+  uidHex, ok := uidVal.(string)
+  if !ok {
+    c.JSON(http.StatusInternalServerError, gin.H{"error": "Invalid user ID in context"})
+    return
+  }
+  userID, err := primitive.ObjectIDFromHex(uidHex)
+  if err != nil {
+    c.JSON(http.StatusBadRequest, gin.H{"error": "Malformed user ID"})
+    return
+  }
+
+  // 2) Bind the rest of the product JSON
+  if err := c.ShouldBindJSON(&product); err != nil {
+    c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid payload"})
+    return
+  }
+
+  // 3) Override the UserID field
+  product.UserID = userID
+
+  // 4) Delegate to service/repo
+  result, err := services.CreateProductService(&product)
+  if err != nil {
+    c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create product"})
+    return
+  }
+  c.JSON(http.StatusOK, result)
 }
 
 // GetProduct retrieves a single product by its ID.(for admin)
