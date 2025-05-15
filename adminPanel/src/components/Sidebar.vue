@@ -1,5 +1,5 @@
 <template>
-  <aside class="w-48 bg-gray-800 dark:bg-gray-800 text-white shadow-lg flex flex-col">
+  <aside class="w-48 bg-gray-800 dark:bg-gray-800 text-white shadow-lg flex flex-col flex-shrink-0">
 
     <div class="flex items-center justify-center h-16 bg-gray-900 dark:bg-gray-900 text-xl font-semibold text-white">
       Admin Panel
@@ -75,17 +75,14 @@
 
 <script>
 export default {
-  name: 'SidebarStatic', // Explicitly name for clarity
-  // Removed props: ['isOpen']
+  name: 'SidebarStatic',
   props: {
-    userRole: String, // Keep if needed for styling
+    userRole: String,
   },
-  // Removed emits: ['close-sidebar']
 };
 </script>
 
 <style scoped>
-/* Add any specific sidebar styles here if needed, but Tailwind handles most */
 /* Removed all responsive/transform related styles */
 
 

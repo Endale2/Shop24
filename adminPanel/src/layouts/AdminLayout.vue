@@ -54,13 +54,11 @@ export default {
       this.user = await auth.getUser();
       if (!this.user) {
         console.warn('AdminLayoutDesktop: User not authenticated or not found, redirecting...');
-        // Ensure router is available and configured with a 'Login' route
         this.$router.push('/login');
       }
     } catch (error) {
       console.error('AdminLayoutDesktop: Error fetching user:', error);
       this.userError = 'Authentication failed.'; // Set error message
-       // Redirect to login on fetch error
        this.$router.push('/login');
     } finally {
        this.loadingUser = false;
@@ -93,7 +91,6 @@ export default {
 }
 
 /* Custom Scrollbar (Optional, shared styling) */
-/* Make sure these styles match the ones you are using elsewhere if any */
 .custom-scrollbar::-webkit-scrollbar {
   width: 8px; /* width of the scrollbar */
 }
