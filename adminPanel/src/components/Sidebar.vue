@@ -1,9 +1,9 @@
 <template>
   <aside class="w-48 bg-gray-800 dark:bg-gray-800 text-white shadow-lg flex flex-col flex-shrink-0">
 
-    <div class="flex items-center justify-center h-16 bg-gray-900 dark:bg-gray-900 text-xl font-semibold text-white">
-      Admin Panel
-      </div>
+    <div class="h-5 ">
+      
+    </div>
 
     <nav class="flex-1 p-4 overflow-y-auto custom-scrollbar">
       <ul>
