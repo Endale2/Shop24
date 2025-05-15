@@ -32,7 +32,7 @@ import Navbar from '../components/Navbar.vue';
 import auth from '../services/auth'; // Your authentication service
 
 export default {
-  name: 'AdminLayoutDesktop', // Explicitly name for clarity
+  name: 'AdminLayoutDesktop',
   components: {
     Sidebar,
     Navbar,
@@ -42,36 +42,37 @@ export default {
       user: null,
       userError: null,
       loadingUser: true,
-      // Removed all responsiveness data (isSidebarOpen, windowWidth)
+      // No responsive state data needed for desktop-only
     };
   },
-  // Removed all responsiveness computed properties and methods (isLargeScreen, toggleSidebar, handleResize, etc.)
-  // Removed all window resize event listeners
+  // No responsive computed properties or methods
+  // No window resize event listeners
 
   async created() {
-    // Fetch user data (needed to show user name in Navbar, or redirect if not authenticated)
+    // Fetch user data when the layout is created
     try {
       this.user = await auth.getUser();
       if (!this.user) {
         console.warn('AdminLayoutDesktop: User not authenticated or not found, redirecting...');
+        // Redirect to the login route if authentication fails
         this.$router.push('/login');
       }
     } catch (error) {
       console.error('AdminLayoutDesktop: Error fetching user:', error);
       this.userError = 'Authentication failed.'; // Set error message
-       this.$router.push('/login');
+       this.$router.push('/login'); // Redirect to login on fetch error
     } finally {
        this.loadingUser = false;
     }
   },
-   // Removed beforeUnmount/beforeDestroy
+   // No beforeUnmount/beforeDestroy needed without listeners
 };
 </script>
 
 <style scoped>
 /*
-  Scoped styles are primarily for transitions or specific component overrides.
-  Tailwind handles the layout and appearance.
+  Scoped styles here are for layout transitions or specific component overrides.
+  Tailwind classes should handle most of the styling and layout.
 */
 
 /* Fade and Transform Transition for Router View */
@@ -90,23 +91,23 @@ export default {
   transform: translateY(-10px);
 }
 
-/* Custom Scrollbar (Optional, shared styling) */
+/* Custom Scrollbar (Optional, ensure styles are consistent) */
 .custom-scrollbar::-webkit-scrollbar {
-  width: 8px; /* width of the scrollbar */
+  width: 8px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: #f1f1f1; /* color of the track */
+  background: #f1f1f1;
   border-radius: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #888; /* color of the scrollbar thumb */
+  background: #888;
   border-radius: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: #555; /* color of the scrollbar thumb on hover */
+  background: #555;
 }
 
 /* Dark mode scrollbar */

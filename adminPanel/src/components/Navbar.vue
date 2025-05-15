@@ -1,5 +1,5 @@
 <template>
-  <nav class="bg-white dark:bg-gray-800 shadow-md p-4 flex justify-between items-center z-20">
+  <nav class="bg-white dark:bg-gray-800 shadow-md p-4 flex justify-between items-center z-20 flex-shrink-0">
     <div class="flex items-center">
       </div>
 

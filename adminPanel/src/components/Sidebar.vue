@@ -77,33 +77,29 @@
 export default {
   name: 'SidebarStatic',
   props: {
-    userRole: String,
+    userRole: String, // Keep if needed for styling
   },
 };
 </script>
 
 <style scoped>
-/* Removed all responsive/transform related styles */
-
-
-/* Add custom scrollbar styles if using the custom-scrollbar class */
+/* No custom styles needed if using Tailwind */
+/* Custom scrollbar styles if used */
 .custom-scrollbar::-webkit-scrollbar {
   width: 8px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-  background: #333; /* Darker track for dark sidebar */
+  background: #333;
   border-radius: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-  background: #555; /* Darker thumb */
+  background: #555;
   border-radius: 4px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
   background: #777;
 }
-
-/* No specific dark mode needed for scrollbar in this dark sidebar */
 </style>
