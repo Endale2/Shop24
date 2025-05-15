@@ -4,11 +4,34 @@
 
     <!-- Loading / Error -->
     <div v-if="loading" class="text-gray-500">Loading...</div>
-    <div v-else-if="error" class="text-red-500">{{ error }}</div>
+    <div v-else-if="error" class="text-red-500 mb-4">{{ error }}</div>
 
     <!-- Detail & Edit Form -->
     <div v-else>
       <form @submit.prevent="updateStore" class="space-y-4">
+        <!-- ID (read-only) -->
+        <div>
+          <label class="block text-sm font-medium">ID</label>
+          <input
+            v-model="store.id"
+            type="text"
+            class="mt-1 block w-full border rounded p-2 bg-gray-100"
+            disabled
+          />
+        </div>
+
+        <!-- Owner ID (read-only) -->
+        <div>
+          <label class="block text-sm font-medium">Owner ID</label>
+          <input
+            v-model="store.ownerId"
+            type="text"
+            class="mt-1 block w-full border rounded p-2 bg-gray-100"
+            disabled
+          />
+        </div>
+
+        <!-- Name (editable) -->
         <div>
           <label class="block text-sm font-medium">Name</label>
           <input
@@ -19,6 +42,7 @@
           />
         </div>
 
+        <!-- Description (editable) -->
         <div>
           <label class="block text-sm font-medium">Description</label>
           <textarea
@@ -28,7 +52,20 @@
           ></textarea>
         </div>
 
-        <div class="flex space-x-2">
+        <!-- Timestamps (read-only) -->
+        <div class="grid grid-cols-2 gap-4 text-sm text-gray-600">
+          <div>
+            <label>Created At</label>
+            <div>{{ formatDate(store.createdAt) }}</div>
+          </div>
+          <div>
+            <label>Updated At</label>
+            <div>{{ formatDate(store.updatedAt) }}</div>
+          </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex space-x-2 mt-4">
           <button
             type="submit"
             class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
@@ -46,20 +83,14 @@
           </button>
         </div>
       </form>
-
-      <p class="mt-6 text-sm text-gray-600">
-        <strong>Owner ID:</strong> {{ store.ownerId }}<br>
-        <strong>Created At:</strong> {{ formatDate(store.createdAt) }}<br>
-        <strong>Updated At:</strong> {{ formatDate(store.updatedAt) }}
-      </p>
     </div>
 
     <!-- Delete Confirmation Modal -->
     <div
       v-if="confirmDelete"
-      class="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 p-4"
+      class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4"
     >
-      <div class="bg-white rounded p-6 space-y-4 max-w-sm w-full">
+      <div class="bg-white rounded p-6 space-y-4 w-full max-w-sm">
         <h3 class="text-lg font-semibold">Confirm Delete</h3>
         <p>Are you sure you want to delete this store? This action cannot be undone.</p>
         <div class="flex justify-end space-x-2">
@@ -89,7 +120,7 @@ export default {
   name: 'StoreDetail',
   data() {
     return {
-      store: null,
+      store: {},
       form: { name: '', description: '' },
       loading: true,
       error: null,
@@ -100,21 +131,21 @@ export default {
   },
   async created() {
     try {
-      const { data } = await axios.get(`/admin/stores/${this.$route.params.id}`);
-      // normalize keys
+      const res = await axios.get(`/admin/stores/${this.$route.params.id}`);
+      const d = res.data;
+      // normalize API response
       this.store = {
-        id: data.ID,
-        name: data.Name,
-        ownerId: data.OwnerID,
-        description: data.Description,
-        createdAt: data.CreatedAt,
-        updatedAt: data.UpdatedAt,
+        id: d.ID,
+        ownerId: d.OwnerID,
+        name: d.Name,
+        description: d.Description,
+        createdAt: d.CreatedAt,
+        updatedAt: d.UpdatedAt,
       };
-      // populate form
       this.form.name = this.store.name;
       this.form.description = this.store.description;
     } catch (e) {
-      this.error = 'Failed to load store';
+      this.error = 'Failed to load store details';
     } finally {
       this.loading = false;
     }
@@ -128,10 +159,10 @@ export default {
       this.error = null;
       try {
         await axios.patch(
-          `/admin/stores/update/${this.store.id}`,
+          `/admin/stores/update-store/${this.store.id}`,
           { name: this.form.name, description: this.form.description }
         );
-        // update local store data
+        // reflect changes locally
         this.store.name = this.form.name;
         this.store.description = this.form.description;
       } catch (e) {
@@ -152,7 +183,7 @@ export default {
         this.deleting = false;
         this.confirmDelete = false;
       }
-    }
-  }
+    },
+  },
 };
 </script>
