@@ -142,7 +142,3 @@ export default {
 };
 </script>
 
-<style scoped>
-/* No specific styles needed if using Tailwind for everything */
-/* Custom scrollbar styles can be added here if you want them specifically for this overflow div */
-</style>

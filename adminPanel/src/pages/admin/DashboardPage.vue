@@ -1,5 +1,5 @@
 <template>
-  <div>
+  <div class="p-0">
     <div class="mb-6">
       <h1 class="text-2xl font-semibold text-gray-900 dark:text-white">Dashboard Overview</h1>
       <p class="mt-1 text-sm text-gray-600 dark:text-gray-300">Get a quick look at your key metrics.</p>
@@ -112,6 +112,3 @@ export default {
 };
 </script>
 
-<style scoped>
-/* No specific styles needed if using Tailwind for everything */
-</style>
