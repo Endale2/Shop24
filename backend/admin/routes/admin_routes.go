@@ -39,6 +39,7 @@ func AdminRoutes(r *gin.Engine) {
 	 	
 	 }
 
+	 
 	// Shops sub-group 
 	 shopGroup := adminGroup.Group("/stores", middlewares.AuthMiddleware() )
 	 {
