@@ -70,10 +70,7 @@
                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
                  {{ p.createdAt ? formatDate(p.createdAt) : '—' }}
                </td>
-               <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                 <router-link :to="`/products/${p.id}/edit`" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300 mr-4">Edit</router-link>
-                 <button @click="deleteProduct(p.id)" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">Delete</button>
-               </td>
+               
              </tr>
            </tbody>
          </table>

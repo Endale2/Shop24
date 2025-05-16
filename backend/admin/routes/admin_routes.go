@@ -7,9 +7,10 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// AdminRoutes groups all admin-related routes under /admin
+
+
 func AdminRoutes(r *gin.Engine) {
-	adminGroup := r.Group("/admin") // General /admin group
+	adminGroup := r.Group("/admin") 
 
 	// Products sub-group
 	productGroup := adminGroup.Group("/products", middlewares.AuthMiddleware() )
