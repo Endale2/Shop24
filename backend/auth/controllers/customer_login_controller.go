@@ -28,3 +28,4 @@ func CustomerLogin(c *gin.Context) {
 		"customer": customerData,
 	})
 }
+
