@@ -255,7 +255,7 @@ export default {
 
        try {
          // Assuming your delete endpoint is DELETE /admin/customers/{id}
-         await axios.delete(`/admin/customers/${this.customer.id}`, { withCredentials: true });
+         await axios.delete(`/admin/customers/delete/${this.customer.id}`, { withCredentials: true });
 
          console.log(`Customer ID ${this.customer.id} deleted.`);
          this.confirmDelete = false; // Close modal
