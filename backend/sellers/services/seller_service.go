@@ -30,6 +30,7 @@ func GetAllSellersService() ([]models.Seller, error) {
 	return repositories.GetAllSellers()
 }
 
+
 // UpdateSellerService updates fields of a seller identified by its hex ID string.
 func UpdateSellerService(idStr string, updatedData bson.M) (*mongo.UpdateResult, error) {
 	id, err := primitive.ObjectIDFromHex(idStr)
