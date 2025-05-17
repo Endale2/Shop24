@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"github.com/Endale2/DRPS/sellers/controllers"
-	"github.com/Endale2/DRPS/auth/middlewares"
+	// "github.com/Endale2/DRPS/sellers/controllers"
+	// "github.com/Endale2/DRPS/auth/middlewares"
 
 	"github.com/gin-gonic/gin"
 )
