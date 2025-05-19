@@ -62,7 +62,7 @@ func AdminRegister(c *gin.Context) {
 
 
 // RefreshToken handles refresh token requests, verifies the refresh token, and issues a new access token.
-func RefreshToken(c *gin.Context) {
+func AdminRefresh(c *gin.Context) {
 	// 1) Read the refresh token cookie
 	refreshToken, err := c.Cookie("refresh_token")
 	if err != nil {
