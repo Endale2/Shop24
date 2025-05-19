@@ -11,7 +11,7 @@ import NotFound from '../pages/NotFound.vue';
 
 // Dashboard layout and its child pages
 import DashboardLayout from '../layouts/DashboardLayout.vue';
-import Sidebar from '../components/Sidebar.vue'; // placeholder, actual child views will go here
+import Sidebar from '@/Sidebar.vue';
 
 const routes = [
   {
