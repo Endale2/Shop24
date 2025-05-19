@@ -4,41 +4,26 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/Endale2/DRPS/auth/models"
-	"github.com/Endale2/DRPS/auth/services"
+	"github.com/Endale2/DRPS/auth/utils"
 	"github.com/gin-gonic/gin"
 )
 
-// SellerLogin handles seller login requests, issues tokens, and sets them as HTTP-only cookies.
-func SellerLogin(c *gin.Context) {
-	var req models.AuthSeller
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	authData, sellerData, err := services.SellerLoginService(&req)
+// SellerRefresh issues a new access token using the refresh_token cookie.
+func SellerRefresh(c *gin.Context) {
+	rt, err := c.Cookie("refresh_token")
 	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Refresh token missing"})
 		return
 	}
 
-	// Set HTTP-only cookies for access and refresh tokens
-	c.SetCookie(
-		"access_token",
-		authData.AccessToken,
-		int((5 * time.Minute).Seconds()), // 5 minutes
-		"/", "", false, true,
-	)
-	c.SetCookie(
-		"refresh_token",
-		authData.RefreshToken,
-		int((7 * 24 * time.Hour).Seconds()), // 7 days
-		"/", "", false, true,
-	)
+	claims, err := utils.ParseToken(rt)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired refresh token"})
+		return
+	}
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Seller logged in successfully",
-		"seller":  sellerData,
-	})
+	// Issue new 5-minute access token
+	at, _ := utils.CreateToken(claims.UserID, 5*time.Minute)
+	c.SetCookie("access_token", at, int((5*time.Minute).Seconds()), "/", "", false, true)
+	c.JSON(http.StatusOK, gin.H{"message": "Access token refreshed"})
 }
