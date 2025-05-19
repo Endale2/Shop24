@@ -11,28 +11,33 @@ import (
 	"github.com/Endale2/DRPS/auth/utils"
 )
 
-// SellerLoginService validates credentials, loads seller details,
-// and issues access & refresh JWTs.
-func SellerLoginService(authSeller *models.AuthSeller) (*models.AuthSeller, *sellerModels.Seller, error) {
-	// 1) Find AuthSeller record
+// SellerLoginService validates login credentials, returns seller data and tokens.
+func SellerLoginService(authSeller *models.AuthSeller) (*sellerModels.Seller, string, string, error) {
+	// Find auth record
 	foundAuth, err := authRepo.FindAuthSellerByEmail(authSeller.Email)
 	if err != nil {
-		return nil, nil, errors.New("seller not found")
+		return nil, "", "", errors.New("seller not found")
 	}
-	// 2) Compare passwords
+
 	if authSeller.Password != foundAuth.Password {
-		return nil, nil, errors.New("password mismatch")
+		return nil, "", "", errors.New("password mismatch")
 	}
-	// 3) Load full Seller record
+
 	sellerData, err := sellerRepo.GetSellerByID(foundAuth.SellerID)
 	if err != nil {
-		return nil, nil, errors.New("seller details not found")
+		return nil, "", "", errors.New("seller details not found")
 	}
-	// 4) Issue tokens via utils
-	access, _ := utils.CreateToken(foundAuth.SellerID.Hex(), 5*time.Minute)
-	refresh, _ := utils.CreateToken(foundAuth.SellerID.Hex(), 7*24*time.Hour)
-	foundAuth.AccessToken = access
-	foundAuth.RefreshToken = refresh
 
-	return foundAuth, sellerData, nil
+	// Generate tokens
+	accessToken, err := utils.CreateToken(foundAuth.SellerID.Hex(), 5*time.Minute)
+	if err != nil {
+		return nil, "", "", errors.New("failed to generate access token")
+	}
+
+	refreshToken, err := utils.CreateToken(foundAuth.SellerID.Hex(), 7*24*time.Hour)
+	if err != nil {
+		return nil, "", "", errors.New("failed to generate refresh token")
+	}
+
+	return sellerData, accessToken, refreshToken, nil
 }

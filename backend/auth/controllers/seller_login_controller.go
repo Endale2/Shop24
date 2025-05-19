@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// SellerLogin handles seller login, issues tokens, and sets HTTP-only cookies.
+// SellerLogin handles seller login and sets HTTP-only cookies for tokens.
 func SellerLogin(c *gin.Context) {
 	var req models.AuthSeller
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -17,26 +17,17 @@ func SellerLogin(c *gin.Context) {
 		return
 	}
 
-	authData, sellerData, err := services.SellerLoginService(&req)
+	sellerData, accessToken, refreshToken, err := services.SellerLoginService(&req)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
 	// Set access token cookie (5 min)
-	c.SetCookie(
-		"access_token",
-		authData.AccessToken,
-		int((5 * time.Minute).Seconds()),
-		"/", "", false, true,
-	)
+	c.SetCookie("access_token", accessToken, int((5 * time.Minute).Seconds()), "/", "", false, true)
+
 	// Set refresh token cookie (7 days)
-	c.SetCookie(
-		"refresh_token",
-		authData.RefreshToken,
-		int((7 * 24 * time.Hour).Seconds()),
-		"/", "", false, true,
-	)
+	c.SetCookie("refresh_token", refreshToken, int((7 * 24 * time.Hour).Seconds()), "/", "", false, true)
 
 	c.JSON(http.StatusOK, gin.H{
 		"message": "Seller logged in successfully",
