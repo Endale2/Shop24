@@ -2,69 +2,75 @@ package services
 
 import (
 	"errors"
+	"time"
 
-	"github.com/Endale2/DRPS/auth/models"
+	authModels "github.com/Endale2/DRPS/auth/models"
 	authRepo "github.com/Endale2/DRPS/auth/repositories"
 	customerModels "github.com/Endale2/DRPS/customers/models"
 	customerRepo "github.com/Endale2/DRPS/customers/repositories"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/Endale2/DRPS/auth/utils"
 )
 
-// CustomerRegisterService registers a new customer by creating both a Customer record (detailed data)
-// and an AuthCustomer record (authentication data), linking them via CustomerID.
-
-func CustomerRegisterService(authCustomer *models.AuthCustomer) error {
-	
-	// Validate required fields.
-	if authCustomer.Email == "" || authCustomer.Password == "" || authCustomer.Username == "" {
-		return errors.New("missing required fields")
+// CustomerRegisterService registers a new customer:
+// 1) Inserts a Customer record.
+// 2) Sets authCustomer.CustomerID to that new ID.
+// 3) Inserts an AuthCustomer record.
+func CustomerRegisterService(authCustomer *authModels.AuthCustomer) error {
+	if authCustomer.Username == "" || authCustomer.Email == "" || authCustomer.Password == "" {
+		return errors.New("username, email and password are required")
 	}
 
-	// Check if an authentication record already exists.
+	// Check for existing auth record
 	if existing, _ := authRepo.FindAuthCustomerByEmail(authCustomer.Email); existing != nil {
 		return errors.New("customer already exists")
 	}
 
-	// Create a new detailed Customer record.
-	newCustomer := &customerModels.Customer{
-		Name:  authCustomer.Username, // Use username as default display name.
-		Email: authCustomer.Email,
-		// Additional fields such as Phone or Address can be added here.
+	// Create detailed Customer record
+	newCust := &customerModels.Customer{
+		Name:    authCustomer.Username,
+		Email:   authCustomer.Email,
+		Phone:   authCustomer.Phone,
+		Address: authCustomer.Address,
 	}
-
-	// Insert the new customer record.
-	res, err := customerRepo.CreateCustomer(newCustomer)
+	res, err := customerRepo.CreateCustomer(newCust)
 	if err != nil {
 		return err
 	}
-	newCustomer.ID = res.InsertedID.(primitive.ObjectID)
+	newCust.ID = res.InsertedID.(primitive.ObjectID)
 
-	// Link the AuthCustomer record to the new Customer.
-	authCustomer.CustomerID = newCustomer.ID
+	// Link AuthCustomer → Customer
+	authCustomer.CustomerID = newCust.ID
 
-	// Create the AuthCustomer record.
+	// Insert AuthCustomer
 	_, err = authRepo.CreateAuthCustomer(authCustomer)
 	return err
 }
 
-// CustomerLoginService validates login credentials and retrieves both authentication data and the detailed Customer record.
-func CustomerLoginService(authCustomer *models.AuthCustomer) (*models.AuthCustomer, *customerModels.Customer, error) {
-	// Look up the AuthCustomer record by email.
+// CustomerLoginService authenticates a customer and issues JWTs.
+// Returns Customer profile, accessToken, refreshToken, error.
+func CustomerLoginService(authCustomer *authModels.AuthCustomer) (*customerModels.Customer, string, string, error) {
+	// 1) Lookup credentials
 	foundAuth, err := authRepo.FindAuthCustomerByEmail(authCustomer.Email)
 	if err != nil {
-		return nil, nil, errors.New("customer not found")
+		return nil, "", "", errors.New("customer not found")
 	}
-
-	// For simplicity, compare passwords directly. In production, use secure hashed comparisons.
+	// 2) Verify password
 	if authCustomer.Password != foundAuth.Password {
-		return nil, nil, errors.New("password mismatch")
+		return nil, "", "", errors.New("invalid credentials")
 	}
-
-	// Retrieve the detailed Customer record using the stored CustomerID.
-	customerData, err := customerRepo.GetCustomerByID(foundAuth.CustomerID)
+	// 3) Load full Customer record
+	custData, err := customerRepo.GetCustomerByID(foundAuth.CustomerID)
 	if err != nil {
-		return nil, nil, errors.New("customer details not found")
+		return nil, "", "", errors.New("failed to load customer data")
 	}
-
-	return foundAuth, customerData, nil
+	// 4) Issue JWTs
+	accessToken, err := utils.CreateToken(foundAuth.CustomerID.Hex(), 5*time.Minute)
+	if err != nil {
+		return nil, "", "", errors.New("failed to generate access token")
+	}
+	refreshToken, err := utils.CreateToken(foundAuth.CustomerID.Hex(), 7*24*time.Hour)
+	if err != nil {
+		return nil, "", "", errors.New("failed to generate refresh token")
+	}
+	return custData, accessToken, refreshToken, nil
 }
