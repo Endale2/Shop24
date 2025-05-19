@@ -9,7 +9,6 @@ import (
 // Seller represents a vendor on the platform
 type Seller struct {
 	ID           primitive.ObjectID   `bson:"_id,omitempty" json:"id"`
-	UserID       primitive.ObjectID   `bson:"user_id,omitempty" json:"user_id"` // Reference to the user account for authentication
 	ShopIDs      []primitive.ObjectID `bson:"shop_ids,omitempty" json:"shop_ids,omitempty"` // List of shops owned by the seller
 	Name         string               `bson:"name" json:"name"`         // Seller's display name
 	Email        string               `bson:"email" json:"email"`       // Contact email
