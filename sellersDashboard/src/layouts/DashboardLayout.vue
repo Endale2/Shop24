@@ -1,34 +1,26 @@
 <template>
-  <div style="display: flex; min-height: 100vh;">
-    <!-- Sidebar -->
-    <aside style="width: 200px; background: #eee; padding: 1rem;">
-      <h3>Shop: {{ activeShop?.name }}</h3>
-      <nav>
-        <ul>
-          <li><router-link to="/app/products">Products</router-link></li>
-          <li><router-link to="/app/orders">Orders</router-link></li>
-          <li><router-link to="/app/customers">Customers</router-link></li>
-          <li><router-link to="/app/discounts">Discounts</router-link></li>
-          <li><router-link to="/app/analytics">Analytics</router-link></li>
-          <li><router-link to="/app/settings">Settings</router-link></li>
-        </ul>
-      </nav>
-    </aside>
+  <div class="flex h-screen">
+    <!-- Sidebar (hidden on small screens) -->
+    <Sidebar />
 
-    <!-- Main Content -->
-    <main style="flex: 1; padding: 2rem;">
-      <router-view />
-    </main>
+    <div class="flex-1 flex flex-col">
+      <!-- Top navbar -->
+      <Navbar />
+
+      <!-- Main content area -->
+      <main class="p-4 bg-gray-50 flex-1 overflow-auto">
+        <router-view />
+      </main>
+    </div>
   </div>
 </template>
 
 <script>
-import { mapState } from 'vuex';
+import Sidebar from '@/components/Sidebar.vue';
+import Navbar from '@/components/Navbar.vue';
 
 export default {
   name: 'DashboardLayout',
-  computed: {
-    ...mapState('shops', ['activeShop'])
-  }
+  components: { Sidebar, Navbar }
 };
 </script>

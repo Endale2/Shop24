@@ -1,41 +1,60 @@
 <template>
-  <div class="container mx-auto py-8 px-4 max-w-md">
-    <h2 class="text-2xl font-bold mb-6 text-center">Create Your Account</h2>
-    <form @submit.prevent="handleRegister" class="bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4">
-      <div class="mb-4">
-        <label class="block text-gray-700 text-sm font-bold mb-2" for="email">
-          Email:
-        </label>
-        <input
-          class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
-          id="email"
-          type="email"
-          v-model="email"
-          required
-        />
-      </div>
-      <div class="mb-6">
-        <label class="block text-gray-700 text-sm font-bold mb-2" for="password">
-          Password:
-        </label>
-        <input
-          class="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 mb-3 leading-tight focus:outline-none focus:shadow-outline"
-          id="password"
-          type="password"
-          v-model="password"
-          required
-        />
+  <div class="min-h-screen flex items-center justify-center bg-gray-100 px-4">
+    <div class="bg-white p-6 rounded shadow-md w-full max-w-md">
+      <h2 class="text-xl font-semibold mb-4 text-center">Create Your Account</h2>
+
+      <form @submit.prevent="handleRegister" class="space-y-4">
+        <!-- Username -->
+        <div>
+          <label class="block text-sm mb-1" for="username">Username</label>
+          <input
+            id="username"
+            v-model="username"
+            required
+            class="w-full px-2 py-1 border rounded text-sm"
+          />
         </div>
-      <div class="flex items-center justify-between">
+
+        <!-- Email -->
+        <div>
+          <label class="block text-sm mb-1" for="email">Email</label>
+          <input
+            id="email"
+            type="email"
+            v-model="email"
+            required
+            class="w-full px-2 py-1 border rounded text-sm"
+          />
+        </div>
+
+        <!-- Password -->
+        <div>
+          <label class="block text-sm mb-1" for="password">Password</label>
+          <input
+            id="password"
+            type="password"
+            v-model="password"
+            required
+            class="w-full px-2 py-1 border rounded text-sm"
+          />
+        </div>
+
+        <!-- Submit -->
         <button
-          class="bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline w-full"
           type="submit"
+          :disabled="loading"
+          class="w-full bg-green-500 text-white py-1 rounded text-sm hover:bg-green-600 disabled:opacity-50"
         >
-          Create Account
+          {{ loading ? 'Creating...' : 'Create Account' }}
         </button>
-      </div>
-    </form>
+
+        <!-- Error -->
+        <p v-if="error" class="text-red-500 text-xs text-center mt-2">
+          {{ error }}
+        </p>
+      </form>
     </div>
+  </div>
 </template>
 
 <script>
@@ -45,24 +64,29 @@ export default {
   name: 'RegisterPage',
   data() {
     return {
+      username: '',
       email: '',
-      password: ''
+      password: '',
+      loading: false,
+      error: null
     };
   },
   methods: {
     ...mapActions('auth', ['register']),
     async handleRegister() {
+      this.loading = true;
+      this.error = null;
       try {
-        await this.register({ email: this.email, password: this.password });
-        // Assuming 'ShopSelector' is the name of the route for selecting a shop
-        this.$router.push({ name: 'ShopSelection' }); // Corrected route name based on previous discussion
+        // your auth service expects { username, email, password }
+        await this.register({ username: this.username, email: this.email, password: this.password });
+        this.$router.push({ name: 'ShopSelection' });
       } catch (err) {
-        alert('Registration failed.'); // Basic error handling
-        console.error('Registration error:', err); // Log error for debugging
+        this.error = err.response?.data?.error || 'Registration failed.';
+        console.error('Registration error:', err);
+      } finally {
+        this.loading = false;
       }
     }
   }
 };
 </script>
-
-

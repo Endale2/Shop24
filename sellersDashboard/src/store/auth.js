@@ -1,37 +1,51 @@
-// store/modules/auth.js
+// src/store/modules/auth.js
 import authService from '@/services/auth';
+
+const state = () => ({
+  user: null
+});
+
+const getters = {
+  isAuthenticated: (s) => !!s.user,
+  user: (s) => s.user
+};
+
+const actions = {
+  // ← Add this!
+  async register({ dispatch }, { username, email, password }) {
+    // call your real backend:
+    await authService.register({ username, email, password });
+    // once registered, fetch the profile into the store
+    return dispatch('fetchMe');
+  },
+
+  async login({ dispatch }, { email, password }) {
+    await authService.login({ email, password });
+    return dispatch('fetchMe');
+  },
+
+  async fetchMe({ commit }) {
+    const user = await authService.me();
+    commit('setUser', user);
+    return user;
+  },
+
+  async logout({ commit }) {
+    await authService.logout();
+    commit('setUser', null);
+  }
+};
+
+const mutations = {
+  setUser(state, u) {
+    state.user = u;
+  }
+};
 
 export default {
   namespaced: true,
-  state: { user: null },
-  getters: {
-    isAuthenticated: (s) => !!s.user,
-    user: (s) => s.user,
-  },
-  actions: {
-    async register({ dispatch }, creds) {
-      const data = await authService.register(creds);
-      // After register, fetch profile
-      await dispatch('fetchMe');
-      return data;
-    },
-    async login({ dispatch }, creds) {
-      await authService.login(creds);
-      return dispatch('fetchMe');
-    },
-    async logout({ commit }) {
-      await authService.logout();
-      commit('setUser', null);
-    },
-    async fetchMe({ commit }) {
-      const user = await authService.me();
-      commit('setUser', user);
-      return user;
-    },
-  },
-  mutations: {
-    setUser(state, user) {
-      state.user = user;
-    },
-  },
+  state,
+  getters,
+  actions,
+  mutations
 };
