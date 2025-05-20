@@ -1,26 +1,14 @@
 <template>
-  <div class="flex h-screen">
-    <!-- Sidebar (hidden on small screens) -->
+  <div class="flex">
     <Sidebar />
-
-    <div class="flex-1 flex flex-col">
-      <!-- Top navbar -->
+    <div class="flex-1">
       <Navbar />
-
-      <!-- Main content area -->
-      <main class="p-4 bg-gray-50 flex-1 overflow-auto">
-        <router-view />
-      </main>
+      <main class="p-4"><router-view/></main>
     </div>
   </div>
 </template>
-
 <script>
 import Sidebar from '@/components/Sidebar.vue';
-import Navbar from '@/components/Navbar.vue';
-
-export default {
-  name: 'DashboardLayout',
-  components: { Sidebar, Navbar }
-};
+import Navbar  from '@/components/Navbar.vue';
+export default { components: { Sidebar, Navbar } };
 </script>
