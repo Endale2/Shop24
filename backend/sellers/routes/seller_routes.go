@@ -1,34 +1,36 @@
 package routes
 
 import (
-	 "github.com/Endale2/DRPS/sellers/controllers"
 	"github.com/Endale2/DRPS/auth/middlewares"
-
+	"github.com/Endale2/DRPS/sellers/controllers"
 	"github.com/gin-gonic/gin"
 )
 
+func SellerRoute(r *gin.Engine) {
+	// 1) Root seller group, with auth
+	sellerGroup := r.Group("/seller")
+	sellerGroup.Use(middlewares.AuthMiddleware())
 
-func  SellerRoute(r  *gin.Engine){
-   sellerGroup:=r.Group("/seller", middlewares.AuthMiddleware())
+	// 2) /seller/shops  — list & create
+	sellerGroup.POST("/shops", controllers.CreateShop)
+	sellerGroup.GET( "/shops", controllers.GetShops)
 
-   shops := sellerGroup.Group("/shops")
-{
-  shops.POST(   "/",            controllers.CreateShop)
-  shops.GET(    "/",            controllers.GetShops)
-  shops.GET(    "/:id",         controllers.GetShop)
-  shops.PATCH(  "/:id",         controllers.UpdateShop)
-  shops.DELETE( "/:id",         controllers.DeleteShop)
+	// 3) /seller/shops/:shopId
+	shopGroup := sellerGroup.Group("/shops/:shopId")
+	{
+		// shop CRUD
+		shopGroup.GET(   "",               controllers.GetShop)
+		shopGroup.PATCH( "",               controllers.UpdateShop)
+		shopGroup.DELETE("",               controllers.DeleteShop)
 
-  prods := shops.Group("/:shopId/products")
-  {
-    prods.POST(   "/",            controllers.CreateProduct)
-    prods.GET(    "/",            controllers.GetProducts)
-    prods.GET(    "/:id",         controllers.GetProduct)
-    prods.PATCH(  "/:id",         controllers.UpdateProduct)
-    prods.DELETE( "/:id",         controllers.DeleteProduct)
-  }
+		// products routes  under  the specific shop
+		prodGroup := shopGroup.Group("/products")
+		{
+			prodGroup.POST(   "",                 controllers.CreateProduct)
+			prodGroup.GET(    "",                 controllers.GetProducts)
+			prodGroup.GET(    "/:productId",      controllers.GetProduct)
+			prodGroup.PATCH(  "/:productId",      controllers.UpdateProduct)
+			prodGroup.DELETE("/:productId",      controllers.DeleteProduct)
+		}
+	}
 }
-
-
-}
-

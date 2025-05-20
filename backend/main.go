@@ -13,6 +13,7 @@ import (
 	"github.com/Endale2/DRPS/config"
 	authRoutes "github.com/Endale2/DRPS/auth/routes"
 	adminRoutes "github.com/Endale2/DRPS/admin/routes"
+	sellerRoutes "github.com/Endale2/DRPS/sellers/routes"
 )
 
 func main() {
@@ -47,6 +48,7 @@ func main() {
 	// Routes
 	authRoutes.AuthRoutes(r)
 	adminRoutes.AdminRoutes(r)
+	sellerRoutes.SellerRoute(r)
 
 	// Test route
 	r.GET("/", func(c *gin.Context) {
