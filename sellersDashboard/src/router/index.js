@@ -1,17 +1,15 @@
-// src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router';
 import store from '../store';
 
-// Page components
+// Pages
 import LandingPage from '../pages/LandingPage.vue';
 import RegisterPage from '../pages/RegisterPage.vue';
 import LoginPage from '../pages/LoginPage.vue';
 import ShopSelectionPage from '../pages/ShopSelectionPage.vue';
 import NotFound from '../pages/NotFound.vue';
 
-// Dashboard layout and its child pages
+// Dashboard
 import DashboardLayout from '../layouts/DashboardLayout.vue';
-import Sidebar from '@/Sidebar.vue';
 
 const routes = [
   {
@@ -50,34 +48,14 @@ const routes = [
       {
         path: 'products',
         name: 'Products',
-        // component: ProductsPage
         component: () => import('../pages/ProductsPage.vue')
       },
-    //   {
-    //     path: 'orders',
-    //     name: 'Orders',
-    //     component: () => import('../views/OrdersPage.vue')
-    //   },
-    //   {
-    //     path: 'customers',
-    //     name: 'Customers',
-    //     component: () => import('../views/CustomersPage.vue')
-    //   },
-    //   {
-    //     path: 'discounts',
-    //     name: 'Discounts',
-    //     component: () => import('../views/DiscountsPage.vue')
-    //   },
-    //   {
-    //     path: 'analytics',
-    //     name: 'Analytics',
-    //     component: () => import('../views/AnalyticsPage.vue')
-    //   },
-    //   {
-    //     path: 'settings',
-    //     name: 'Settings',
-    //     component: () => import('../views/SettingsPage.vue')
-    //   }
+      // Future routes can be uncommented when needed
+      // {
+      //   path: 'orders',
+      //   name: 'Orders',
+      //   component: () => import('../pages/OrdersPage.vue')
+      // },
     ]
   },
   {
@@ -92,27 +70,22 @@ const router = createRouter({
   routes
 });
 
-// Global navigation guard
-router.beforeEach((to, from, next) => {
+// Global auth/shop guard
+router.beforeEach(async (to, from, next) => {
   const isAuthenticated = store.getters['auth/isAuthenticated'];
   const activeShop = store.getters['shops/activeShop'];
 
-  // Redirect unauthenticated users away from protected routes
+  // If route requires auth and user is not logged in
   if (to.meta.requiresAuth && !isAuthenticated) {
     return next({ name: 'Login' });
   }
 
-  // After login/registration, prevent access to auth pages
+  // If already logged in, prevent navigating to auth pages
   if (!to.meta.requiresAuth && isAuthenticated) {
-    // If user has an active shop, send to dashboard
-    if (activeShop) {
-      return next({ name: 'Products' });
-    }
-    // Otherwise send to shop selection
-    return next({ name: 'ShopSelection' });
+    return next(activeShop ? { name: 'Products' } : { name: 'ShopSelection' });
   }
 
-  // Ensure a shop is selected for routes that require one
+  // If route requires a shop and none is selected
   if (to.meta.requiresShop && !activeShop) {
     return next({ name: 'ShopSelection' });
   }

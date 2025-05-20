@@ -1,49 +1,37 @@
-// src/store/auth.js
-import authService from '../services/auth';
-
-const state = () => ({
-  token: localStorage.getItem('token') || null,
-  user: JSON.parse(localStorage.getItem('user')) || null
-});
-
-const getters = {
-  isAuthenticated: (state) => !!state.token,
-  currentUser: (state) => state.user
-};
-
-const mutations = {
-  setAuth(state, { token, user }) {
-    state.token = token;
-    state.user = user;
-    localStorage.setItem('token', token);
-    localStorage.setItem('user', JSON.stringify(user));
-  },
-  clearAuth(state) {
-    state.token = null;
-    state.user = null;
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-  }
-};
-
-const actions = {
-  async login({ commit }, credentials) {
-    const response = await authService.login(credentials);
-    commit('setAuth', { token: response.token, user: response.user });
-  },
-  async register({ commit }, data) {
-    const response = await authService.register(data);
-    commit('setAuth', { token: response.token, user: response.user });
-  },
-  logout({ commit }) {
-    commit('clearAuth');
-  }
-};
+// store/modules/auth.js
+import authService from '@/services/auth';
 
 export default {
   namespaced: true,
-  state,
-  getters,
-  mutations,
-  actions
+  state: { user: null },
+  getters: {
+    isAuthenticated: (s) => !!s.user,
+    user: (s) => s.user,
+  },
+  actions: {
+    async register({ dispatch }, creds) {
+      const data = await authService.register(creds);
+      // After register, fetch profile
+      await dispatch('fetchMe');
+      return data;
+    },
+    async login({ dispatch }, creds) {
+      await authService.login(creds);
+      return dispatch('fetchMe');
+    },
+    async logout({ commit }) {
+      await authService.logout();
+      commit('setUser', null);
+    },
+    async fetchMe({ commit }) {
+      const user = await authService.me();
+      commit('setUser', user);
+      return user;
+    },
+  },
+  mutations: {
+    setUser(state, user) {
+      state.user = user;
+    },
+  },
 };

@@ -1,32 +1,39 @@
 // src/services/shop.js
-
-let dummyShops = {
-  'user_123': [
-    { id: 'shop_1', name: 'My First Shop' },
-    { id: 'shop_2', name: 'My Second Shop' }
-  ]
-};
+import api from './api';
 
 export default {
-  async fetchShops(userId) {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    return dummyShops[userId] || [];
+  // GET /seller/shops
+  async fetchShops() {
+    const res = await api.get('/seller/shops');
+    return res.data; // [ { id, name, ownerId, … }, … ]
   },
 
-  async createShop(userId, shopData) {
-    const newShop = {
-      id: `shop_${Date.now()}`,
-      name: shopData.name
-    };
+  // POST /seller/shops
+  async createShop({ name, description }) {
+    const res = await api.post('/seller/shops', { name, description });
+    return res.data; // InsertOneResult
+  },
 
-    if (!dummyShops[userId]) {
-      dummyShops[userId] = [];
-    }
-    dummyShops[userId].push(newShop);
+  // Optionally, select a shop in your Vuex store
+  selectShop(shop) {
+    // dispatch to shops module: e.g. store.commit('shops/setActiveShop', shop)
+  },
 
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 300));
-    return newShop;
-  }
+  // GET a single shop
+  async getShop(shopId) {
+    const res = await api.get(`/seller/shops/${shopId}`);
+    return res.data;
+  },
+
+  // PATCH update shop
+  async updateShop(shopId, updates) {
+    const res = await api.patch(`/seller/shops/${shopId}`, updates);
+    return res.data;
+  },
+
+  // DELETE shop
+  async deleteShop(shopId) {
+    const res = await api.delete(`/seller/shops/${shopId}`);
+    return res.data;
+  },
 };
