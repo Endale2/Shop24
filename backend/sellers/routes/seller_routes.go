@@ -23,7 +23,7 @@ func SellerRoute(r *gin.Engine) {
 		shopGroup.PATCH( "",               controllers.UpdateShop)
 		shopGroup.DELETE("",               controllers.DeleteShop)
 
-		// products routes  under  the specific shop
+		// nested products under that shop
 		prodGroup := shopGroup.Group("/products")
 		{
 			prodGroup.POST(   "",                 controllers.CreateProduct)

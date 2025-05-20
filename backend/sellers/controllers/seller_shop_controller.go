@@ -59,30 +59,39 @@ func GetShops(c *gin.Context) {
 }
 
 // GetShop returns one shop if owned by the seller.
-// GET /seller/shops/:id
+// GET /seller/shops/:shopId
 func GetShop(c *gin.Context) {
-	sellerHex, _ := c.Get("user_id")
-	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
+    sellerHex, _ := c.Get("user_id")
+    sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
 
-	shopID := c.Param("id")
-	shop, err := shopService.GetShopByIDService(shopID)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "shop not found"})
-		return
-	}
-	if shop.OwnerID != sellerID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "not your shop"})
-		return
-	}
-	c.JSON(http.StatusOK, shop)
+    // use lowercase "shopId" exactly as in your route
+    shopID := c.Param("shopId")
+    if shopID == "" {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "shopId is required"})
+        return
+    }
+
+    shop, err := shopService.GetShopByIDService(shopID)
+    if err != nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "shop not found"})
+        return
+    }
+
+    if shop.OwnerID != sellerID {
+        c.JSON(http.StatusForbidden, gin.H{"error": "not your shop"})
+        return
+    }
+
+    c.JSON(http.StatusOK, shop)
 }
 
+
 // UpdateShop allows a seller to update their own shop.
-// PATCH /seller/shops/:id
+// PATCH /seller/shops/:shopId
 func UpdateShop(c *gin.Context) {
 	sellerHex, _ := c.Get("user_id")
 	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
-	shopID := c.Param("id")
+	shopID := c.Param("shopId")
 
 	shop, err := shopService.GetShopByIDService(shopID)
 	if err != nil || shop.OwnerID != sellerID {
@@ -109,7 +118,7 @@ func UpdateShop(c *gin.Context) {
 func DeleteShop(c *gin.Context) {
 	sellerHex, _ := c.Get("user_id")
 	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
-	shopID := c.Param("id")
+	shopID := c.Param("shopId")
 
 	shop, err := shopService.GetShopByIDService(shopID)
 	if err != nil || shop.OwnerID != sellerID {
