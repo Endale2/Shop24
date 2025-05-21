@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var productCollection *mongo.Collection = config.GetCollection("yourDatabaseName", "products")
+var productCollection *mongo.Collection = config.GetCollection("DRPS", "products")
 
 // CreateProduct inserts a new product into the collection.
 func CreateProduct(product *models.Product) (*mongo.InsertOneResult, error) {

@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-var customerCollection *mongo.Collection = config.GetCollection("your_database", "customers")
+var customerCollection *mongo.Collection = config.GetCollection("DRPS", "customers")
 
 // CreateCustomer inserts a new Customer document.
 func CreateCustomer(customer *models.Customer) (*mongo.InsertOneResult, error) {

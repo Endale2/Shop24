@@ -12,7 +12,7 @@ import (
     "go.mongodb.org/mongo-driver/mongo"
 )
 
-var shopCustomerColl *mongo.Collection = config.GetCollection("yourDatabaseName", "shop_customers")
+var shopCustomerColl *mongo.Collection = config.GetCollection("DRPS", "shop_customers")
 
 // CreateLink adds a Customer to a Shop.
 func CreateShopCustomerLink(link *models.ShopCustomer) (*mongo.InsertOneResult, error) {

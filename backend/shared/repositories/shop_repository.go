@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var shopCollection *mongo.Collection = config.GetCollection("yourDatabaseName", "shops")
+var shopCollection *mongo.Collection = config.GetCollection("DRPS", "shops")
 
 // Createshop inserts a new shop into the collection.
 func CreateShop(shop *models.Shop) (*mongo.InsertOneResult, error) {

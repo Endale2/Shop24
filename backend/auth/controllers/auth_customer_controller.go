@@ -18,8 +18,7 @@ import (
 
 
 
-// CustomerLogin logs in a customer, sets JWT cookies,
-// and optionally links them into a shop (shopId in body).
+/// and optionally links them into a shop (shopId in body).
 func CustomerLogin(c *gin.Context) {
     var req struct {
         models.AuthCustomer
@@ -51,7 +50,6 @@ func CustomerLogin(c *gin.Context) {
 
     c.JSON(http.StatusOK, gin.H{"message": "Logged in", "customer": custData})
 }
-
 // CustomerRegister registers & logs in the customer, sets cookies,
 // and auto-links them into the provided shop.
 func CustomerRegister(c *gin.Context) {

@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var authAdminCollection *mongo.Collection = config.GetCollection("your_database", "authadmins")
+var authAdminCollection *mongo.Collection = config.GetCollection("DRPS", "authadmins")
 
 // CreateAuthAdmin inserts a new AuthAdmin document.
 func CreateAuthAdmin(authAdmin *models.AuthAdmin) (*mongo.InsertOneResult, error) {

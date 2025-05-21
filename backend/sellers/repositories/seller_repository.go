@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var sellerCollection *mongo.Collection = config.GetCollection("your_database", "sellers")
+var sellerCollection *mongo.Collection = config.GetCollection("DRPS", "sellers")
 
 // CreateSeller inserts a new Seller document and sets timestamps.
 func CreateSeller(seller *models.Seller) (*mongo.InsertOneResult, error) {

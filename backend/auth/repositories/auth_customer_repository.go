@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var authCustomerCollection *mongo.Collection = config.GetCollection("your_database", "authcustomers")
+var authCustomerCollection *mongo.Collection = config.GetCollection("DRPS", "authcustomers")
 
 // CreateAuthCustomer inserts a new AuthCustomer document.
 func CreateAuthCustomer(authCustomer *models.AuthCustomer) (*mongo.InsertOneResult, error) {

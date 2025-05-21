@@ -10,7 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-var adminCollection *mongo.Collection = config.GetCollection("my_DRPS_database", "admins")
+var adminCollection *mongo.Collection = config.GetCollection("DRPS", "admins")
 
 // CreateAdmin inserts a new Admin document.
 func CreateAdmin(admin *models.Admin) (*mongo.InsertOneResult, error) {

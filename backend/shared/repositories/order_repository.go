@@ -13,7 +13,7 @@ import (
 )
 
 // orderCollection is the MongoDB collection for orders.
-var orderCollection *mongo.Collection = config.GetCollection("yourDatabaseName", "orders")
+var orderCollection *mongo.Collection = config.GetCollection("DRPS", "orders")
 
 // CreateOrder inserts a new order into the collection.
 func CreateOrder(order *models.Order) (*mongo.InsertOneResult, error) {

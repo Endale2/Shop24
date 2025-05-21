@@ -9,7 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var authSellerCollection *mongo.Collection = config.GetCollection("your_database", "authsellers")
+var authSellerCollection *mongo.Collection = config.GetCollection("DRPS", "authsellers")
 
 // CreateAuthSeller inserts a new AuthSeller document.
 func CreateAuthSeller(authSeller *models.AuthSeller) (*mongo.InsertOneResult, error) {

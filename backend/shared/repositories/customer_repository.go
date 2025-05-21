@@ -12,7 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var customerCollection *mongo.Collection = config.GetCollection("yourDatabaseName", "customers")
+var customerCollection *mongo.Collection = config.GetCollection("DRPS", "customers")
 
 // CreateCustomer inserts a new customer into the collection.
 func CreateCustomer(customer *custModel.Customer) (*mongo.InsertOneResult, error) {
