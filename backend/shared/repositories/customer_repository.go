@@ -5,7 +5,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/Endale2/DRPS/shared/models"
+	custModel "github.com/Endale2/DRPS/customers/models"
 	"github.com/Endale2/DRPS/config"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -15,7 +15,7 @@ import (
 var customerCollection *mongo.Collection = config.GetCollection("yourDatabaseName", "customers")
 
 // CreateCustomer inserts a new customer into the collection.
-func CreateCustomer(customer *models.Customer) (*mongo.InsertOneResult, error) {
+func CreateCustomer(customer *custModel.Customer) (*mongo.InsertOneResult, error) {
 	customer.ID = primitive.NewObjectID()
 	customer.CreatedAt = time.Now()
 	customer.UpdatedAt = time.Now()
@@ -24,13 +24,13 @@ func CreateCustomer(customer *models.Customer) (*mongo.InsertOneResult, error) {
 }
 
 // GetCustomerByID retrieves a customer by its ID.
-func GetCustomerByID(id string) (*models.Customer, error) {
+func GetCustomerByID(id string) (*custModel.Customer, error) {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, errors.New("invalid customer ID")
 	}
 
-	var customer models.Customer
+	var customer custModel.Customer
 	err = customerCollection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&customer)
 	if err != nil {
 		return nil, err
@@ -39,16 +39,16 @@ func GetCustomerByID(id string) (*models.Customer, error) {
 }
 
 // GetAllCustomers returns all customers in the collection.
-func GetAllCustomers() ([]models.Customer, error) {
+func GetAllCustomers() ([]custModel.Customer, error) {
 	cursor, err := customerCollection.Find(context.Background(), bson.M{})
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(context.Background())
 
-	var customers []models.Customer
+	var customers []custModel.Customer
 	for cursor.Next(context.Background()) {
-		var customer models.Customer
+		var customer custModel.Customer
 		if err := cursor.Decode(&customer); err != nil {
 			return nil, err
 		}

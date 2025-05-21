@@ -29,7 +29,7 @@ func CustomerRegisterService(authCustomer *authModels.AuthCustomer) error {
 
 	// 3) Create detailed Customer record (no Phone/Address on AuthCustomer)
 	newCust := &customerModels.Customer{
-		Name:  authCustomer.Username,
+		UserName:  authCustomer.Username,
 		Email: authCustomer.Email,
 		// if you want to capture phone/address, add those fields to AuthCustomer model
 	}

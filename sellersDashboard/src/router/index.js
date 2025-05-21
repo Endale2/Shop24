@@ -50,6 +50,12 @@ const routes = [
         name: 'Products',
         component: () => import('../pages/products/ProductsPage.vue')
       },
+      {
+  path: 'customers',
+  name: 'Customers',
+  component: () => import('../pages/customers/CustomersPage.vue')
+}
+
       // Future routes can be uncommented when needed
       // {
       //   path: 'orders',

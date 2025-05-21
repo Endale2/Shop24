@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"github.com/Endale2/DRPS/shared/models"
+	"github.com/Endale2/DRPS/customers/models"
 	"github.com/Endale2/DRPS/shared/services"
 	"go.mongodb.org/mongo-driver/bson"
 )
