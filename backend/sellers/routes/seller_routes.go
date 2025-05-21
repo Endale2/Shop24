@@ -33,14 +33,12 @@ func SellerRoute(r *gin.Engine) {
 			prodGroup.DELETE("/:productId", controllers.DeleteProduct)
 		}
 
-		// in sellers/routes/seller_routes.go
 		custGroup := shopGroup.Group("/customers")
 		{
-			custGroup.POST("", controllers.CreateCustomer)
-			custGroup.GET("", controllers.GetCustomers)
-			custGroup.GET("/:custId", controllers.GetCustomer)
-			custGroup.PATCH("/:custId", controllers.UpdateCustomer)
-			custGroup.DELETE("/:custId", controllers.DeleteCustomer)
+			custGroup.POST("/link", controllers.LinkCustomer)
+			custGroup.GET("", controllers.GetLinkedCustomers)
+			custGroup.GET("/:customerId",     controllers.GetCustomerDetail)
+			custGroup.DELETE("/remove-from-shop/:linkId", controllers.UnlinkCustomer)
 		}
 
 	}

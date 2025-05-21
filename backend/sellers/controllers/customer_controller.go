@@ -1,160 +1,148 @@
-// File: sellers/controllers/seller_customer_controller.go
 package controllers
 
 import (
     "net/http"
 
-    "github.com/Endale2/DRPS/shared/models"
-    customerService "github.com/Endale2/DRPS/shared/services"
-    shopService     "github.com/Endale2/DRPS/shared/services"
+    scService "github.com/Endale2/DRPS/shared/services"
     "github.com/gin-gonic/gin"
-    "go.mongodb.org/mongo-driver/bson"
     "go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// CreateCustomer creates a new customer under the seller’s shop.
-// POST /seller/shops/:shopId/customers
-func CreateCustomer(c *gin.Context) {
-    // 1) Authenticate seller
+// Add an existing customer to the shop (by customer ID).
+// POST /seller/shops/:shopId/customers/link
+func LinkCustomer(c *gin.Context) {
     sellerHex, _ := c.Get("user_id")
     sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
 
-    // 2) Verify shop ownership
-    shopID := c.Param("shopId")
-    shop, err := shopService.GetShopByIDService(shopID)
+    shopIDhex := c.Param("shopId")
+    shop, err := scService.GetShopByIDService(shopIDhex)
     if err != nil || shop.OwnerID != sellerID {
-        c.JSON(http.StatusForbidden, gin.H{"error": "not authorized for this shop"})
+        c.JSON(http.StatusForbidden, gin.H{"error": "not your shop"})
         return
     }
 
-    // 3) Bind JSON
-    var cust models.Customer
-    if err := c.ShouldBindJSON(&cust); err != nil {
+    // payload: { "customerId": "<hex>" }
+    var body struct{ CustomerID string }
+    if err := c.ShouldBindJSON(&body); err != nil {
         c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
         return
     }
-
-    // 4) Stamp the ShopID
-    cust.ShopID = shop.ID
-
-    // 5) Create
-    res, err := customerService.CreateCustomerService(&cust)
+    custID, err := primitive.ObjectIDFromHex(body.CustomerID)
     if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "creation failed"})
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid customer ID"})
         return
     }
-    c.JSON(http.StatusOK, res)
+
+    linkID, err := scService.LinkCustomerToShop(shop.ID, custID)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "could not link"})
+        return
+    }
+    c.JSON(http.StatusOK, gin.H{"linkId": linkID.Hex()})
 }
 
-// GetCustomers lists only this shop’s customers.
+// List only the customers linked to this shop.
 // GET /seller/shops/:shopId/customers
-func GetCustomers(c *gin.Context) {
+func GetLinkedCustomers(c *gin.Context) {
     sellerHex, _ := c.Get("user_id")
     sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
 
-    shopID := c.Param("shopId")
-    shop, err := shopService.GetShopByIDService(shopID)
+    shopIDhex := c.Param("shopId")
+    shop, err := scService.GetShopByIDService(shopIDhex)
     if err != nil || shop.OwnerID != sellerID {
-        c.JSON(http.StatusForbidden, gin.H{"error": "not authorized for this shop"})
+        c.JSON(http.StatusForbidden, gin.H{"error": "not your shop"})
         return
     }
 
-    // fetch with filter
-    filter := bson.M{ "shopId": shop.ID }
-    list, err := customerService.GetAllCustomersServiceWithFilter(filter)
+    links, err := scService.GetCustomerLinksForShop(shop.ID)
     if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "fetch failed"})
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "could not fetch links"})
         return
     }
-    c.JSON(http.StatusOK, list)
+
+    // collect actual Customer records
+    var result []interface{}
+    for _, link := range links {
+        cust, err := scService.GetCustomerByIDService(link.CustomerID.Hex())
+        if err == nil {
+            // optionally add the link ID so you can unlink later:
+            result = append(result, gin.H{
+                "linkId":   link.ID.Hex(),
+                "customer": cust,
+            })
+        }
+    }
+    c.JSON(http.StatusOK, result)
 }
 
-// GetCustomer retrieves one customer under this shop.
-// GET /seller/shops/:shopId/customers/:custId
-func GetCustomer(c *gin.Context) {
+// Unlink (remove) a customer from this shop.
+// DELETE /seller/shops/:shopId/customers/link/:linkId
+func UnlinkCustomer(c *gin.Context) {
     sellerHex, _ := c.Get("user_id")
     sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
 
-    shopID := c.Param("shopId")
-    shop, err := shopService.GetShopByIDService(shopID)
+    shopIDhex := c.Param("shopId")
+    shop, err := scService.GetShopByIDService(shopIDhex)
     if err != nil || shop.OwnerID != sellerID {
-        c.JSON(http.StatusForbidden, gin.H{"error": "not authorized for this shop"})
+        c.JSON(http.StatusForbidden, gin.H{"error": "not your shop"})
         return
     }
 
-    custID := c.Param("custId")
-    cust, err := customerService.GetCustomerByIDService(custID)
+    linkIDhex := c.Param("linkId")
+    linkID, err := primitive.ObjectIDFromHex(linkIDhex)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid link ID"})
+        return
+    }
+
+    if err := scService.UnlinkCustomerFromShop(linkID); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "could not unlink"})
+        return
+    }
+    c.JSON(http.StatusOK, gin.H{"message": "customer removed from shop"})
+}
+
+
+// Get one customer’s details by real customer ID,
+// but only if linked to this shop.
+// GET /seller/shops/:shopId/customers/:customerId
+func GetCustomerDetail(c *gin.Context) {
+    // 1) Auth & ownership
+    userHex, _ := c.Get("user_id")
+    sellerID, _ := primitive.ObjectIDFromHex(userHex.(string))
+
+    shopIDhex := c.Param("shopId")
+    shop, err := scService.GetShopByIDService(shopIDhex)
+    if err != nil || shop.OwnerID != sellerID {
+        c.JSON(http.StatusForbidden, gin.H{"error": "not your shop"})
+        return
+    }
+
+    // 2) parse customerId
+    custHex := c.Param("customerId")
+    custID, err := primitive.ObjectIDFromHex(custHex)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid customer ID"})
+        return
+    }
+
+    // 3) check linkage
+    linked, err := scService.IsCustomerLinked(shop.ID, custID)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "could not verify linkage"})
+        return
+    }
+    if !linked {
+        c.JSON(http.StatusForbidden, gin.H{"error": "customer not in this shop"})
+        return
+    }
+
+    // 4) fetch real customer record
+    cust, err := scService.GetCustomerByIDService(custHex)
     if err != nil {
         c.JSON(http.StatusNotFound, gin.H{"error": "customer not found"})
         return
     }
-    if cust.ShopID != shop.ID {
-        c.JSON(http.StatusForbidden, gin.H{"error": "not your customer"})
-        return
-    }
+
     c.JSON(http.StatusOK, cust)
-}
-
-// UpdateCustomer updates a customer under this shop.
-// PATCH /seller/shops/:shopId/customers/:custId
-func UpdateCustomer(c *gin.Context) {
-    sellerHex, _ := c.Get("user_id")
-    sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
-
-    shopID := c.Param("shopId")
-    shop, err := shopService.GetShopByIDService(shopID)
-    if err != nil || shop.OwnerID != sellerID {
-        c.JSON(http.StatusForbidden, gin.H{"error": "not authorized for this shop"})
-        return
-    }
-
-    custID := c.Param("custId")
-    cust, err := customerService.GetCustomerByIDService(custID)
-    if err != nil || cust.ShopID != shop.ID {
-        c.JSON(http.StatusForbidden, gin.H{"error": "not your customer"})
-        return
-    }
-
-    var updates bson.M
-    if err := c.ShouldBindJSON(&updates); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
-        return
-    }
-    // Prevent ShopID reassignment:
-    delete(updates, "shopId")
-
-    res, err := customerService.UpdateCustomerService(custID, updates)
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "update failed"})
-        return
-    }
-    c.JSON(http.StatusOK, res)
-}
-
-// DeleteCustomer removes a customer under this shop.
-// DELETE /seller/shops/:shopId/customers/:custId
-func DeleteCustomer(c *gin.Context) {
-    sellerHex, _ := c.Get("user_id")
-    sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
-
-    shopID := c.Param("shopId")
-    shop, err := shopService.GetShopByIDService(shopID)
-    if err != nil || shop.OwnerID != sellerID {
-        c.JSON(http.StatusForbidden, gin.H{"error": "not authorized for this shop"})
-        return
-    }
-
-    custID := c.Param("custId")
-    cust, err := customerService.GetCustomerByIDService(custID)
-    if err != nil || cust.ShopID != shop.ID {
-        c.JSON(http.StatusForbidden, gin.H{"error": "not your customer"})
-        return
-    }
-
-    res, err := customerService.DeleteCustomerService(custID)
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "delete failed"})
-        return
-    }
-    c.JSON(http.StatusOK, res)
 }
