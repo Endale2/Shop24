@@ -2,7 +2,7 @@
   <aside class="w-64 bg-white border-r border-gray-200 h-screen hidden md:flex flex-col shadow-sm">
     <div class="px-4 py-6 flex items-center space-x-2 border-b border-gray-200">
       <ShopIcon class="h-7 w-7 text-green-600" />
-      <span class="text-2xl font-bold text-gray-800">My Store</span>
+      <span class="text-2xl font-bold text-gray-800">{{ activeShop.name }}</span>
     </div>
 
     <nav class="flex-1 px-2 py-4 space-y-1 overflow-y-auto">
@@ -35,9 +35,14 @@ import {
   GlobeAltIcon,
   ShoppingBagIcon as ShopIcon
 } from '@heroicons/vue/outline';
+import { mapGetters, mapActions } from 'vuex';
 
 export default {
   name: 'Sidebar',
+  computed: {
+    ...mapGetters('auth', ['user']),
+    ...mapGetters('shops', ['activeShop'])
+  },
   components: {
     SidebarLink,
     HomeIcon,

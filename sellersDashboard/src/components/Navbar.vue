@@ -1,16 +1,13 @@
 <template>
   <header class="bg-white shadow p-4 flex justify-between items-center border-b border-gray-200">
     <div class="flex items-center">
-      <h1 class="text-2xl font-bold tracking-tight text-green-700">Dashboard</h1>
+      
       <div class="text-sm text-gray-600 ml-6 flex items-center space-x-4">
         <span v-if="user" class="flex items-center">
           <svg class="w-4 h-4 mr-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>
           User: {{ user.id }}
         </span>
-        <span v-if="activeShop" class="flex items-center">
-          <svg class="w-4 h-4 mr-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 110-6 3 3 0 010 6z"></path></svg>
-          Shop: {{ activeShop.name }}
-        </span>
+        
       </div>
     </div>
     <div class="flex items-center space-x-6">
