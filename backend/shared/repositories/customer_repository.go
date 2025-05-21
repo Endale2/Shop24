@@ -82,3 +82,23 @@ func DeleteCustomer(id string) (*mongo.DeleteResult, error) {
 
 	return customerCollection.DeleteOne(context.Background(), bson.M{"_id": objID})
 }
+
+
+// GetCustomersWithFilter returns customers matching a filter (e.g. shopId).
+func GetCustomersWithFilter(filter bson.M) ([]models.Customer, error) {
+    cursor, err := customerCollection.Find(context.Background(), filter)
+    if err != nil {
+        return nil, err
+    }
+    defer cursor.Close(context.Background())
+
+    var list []models.Customer
+    for cursor.Next(context.Background()) {
+        var c models.Customer
+        if err := cursor.Decode(&c); err != nil {
+            return nil, err
+        }
+        list = append(list, c)
+    }
+    return list, nil
+}

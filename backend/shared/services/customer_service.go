@@ -33,3 +33,8 @@ func UpdateCustomerService(id string, updatedData bson.M) (*mongo.UpdateResult, 
 func DeleteCustomerService(id string) (*mongo.DeleteResult, error) {
 	return repositories.DeleteCustomer(id)
 }
+
+// GetAllCustomersServiceWithFilter returns customers matching filter.
+func GetAllCustomersServiceWithFilter(filter bson.M) ([]models.Customer, error) {
+    return repositories.GetCustomersWithFilter(filter)
+}
