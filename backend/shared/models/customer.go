@@ -9,6 +9,7 @@ import (
 
 type Customer struct {
     ID         primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+    ShopID     primitive.ObjectID `bson:"shopId,omitempty"  json:"shopId"`
     FirstName  string             `bson:"firstName"       json:"firstName"`
     LastName   string             `bson:"lastName"        json:"lastName"`
     Email      string             `bson:"email"           json:"email"`
