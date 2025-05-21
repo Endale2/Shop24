@@ -4,92 +4,105 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Endale2/DRPS/auth/models"
+	"github.com/Endale2/DRPS/auth/services"
+	"github.com/gin-gonic/gin"
+	"github.com/Endale2/DRPS/auth/utils"
+	authModels "github.com/Endale2/DRPS/auth/models"
+	authRepo "github.com/Endale2/DRPS/auth/repositories"
+	customerModels "github.com/Endale2/DRPS/customers/models"
 	customerRepo "github.com/Endale2/DRPS/customers/repositories"
 
-
-    "github.com/Endale2/DRPS/auth/models"
-    "github.com/Endale2/DRPS/auth/services"
-    "github.com/Endale2/DRPS/auth/utils"
-    shopCustSvc "github.com/Endale2/DRPS/shared/services"
-   // custRepo "github.com/Endale2/DRPS/customers/repositories"
-    "github.com/gin-gonic/gin"
-    "go.mongodb.org/mongo-driver/bson/primitive"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-
-
-/// and optionally links them into a shop (shopId in body).
+// CustomerLogin logs in a customer and sets JWT cookies.
 func CustomerLogin(c *gin.Context) {
-    var req struct {
-        models.AuthCustomer
-        ShopID string `json:"shopId,omitempty"`
-    }
-    if err := c.ShouldBindJSON(&req); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        return
-    }
+	var req models.AuthCustomer
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
 
-    // Authenticate & get tokens; custData is *models.Customer
-    custData, accessToken, refreshToken, err := services.CustomerLoginService(&req.AuthCustomer)
-    if err != nil {
-        c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-        return
-    }
+	custData, accessToken, refreshToken, err := services.CustomerLoginService(&req)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
 
-    // Set cookies
-    c.SetCookie("access_token", accessToken, int((5 * time.Minute).Seconds()), "/", "", false, true)
-    c.SetCookie("refresh_token", refreshToken, int((7*24*time.Hour).Seconds()), "/", "", false, true)
+	c.SetCookie("access_token", accessToken, int((5 * time.Minute).Seconds()), "/", "", false, true)
+	c.SetCookie("refresh_token", refreshToken, int((7*24*time.Hour).Seconds()), "/", "", false, true)
 
-    // Link into shop if shopId was provided
-    if req.ShopID != "" {
-        if shopOID, err := primitive.ObjectIDFromHex(req.ShopID); err == nil {
-            // Use custData.ID — the real Customer ID
-            shopCustSvc.LinkCustomerToShop(shopOID, custData.ID)
-        }
-    }
-
-    c.JSON(http.StatusOK, gin.H{"message": "Logged in", "customer": custData})
-}
-// CustomerRegister registers & logs in the customer, sets cookies,
-// and auto-links them into the provided shop.
-func CustomerRegister(c *gin.Context) {
-    var req struct {
-        models.AuthCustomer
-        ShopID string `json:"shopId,omitempty"`
-    }
-    if err := c.ShouldBindJSON(&req); err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-        return
-    }
-
-    // Create Customer + AuthCustomer
-    if err := services.CustomerRegisterService(&req.AuthCustomer); err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-        return
-    }
-
-    // Auto-login to get back *models.Customer
-    custData, accessToken, refreshToken, err := services.CustomerLoginService(&req.AuthCustomer)
-    if err != nil {
-        c.JSON(http.StatusInternalServerError, gin.H{"error": "registered but login failed"})
-        return
-    }
-
-    // Set cookies
-    c.SetCookie("access_token", accessToken, int((5 * time.Minute).Seconds()), "/", "", false, true)
-    c.SetCookie("refresh_token", refreshToken, int((7*24*time.Hour).Seconds()), "/", "", false, true)
-
-    // Link into shop if requested
-    if req.ShopID != "" {
-        if shopOID, err := primitive.ObjectIDFromHex(req.ShopID); err == nil {
-            shopCustSvc.LinkCustomerToShop(shopOID, custData.ID)
-        }
-    }
-
-    c.JSON(http.StatusOK, gin.H{"message": "Registered & logged in", "customer": custData})
+	c.JSON(http.StatusOK, gin.H{"message": "Logged in", "customer": custData})
 }
 
 
+
+
+// RegisterCustomer handles POST /customers/register
+func RegisterCustomer(c *gin.Context) {
+	// 1) Bind into a lightweight map or into AuthCustomer for fields username/email/password
+	var payload map[string]string
+	if err := c.ShouldBindJSON(&payload); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 2) Validate required fields
+	required := []string{"firstName", "lastName", "username", "email", "password", "phone", "address", "city", "state", "postalCode", "country"}
+	for _, key := range required {
+		if payload[key] == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": key + " is required"})
+			return
+		}
+	}
+
+	// 3) Check for existing auth record
+	if existing, _ := authRepo.FindAuthCustomerByEmail(payload["email"]); existing != nil {
+		c.JSON(http.StatusConflict, gin.H{"error": "customer already exists"})
+		return
+	}
+
+	// 4) Create the Customer record
+	cust := &customerModels.Customer{
+		FirstName:  payload["firstName"],
+		LastName:   payload["lastName"],
+		UserName:   payload["username"],
+		Email:      payload["email"],
+		Phone:      payload["phone"],
+		Address:    payload["address"],
+		City:       payload["city"],
+		State:      payload["state"],
+		PostalCode: payload["postalCode"],
+		Country:    payload["country"],
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
+	}
+	res, err := customerRepo.CreateCustomer(cust)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create customer: " + err.Error()})
+		return
+	}
+
+	// 5) Create the AuthCustomer record, linking to the new customer ID
+	newID := res.InsertedID.(primitive.ObjectID)
+	authCust := &authModels.AuthCustomer{
+		Username:   payload["username"],
+		Email:      payload["email"],
+		Password:   payload["password"],
+		CustomerID: newID,
+	}
+	if _, err := authRepo.CreateAuthCustomer(authCust); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create auth record: " + err.Error()})
+		return
+	}
+
+	// 6) Return success
+	c.JSON(http.StatusCreated, gin.H{
+		"message":    "customer registered successfully",
+		"customerId": newID.Hex(),
+	})
+}
 
 
 

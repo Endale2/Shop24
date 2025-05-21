@@ -27,11 +27,11 @@ func CustomerRegisterService(authCustomer *authModels.AuthCustomer) error {
 		return errors.New("customer already exists")
 	}
 
-	// 3) Create detailed Customer record (no Phone/Address on AuthCustomer)
+	// 3) Create detailed Customer record 
 	newCust := &customerModels.Customer{
 		UserName:  authCustomer.Username,
 		Email: authCustomer.Email,
-		// if you want to capture phone/address, add those fields to AuthCustomer model
+		
 	}
 	res, err := customerRepo.CreateCustomer(newCust)
 	if err != nil {
