@@ -1,36 +1,29 @@
-// src/services/auth.js
+//src/services/auth.js
 import api from './api';
 
-export default {
-  // Registers then auto-logs in (cookies set by backend)
-  async register({ username, email, password }) {
-    const payload = { username, email, password };
-    // Backend will set access and refresh cookies
-    const res = await api.post('/auth/seller/register', payload);
-    return res.data; // { message, seller: { … } }
+export const authService = {
+  register: async ({ username, email, password }) => {
+    const res = await api.post('/auth/seller/register', { username, email, password });
+    return res.data;
   },
 
-  // Logs in, sets cookies
-  async login({ email, password }) {
+  login: async ({ email, password }) => {
     const res = await api.post('/auth/seller/login', { email, password });
-    return res.data; // { message, seller: { … } }
+    return res.data;
   },
 
-  // Clears HTTP-only cookies
-  async logout() {
+  logout: async () => {
     await api.post('/auth/seller/logout');
   },
 
-  // Checks /auth/seller/me for current seller profile
-  async me() {
+  me: async () => {
     const res = await api.get('/auth/seller/me');
-    return res.data; // { id, name, … }
+    return res.data;
   },
 
-  // Returns true if the user is logged in (refreshing if needed)
-  async isAuthenticated() {
+  isAuthenticated: async () => {
     try {
-      await this.me();
+      await authService.me();
       return true;
     } catch {
       return false;

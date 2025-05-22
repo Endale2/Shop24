@@ -2,52 +2,50 @@
 import axios from 'axios';
 
 const api = axios.create({
-  baseURL: 'http://localhost:8080',
+  baseURL:  'http://localhost:8080',
   withCredentials: true,
 });
 
-// Automatic token refresh on 401
 let isRefreshing = false;
 let failedQueue = [];
 
-function processQueue(error, result = null) {
-  failedQueue.forEach(({ resolve, reject }) => {
-    error ? reject(error) : resolve(result);
+function processQueue(error, token = null) {
+  failedQueue.forEach(prom => {
+    error ? prom.reject(error) : prom.resolve(token);
   });
   failedQueue = [];
 }
 
 api.interceptors.response.use(
-  (res) => res,
-  async (err) => {
-    const original = err.config;
-    if (
-      err.response?.status === 401 &&
-      !original._retry &&
-      !original.url.includes('/auth/seller/refresh')
-    ) {
-      original._retry = true;
+  response => response,
+  async error => {
+    const { config, response } = error;
+    const originalRequest = config;
+
+    if (response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
       if (isRefreshing) {
-        return new Promise((resolve, reject) =>
-          failedQueue.push({ resolve, reject })
-        ).then(() => api(original));
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(() => api(originalRequest));
       }
+
       isRefreshing = true;
       try {
         await api.post('/auth/seller/refresh');
         processQueue(null);
-        return api(original);
-      } catch (e) {
-        processQueue(e, null);
-        throw e;
+        return api(originalRequest);
+      } catch (err) {
+        processQueue(err);
+        return Promise.reject(err);
       } finally {
         isRefreshing = false;
       }
     }
-    throw err;
-  }
 
-  
+    return Promise.reject(error);
+  }
 );
 
 export default api;

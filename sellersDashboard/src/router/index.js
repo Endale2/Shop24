@@ -1,16 +1,13 @@
+// src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router';
-import store from '../store';
-
-// Pages
-import LandingPage from '../pages/LandingPage.vue';
-import RegisterPage from '../pages/RegisterPage.vue';
-import LoginPage from '../pages/LoginPage.vue';
-import ShopSelectionPage from '../pages/ShopSelectionPage.vue';
-import NotFound from '../pages/NotFound.vue';
-
-// Dashboard
-import DashboardLayout from '../layouts/DashboardLayout.vue';
-
+import store from '@/store';
+import LandingPage from '@/pages/LandingPage.vue';
+import RegisterPage from '@/pages/RegisterPage.vue';
+import LoginPage from '@/pages/LoginPage.vue';
+import ShopSelectionPage from '@/pages/ShopSelectionPage.vue';
+import DashboardLayout from '@/layouts/AppLayout.vue';
+import NotFound from '@/pages/NotFound.vue';
+import DashboardPage from '@/pages/dashboard/DashboardPage.vue';
 const routes = [
   {
     path: '/',
@@ -37,13 +34,14 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/app',
+    path: '/dashboard',
     component: DashboardLayout,
     meta: { requiresAuth: true, requiresShop: true },
     children: [
-      {
-        path: '',
-        redirect: { name: 'Products' }
+       {
+        path: '',               
+        name: 'Dashboard',      
+        component: DashboardPage
       },
       {
         path: 'products',
@@ -56,12 +54,6 @@ const routes = [
   component: () => import('../pages/customers/CustomersPage.vue')
 }
 
-      // Future routes can be uncommented when needed
-      // {
-      //   path: 'orders',
-      //   name: 'Orders',
-      //   component: () => import('../pages/OrdersPage.vue')
-      // },
     ]
   },
   {
@@ -71,31 +63,20 @@ const routes = [
   }
 ];
 
-const router = createRouter({
-  history: createWebHistory(),
-  routes
-});
+const router = createRouter({ history: createWebHistory(), routes });
 
-// Global auth/shop guard
 router.beforeEach(async (to, from, next) => {
-  const isAuthenticated = store.getters['auth/isAuthenticated'];
-  const activeShop = store.getters['shops/activeShop'];
-
-  // If route requires auth and user is not logged in
-  if (to.meta.requiresAuth && !isAuthenticated) {
-    return next({ name: 'Login' });
+  const isAuth = store.getters['auth/isAuthenticated'];
+  if (to.meta.requiresAuth) {
+    if (!isAuth) return next({ name: 'Login' });
+    if (!store.state.auth.user) await store.dispatch('auth/fetchMe');
   }
-
-  // If already logged in, prevent navigating to auth pages
-  if (!to.meta.requiresAuth && isAuthenticated) {
-    return next(activeShop ? { name: 'Products' } : { name: 'ShopSelection' });
+  if (!to.meta.requiresAuth && isAuth) {
+    return next({ name: store.getters['shops/activeShop'] ? 'Products' : 'ShopSelection' });
   }
-
-  // If route requires a shop and none is selected
-  if (to.meta.requiresShop && !activeShop) {
+  if (to.meta.requiresShop && !store.getters['shops/activeShop']) {
     return next({ name: 'ShopSelection' });
   }
-
   next();
 });
 

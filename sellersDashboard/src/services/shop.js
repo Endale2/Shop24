@@ -1,25 +1,22 @@
 // src/services/shop.js
-import api from './api'; // your axios instance
+import api from './api';
 
-export default {
-  // GET /seller/shops → normalize keys
-  async fetchShops() {
+export const shopService = {
+  fetchShops: async () => {
     const res = await api.get('/seller/shops');
     return res.data.map(s => ({
-      id:          s.ID,
-      name:        s.Name,
-      ownerId:     s.OwnerID,
+      id: s._id || s.ID,
+      name: s.Name,
+      ownerId: s.OwnerID,
       description: s.Description,
-      createdAt:   s.CreatedAt,
-      updatedAt:   s.UpdatedAt
+      createdAt: s.CreatedAt,
+      updatedAt: s.UpdatedAt,
     }));
   },
 
-  // POST /seller/shops
-  async createShop({ name, description }) {
+  createShop: async ({ name, description }) => {
     const res = await api.post('/seller/shops', { name, description });
-    // backend returns InsertOneResult; we need to re-fetch or construct:
-    const newId = res.data.InsertedID.$oid; // adjust to however your backend returns it
-    return { id: newId, name, ownerId: null, description, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
-  }
+    const newId = res.data.insertedId || res.data.InsertedID?.$oid;
+    return { id: newId, name, description, ownerId: null, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
+  },
 };
