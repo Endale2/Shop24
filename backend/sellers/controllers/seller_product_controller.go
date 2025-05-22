@@ -12,30 +12,99 @@ import (
 
 // CreateProduct creates a product under a seller’s shop.
 // POST /seller/shops/:shopId/products
-func CreateProduct(c *gin.Context) {
-	sellerHex, _ := c.Get("user_id")
-	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
+// variantInput matches your payload's structure:
+// {
+//   "name": "Size",
+//   "options": ["S","M","L"],
+//   "prices": [49.99,49.99,49.99]
+// }
+type variantInput struct {
+	Name    string    `json:"name" binding:"required"`
+	Options []string  `json:"options" binding:"required"`
+	Prices  []float64 `json:"prices" binding:"required"`
+}
 
-	shopID := c.Param("shopId")
-	shop, err := services.GetShopByIDService(shopID)
+// createProductInput matches the rest of your payload
+type createProductInput struct {
+	Name        string         `json:"name" binding:"required"`
+	Description string         `json:"description" binding:"required"`
+	Images      []string       `json:"images" binding:"required"`
+	Category    string         `json:"category" binding:"required"`
+	Price       float64        `json:"price" binding:"required"`
+	CreatedBy   string         `json:"createdBy" binding:"required"`
+	Variants    []variantInput `json:"variants"`
+}
+
+// CreateProduct handles POST /seller/shops/:shopId/products
+func CreateProduct(c *gin.Context) {
+	// 1) get seller ID from context
+	sellerHex, _ := c.Get("user_id")
+	sellerID, err := primitive.ObjectIDFromHex(sellerHex.(string))
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid user ID"})
+		return
+	}
+
+	// 2) parse shop ID from URL
+	shopHex := c.Param("shopId")
+	shopID, err := primitive.ObjectIDFromHex(shopHex)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid shopId"})
+		return
+	}
+
+	// 3) verify shop ownership
+	shop, err := services.GetShopByIDService(shopHex)
 	if err != nil || shop.OwnerID != sellerID {
 		c.JSON(http.StatusForbidden, gin.H{"error": "not authorized"})
 		return
 	}
 
-	var p models.Product
-	if err := c.ShouldBindJSON(&p); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
+	// 4) bind JSON into our input struct
+	var input createProductInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload: " + err.Error()})
 		return
 	}
-	p.ShopID = shop.ID
-	p.UserID = sellerID
 
-	res, err := services.CreateProductService(&p)
+	// 5) map input → models.Product
+	prod := &models.Product{
+		ShopID:      shopID,
+		UserID:      sellerID,
+		Name:        input.Name,
+		Description: input.Description,
+		Images:      input.Images,
+		Category:    input.Category,
+		Price:       input.Price,
+		CreatedBy:   sellerID,
+		
+	}
+
+	// 6) build Variant slice
+	for _, v := range input.Variants {
+		// ensure options/prices lengths match
+		if len(v.Options) != len(v.Prices) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "variant '" + v.Name + "' options/prices length mismatch"})
+			return
+		}
+		for i, opt := range v.Options {
+			// each entry becomes its own Variant, keyed by variant name
+			prod.Variants = append(prod.Variants, models.Variant{
+				Options: map[string]string{v.Name: opt},
+				Price:   v.Prices[i],
+				Stock:   0,
+				Image:   "",
+			})
+		}
+	}
+
+	// 7) persist
+	res, err := services.CreateProductService(prod)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "creation failed"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "creation failed: " + err.Error()})
 		return
 	}
+
 	c.JSON(http.StatusOK, res)
 }
 
