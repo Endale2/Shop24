@@ -16,8 +16,7 @@ type Order struct {
 	TotalAmount        float64            `bson:"total_amount" json:"total_amount"`                     // Total order amount (sum of item total prices + shipping + taxes - discounts)
 	SubtotalAmount     float64            `bson:"subtotal_amount" json:"subtotal_amount"`               // Sum of item total prices before shipping, taxes, and discounts
 	DiscountAmount     float64            `bson:"discount_amount,omitempty" json:"discount_amount,omitempty"` // Total discount applied to the order
-	ShippingAmount     float64            `bson:"shipping_amount,omitempty" json:"shipping_amount,omitempty"` // Total shipping cost
-	TaxAmount          float64            `bson:"tax_amount,omitempty" json:"tax:"amount,omitempty"`     // Total tax amount
+	ShippingAmount     float64            `bson:"shipping_amount,omitempty" json:"shipping_amount,omitempty"` // Total shipping cost     // Total tax amount
 	Currency           string             `bson:"currency" json:"currency"`                             // e.g., "USD", "EUR"
 	PaymentStatus      PaymentStatus      `bson:"payment_status" json:"payment_status"`                 // Enum: "Pending", "Paid", "Failed", "Refunded", "PartiallyRefunded"
 	PaymentDetails     PaymentDetails     `bson:"payment_details,omitempty" json:"payment_details,omitempty"` // Details about the payment transaction
