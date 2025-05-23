@@ -38,7 +38,7 @@ func SellerRoute(r *gin.Engine) {
 			custGroup.POST("/link", controllers.LinkCustomer)
 			custGroup.GET("", controllers.GetLinkedCustomers)
 			custGroup.GET("/:customerId",     controllers.GetCustomerDetail)
-			custGroup.DELETE("/remove-from-shop/:linkId", controllers.UnlinkCustomer)
+			custGroup.DELETE("/:linkId", controllers.UnlinkCustomer)
 		}
 
 	}
