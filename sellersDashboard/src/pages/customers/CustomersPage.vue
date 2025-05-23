@@ -124,7 +124,7 @@
 
 <script>
 import { mapGetters } from 'vuex';
-import api from '@/services/api'; // Assuming you have an axios instance or similar for API calls
+import api from '@/services/api'; // Make sure this path to your API service is correct
 
 export default {
   name: 'CustomersPage',
@@ -134,30 +134,36 @@ export default {
       loading: false,
       error: null,
       search: '',
-      currentView: 'list' // Default view: 'list' as requested
+      currentView: 'list' // Default view: 'list' (tabular)
     };
   },
   computed: {
-    ...mapGetters('shops', ['activeShop']), // Correctly importing activeShop from your shops module
+    // Access the activeShop getter from the 'shops' Vuex module
+    ...mapGetters('shops', ['activeShop']),
     filteredCustomers() {
       const term = this.search.trim().toLowerCase();
       if (!term) return this.customers;
       return this.customers.filter(c =>
+        // Search by first name, last name, or email
         `${c.firstName || ''} ${c.lastName || ''}`.toLowerCase().includes(term) ||
         (c.email && c.email.toLowerCase().includes(term))
       );
     }
   },
+  // Fetches customers when the component is created
   async created() {
+    // Before making an API call, ensure an active shop is selected
     if (!this.activeShop) {
       this.error = 'No shop selected. Please select a shop from the dashboard to view its customers.';
-      return;
+      return; // Stop execution if no active shop
     }
 
-    this.loading = true;
+    this.loading = true; // Set loading state to true
     try {
-      // Fetching data from your API endpoint using activeShop.id
+      // Make the API call to your backend using the active shop's ID
       const res = await api.get(`/seller/shops/${this.activeShop.id}/customers`);
+
+      // Map the response data to match the expected customer structure
       this.customers = res.data.map(item => ({
         id:          item.customer.id,
         firstName:   item.customer.firstName,
@@ -165,21 +171,22 @@ export default {
         email:       item.customer.email,
         phone:       item.customer.phone,
         createdAt:   item.customer.createdAt,
-        linkId:      item.linkId // Important for unique keys in v-for
+        linkId:      item.linkId // Crucial for unique keys in v-for loops
       }));
     } catch (e) {
       console.error('Failed to load customers:', e);
-      // More specific error message based on common API errors
+      // Provide a more informative error message to the user
       if (e.response && e.response.status === 404) {
-        this.error = `No customers found for shop ID: ${this.activeShop.id}.`;
+        this.error = `No customers found for shop ID: ${this.activeShop.id}. Double-check the shop selection or if there are any customers linked.`;
       } else {
-        this.error = 'Failed to load customers. Please check your network connection or the server.';
+        this.error = 'Failed to load customers. Please check your network connection or the server status.';
       }
     } finally {
-      this.loading = false;
+      this.loading = false; // Always reset loading state
     }
   },
   methods: {
+    // Formats a date string into a user-friendly format
     formatDate(dt) {
       return dt ? new Date(dt).toLocaleDateString('en-US', {
         year: 'numeric',
@@ -187,16 +194,18 @@ export default {
         day: 'numeric'
       }) : '—';
     },
+    // Generates initials from first and last names for avatars
     getInitials(firstName, lastName) {
       const firstInitial = firstName ? firstName.charAt(0).toUpperCase() : '';
       const lastInitial = lastName ? lastName.charAt(0).toUpperCase() : '';
-      return `${firstInitial}${lastInitial}` || '?';
+      return `${firstInitial}${lastInitial}` || '?'; // Fallback to '?' if no names
     },
+    // Navigates to the customer detail page
     goToCustomerDetail(cust) {
-      // Ensure both activeShop and customer ID exist before navigating
+      // Ensure we have both shop ID and customer ID before navigating
       if (this.activeShop && cust.id) {
         this.$router.push({
-          name: 'CustomerDetail', // This name must match your Vue Router configuration
+          name: 'CustomerDetail', // Make sure this route name exists in your Vue Router configuration
           params: { shopId: this.activeShop.id, customerId: cust.id }
         });
       } else {
@@ -208,6 +217,7 @@ export default {
 </script>
 
 <style scoped>
+/* Basic spin animation for loading indicators */
 @keyframes spin {
   from { transform: rotate(0deg); }
   to   { transform: rotate(360deg); }
