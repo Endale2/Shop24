@@ -59,6 +59,13 @@ const routes = [
   name: 'Customers',
   component: () => import('../pages/customers/CustomersPage.vue')
 },
+{
+  path: 'customers/:customerId',
+  name: 'CustomerDetail',
+  component: () => import('@/pages/customers/CustomerDetailPage.vue'),
+  props: true
+}
+,
  {
   path: 'orders',
   name: 'Orders',

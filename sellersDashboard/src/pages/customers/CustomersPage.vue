@@ -124,7 +124,7 @@
 
 <script>
 import { mapGetters } from 'vuex';
-import api from '@/services/api';
+import api from '@/services/api'; // Assuming you have an axios instance or similar for API calls
 
 export default {
   name: 'CustomersPage',
@@ -134,11 +134,11 @@ export default {
       loading: false,
       error: null,
       search: '',
-      currentView: 'list' // Default view: 'list' (changed from 'cards')
+      currentView: 'list' // Default view: 'list' as requested
     };
   },
   computed: {
-    ...mapGetters('shops', ['activeShop']),
+    ...mapGetters('shops', ['activeShop']), // Correctly importing activeShop from your shops module
     filteredCustomers() {
       const term = this.search.trim().toLowerCase();
       if (!term) return this.customers;
@@ -153,82 +153,28 @@ export default {
       this.error = 'No shop selected. Please select a shop from the dashboard to view its customers.';
       return;
     }
+
     this.loading = true;
     try {
-      // Using the provided sample data structure for demonstration
-      const sampleData = [
-        {
-          "customer": {
-            "id": "682f140d663e5583675d378a",
-            "firstName": "Laura",
-            "lastName": "Martinez",
-            "username": "ava.mart",
-            "email": "laura.martinez@example.com",
-            "phone": "+1-555-123-4567",
-            "address": "1010 Pine Avenue",
-            "city": "Austin",
-            "state": "TX",
-            "postalCode": "73301",
-            "country": "USA",
-            "createdAt": "2025-05-22T12:09:49.537Z",
-            "updatedAt": "2025-05-22T12:09:49.537Z"
-          },
-          "linkId": "682f1cdd663e5583675d3790"
-        },
-        {
-          "customer": {
-            "id": "abc123def456ghi789jkl012",
-            "firstName": "John",
-            "lastName": "Doe",
-            "username": "john.doe",
-            "email": "john.doe@example.com",
-            "phone": "+1-123-456-7890",
-            "address": "123 Main St",
-            "city": "Springfield",
-            "state": "IL",
-            "postalCode": "62704",
-            "country": "USA",
-            "createdAt": "2025-05-20T10:00:00.000Z",
-            "updatedAt": "2025-05-21T11:30:00.000Z"
-          },
-          "linkId": "mno345pqr678stu901vwx234"
-        },
-         {
-          "customer": {
-            "id": "zxc789vbn012mas345dfg678",
-            "firstName": "Alice",
-            "lastName": "Smith",
-            "username": "alice.s",
-            "email": "alice.smith@example.com",
-            "phone": "+44-20-7946-0958",
-            "address": "789 Oak Lane",
-            "city": "London",
-            "state": "",
-            "postalCode": "SW1A 0AA",
-            "country": "UK",
-            "createdAt": "2025-05-18T09:15:22.123Z",
-            "updatedAt": "2025-05-19T14:05:30.456Z"
-          },
-          "linkId": "hjk890lmn123opq456rst789"
-        }
-      ];
-
-      // In a real application, you would replace this with:
-      // const res = await api.get(`/seller/shops/${this.activeShop.id}/customers`);
-      // this.customers = res.data.map(item => ({...}));
-
-      this.customers = sampleData.map(item => ({
+      // Fetching data from your API endpoint using activeShop.id
+      const res = await api.get(`/seller/shops/${this.activeShop.id}/customers`);
+      this.customers = res.data.map(item => ({
         id:          item.customer.id,
         firstName:   item.customer.firstName,
         lastName:    item.customer.lastName,
         email:       item.customer.email,
         phone:       item.customer.phone,
         createdAt:   item.customer.createdAt,
-        linkId:      item.linkId
+        linkId:      item.linkId // Important for unique keys in v-for
       }));
     } catch (e) {
       console.error('Failed to load customers:', e);
-      this.error = 'Failed to load customers. Please check your network connection or try again.';
+      // More specific error message based on common API errors
+      if (e.response && e.response.status === 404) {
+        this.error = `No customers found for shop ID: ${this.activeShop.id}.`;
+      } else {
+        this.error = 'Failed to load customers. Please check your network connection or the server.';
+      }
     } finally {
       this.loading = false;
     }
@@ -244,16 +190,17 @@ export default {
     getInitials(firstName, lastName) {
       const firstInitial = firstName ? firstName.charAt(0).toUpperCase() : '';
       const lastInitial = lastName ? lastName.charAt(0).toUpperCase() : '';
-      return `${firstInitial}${lastInitial}` || '?'; // Return '?' if no initials available
+      return `${firstInitial}${lastInitial}` || '?';
     },
     goToCustomerDetail(cust) {
+      // Ensure both activeShop and customer ID exist before navigating
       if (this.activeShop && cust.id) {
         this.$router.push({
-          name: 'CustomerDetail', // Make sure this route name exists in your Vue Router config
+          name: 'CustomerDetail', // This name must match your Vue Router configuration
           params: { shopId: this.activeShop.id, customerId: cust.id }
         });
       } else {
-        console.warn('Cannot navigate to customer detail: missing shopId or customerId', { activeShop: this.activeShop, customer: cust });
+        console.warn('Cannot navigate to customer detail: Missing activeShop or customer ID.', { activeShop: this.activeShop, customer: cust });
       }
     }
   }
