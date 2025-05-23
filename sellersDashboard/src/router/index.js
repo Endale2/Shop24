@@ -52,6 +52,20 @@ const routes = [
   path: 'customers',
   name: 'Customers',
   component: () => import('../pages/customers/CustomersPage.vue')
+},
+ {
+  path: 'orders',
+  name: 'Orders',
+  component: () => import('../pages/orders/OrdersPage.vue')
+},
+{
+  path: 'discounts',
+  name: 'Discounts',
+  component: () => import('../pages/discounts/DiscountsPage.vue')
+}, {
+  path: 'analytics',
+  name: 'Analytics',
+  component: () => import('../pages/analytics/AnalyticsPage.vue')
 }
 
     ]
