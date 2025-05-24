@@ -15,8 +15,11 @@ const error    = ref(null)
 onMounted(async () => {
   loading.value = true
   try {
+    // public shop fetch (no auth)
     shop.value = await shops.fetchPublicShop(shopId)
-    products.value = await productService.fetchByShop(shopId)
+
+    // public product fetch (no auth)
+    products.value = await productService.fetchPublicByShop(shopId)
   } catch (e) {
     console.error(e)
     error.value   = 'Could not load this storefront.'
