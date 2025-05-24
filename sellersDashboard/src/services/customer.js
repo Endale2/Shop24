@@ -10,21 +10,23 @@ export const customerService = {
   async fetchAll(shopId) {
     const res = await api.get(`/seller/shops/${shopId}/customers`)
     // normalize list entries
-    return res.data.map(c => ({
-      id:         c.id,
-      firstName:  c.firstName,
-      lastName:   c.lastName,
-      username:   c.username,
-      email:      c.email,
-      phone:      c.phone,
-      address:    c.address,
-      city:       c.city,
-      state:      c.state,
-      postalCode: c.postalCode,
-      country:    c.country,
-      createdAt:  c.createdAt,
-      updatedAt:  c.updatedAt,
-      linkId:     c.linkId ?? null
+    // The incoming data structure wraps each customer in a 'customer' key.
+    // We need to access c.customer for the actual customer details.
+    return res.data.map(item => ({ // Renamed 'c' to 'item' for clarity
+      id:           item.customer.id, // Access customer.id
+      firstName:    item.customer.firstName,
+      lastName:     item.customer.lastName,
+      username:     item.customer.username,
+      email:        item.customer.email,
+      phone:        item.customer.phone,
+      address:      item.customer.address,
+      city:         item.customer.city,
+      state:        item.customer.state,
+      postalCode:   item.customer.postalCode,
+      country:      item.customer.country,
+      createdAt:    item.customer.createdAt,
+      updatedAt:    item.customer.updatedAt,
+      linkId:       item.linkId ?? null // linkId is outside the customer object
     }))
   },
 
@@ -40,20 +42,20 @@ export const customerService = {
     // unwrap payload
     const payload = res.data.customer ?? res.data
     return {
-      id:          payload.id,
-      firstName:   payload.firstName,
-      lastName:    payload.lastName,
-      username:    payload.username,
-      email:       payload.email,
-      phone:       payload.phone,
-      address:     payload.address,
-      city:        payload.city,
-      state:       payload.state,
-      postalCode:  payload.postalCode,
-      country:     payload.country,
-      createdAt:   payload.createdAt,
-      updatedAt:   payload.updatedAt,
-      linkId:      res.data.linkId ?? null
+      id:           payload.id,
+      firstName:    payload.firstName,
+      lastName:     payload.lastName,
+      username:     payload.username,
+      email:        payload.email,
+      phone:        payload.phone,
+      address:      payload.address,
+      city:         payload.city,
+      state:        payload.state,
+      postalCode:   payload.postalCode,
+      country:      payload.country,
+      createdAt:    payload.createdAt,
+      updatedAt:    payload.updatedAt,
+      linkId:       res.data.linkId ?? null
     }
   },
 

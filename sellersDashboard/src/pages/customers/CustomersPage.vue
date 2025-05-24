@@ -1,7 +1,5 @@
-<!-- src/pages/customers/CustomersPage.vue -->
 <template>
   <div class="p-4 sm:p-6 max-w-7xl mx-auto space-y-8 font-sans">
-    <!-- Header + Search + View Toggle -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
       <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">
         Customers Overview
@@ -36,13 +34,11 @@
       </div>
     </div>
 
-    <!-- Loading -->
     <div v-if="loading" class="flex flex-col items-center justify-center text-gray-600 py-16">
       <RefreshIcon class="animate-spin h-10 w-10 text-blue-500 mb-3" />
       <p class="text-lg">Loading customers...</p>
     </div>
 
-    <!-- Error -->
     <div
       v-else-if="error"
       class="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-sm"
@@ -53,7 +49,6 @@
       <p class="text-sm mt-2">Please try again or contact support if the issue persists.</p>
     </div>
 
-    <!-- No Results -->
     <div
       v-else-if="filteredCustomers.length === 0"
       class="bg-blue-50 border border-blue-200 text-blue-700 px-6 py-8 rounded-lg text-center mt-8 shadow-sm"
@@ -66,7 +61,6 @@
       </p>
     </div>
 
-    <!-- List View -->
     <div v-else-if="currentView === 'list'" class="overflow-x-auto bg-white shadow-lg rounded-xl">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-100">
@@ -105,7 +99,6 @@
       </table>
     </div>
 
-    <!-- Card View -->
     <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       <div
         v-for="cust in filteredCustomers"
