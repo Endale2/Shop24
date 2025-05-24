@@ -67,5 +67,24 @@ export const shopService = {
    */
   async deleteShop(shopId) {
     await api.delete(`/seller/shops/${shopId}`)
+  },
+
+
+  /**
+   * Public fetch of a single shop by ID.
+   * Works even if the user isn’t authenticated.
+   */
+  async fetchById(shopId) {
+    // Suppose you expose GET /shops/:shopId publicly
+    const res = await api.get(`/shops/${shopId}`)
+    const s = res.data
+    return {
+      id:          s._id ?? s.ID,
+      name:        s.Name ?? s.name,
+      description: s.Description ?? s.description,
+      createdAt:   s.CreatedAt ?? s.createdAt,
+      updatedAt:   s.UpdatedAt ?? s.updatedAt,
+      ownerId:     s.OwnerID ?? s.ownerId,
+    }
   }
 }

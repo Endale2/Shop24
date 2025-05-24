@@ -10,8 +10,18 @@ import ShopSelectionPage from '@/pages/ShopSelectionPage.vue'
 import DashboardLayout from '@/layouts/AppLayout.vue'
 import DashboardPage from '@/pages/dashboard/DashboardPage.vue'
 import NotFound from '@/pages/NotFound.vue'
-
+import StorefrontPage from '@/pages/storefront/StorefrontPage.vue'
 const routes = [
+   // If a subdomain is set (we detect in main.js),
+  // `/` will render the storefront:
+  {
+    path: '/',
+    name: 'Storefront',
+    component: StorefrontPage,
+    meta: { requiresAuth: false }
+  },
+
+  
   {
     path: '/',
     name: 'Landing',

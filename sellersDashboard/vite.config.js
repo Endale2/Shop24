@@ -12,6 +12,11 @@ export default defineConfig({
     vueDevTools(),
     tailwindcss()
   ],
+   server: {
+    host: true,        // allow connections on any hostname (including shop1.localhost)
+    port: 5174,
+    strictPort: true,
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))

@@ -1,3 +1,4 @@
+// src/stores/shops.js
 import { defineStore } from 'pinia'
 import { shopService } from '@/services/shop'
 
@@ -23,5 +24,9 @@ export const useShopStore = defineStore('shops', {
     setActiveShop(shop) {
       this.active = shop
     }
+  },
+  persist: {
+    // persist both `list` and `active` to localStorage
+    paths: ['list', 'active']
   }
 })
