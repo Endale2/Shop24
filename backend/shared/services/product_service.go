@@ -4,6 +4,7 @@ import (
 	"github.com/Endale2/DRPS/shared/models"
 	"github.com/Endale2/DRPS/shared/repositories"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
@@ -44,4 +45,15 @@ func CountProductsService(filter bson.M) (int64, error) {
 // CountByCategoryService returns counts of products grouped by category.
 func CountByCategoryService() (map[string]int64, error) {
     return repositories.CountByCategory()
+}
+
+
+// GetProductsByShopIDService retrieves all products for a specific shop.
+func GetProductsByShopIDService(shopID string) ([]models.Product, error) {
+	oid, err := primitive.ObjectIDFromHex(shopID)
+	if err != nil {
+		return nil, err
+	}
+	filter := bson.M{"shop_id": oid}
+	return repositories.GetProductsByFilter(filter)
 }

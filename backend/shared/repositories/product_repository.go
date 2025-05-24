@@ -118,3 +118,23 @@ func CountByCategory() (map[string]int64, error) {
 	}
 	return results, nil
 }
+
+
+// GetProductsByFilter retrieves products matching an arbitrary filter.
+func GetProductsByFilter(filter bson.M) ([]models.Product, error) {
+	cursor, err := productCollection.Find(context.Background(), filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.Background())
+
+	var products []models.Product
+	for cursor.Next(context.Background()) {
+		var p models.Product
+		if err := cursor.Decode(&p); err != nil {
+			return nil, err
+		}
+		products = append(products, p)
+	}
+	return products, nil
+}
