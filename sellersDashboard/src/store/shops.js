@@ -1,32 +1,27 @@
-//src/store/modules/shops.js
-import { shopService } from '@/services/shop';
+import { defineStore } from 'pinia'
+import { shopService } from '@/services/shop'
 
-const state = () => ({ list: [], active: null });
-const getters = {
-  allShops: s => s.list,
-  activeShop: s => s.active,
-};
-const actions = {
-  async fetchShops({ commit }) {
-    const shops = await shopService.fetchShops();
-    commit('setList', shops);
-    return shops;
+export const useShopStore = defineStore('shops', {
+  state: () => ({
+    list: [],
+    active: null,
+  }),
+  getters: {
+    allShops: (state) => state.list,
+    activeShop: (state) => state.active,
   },
-  async createShop({ dispatch }, payload) {
-    const newShop = await shopService.createShop(payload);
-    await dispatch('fetchShops');
-    return newShop;
-  },
-  setActiveShop({ commit }, shop) {
-    commit('setActive', shop);
-  },
-};
-const mutations = {
-  setList(state, shops) {
-    state.list = shops;
-  },
-  setActive(state, shop) {
-    state.active = shop;
-  },
-};
-export default { namespaced: true, state, getters, actions, mutations };
+  actions: {
+    async fetchShops() {
+      this.list = await shopService.fetchShops()
+      return this.list
+    },
+    async createShop(payload) {
+      const shop = await shopService.createShop(payload)
+      await this.fetchShops()
+      return shop
+    },
+    setActiveShop(shop) {
+      this.active = shop
+    }
+  }
+})

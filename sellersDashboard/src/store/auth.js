@@ -1,34 +1,27 @@
-// src/store/modules/auth.js
-import { authService } from '@/services/auth';
+import { defineStore } from 'pinia'
+import { authService } from '@/services/auth'
 
-const state = () => ({ user: null });
-const getters = {
-  isAuthenticated: s => !!s.user,
-  user: s => s.user,
-};
-
-const actions = {
-  async register({ dispatch }, payload) {
-    await authService.register(payload);
-    return dispatch('fetchMe');
+export const useAuthStore = defineStore('auth', {
+  state: () => ({ user: null }),
+  getters: {
+    isAuthenticated: (state) => !!state.user,
   },
-  async login({ dispatch }, payload) {
-    await authService.login(payload);
-    return dispatch('fetchMe');
-  },
-  async fetchMe({ commit }) {
-    const user = await authService.me();
-    commit('setUser', user);
-    return user;
-  },
-  async logout({ commit }) {
-    await authService.logout();
-    commit('setUser', null);
-  },
-};
-const mutations = {
-  setUser(state, user) {
-    state.user = user;
-  },
-};
-export default { namespaced: true, state, getters, actions, mutations };
+  actions: {
+    async fetchMe() {
+      this.user = await authService.me()
+      return this.user
+    },
+    async register(payload) {
+      await authService.register(payload)
+      return this.fetchMe()
+    },
+    async login(payload) {
+      await authService.login(payload)
+      return this.fetchMe()
+    },
+    async logout() {
+      await authService.logout()
+      this.user = null
+    }
+  }
+})

@@ -1,3 +1,4 @@
+<!-- src/pages/LoginPage.vue -->
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-100">
     <div class="bg-white p-6 rounded shadow w-full max-w-sm">
@@ -32,39 +33,49 @@
           {{ loading ? 'Logging in...' : 'Login' }}
         </button>
 
-        <p v-if="error" class="text-red-500 text-xs text-center mt-2">{{ error }}</p>
+        <p v-if="error" class="text-red-500 text-xs text-center mt-2">
+          {{ error }}
+        </p>
       </form>
     </div>
   </div>
 </template>
 
-<script>
-import { mapActions } from 'vuex';
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/store/auth'
 
-export default {
-  name: 'LoginPage',
-  data() {
-    return {
-      email: '',
-      password: '',
-      loading: false,
-      error: null
-    };
-  },
-  methods: {
-    ...mapActions('auth', ['login']),
-    async handleLogin() {
-      this.loading = true;
-      this.error = null;
-      try {
-        await this.login({ email: this.email, password: this.password });
-        this.$router.push({ name: 'ShopSelection' }); // Fixed name: 'ShopSelection'
-      } catch (err) {
-        this.error = 'Login failed. Please check your credentials.';
-      } finally {
-        this.loading = false;
-      }
-    }
+const router = useRouter()
+const auth = useAuthStore()
+
+// Form state
+const email = ref('')
+const password = ref('')
+const loading = ref(false)
+const error = ref(null)
+
+// Prevent access if already logged in
+onMounted(() => {
+  if (auth.isAuthenticated) {
+    router.replace({ name: 'ShopSelection' })
   }
-};
+})
+
+async function handleLogin() {
+  loading.value = true
+  error.value = null
+
+  try {
+    // Attempt login; auth.login should set auth.user internally
+    await auth.login({ email: email.value, password: password.value })
+
+    // Redirect to shop selection after success
+    router.push({ name: 'ShopSelection' })
+  } catch (err) {
+    error.value = 'Login failed. Please check your credentials.'
+  } finally {
+    loading.value = false
+  }
+}
 </script>

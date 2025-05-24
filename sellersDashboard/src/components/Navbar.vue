@@ -1,42 +1,43 @@
+<!-- src/components/Navbar.vue -->
 <template>
-  <header class="bg-white shadow p-4 flex justify-between items-center border-b border-gray-200">
+  <header class="bg-white shadow p-4 flex items-center justify-between border-b border-gray-200">
     <div class="flex items-center">
-      
-      <div class="text-sm text-gray-600 ml-6 flex items-center space-x-4">
-        <span v-if="user" class="flex items-center">
-          <svg class="w-4 h-4 mr-1 text-gray-400" fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z" clip-rule="evenodd"></path></svg>
-          User: {{ user.id }}
-        </span>
-        
+      <button
+        class="md:hidden p-1 rounded-md hover:bg-gray-100"
+        @click="$emit('toggle-sidebar')"
+      >
+        <MenuIcon class="h-6 w-6 text-gray-700" />
+      </button>
+      <div v-if="user" class="ml-4 text-sm text-gray-600 flex items-center space-x-2">
+        <UserIcon class="h-5 w-5 text-gray-400" />
+        <span>{{ user.email }}</span>
       </div>
     </div>
-    <div class="flex items-center space-x-6">
-      <span v-if="user" class="text-gray-700 text-md font-medium">{{ user.email }}</span>
-      <button
-        @click="handleLogout"
-        class="bg-green-600 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-300 focus:ring-opacity-75 font-semibold py-2 px-4 rounded-full transition duration-300 ease-in-out transform hover:scale-105"
-      >
-        Logout
-      </button>
-    </div>
+
+    <button
+      v-if="user"
+      @click="handleLogout"
+      class="bg-green-600 text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-300 focus:ring-opacity-75 font-semibold py-2 px-4 rounded-full transition transform hover:scale-105"
+    >
+      Logout
+    </button>
   </header>
 </template>
 
-<script>
-import { mapGetters, mapActions } from 'vuex';
+<script setup>
+import { computed } from 'vue'
+import { useRouter } from 'vue-router'
+import { useAuthStore } from '@/store/auth'
+import { MenuIcon, UserIcon } from '@heroicons/vue/outline'
 
-export default {
-  name: 'Navbar',
-  computed: {
-    ...mapGetters('auth', ['user']),
-    ...mapGetters('shops', ['activeShop'])
-  },
-  methods: {
-    ...mapActions('auth', ['logout']),
-    async handleLogout() {
-      await this.logout();
-      this.$router.push({ name: 'Login' });
-    }
-  }
-};
+const router = useRouter()
+const auth = useAuthStore()
+
+// Define user as a computed so the template can react
+const user = computed(() => auth.user)
+
+async function handleLogout() {
+  await auth.logout()
+  router.push({ name: 'Login' })
+}
 </script>

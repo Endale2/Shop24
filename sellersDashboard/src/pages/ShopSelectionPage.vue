@@ -1,3 +1,4 @@
+<!-- src/pages/ShopSelectionPage.vue -->
 <template>
   <div class="min-h-screen flex items-center justify-center bg-gray-50 p-4">
     <div class="bg-white p-8 rounded-xl shadow-lg w-full max-w-2xl border border-gray-100">
@@ -53,59 +54,62 @@
   </div>
 </template>
 
-<script>
-import { mapGetters, mapActions } from 'vuex';
+<script setup>
+import { ref, computed, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+import { useShopStore } from '@/store/shops'
 
-export default {
-  name: 'ShopSelectionPage',
-  data() {
-    return {
-      newShopName: '',
-      creating: false,
-    };
-  },
-  computed: {
-    ...mapGetters('shops', ['allShops']),
-    shops() {
-      return this.allShops;
-    }
-  },
-  async created() {
-    try {
-      await this.fetchShops();
-    } catch (err) {
-      console.error('Failed to fetch shops:', err);
-    }
-  },
-  methods: {
-    ...mapActions('shops', ['fetchShops', 'createShop', 'setActiveShop']),
-    formatDate(date) {
-      return new Date(date).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' });
-    },
-    async createNewShop() {
-      if (!this.newShopName.trim()) return;
-      this.creating = true;
-      try {
-        const newShop = await this.createShop({ name: this.newShopName });
-        this.setActiveShop(newShop);
-        this.$router.push({ name: 'Dashboard' });
-      } catch (err) {
-        console.error('Failed to create shop:', err);
-      } finally {
-        this.creating = false;
-        this.newShopName = '';
-      }
-    },
-    selectShop(shop) {
-      this.setActiveShop(shop);
-      this.$router.push({ name: 'Dashboard' });
-    }
+const router = useRouter()
+const shopStore = useShopStore()
+
+// local state
+const newShopName = ref('')
+const creating = ref(false)
+
+// derived state
+const shops = computed(() => shopStore.allShops)
+
+// fetch existing shops on mount
+onMounted(async () => {
+  try {
+    await shopStore.fetchShops()
+  } catch (err) {
+    console.error('Failed to fetch shops:', err)
   }
-};
+})
+
+// helpers
+function formatDate(date) {
+  return new Date(date).toLocaleDateString(undefined, {
+    year: 'numeric',
+    month: 'short',
+    day: 'numeric',
+  })
+}
+
+// actions
+async function createNewShop() {
+  if (!newShopName.value.trim()) return
+  creating.value = true
+  try {
+    const newShop = await shopStore.createShop({ name: newShopName.value, description: '' })
+    shopStore.setActiveShop(newShop)
+    router.push({ name: 'Dashboard' })
+  } catch (err) {
+    console.error('Failed to create shop:', err)
+  } finally {
+    creating.value = false
+    newShopName.value = ''
+  }
+}
+
+function selectShop(shop) {
+  shopStore.setActiveShop(shop)
+  router.push({ name: 'Dashboard' })
+}
 </script>
 
 <style scoped>
-/* Card hover shadow */
 .hover\:shadow-md:hover {
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }

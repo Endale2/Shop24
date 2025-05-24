@@ -1,51 +1,52 @@
 // src/services/api.js
-import axios from 'axios';
+import axios from 'axios'
 
 const api = axios.create({
-  baseURL:  'http://localhost:8080',
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8080',
   withCredentials: true,
-});
+})
 
-let isRefreshing = false;
-let failedQueue = [];
+let isRefreshing = false
+let failedQueue = []
 
 function processQueue(error, token = null) {
-  failedQueue.forEach(prom => {
-    error ? prom.reject(error) : prom.resolve(token);
-  });
-  failedQueue = [];
+  failedQueue.forEach(({ resolve, reject }) => {
+    error ? reject(error) : resolve(token)
+  })
+  failedQueue = []
 }
 
 api.interceptors.response.use(
   response => response,
   async error => {
-    const { config, response } = error;
-    const originalRequest = config;
+    const { response, config } = error
+    const originalRequest = config
 
     if (response?.status === 401 && !originalRequest._retry) {
-      originalRequest._retry = true;
+      originalRequest._retry = true
 
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject });
-        }).then(() => api(originalRequest));
+          failedQueue.push({ resolve, reject })
+        }).then(() => api(originalRequest))
       }
 
-      isRefreshing = true;
+      isRefreshing = true
       try {
-        await api.post('/auth/seller/refresh');
-        processQueue(null);
-        return api(originalRequest);
+        // this will set a new HTTP-only refresh cookie / token
+        await api.post('/auth/seller/refresh')
+        processQueue(null)
+        return api(originalRequest)
       } catch (err) {
-        processQueue(err);
-        return Promise.reject(err);
+        processQueue(err)
+        return Promise.reject(err)
       } finally {
-        isRefreshing = false;
+        isRefreshing = false
       }
     }
 
-    return Promise.reject(error);
+    return Promise.reject(error)
   }
-);
+)
 
-export default api;
+export default api
