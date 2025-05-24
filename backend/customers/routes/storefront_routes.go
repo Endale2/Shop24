@@ -6,9 +6,9 @@ import (
 )
 
 // StorefrontRoutes sets up public routes for storefront operations.
-func StorefrontRoutes(r *gin.RouterGroup) {
+func StorefrontRoutes(r *gin.Engine) {
 	// Group storefront routes under /storefront
-	storefront := r.Group("/storefront")
+	storefront := r.Group("/shops")
 	{
 		// GET /customers/storefront/:id
 		storefront.GET("/:id", controllers.GetStorefront)
