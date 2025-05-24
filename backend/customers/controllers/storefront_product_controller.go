@@ -11,16 +11,18 @@ import (
 // GET /shops/:shopid/products
 func GetProductsByShop(c *gin.Context) {
 	shopID := c.Param("shopid")
+
 	products, err := productServices.GetProductsByShopIDService(shopID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch products"})
 		return
 	}
+
 	c.JSON(http.StatusOK, products)
 }
 
 // GetProductDetail returns one product by ID.
-// GET /product/:productid
+// GET /shops/:shopid/products/:productid
 func GetProductDetail(c *gin.Context) {
 	productID := c.Param("productid")
 	product, err := productServices.GetProductByIDService(productID)

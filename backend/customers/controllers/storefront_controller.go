@@ -11,7 +11,7 @@ import (
 // GetStorefront handles public GET /storefront/:id requests to retrieve a shop by ID.
 func GetStorefront(c *gin.Context) {
 	// Extract shop ID from path parameter
-	id := c.Param("id")
+	id := c.Param("shopid")
 
 	// Call service layer to get shop
 	shop, err := shopServices.GetShopByIDService(id)
