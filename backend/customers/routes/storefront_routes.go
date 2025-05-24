@@ -5,12 +5,21 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// StorefrontRoutes sets up public routes for storefront operations.
+// StorefrontRoutes sets up public storefront endpoints.
 func StorefrontRoutes(r *gin.Engine) {
-	// Group storefront routes under /storefront
-	storefront := r.Group("/shops")
+	shops := r.Group("/shops")
 	{
-		// GET /customers/storefront/:id
-		storefront.GET("/:id", controllers.GetStorefront)
+		// GET /shops/:shopid               → shop details
+		shops.GET("/:shopid", controllers.GetStorefront)
+
+		// Nested products under that shop...
+		products := shops.Group("/:shopid/products")
+		{
+			// GET /shops/:shopid/products
+			products.GET("", controllers.GetProductsByShop)
+
+			// GET /shops/:shopid/products/:productid
+			products.GET("/:productid", controllers.GetProductDetail)
+		}
 	}
 }
