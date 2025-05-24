@@ -10,21 +10,14 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// CreateProduct creates a product under a seller’s shop.
-// POST /seller/shops/:shopId/products
-// variantInput matches your payload's structure:
-// {
-//   "name": "Size",
-//   "options": ["S","M","L"],
-//   "prices": [49.99,49.99,49.99]
-// }
+// variantInput and createProductInput remain unchanged
+
 type variantInput struct {
 	Name    string    `json:"name" binding:"required"`
 	Options []string  `json:"options" binding:"required"`
 	Prices  []float64 `json:"prices" binding:"required"`
 }
 
-// createProductInput matches the rest of your payload
 type createProductInput struct {
 	Name        string         `json:"name" binding:"required"`
 	Description string         `json:"description" binding:"required"`
@@ -37,7 +30,7 @@ type createProductInput struct {
 
 // CreateProduct handles POST /seller/shops/:shopId/products
 func CreateProduct(c *gin.Context) {
-	// 1) get seller ID from context
+	// seller auth
 	sellerHex, _ := c.Get("user_id")
 	sellerID, err := primitive.ObjectIDFromHex(sellerHex.(string))
 	if err != nil {
@@ -45,145 +38,136 @@ func CreateProduct(c *gin.Context) {
 		return
 	}
 
-	// 2) parse shop ID from URL
-	shopHex := c.Param("shopId")
-	shopID, err := primitive.ObjectIDFromHex(shopHex)
+	// parse & authorize shop (route uses :shopId)
+	shopParam := c.Param("shopId")
+	shopID, err := primitive.ObjectIDFromHex(shopParam)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid shopId"})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid shop ID"})
 		return
 	}
-
-	// 3) verify shop ownership
-	shop, err := services.GetShopByIDService(shopHex)
+	shop, err := services.GetShopByIDService(shopParam)
 	if err != nil || shop.OwnerID != sellerID {
 		c.JSON(http.StatusForbidden, gin.H{"error": "not authorized"})
 		return
 	}
 
-	// 4) bind JSON into our input struct
-	var input createProductInput
-	if err := c.ShouldBindJSON(&input); err != nil {
+	// bind payload
+	var in createProductInput
+	if err := c.ShouldBindJSON(&in); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload: " + err.Error()})
 		return
 	}
 
-	// 5) map input → models.Product
-	prod := &models.Product{
+	// map to model
+	p := &models.Product{
 		ShopID:      shopID,
 		UserID:      sellerID,
-		Name:        input.Name,
-		Description: input.Description,
-		Images:      input.Images,
-		Category:    input.Category,
-		Price:       input.Price,
+		Name:        in.Name,
+		Description: in.Description,
+		Images:      in.Images,
+		Category:    in.Category,
+		Price:       in.Price,
 		CreatedBy:   sellerID,
-		
 	}
 
-	// 6) build Variant slice
-	for _, v := range input.Variants {
-		// ensure options/prices lengths match
+	// build variants
+	for _, v := range in.Variants {
 		if len(v.Options) != len(v.Prices) {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "variant '" + v.Name + "' options/prices length mismatch"})
+			c.JSON(http.StatusBadRequest, gin.H{"error": "variant '" + v.Name + "' options/prices mismatch"})
 			return
 		}
 		for i, opt := range v.Options {
-			// each entry becomes its own Variant, keyed by variant name
-			prod.Variants = append(prod.Variants, models.Variant{
+			p.Variants = append(p.Variants, models.Variant{
 				Options: map[string]string{v.Name: opt},
 				Price:   v.Prices[i],
 				Stock:   0,
-				Image:   "",
 			})
 		}
 	}
 
-	// 7) persist
-	res, err := services.CreateProductService(prod)
+	// persist
+	res, err := services.CreateProductService(p)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "creation failed: " + err.Error()})
 		return
 	}
-
-	c.JSON(http.StatusOK, res)
+	c.JSON(http.StatusCreated, res)
 }
 
-// GetProducts lists products for one of the seller’s shops.
+// GetProducts lists products for a seller’s shop.
 // GET /seller/shops/:shopId/products
 func GetProducts(c *gin.Context) {
+	// seller auth
 	sellerHex, _ := c.Get("user_id")
 	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
 
-	shopID := c.Param("shopId")
-	shop, err := services.GetShopByIDService(shopID)
+	// parse & authorize shop
+	shopParam := c.Param("shopId")
+	shopID, err := primitive.ObjectIDFromHex(shopParam)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid shop ID"})
+		return
+	}
+	shop, err := services.GetShopByIDService(shopParam)
 	if err != nil || shop.OwnerID != sellerID {
 		c.JSON(http.StatusForbidden, gin.H{"error": "not authorized"})
 		return
 	}
 
-	all, err := services.GetAllProductsService()
+	// fetch filtered products via service
+	products, err := services.GetProductsByShopIDService(shopID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "fetch failed"})
 		return
 	}
-
-	var filtered []models.Product
-	for _, pr := range all {
-		if pr.ShopID == shop.ID {
-			filtered = append(filtered, pr)
-		}
-	}
-	c.JSON(http.StatusOK, filtered)
+	c.JSON(http.StatusOK, products)
 }
 
 // GetProduct retrieves one product in a seller’s shop.
 // GET /seller/shops/:shopId/products/:productId
 func GetProduct(c *gin.Context) {
+	// seller auth + shop authorize
 	sellerHex, _ := c.Get("user_id")
 	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
-
-	shopID := c.Param("shopId")
-	shop, err := services.GetShopByIDService(shopID)
+	shopParam := c.Param("shopId")
+	shop, err := services.GetShopByIDService(shopParam)
 	if err != nil || shop.OwnerID != sellerID {
 		c.JSON(http.StatusForbidden, gin.H{"error": "not authorized"})
 		return
 	}
 
-	productId := c.Param("productId")
-	pr, err := services.GetProductByIDService(productId)
-	if err != nil || pr.ShopID != shop.ID {
+	// load and verify product
+	prID := c.Param("productId")
+	p, err := services.GetProductByIDService(prID)
+	if err != nil || p.ShopID != shop.ID {
 		c.JSON(http.StatusNotFound, gin.H{"error": "product not found"})
 		return
 	}
-	c.JSON(http.StatusOK, pr)
+	c.JSON(http.StatusOK, p)
 }
 
 // UpdateProduct updates a product in the seller’s shop.
 // PATCH /seller/shops/:shopId/products/:productId
 func UpdateProduct(c *gin.Context) {
+	// auth + authorize
 	sellerHex, _ := c.Get("user_id")
 	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
-
-	shopID := c.Param("shopId")
-	shop, err := services.GetShopByIDService(shopID)
+	shopParam := c.Param("shopId")
+	shop, err := services.GetShopByIDService(shopParam)
 	if err != nil || shop.OwnerID != sellerID {
 		c.JSON(http.StatusForbidden, gin.H{"error": "not authorized"})
 		return
 	}
 
-	productId := c.Param("productId")
-	// Optional: verify ownership by loading product:
-	// pr, _ := services.GetProductByIDService(productId)
-	// if pr.ShopID != shop.ID { ... }
-
-	var updates bson.M
-	if err := c.ShouldBindJSON(&updates); err != nil {
+	// bind updates
+	var upd bson.M
+	if err := c.ShouldBindJSON(&upd); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
 		return
 	}
-	updates["shop_id"] = shop.ID
+	upd["shop_id"] = shop.ID
 
-	res, err := services.UpdateProductService(productId, updates)
+	res, err := services.UpdateProductService(c.Param("productId"), upd)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "update failed"})
 		return
@@ -194,18 +178,17 @@ func UpdateProduct(c *gin.Context) {
 // DeleteProduct deletes a product from a seller’s shop.
 // DELETE /seller/shops/:shopId/products/:productId
 func DeleteProduct(c *gin.Context) {
+	// auth + authorize
 	sellerHex, _ := c.Get("user_id")
 	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
-
-	shopID := c.Param("shopId")
-	shop, err := services.GetShopByIDService(shopID)
+	shopParam := c.Param("shopId")
+	shop, err := services.GetShopByIDService(shopParam)
 	if err != nil || shop.OwnerID != sellerID {
 		c.JSON(http.StatusForbidden, gin.H{"error": "not authorized"})
 		return
 	}
 
-	productId := c.Param("productId")
-	res, err := services.DeleteProductService(productId)
+	res, err := services.DeleteProductService(c.Param("productId"))
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "delete failed"})
 		return

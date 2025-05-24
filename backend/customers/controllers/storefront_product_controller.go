@@ -5,14 +5,22 @@ import (
 
 	productServices "github.com/Endale2/DRPS/shared/services"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // GetProductsByShop returns all products for a shop.
 // GET /shops/:shopid/products
 func GetProductsByShop(c *gin.Context) {
-	shopID := c.Param("shopid")
+	// parse shop ID
+	rawShop := c.Param("shopid")
+	shopOID, err := primitive.ObjectIDFromHex(rawShop)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid shop ID"})
+		return
+	}
 
-	products, err := productServices.GetProductsByShopIDService(shopID)
+	// fetch products
+	products, err := productServices.GetProductsByShopIDService(shopOID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch products"})
 		return

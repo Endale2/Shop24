@@ -49,14 +49,7 @@ func CountByCategoryService() (map[string]int64, error) {
 
 
 // GetProductsByShopIDService retrieves all products for a specific shop.
-func GetProductsByShopIDService(shopID string) ([]models.Product, error) {
-	// 1) convert hex string to ObjectID
-	oid, err := primitive.ObjectIDFromHex(shopID)
-	if err != nil {
-		return nil, err
-	}
-	// 2) filter on the exact BSON field name: "shop_id"
-	filter := bson.M{"shop_id": oid}
-	// 3) delegate to the repository
-	return repositories.GetProductsByFilter(filter)
+func GetProductsByShopIDService(shopOID primitive.ObjectID) ([]models.Product, error) {
+	// directly filter on shop_id
+	return repositories.GetProductsByFilter(bson.M{"shop_id": shopOID})
 }
