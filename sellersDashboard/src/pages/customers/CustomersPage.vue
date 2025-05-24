@@ -106,7 +106,7 @@
           <p class="text-sm text-gray-600">{{ c.phone || 'N/A' }}</p>
         </div>
         <div class="px-6 py-3 bg-gray-50 border-t border-gray-100 text-xs text-gray-500 flex justify-between">
-          <span>ID: {{ c.id.slice(0, 8) }}...</span>
+          <span>ID: {{ (c.id || '').slice(0, 8) }}...</span>
           <span>Joined {{ formatDate(c.createdAt) }}</span>
         </div>
       </div>
