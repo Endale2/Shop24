@@ -1,31 +1,34 @@
 // src/main.js
-import { createApp } from 'vue'
-import { createPinia }   from 'pinia'
-import piniaPersist      from 'pinia-plugin-persistedstate'
-import App               from './App.vue'
-import router            from './router'
-import { useShopStore }  from '@/store/shops'
+import { createApp }    from 'vue'
+import { createPinia }  from 'pinia'
+import piniaPersist     from 'pinia-plugin-persistedstate'
+import App              from './App.vue'
+import router           from './router'
+import { useShopStore } from '@/store/shops'
+import { useAuthStore } from '@/store/auth'
 
-const app = createApp(App)
+const app   = createApp(App)
 const pinia = createPinia()
 pinia.use(piniaPersist)
 app.use(pinia)
 app.use(router)
 
-// extract subdomain (e.g. "shop123" from "shop123.localhost")
-const host = window.location.hostname       // e.g. "shop123.localhost"
-const subdomain = host.split('.')[0] === 'localhost' 
-  ? null 
-  : host.split('.')[0]
+// Detect if we’re in “storefront” subdomain mode
+const { hostname, port } = window.location
+const isStorefront = port === '5174' && hostname.endsWith('.localhost')
 
-if (subdomain) {
-  // if a subdomain exists, set it as your activeShop in Pinia
+if (!isStorefront) {
+  // Normal dashboard app: fetch auth + shops
+  const auth = useAuthStore()
   const shops = useShopStore()
-  // you may want to fetch all shops first, then pick the one matching `subdomain`
-  shops.fetchShops().then(list => {
-    const match = list.find(s => s.id === subdomain)
-    if (match) shops.setActiveShop(match)
-  })
+
+  // Try to restore user & shops
+  auth.fetchMe().catch(() => {})          // no redirect here
+  shops.fetchShops().catch(() => {})      // ignore 401
+
+} else {
+  // Storefront: skip auth & shop list entirely
+  console.log('🛍️ Running in storefront mode for', hostname)
 }
 
 app.mount('#app')

@@ -14,7 +14,7 @@ import StorefrontPage from '@/pages/storefront/StorefrontPage.vue'
 const routes = [
    // If a subdomain is set (we detect in main.js),
   // `/` will render the storefront:
-  {
+   {
     path: '/',
     name: 'Storefront',
     component: StorefrontPage,
