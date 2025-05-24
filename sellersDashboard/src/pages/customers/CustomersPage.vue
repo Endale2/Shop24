@@ -137,7 +137,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { useShopStore } from '@/stores/shops'
+import { useShopStore } from '@/store/shops'
 import { customerService } from '@/services/customer'
 import {
   ViewListIcon,
