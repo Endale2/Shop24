@@ -3,6 +3,7 @@
     class="relative h-72 md:h-96 bg-cover bg-center flex items-center justify-center text-white overflow-hidden"
     :style="`background-image: url(${shop?.banner || '/images/default-shop-banner.jpg'});`"
   >
+    <!-- dark overlay -->
     <div class="absolute inset-0 bg-black bg-opacity-60"></div>
 
     <div class="relative z-10 text-center p-6 md:p-8 max-w-xl mx-auto">
@@ -13,8 +14,9 @@
         {{ shop?.description || 'Discover unique products and amazing deals right here.' }}
       </p>
 
+      <!-- Shop Now button -->
       <router-link
-        v-if="shop?.name"
+        v-if="shop?.slug"
         to="/products"
         class="mt-8 inline-block bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-8 rounded-full shadow-lg transform hover:scale-105 transition duration-300 ease-in-out"
       >
@@ -25,8 +27,12 @@
 </template>
 
 <script setup>
-import { useShopStore } from '@/stores/shop';
-import { RouterLink } from 'vue-router'; // Important for using router-link
+import { defineProps } from 'vue'
 
-const shop = useShopStore().info;
+defineProps({
+  shop: {
+    type: Object,
+    default: () => ({})
+  }
+})
 </script>

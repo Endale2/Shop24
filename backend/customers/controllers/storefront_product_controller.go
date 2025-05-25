@@ -3,38 +3,50 @@ package controllers
 import (
 	"net/http"
 
+	shopService "github.com/Endale2/DRPS/shared/services"
 	productServices "github.com/Endale2/DRPS/shared/services"
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// GetProductsByShop returns all products for a shop.
-// GET /shops/:shopid/products
+// GetProductsByShop returns all products for a shop by slug.
+// GET /shops/:slug/products
 func GetProductsByShop(c *gin.Context) {
-	// parse shop ID
-	rawShop := c.Param("shopid")
-	shopOID, err := primitive.ObjectIDFromHex(rawShop)
+	slug := c.Param("slug")
+	shop, err := shopService.GetShopBySlugService(slug)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid shop ID"})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to retrieve shop"})
+		return
+	}
+	if shop == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "shop not found"})
 		return
 	}
 
-	// fetch products
-	products, err := productServices.GetProductsByShopIDService(shopOID)
+	products, err := productServices.GetProductsByShopSlugService(slug)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch products"})
+		return
+	}
+	if products == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "no products found"})
 		return
 	}
 
 	c.JSON(http.StatusOK, products)
 }
 
-// GetProductDetail returns one product by ID.
-// GET /shops/:shopid/products/:productid
+// GetProductDetail returns one product by its slug.
+// GET /shops/:slug/products/:productslug
 func GetProductDetail(c *gin.Context) {
-	productID := c.Param("productid")
-	product, err := productServices.GetProductByIDService(productID)
+	// extract shopSlug to ensure nested route, though not used to fetch product
+	// you could verify that product belongs to shop if needed
+	productSlug := c.Param("productslug")
+	product, err := productServices.GetProductBySlugService(productSlug)
 	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to retrieve product"})
+		return
+	}
+	if product == nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "product not found"})
 		return
 	}

@@ -8,25 +8,19 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-// GetStorefront handles public GET /storefront/:id requests to retrieve a shop by ID.
+// GetStorefront handles GET /storefront/:slug
 func GetStorefront(c *gin.Context) {
-	// Extract shop ID from path parameter
-	id := c.Param("shopid")
+    slug := c.Param("slug")
 
-	// Call service layer to get shop
-	shop, err := shopServices.GetShopByIDService(id)
-	if err != nil {
-		// On error (e.g., invalid ID or DB error), return 400 or 500 accordingly
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
+    shop, err := shopServices.GetShopBySlugService(slug)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+    if shop == nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "shop not found"})
+        return
+    }
 
-	if shop == nil {
-		// No shop found for the given ID
-		c.JSON(http.StatusNotFound, gin.H{"error": "shop not found"})
-		return
-	}
-
-	// Return shop data
-	c.JSON(http.StatusOK, shop)
+    c.JSON(http.StatusOK, shop)
 }

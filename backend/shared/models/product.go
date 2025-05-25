@@ -26,6 +26,7 @@ type Product struct {
 	ShopID      primitive.ObjectID `bson:"shop_id,omitempty" json:"shop_id"`
 	UserID      primitive.ObjectID `bson:"user_id,omitempty" json:"user_id"`
 	Name        string             `bson:"name" json:"name"`
+	Slug          string             `bson:"slug" json:"slug"`
 	Description string             `bson:"description" json:"description"`
 	Images      []string           `bson:"images" json:"images"` // General images for the product
 	Category    string             `bson:"category" json:"category"`

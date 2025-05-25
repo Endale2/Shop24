@@ -1,8 +1,14 @@
 <template>
-  <div>
-    <ShopHero :shop="shop.info" />
+  <div v-if="shop.current">
+    <ShopHero :shop="shop.current" />
     <h2 class="text-2xl font-bold my-4">Products</h2>
-    <ProductGrid :products="shop.products" />
+    <ProductGrid
+      :products="shop.products"
+      :shopSlug="shop.current.slug"
+    />
+  </div>
+  <div v-else class="flex justify-center items-center h-full">
+    <p>Loading shop...</p>
   </div>
 </template>
 

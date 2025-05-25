@@ -9,13 +9,13 @@ import (
 
 func StorefrontRoutes(r *gin.Engine) {
 	shops := r.Group("/shops")
-	{
-		shops.GET("/:shopid", controllers.GetStorefront) // shop detail
-		// products nested under the same :shopid
-		prods := shops.Group("/:shopid/products")
-		{
-			prods.GET("", controllers.GetProductsByShop)
-			prods.GET("/:productid", controllers.GetProductDetail)
-		}
-	}
+{
+    shops.GET("/:slug", controllers.GetStorefront)
+    prods := shops.Group("/:slug/products")
+    {
+        prods.GET("", controllers.GetProductsByShop)
+        prods.GET("/:productslug", controllers.GetProductDetail)
+    }
+}
+
 }

@@ -33,3 +33,9 @@ func UpdateShopService(id string, updatedData bson.M) (*mongo.UpdateResult, erro
 func DeleteShopService(id string) (*mongo.DeleteResult, error) {
 	return repositories.DeleteShop(id)
 }
+
+
+// GetShopBySlugService retrieves a Shop by its slug.
+func GetShopBySlugService(slug string) (*models.Shop, error) {
+    return repositories.GetShopBySlug(slug)
+}

@@ -53,3 +53,14 @@ func GetProductsByShopIDService(shopOID primitive.ObjectID) ([]models.Product, e
 	// directly filter on shop_id
 	return repositories.GetProductsByFilter(bson.M{"shop_id": shopOID})
 }
+
+//get  many  products  by given  shop  slug
+func GetProductsByShopSlugService(slug string) ([]models.Product, error) {
+    return repositories.GetProductsByShopSlug(slug)
+}
+
+// GetProductBySlugService retrieves a product by its slug.
+func GetProductBySlugService(slug string) (*models.Product, error) {
+    return repositories.GetProductBySlug(slug)
+}
+

@@ -1,12 +1,13 @@
 import api from './api'
 
-
-export async function fetchProducts(shopId) {
-  const { data } = await api.get(`/shops/${shopId}/products`)
+// Products by shop slug (used on Home and ProductsPage)
+export async function fetchProducts(shopSlug) {
+  const { data } = await api.get(`/shops/${shopSlug}/products`)
   return data
 }
 
-export async function fetchProductById(shopId, productId) {
-  const { data } = await api.get(`/shops/${shopId}/products/${productId}`)
+// Single product by shop and product slug
+export async function fetchProductBySlug(shopSlug, productSlug) {
+  const { data } = await api.get(`/shops/${shopSlug}/products/${productSlug}`)
   return data
 }

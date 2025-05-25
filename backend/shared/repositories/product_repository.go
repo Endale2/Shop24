@@ -138,3 +138,35 @@ func GetProductsByFilter(filter bson.M) ([]models.Product, error) {
 	}
 	return products, nil
 }
+
+
+// GetProductsByShopSlug retrieves all products for the shop with the given slug.
+func GetProductsByShopSlug(slug string) ([]models.Product, error) {
+    // 1) Lookup the shop by slug
+    shop, err := GetShopBySlug(slug)
+    if err != nil {
+        return nil, err
+    }
+    if shop == nil {
+        // no such shop
+        return nil, nil
+    }
+    // 2) Use the existing filter helper
+    return GetProductsByFilter(bson.M{"shop_id": shop.ID})
+}
+
+// GetProductBySlug retrieves a product by its slug.
+func GetProductBySlug(slug string) (*models.Product, error) {
+    var p models.Product
+    err := productCollection.FindOne(
+        context.Background(),
+        bson.M{"slug": slug},
+    ).Decode(&p)
+    if err != nil {
+        if err == mongo.ErrNoDocuments {
+            return nil, nil
+        }
+        return nil, err
+    }
+    return &p, nil
+}
