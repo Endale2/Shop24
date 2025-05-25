@@ -125,6 +125,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+// ✅ Adjust this import to point to your actual stores folder:
 import { useShopStore } from '@/store/shops'
 import { productService } from '@/services/product'
 import {
@@ -146,14 +147,12 @@ const currentView = ref('list')
 // Computed
 const activeShop = computed(() => shopStore.activeShop)
 
-// Helper to style view toggle buttons
 function viewButtonClass(view) {
   return view === currentView.value
     ? 'bg-blue-600 text-white hover:bg-blue-700'
     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
 }
 
-// Fetch products on mount
 onMounted(async () => {
   if (!activeShop.value) {
     error.value = 'No shop selected. Please select a shop to view products.'
@@ -161,7 +160,8 @@ onMounted(async () => {
   }
   loading.value = true
   try {
-    products.value = await productService.fetchByShop(activeShop.value.id)
+    // ⚠️ Make sure this matches your service method name:
+    products.value = await productService.fetchAllByShop(activeShop.value.id)
   } catch (e) {
     console.error(e)
     error.value = 'Failed to load products. Please try again later.'
@@ -170,7 +170,6 @@ onMounted(async () => {
   }
 })
 
-// Format helpers
 function formatDate(dt) {
   return dt
     ? new Date(dt).toLocaleDateString(undefined, {
@@ -185,7 +184,6 @@ function formatPrice(p) {
   return p != null ? `$${p.toFixed(2)}` : 'N/A'
 }
 
-// Navigate to detail
 function goToDetail(productId) {
   router.push({ name: 'ProductDetail', params: { productId } })
 }

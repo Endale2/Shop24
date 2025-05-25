@@ -1,4 +1,3 @@
-// src/services/api.js
 import axios from 'axios'
 
 const api = axios.create({
@@ -6,41 +5,35 @@ const api = axios.create({
   withCredentials: true,
 })
 
-// Helpers for queueing refresh
+// token‐refresh queue logic, only for seller routes:
 let isRefreshing = false
 let failedQueue = []
-function processQueue(error, token = null) {
-  failedQueue.forEach(p => error ? p.reject(error) : p.resolve(token))
+function processQueue(err, token = null) {
+  failedQueue.forEach(p => err ? p.reject(err) : p.resolve(token))
   failedQueue = []
 }
-
-// Only try to refresh on these protected paths:
-const refreshablePaths = ['/auth/seller/me', '/seller/']  // substring match
+const refreshablePaths = ['/auth/seller/me', '/seller/']
 
 api.interceptors.response.use(
   r => r,
   async err => {
     const { config, response } = err
-    const originalRequest = config
-
-    // If 401 *and* this is a refreshable endpoint, attempt token refresh
+    const orig = config
     const is401 = response?.status === 401
-    const needsRefresh = refreshablePaths.some(p => originalRequest.url.includes(p))
+    const needsRefresh = refreshablePaths.some(p => orig.url.includes(p))
 
-    if (is401 && needsRefresh && !originalRequest._retry) {
-      originalRequest._retry = true
-
+    if (is401 && needsRefresh && !orig._retry) {
+      orig._retry = true
       if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          failedQueue.push({ resolve, reject })
-        }).then(() => api(originalRequest))
+        return new Promise((res, rej) => {
+          failedQueue.push({ resolve: res, reject: rej })
+        }).then(() => api(orig))
       }
-
       isRefreshing = true
       try {
-        await api.post('/auth/seller/refresh')   // your refresh endpoint
+        await api.post('/auth/seller/refresh')
         processQueue(null)
-        return api(originalRequest)
+        return api(orig)
       } catch (refreshErr) {
         processQueue(refreshErr)
         return Promise.reject(refreshErr)
@@ -49,7 +42,6 @@ api.interceptors.response.use(
       }
     }
 
-    // Otherwise just reject immediately (so public storefront .catch() can handle it)
     return Promise.reject(err)
   }
 )
