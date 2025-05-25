@@ -2,18 +2,20 @@ package main
 
 import (
 	"log"
+	"net/url"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 
-	"github.com/Endale2/DRPS/config"
-	authRoutes "github.com/Endale2/DRPS/auth/routes"
 	adminRoutes "github.com/Endale2/DRPS/admin/routes"
-	sellerRoutes "github.com/Endale2/DRPS/sellers/routes"
+	authRoutes "github.com/Endale2/DRPS/auth/routes"
+	"github.com/Endale2/DRPS/config"
 	storefrontRoutes "github.com/Endale2/DRPS/customers/routes"
+	sellerRoutes "github.com/Endale2/DRPS/sellers/routes"
 )
 
 func main() {
@@ -34,11 +36,33 @@ func main() {
 	// Initialize Gin router
 	r := gin.Default()
 
-	// CORS configuration: only allow dashboard and root storefront
+	// CORS: allow three exact origins plus any subdomain on 5175
 	corsConfig := cors.Config{
-		AllowOrigins: []string{
-			"http://localhost:5173", // Seller Dashboard
-			"http://localhost:5174", // Storefront root
+		AllowOriginFunc: func(origin string) bool {
+			u, err := url.Parse(origin)
+			if err != nil {
+				return false
+			}
+			host := u.Hostname()
+			port := u.Port()
+
+			// 1) Admin Dashboard
+			if host == "localhost" && port == "5173" {
+				return true
+			}
+			// 2) Seller root app
+			if host == "localhost" && port == "5174" {
+				return true
+			}
+			// 3) Storefront root
+			if host == "localhost" && port == "5175" {
+				return true
+			}
+			// 4) Any storefront subdomain on 5175, e.g. shop123.localhost:5175
+			if port == "5175" && strings.HasSuffix(host, ".localhost") {
+				return true
+			}
+			return false
 		},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
@@ -46,6 +70,7 @@ func main() {
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}
+
 
 	// Apply CORS middleware
 	r.Use(cors.New(corsConfig))
