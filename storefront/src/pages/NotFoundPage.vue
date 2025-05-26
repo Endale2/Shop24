@@ -1,6 +1,3 @@
 <template>
-    <h1>
-        Not  Found
-    </h1>
+  <h1 class="text-center py-20">Not Found</h1>
 </template>
-<script></script>

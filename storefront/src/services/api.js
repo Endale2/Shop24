@@ -1,4 +1,3 @@
-// src/services/api.js
 import axios from 'axios'
 
 const api = axios.create({
@@ -13,6 +12,6 @@ function processQueue(error, token = null) {
   failedQueue = []
 }
 
-// (your interceptor logic…)
+// (interceptor logic…)
 
-export default api   // <<— default export
+export default api

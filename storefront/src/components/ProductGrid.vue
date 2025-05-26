@@ -1,10 +1,11 @@
+// src/components/ProductGrid.vue
 <template>
-  <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 p-4">
+  <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
     <router-link
       v-for="p in products"
-      :key="p.slug"
-      :to="{ name: 'Product', params: { shopSlug: shopSlug, productSlug: p.slug } }"
-      class="block"
+      :key="p.id"
+      :to="`/products/${p.slug}`"
+      class="block group transform hover:scale-105 transition duration-300"
     >
       <ProductCard :product="p" />
     </router-link>
@@ -13,10 +14,17 @@
 
 <script setup>
 import { defineProps } from 'vue'
-import ProductCard from './ProductCard.vue'
+import ProductCard      from './ProductCard.vue'
 
 defineProps({
-  products: { type: Array, default: () => [] },
-  shopSlug: { type: String, required: true }
+  products: { type: Array, required: true }
 })
 </script>
+
+<style scoped>
+/* Optional: fade-in for cards */
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+</style>

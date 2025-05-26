@@ -1,33 +1,50 @@
-// src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
-import HomePage from '@/pages/HomePage.vue'
-import ProductsPage from '@/pages/ProductsPage.vue'
-import ProductDetail from '@/pages/ProductDetail.vue'
-import NotFoundPage from '@/pages/NotFoundPage.vue'
+import { useShopStore }         from '@/stores/shop'
+import HomePage                 from '@/pages/HomePage.vue'
+import ProductsPage             from '@/pages/ProductsPage.vue'
+import ProductDetail            from '@/pages/ProductDetail.vue'
+import NotFoundPage             from '@/pages/NotFoundPage.vue'
 
 const routes = [
-  { path: '/', name: 'Home', component: HomePage },
-  { path: '/products', name: 'Products', component: ProductsPage },
+  { path: '/',                     name: 'Home',     component: HomePage },
+  { path: '/products',             name: 'Products', component: ProductsPage },
   {
-    // MODIFIED: Path now includes :shopSlug for clarity and to match API structure
-    // This allows ProductGrid to link to this route with both slugs as params.
-    path: '/products/:productSlug',
-    name: 'Product',
-    component: ProductDetail,
-    props: true // This will pass shopSlug and productSlug as props to the component
-  },
-  { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFoundPage }
+  path: '/products/:productSlug',
+  name: 'ProductDetail',              // ← Name must be exactly 'Product'
+  component: ProductDetail,
+  props: route => ({
+    shopSlug:    window.location.host.split('.')[0],
+    productSlug: route.params.productSlug
+  })
+}
+,
+  { path: '/:pathMatch(.*)*',      name: 'NotFound', component: NotFoundPage }
 ]
 
-export default createRouter({
+const router = createRouter({
   history: createWebHistory(),
   routes,
-  // Optional: Scroll behavior for navigation
   scrollBehavior(to, from, savedPosition) {
-    if (savedPosition) {
-      return savedPosition;
-    } else {
-      return { top: 0 };
-    }
+    return savedPosition || { top: 0 }
   }
 })
+
+router.beforeEach(async (to, from, next) => {
+  const host     = window.location.host.split(':')[0]
+  const shopSlug = host.split('.')[0]
+
+  const shop = useShopStore()
+
+  if (!shop.current || shop.current.slug !== shopSlug) {
+    try {
+      await shop.fetchShop(shopSlug)
+      await shop.fetchProducts(shopSlug)
+    } catch (e) {
+      console.error('Error fetching shop data:', e)
+    }
+  }
+
+  next()
+})
+
+export default router
