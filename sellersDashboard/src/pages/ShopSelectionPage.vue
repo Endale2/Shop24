@@ -107,6 +107,7 @@ function selectShop(shop) {
   shopStore.setActiveShop(shop)
   router.push({ name: 'Dashboard' })
 }
+
 </script>
 
 <style scoped>

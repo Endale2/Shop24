@@ -154,21 +154,20 @@ function viewButtonClass(view) {
 }
 
 onMounted(async () => {
-  if (!activeShop.value) {
-    error.value = 'No shop selected. Please select a shop to view products.'
+  console.log('🔎 products  activeShop is:', activeShop.value)
+  if (!activeShop.value?.id) {
+    router.replace({ name: 'ShopSelection' })
     return
   }
+
   loading.value = true
   try {
-    // ⚠️ Make sure this matches your service method name:
     products.value = await productService.fetchAllByShop(activeShop.value.id)
-  } catch (e) {
-    console.error(e)
-    error.value = 'Failed to load products. Please try again later.'
   } finally {
     loading.value = false
   }
 })
+
 
 function formatDate(dt) {
   return dt

@@ -4,7 +4,7 @@ export const shopService = {
   async fetchShops() {
     const res = await api.get('/seller/shops')
     return res.data.map(s => ({
-      id:          s._id ?? s.ID,
+      id:          s._id ?? s.id,
       name:        s.Name ?? s.name,
       ownerId:     s.OwnerID ?? s.ownerId,
       description: s.Description ?? s.description,

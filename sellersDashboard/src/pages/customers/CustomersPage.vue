@@ -171,13 +171,15 @@ const filteredCustomers = computed(() => {
 
 // Fetch customers
 onMounted(async () => {
-  if (!activeShop.value) {
-    error.value = 'No shop selected. Please select a shop to view customers.'
+  console.log('🔎 customers  activeShop is:', activeShop.value)
+  if (!activeShop.value?.id) {
+    router.replace({ name: 'ShopSelection' })
     return
   }
   loading.value = true
   try {
     customers.value = await customerService.fetchAll(activeShop.value.id)
+
   } catch (e) {
     console.error(e)
     error.value = 'Failed to load customers. Please try again later.'
