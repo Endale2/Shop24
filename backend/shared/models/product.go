@@ -19,6 +19,7 @@ type Variant struct {
 
 
 
+
 // Product represents the main product entity.
 // It can have multiple variants with different options, prices, and stock levels.
 type Product struct {
