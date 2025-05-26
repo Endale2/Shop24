@@ -179,6 +179,9 @@ onMounted(async () => {
   loading.value = true
   try {
     customers.value = await customerService.fetchAll(activeShop.value.id)
+  const result = await customerService.fetchAll(activeShop.value.id)
+customers.value = Array.isArray(result) ? result : []
+
 
   } catch (e) {
     console.error(e)
