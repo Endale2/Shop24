@@ -14,6 +14,7 @@
 import { useShopStore } from '@/stores/shop'
 import { ref }         from 'vue'
 
+
 const shop = useShopStore()
 const year = new Date().getFullYear()
 </script>
