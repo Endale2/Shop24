@@ -40,7 +40,7 @@
       <div class="mt-auto pt-2 flex items-center justify-between">
         <p class="text-indigo-600 text-lg sm:text-xl font-bold">
           ${{ product.price.toFixed(2) }}
-          <span v-if="product.originalPrice && product.originalPrice > product.price" class="text-sm text-gray-500 line-through ml-2">
+          <span v-if="product.originalPrice && product.originalPrice > product.display_price" class="text-sm text-gray-500 line-through ml-2">
             ${{ product.originalPrice.toFixed(2) }}
           </span>
         </p>
