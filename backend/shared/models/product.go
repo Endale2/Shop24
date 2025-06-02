@@ -11,6 +11,7 @@ import (
 // The Options map can hold any variant attribute such as "color", "size", "capacity", etc.
 
 type Variant struct {
+	VariantID primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	Options map[string]string `bson:"options" json:"options"` // e.g., {"color": "Red", "size": "M"} or {"capacity": "128GB"}
 	Price   float64           `bson:"price" json:"price"`     // Price for this specific variant
 	Stock   int               `bson:"stock" json:"stock"`     // Available stock
@@ -26,6 +27,7 @@ type Product struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
 	ShopID      primitive.ObjectID `bson:"shop_id,omitempty" json:"shop_id"`
 	UserID      primitive.ObjectID `bson:"user_id,omitempty" json:"user_id"`
+	DiscountID  []primitive.ObjectID `bson:"discount_id,omitempty" json:"discount_id"`
 	Name        string             `bson:"name" json:"name"`
 	Slug          string             `bson:"slug" json:"slug"`
 	Description string             `bson:"description" json:"description"`
