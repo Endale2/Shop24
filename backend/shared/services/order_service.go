@@ -9,7 +9,6 @@ import (
 
 // CreateOrderService creates a new order.
 func CreateOrderService(order *models.Order) (*mongo.InsertOneResult, error) {
-	// Place for business validations (e.g., inventory check, price calculation)
 	return repositories.CreateOrder(order)
 }
 
@@ -25,7 +24,6 @@ func GetAllOrdersService() ([]models.Order, error) {
 
 // UpdateOrderService updates fields of an order identified by its ID.
 func UpdateOrderService(id string, updatedData bson.M) (*mongo.UpdateResult, error) {
-	// Place for business rules (e.g., status transition validation)
 	return repositories.UpdateOrder(id, updatedData)
 }
 
@@ -33,3 +31,10 @@ func UpdateOrderService(id string, updatedData bson.M) (*mongo.UpdateResult, err
 func DeleteOrderService(id string) (*mongo.DeleteResult, error) {
 	return repositories.DeleteOrder(id)
 }
+
+
+
+
+// Also purely delegates.
+
+// Suggestion: At order creation time, you probably call cart_service.recalcCart one last time, subtract inventory, set OrderNumber, etc. You could add that in CreateOrderService.

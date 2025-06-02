@@ -1,18 +1,20 @@
+// customers/controllers/storefront_product_controller.go
 package controllers
 
 import (
 	"net/http"
 
-	shopService "github.com/Endale2/DRPS/shared/services"
-	productServices "github.com/Endale2/DRPS/shared/services"
+	"github.com/Endale2/DRPS/shared/services"
 	"github.com/gin-gonic/gin"
 )
 
-// GetProductsByShop returns all products for a shop by slug.
-// GET /shops/:slug/products
+// GetProductsByShop returns all products for a shop identified by its slug.
+// GET /shops/:shopSlug/products
 func GetProductsByShop(c *gin.Context) {
-	slug := c.Param("slug")
-	shop, err := shopService.GetShopBySlugService(slug)
+	shopSlug := c.Param("shopSlug")
+
+	// 1) Verify shop exists
+	shop, err := services.GetShopBySlugService(shopSlug)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to retrieve shop"})
 		return
@@ -22,26 +24,35 @@ func GetProductsByShop(c *gin.Context) {
 		return
 	}
 
-	products, err := productServices.GetProductsByShopSlugService(slug)
+	// 2) Fetch products by shop slug (service filters by shop_id internally)
+	products, err := services.GetProductsByShopSlugService(shopSlug)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch products"})
 		return
 	}
-	if products == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "no products found"})
-		return
-	}
-
+	// It’s valid for a shop to have zero products; return empty array
 	c.JSON(http.StatusOK, products)
 }
 
-// GetProductDetail returns one product by its slug.
-// GET /shops/:slug/products/:productslug
+// GetProductDetail returns one product by its slug, verifying it belongs to this shop.
+// GET /shops/:shopSlug/products/:productSlug
 func GetProductDetail(c *gin.Context) {
-	// extract shopSlug to ensure nested route, though not used to fetch product
-	// you could verify that product belongs to shop if needed
-	productSlug := c.Param("productslug")
-	product, err := productServices.GetProductBySlugService(productSlug)
+	shopSlug := c.Param("shopSlug")
+	productSlug := c.Param("productSlug")
+
+	// 1) Verify shop exists
+	shop, err := services.GetShopBySlugService(shopSlug)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to retrieve shop"})
+		return
+	}
+	if shop == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "shop not found"})
+		return
+	}
+
+	// 2) Fetch product by slug
+	product, err := services.GetProductBySlugService(productSlug)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to retrieve product"})
 		return
@@ -50,5 +61,12 @@ func GetProductDetail(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "product not found"})
 		return
 	}
+
+	// 3) Ensure product.ShopID matches shop.ID
+	if product.ShopID != shop.ID {
+		c.JSON(http.StatusNotFound, gin.H{"error": "product does not belong to this shop"})
+		return
+	}
+
 	c.JSON(http.StatusOK, product)
 }

@@ -9,7 +9,6 @@ import (
 
 // CreateShopService creates a new Shop.
 func CreateShopService(shop *models.Shop) (*mongo.InsertOneResult, error) {
-	// You can add business logic or validations here if needed.
 	return repositories.CreateShop(shop)
 }
 
@@ -25,7 +24,6 @@ func GetAllShopsService() ([]models.Shop, error) {
 
 // UpdateShopService updates fields of a Shop identified by its ID.
 func UpdateShopService(id string, updatedData bson.M) (*mongo.UpdateResult, error) {
-	// Add any service-level validations or business rules here.
 	return repositories.UpdateShop(id, updatedData)
 }
 
@@ -34,8 +32,14 @@ func DeleteShopService(id string) (*mongo.DeleteResult, error) {
 	return repositories.DeleteShop(id)
 }
 
-
 // GetShopBySlugService retrieves a Shop by its slug.
 func GetShopBySlugService(slug string) (*models.Shop, error) {
-    return repositories.GetShopBySlug(slug)
+	return repositories.GetShopBySlug(slug)
 }
+
+
+// Notes:
+
+// Correct and simple.
+
+// Suggestion: If you want to enforce “unique slug” at creation, check GetShopBySlug first.

@@ -1,31 +1,29 @@
 package services
 
 import (
-	"github.com/Endale2/DRPS/customers/models"
+	custModel "github.com/Endale2/DRPS/customers/models"
 	"github.com/Endale2/DRPS/shared/repositories"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // CreateCustomerService creates a new customer.
-func CreateCustomerService(customer *models.Customer) (*mongo.InsertOneResult, error) {
-	// Add any business logic or validations here (e.g., check email format).
+func CreateCustomerService(customer *custModel.Customer) (*mongo.InsertOneResult, error) {
 	return repositories.CreateCustomer(customer)
 }
 
 // GetCustomerByIDService retrieves a customer by its ID.
-func GetCustomerByIDService(id string) (*models.Customer, error) {
+func GetCustomerByIDService(id string) (*custModel.Customer, error) {
 	return repositories.GetCustomerByID(id)
 }
 
 // GetAllCustomersService returns all customers.
-func GetAllCustomersService() ([]models.Customer, error) {
+func GetAllCustomersService() ([]custModel.Customer, error) {
 	return repositories.GetAllCustomers()
 }
 
 // UpdateCustomerService updates fields of a customer identified by its ID.
 func UpdateCustomerService(id string, updatedData bson.M) (*mongo.UpdateResult, error) {
-	// Place to add service-level validations or business rules (e.g., phone number format).
 	return repositories.UpdateCustomer(id, updatedData)
 }
 
