@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/Endale2/DRPS/shared/models"
 	"github.com/Endale2/DRPS/shared/services"
@@ -9,8 +10,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
-
-// variantInput and createProductInput remain unchanged
 
 type variantInput struct {
 	Name    string    `json:"name" binding:"required"`
@@ -28,9 +27,16 @@ type createProductInput struct {
 	Variants    []variantInput `json:"variants"`
 }
 
+// slugify converts a name to a URL-friendly slug
+func slugify(name string) string {
+	slug := strings.ToLower(name)
+	slug = strings.ReplaceAll(slug, " ", "-")
+	slug = strings.ReplaceAll(slug, "_", "-")
+	return slug
+}
+
 // CreateProduct handles POST /seller/shops/:shopId/products
 func CreateProduct(c *gin.Context) {
-	// seller auth
 	sellerHex, _ := c.Get("user_id")
 	sellerID, err := primitive.ObjectIDFromHex(sellerHex.(string))
 	if err != nil {
@@ -38,7 +44,6 @@ func CreateProduct(c *gin.Context) {
 		return
 	}
 
-	// parse & authorize shop (route uses :shopId)
 	shopParam := c.Param("shopId")
 	shopID, err := primitive.ObjectIDFromHex(shopParam)
 	if err != nil {
@@ -51,18 +56,18 @@ func CreateProduct(c *gin.Context) {
 		return
 	}
 
-	// bind payload
 	var in createProductInput
 	if err := c.ShouldBindJSON(&in); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload: " + err.Error()})
 		return
 	}
 
-	// map to model
+	slug := slugify(in.Name)
 	p := &models.Product{
 		ShopID:      shopID,
 		UserID:      sellerID,
 		Name:        in.Name,
+		Slug:        slug,
 		Description: in.Description,
 		Images:      in.Images,
 		Category:    in.Category,
@@ -70,7 +75,6 @@ func CreateProduct(c *gin.Context) {
 		CreatedBy:   sellerID,
 	}
 
-	// build variants
 	for _, v := range in.Variants {
 		if len(v.Options) != len(v.Prices) {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "variant '" + v.Name + "' options/prices mismatch"})
@@ -85,7 +89,6 @@ func CreateProduct(c *gin.Context) {
 		}
 	}
 
-	// persist
 	res, err := services.CreateProductService(p)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "creation failed: " + err.Error()})
@@ -94,14 +97,10 @@ func CreateProduct(c *gin.Context) {
 	c.JSON(http.StatusCreated, res)
 }
 
-// GetProducts lists products for a seller’s shop.
-// GET /seller/shops/:shopId/products
 func GetProducts(c *gin.Context) {
-	// seller auth
 	sellerHex, _ := c.Get("user_id")
 	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
 
-	// parse & authorize shop
 	shopParam := c.Param("shopId")
 	shopID, err := primitive.ObjectIDFromHex(shopParam)
 	if err != nil {
@@ -114,7 +113,6 @@ func GetProducts(c *gin.Context) {
 		return
 	}
 
-	// fetch filtered products via service
 	products, err := services.GetProductsByShopIDService(shopID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "fetch failed"})
@@ -123,10 +121,7 @@ func GetProducts(c *gin.Context) {
 	c.JSON(http.StatusOK, products)
 }
 
-// GetProduct retrieves one product in a seller’s shop.
-// GET /seller/shops/:shopId/products/:productId
 func GetProduct(c *gin.Context) {
-	// seller auth + shop authorize
 	sellerHex, _ := c.Get("user_id")
 	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
 	shopParam := c.Param("shopId")
@@ -136,7 +131,6 @@ func GetProduct(c *gin.Context) {
 		return
 	}
 
-	// load and verify product
 	prID := c.Param("productId")
 	p, err := services.GetProductByIDService(prID)
 	if err != nil || p.ShopID != shop.ID {
@@ -146,10 +140,7 @@ func GetProduct(c *gin.Context) {
 	c.JSON(http.StatusOK, p)
 }
 
-// UpdateProduct updates a product in the seller’s shop.
-// PATCH /seller/shops/:shopId/products/:productId
 func UpdateProduct(c *gin.Context) {
-	// auth + authorize
 	sellerHex, _ := c.Get("user_id")
 	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
 	shopParam := c.Param("shopId")
@@ -159,7 +150,6 @@ func UpdateProduct(c *gin.Context) {
 		return
 	}
 
-	// bind updates
 	var upd bson.M
 	if err := c.ShouldBindJSON(&upd); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
@@ -175,10 +165,7 @@ func UpdateProduct(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
-// DeleteProduct deletes a product from a seller’s shop.
-// DELETE /seller/shops/:shopId/products/:productId
 func DeleteProduct(c *gin.Context) {
-	// auth + authorize
 	sellerHex, _ := c.Get("user_id")
 	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
 	shopParam := c.Param("shopId")
