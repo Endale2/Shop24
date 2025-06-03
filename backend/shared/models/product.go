@@ -13,6 +13,7 @@ type Variant struct {
     Stock     int                   `bson:"stock"            json:"stock"`
     Image     string                `bson:"image,omitempty"  json:"image,omitempty"`
 
+    
     // Timestamps for each variant:
     CreatedAt time.Time             `bson:"createdAt,omitempty" json:"createdAt,omitempty"`
     UpdatedAt time.Time             `bson:"updatedAt,omitempty" json:"updatedAt,omitempty"`
