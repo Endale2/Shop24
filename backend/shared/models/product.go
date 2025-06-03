@@ -5,6 +5,7 @@ import (
     "time"
 )
 
+
 // Variant represents a specific version of a product.
 type Variant struct {
     VariantID primitive.ObjectID    `bson:"_id,omitempty"    json:"id"`
