@@ -42,4 +42,23 @@ func SellerRoute(r *gin.Engine) {
 		}
 
 	}
+
+	// ─────  nested collections ─────
+		collGroup := shopGroup.Group("/collections")
+		{
+			// Create a new collection
+			collGroup.POST("", controllers.CreateCollection)
+
+			// List all collections for this shop
+			collGroup.GET("", controllers.GetCollections)
+
+			// CRUD on a single collection
+			collGroup.GET("/:collId", controllers.GetCollection)
+			collGroup.PATCH("/:collId", controllers.UpdateCollection)
+			collGroup.DELETE("/:collId", controllers.DeleteCollection)
+
+			// Add/remove products in a given collection
+			collGroup.POST("/:collId/products", controllers.AddProductToCollection)
+			collGroup.DELETE("/:collId/products/:productId", controllers.RemoveProductFromCollection)
+		}
 }

@@ -11,6 +11,7 @@ import (
 // and smart collections (where products are automatically included based on defined filters).
 type Collection struct {
 	ID          primitive.ObjectID   `bson:"_id,omitempty" json:"id"`
+	ShopID             primitive.ObjectID   `bson:"shop_id,omitempty"         json:"shop_id,omitempty"`   
 	Title       string               `bson:"title" json:"title"`                 // The display title of the collection
 	Description string               `bson:"description" json:"description"`     // A description of what the collection is about
 	Handle      string               `bson:"handle" json:"handle"`               // URL-friendly unique identifier (e.g., "summer-sale")
