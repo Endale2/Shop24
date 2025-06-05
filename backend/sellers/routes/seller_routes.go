@@ -32,7 +32,7 @@ func SellerRoute(r *gin.Engine) {
 			prodGroup.PATCH("/:productId", controllers.UpdateProduct)
 			prodGroup.DELETE("/:productId", controllers.DeleteProduct)
 		}
-
+  // ─────  nested customers  routes ─────
 		custGroup := shopGroup.Group("/customers")
 		{
 			custGroup.POST("/link", controllers.LinkCustomer)
@@ -41,9 +41,7 @@ func SellerRoute(r *gin.Engine) {
 			custGroup.DELETE("/:linkId", controllers.UnlinkCustomer)
 		}
 
-	}
-
-	// ─────  nested collections ─────
+		// ─────  nested collections ─────
 		collGroup := shopGroup.Group("/collections")
 		{
 			// Create a new collection
@@ -61,4 +59,8 @@ func SellerRoute(r *gin.Engine) {
 			collGroup.POST("/:collId/products", controllers.AddProductToCollection)
 			collGroup.DELETE("/:collId/products/:productId", controllers.RemoveProductFromCollection)
 		}
+
+	}
+
+	
 }
