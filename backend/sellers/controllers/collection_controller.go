@@ -126,8 +126,40 @@ func GetCollection(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "collection not found"})
 		return
 	}
-	c.JSON(http.StatusOK, coll)
+
+	// Build a list of product summaries (id, name, main_image)
+	type ProductSummary struct {
+		ID        primitive.ObjectID `json:"id"`
+		Name      string             `json:"name"`
+		MainImage string             `json:"main_image"`
+	}
+	var summaries []ProductSummary
+	for _, pid := range coll.ProductIDs {
+		p, err := sharedSvc.GetProductByIDService(pid.Hex())
+		if err != nil {
+			// skip on error
+			continue
+		}
+		if p == nil {
+			continue
+		}
+		summaries = append(summaries, ProductSummary{
+			ID:        p.ID,
+			Name:      p.Name,
+			MainImage: p.MainImage,
+		})
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"id":          coll.ID,
+		"title":       coll.Title,
+		"description": coll.Description,
+		"handle":      coll.Handle,
+		"image":       coll.Image,
+		"products":    summaries,
+	})
 }
+
 
 // UpdateCollectionInput is the JSON body for updating a collection.
 type UpdateCollectionInput struct {
