@@ -17,8 +17,8 @@ import (
 // then creates the AuthSeller record.
 func SellerRegisterService(authSeller *models.AuthSeller) error {
 	// Validate required fields
-	if authSeller.Username == "" || authSeller.Email == "" || authSeller.Password == "" {
-		return errors.New("username, email and password are required")
+	if authSeller.Email == "" || authSeller.Password == "" {
+		return errors.New("email and password are required")
 	}
 
 	// Check for existing authentication record
