@@ -18,6 +18,7 @@ type Variant struct {
     UpdatedAt time.Time             `bson:"updatedAt,omitempty" json:"updatedAt,omitempty"`
 }
 
+
 // Product represents the main product entity.
 type Product struct {
     ID            primitive.ObjectID   `bson:"_id,omitempty"       json:"id"`
