@@ -260,40 +260,76 @@ type AddProductInput struct {
 
 // AddProductToCollection handles POST /seller/shops/:shopId/collections/:collId/products
 func AddProductToCollection(c *gin.Context) {
-	userHex, _ := c.Get("user_id")
-	sellerID, _ := primitive.ObjectIDFromHex(userHex.(string))
+    userHex, _ := c.Get("user_id")
+    sellerID, _ := primitive.ObjectIDFromHex(userHex.(string))
 
-	shopHex := c.Param("shopId")
-	shop, err := sharedSvc.GetShopByIDService(shopHex)
-	if err != nil || shop.OwnerID != sellerID {
-		c.JSON(http.StatusForbidden, gin.H{"error": "not authorized"})
-		return
-	}
+    // 1) Verify shop ownership
+    shopHex := c.Param("shopId")
+    shopID, err := primitive.ObjectIDFromHex(shopHex)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid shop ID"})
+        return
+    }
+    shop, err := sharedSvc.GetShopByIDService(shopHex)
+    if err != nil || shop.OwnerID != sellerID {
+        c.JSON(http.StatusForbidden, gin.H{"error": "not authorized"})
+        return
+    }
 
-	collHex := c.Param("collId")
-	collID, err := primitive.ObjectIDFromHex(collHex)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid collection ID"})
-		return
-	}
+    // 2) Parse collection ID
+    collHex := c.Param("collId")
+    collID, err := primitive.ObjectIDFromHex(collHex)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid collection ID"})
+        return
+    }
+    coll, err := repositories.GetCollectionByID(collID)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "error retrieving collection"})
+        return
+    }
+    if coll == nil || coll.ShopID != shopID {
+        c.JSON(http.StatusNotFound, gin.H{"error": "collection not found"})
+        return
+    }
 
-	var in AddProductInput
-	if err := c.ShouldBindJSON(&in); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
-		return
-	}
-	prodID, err := primitive.ObjectIDFromHex(in.ProductID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid product ID"})
-		return
-	}
+    // 3) Bind request payload
+    var in AddProductInput
+    if err := c.ShouldBindJSON(&in); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
+        return
+    }
+    prodID, err := primitive.ObjectIDFromHex(in.ProductID)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid product ID"})
+        return
+    }
 
-	err = collSvc.AddProductToCollectionService(collID, prodID, sellerID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to add product to collection"})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{"message": "product added to collection"})
+    // 4) Verify product exists and belongs to this shop
+    prod, err := sharedSvc.GetProductByIDService(prodID.Hex())
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "error fetching product"})
+        return
+    }
+    if prod == nil || prod.ShopID != shopID {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "product does not belong to this shop"})
+        return
+    }
+
+    // 5) Prevent duplicates: check if already in coll.ProductIDs
+    for _, existing := range coll.ProductIDs {
+        if existing == prodID {
+            c.JSON(http.StatusBadRequest, gin.H{"error": "product already in collection"})
+            return
+        }
+    }
+
+    // 6) Add product to collection
+    if err := collSvc.AddProductToCollectionService(collID, prodID, sellerID); err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to add product to collection"})
+        return
+    }
+    c.JSON(http.StatusOK, gin.H{"message": "product added to collection"})
 }
 
 // RemoveProductFromCollection handles DELETE /seller/shops/:shopId/collections/:collId/products/:productId
