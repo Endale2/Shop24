@@ -10,7 +10,9 @@ import (
 type Seller struct {
 	ID           primitive.ObjectID   `bson:"_id,omitempty" json:"id"`
 	ShopIDs      []primitive.ObjectID `bson:"shop_ids,omitempty" json:"shop_ids,omitempty"` // List of shops owned by the seller
-	Name         string               `bson:"name" json:"name"`         // Seller's display name
+	FirstName         string               `bson:"first_name" json:"first_name"`         // Seller's First name
+	LastName         string               `bson:"last_name" json:"last_name"`         // Seller's Last name
+	ProfileImage     string                `bson:"profile_image,omitempty"  json:"profile_image,omitempty"`
 	Email        string               `bson:"email" json:"email"`       // Contact email
 	Phone        string               `bson:"phone,omitempty" json:"phone,omitempty"` // Optional phone number
 	Address      string               `bson:"address,omitempty" json:"address,omitempty"` // Business or mailing address

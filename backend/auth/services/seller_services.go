@@ -29,7 +29,7 @@ func SellerRegisterService(authSeller *models.AuthSeller) error {
 	// Create the detailed Seller record
 	newSeller := &sellerModels.Seller{
 		// UserID can stay zero unless you track a separate user account
-		Name:      authSeller.Username,
+		
 		Email:     authSeller.Email,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
