@@ -1,39 +1,32 @@
-
 <template>
-  <aside class="flex flex-col h-full bg-white shadow-lg border-r border-gray-200">
-    <!-- Brand / Shop header -->
-    <div class="flex items-center px-6 py-5 border-b border-gray-200">
-      <template v-if="activeShop?.image">
-        <img
-          :src="activeShop.image"
-          alt="Shop logo"
-          class="h-8 w-8 rounded-full object-cover mr-2"
-        />
-      </template>
-      <template v-else>
-        <ShopIcon class="h-8 w-8 text-green-600 mr-2" />
-      </template>
-      <h2 class="text-2xl font-extrabold text-gray-800 truncate">
-        {{ activeShop?.name || 'Your Shop' }}
-      </h2>
+  <aside class="flex h-full w-64 flex-col overflow-y-auto border-r border-slate-200 bg-white">
+    <div class="group relative h-20 w-full md:h-32">
+      <div
+        class="absolute inset-0 h-full w-full bg-slate-100 transition-all duration-300"
+        :class="{
+          'bg-cover bg-center': activeShop?.image,
+          'group-hover:scale-105': activeShop?.image,
+        }"
+        :style="activeShop?.image ? `background-image: url(${activeShop.image})` : ''"
+      >
+        <div v-if="!activeShop?.image" class="flex h-full w-full items-center justify-center">
+          <ShopIcon class="h-10 w-10 text-slate-400" />
+        </div>
+      </div>
     </div>
 
-    <!-- Navigation links -->
-    <nav class="flex-1 overflow-y-auto px-2 py-4 space-y-1">
-      <SidebarLink to="/dashboard"         :icon="HomeIcon"           label="Home" />
-      <SidebarLink to="/dashboard/orders"  :icon="ClipboardListIcon"  label="Orders" />
-      <SidebarLink to="/dashboard/products":icon="TagIcon"            label="Products" />
-      <SidebarLink to="/dashboard/collections"
-                   :icon="CollectionIcon"
-                   label="Collections" />
-      <SidebarLink to="/dashboard/customers":icon="UsersIcon"         label="Customers" />
-      <SidebarLink to="/dashboard/discounts":icon="GiftIcon"          label="Discounts" />
-      <SidebarLink to="/dashboard/analytics":icon="ChartBarIcon"      label="Analytics" />
-      <SidebarLink to="/dashboard/settings" :icon="CogIcon"           label="Settings" />
+    <nav class="flex-1 space-y-1 p-2">
+      <SidebarLink to="/dashboard" :icon="HomeIcon" label="Home" />
+      <SidebarLink to="/dashboard/orders" :icon="ClipboardListIcon" label="Orders" />
+      <SidebarLink to="/dashboard/products" :icon="TagIcon" label="Products" />
+      <SidebarLink to="/dashboard/collections" :icon="CollectionIcon" label="Collections" />
+      <SidebarLink to="/dashboard/customers" :icon="UsersIcon" label="Customers" />
+      <SidebarLink to="/dashboard/discounts" :icon="GiftIcon" label="Discounts" />
+      <SidebarLink to="/dashboard/analytics" :icon="ChartBarIcon" label="Analytics" />
+      <SidebarLink to="/dashboard/settings" :icon="CogIcon" label="Settings" />
 
-      <!-- Dynamic Collections -->
-      <div v-if="collections.length" class="mt-6 pt-4 border-t border-gray-200">
-        <p class="px-3 text-xs font-semibold text-gray-500 uppercase mb-2">
+      <div v-if="collections.length" class="pt-4">
+        <p class="mb-2 px-3 text-xs font-semibold uppercase text-slate-500">
           Your Collections
         </p>
         <SidebarLink
@@ -47,9 +40,8 @@
       </div>
     </nav>
 
-    <!-- Sales Channels -->
-    <div class="px-4 py-4 border-t border-gray-200">
-      <p class="text-xs font-semibold text-gray-500 uppercase mb-2">
+    <div class="border-t border-slate-200 p-2">
+      <p class="mb-2 px-3 text-xs font-semibold uppercase text-slate-500">
         Sales Channels
       </p>
       <SidebarLink
@@ -79,7 +71,7 @@ import {
   CollectionIcon
 } from '@heroicons/vue/outline'
 
-const shopStore   = useShopStore()
-const activeShop  = computed(() => shopStore.active)
+const shopStore = useShopStore()
+const activeShop = computed(() => shopStore.active)
 const collections = computed(() => activeShop.value?.collections || [])
 </script>
