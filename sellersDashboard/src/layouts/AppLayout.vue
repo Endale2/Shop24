@@ -1,7 +1,7 @@
 <!-- src/layouts/AppLayout.vue -->
 <template>
   <div class="flex h-screen bg-gray-100 overflow-hidden">
-    <!-- Backdrop when sidebar is open on mobile -->
+    <!-- Backdrop on mobile when sidebar open -->
     <transition name="fade">
       <div
         v-if="showSidebar"
@@ -11,18 +11,23 @@
     </transition>
 
     <!-- Sidebar -->
-    <Sidebar
+    <aside
       :class="[
-        'fixed z-30 inset-y-0 left-0 w-64 bg-white border-r border-gray-200 transform transition-transform duration-200 ease-in-out',
+        'fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-200 z-30 transform transition-transform duration-300 ease-in-out',
         showSidebar ? 'translate-x-0' : '-translate-x-full',
-        'md:translate-x-0 md:static md:flex'
+        'md:translate-x-0 md:static'
       ]"
-    />
+    >
+      <Sidebar />
+    </aside>
 
-    <!-- Main content -->
-    <div class="flex-1 flex flex-col">
+    <!-- Main Content -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+      <!-- Navbar -->
       <Navbar @toggle-sidebar="showSidebar = !showSidebar" />
-      <main class="flex-1 overflow-auto p-6 bg-gray-50">
+
+      <!-- Page Content -->
+      <main class="flex-1 overflow-auto p-4 md:p-6">
         <router-view />
       </main>
     </div>
@@ -32,7 +37,18 @@
 <script setup>
 import { ref } from 'vue'
 import Sidebar from '@/components/Sidebar.vue'
-import Navbar from '@/components/Navbar.vue'
+import Navbar  from '@/components/Navbar.vue'
 
 const showSidebar = ref(false)
 </script>
+
+<style scoped>
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
+</style>

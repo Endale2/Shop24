@@ -32,20 +32,18 @@ const props = defineProps({
   to:     { type: String,  required: true },
   icon:   { type: [Object], required: true },
   label:  { type: String,  required: true },
-  small:  { type: Boolean, default: false }
+  small:  { type: Boolean, default: false },
+  exact:  { type: Boolean, default: false },  // NEW
 })
 
 const route = useRoute()
 
-// Match either exact path, or nested under that path.
-// E.g. to="/dashboard" matches "/dashboard" or "/dashboard/products/…"
 const isActive = computed(() => {
-  const p = route.path
-  const t = props.to.endsWith('/') ? props.to.slice(0, -1) : props.to
-  return p === t || p.startsWith(t + '/')
+  const path = route.path.replace(/\/$/, '')
+  const target = props.to.replace(/\/$/, '')
+  if (props.exact) {
+    return path === target
+  }
+  return path === target || path.startsWith(target + '/')
 })
 </script>
-
-<style scoped>
-/* nothing additional—everything via Tailwind */
-</style>
