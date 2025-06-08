@@ -22,6 +22,7 @@ const routes = [
     children: [
       { path: '',                     name: 'Dashboard',      component: DashboardPage },
       { path: 'products',             name: 'Products',       component: () => import('@/pages/products/ProductsPage.vue') },
+      { path: 'collections',          name: 'Collections',    component: () => import('@/pages/collections/CollectionsPage.vue') },
       { path: 'products/:productId',  name: 'ProductDetail',  component: () => import('@/pages/products/ProductDetailPage.vue'), props: true },
       { path: 'customers',            name: 'Customers',      component: () => import('@/pages/customers/CustomersPage.vue') },
       { path: 'customers/:customerId',name: 'CustomerDetail', component: () => import('@/pages/customers/CustomerDetailPage.vue'), props: true },
