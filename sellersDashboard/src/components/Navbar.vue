@@ -1,18 +1,21 @@
+<!-- src/components/Navbar.vue -->
 <template>
-  <header class="bg-gradient-to-r from-gray-100 to-gray-200 shadow-lg px-6 py-3 flex items-center justify-between text-gray-800 relative z-20">
+  <header class="bg-white shadow-md px-6 py-3 flex items-center justify-between text-gray-800 z-20">
     <div class="flex items-center space-x-4">
+      <!-- Mobile: hamburger -->
       <button
-        class="md:hidden p-2 rounded-full hover:bg-gray-300 transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50"
+        class="md:hidden p-2 rounded-full hover:bg-gray-100 transition focus:outline-none focus:ring-2 focus:ring-gray-300"
         @click="$emit('toggle-sidebar')"
         aria-label="Toggle menu"
       >
         <MenuIcon class="h-6 w-6 text-gray-700" />
       </button>
 
+      <!-- Shop selector -->
       <div v-if="shops.length" class="relative">
         <button
           @click="showShopMenu = !showShopMenu"
-          class="inline-flex items-center bg-white border border-gray-300 hover:bg-gray-100 px-4 py-2 rounded-full text-gray-700 font-semibold shadow-md transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-opacity-50"
+          class="inline-flex items-center bg-white border border-gray-200 hover:bg-gray-50 px-4 py-2 rounded-full text-gray-700 font-medium shadow-sm transition"
         >
           <ShopIcon class="h-5 w-5 mr-2 text-green-600" />
           <span>{{ activeShop?.name || 'Select Shop' }}</span>
@@ -21,55 +24,81 @@
         <ul
           v-if="showShopMenu"
           @click.away="showShopMenu = false"
-          class="absolute mt-3 w-48 bg-white border border-gray-200 rounded-xl shadow-xl z-30 overflow-hidden animate-fade-in-down"
+          class="absolute mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-xl z-30 overflow-hidden animate-fade-in-down"
         >
           <li
             v-for="shop in shops"
             :key="shop.id"
             @click="selectShop(shop)"
-            class="px-4 py-3 hover:bg-gray-100 cursor-pointer text-gray-800 transition duration-200 ease-in-out"
+            class="px-4 py-3 hover:bg-gray-50 cursor-pointer text-gray-800 transition"
           >
             {{ shop.name }}
           </li>
           <li class="border-t border-gray-100">
             <button
               @click="goToShopSelection"
-              class="w-full text-left px-4 py-3 hover:bg-gray-100 text-green-600 font-medium transition duration-200 ease-in-out"
-            >Manage Shops…</button>
+              class="w-full text-left px-4 py-3 hover:bg-gray-50 text-green-600 font-medium transition"
+            >
+              Manage Shops…
+            </button>
           </li>
         </ul>
       </div>
     </div>
 
     <div class="flex items-center space-x-4">
-      <button class="relative p-2 rounded-full hover:bg-gray-300 transition duration-300 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-opacity-50" aria-label="Notifications">
+      <!-- Notifications -->
+      <button
+        class="relative p-2 rounded-full hover:bg-gray-100 transition focus:outline-none focus:ring-2 focus:ring-gray-300"
+        aria-label="Notifications"
+      >
         <BellIcon class="h-6 w-6 text-gray-700" />
-        <span v-if="unreadCount" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-white animate-bounce-short">
+        <span
+          v-if="unreadCount"
+          class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-white animate-bounce-short"
+        >
           {{ unreadCount }}
         </span>
       </button>
 
+      <!-- User menu -->
       <div class="relative">
         <button
           @click="showUserMenu = !showUserMenu"
-          class="flex items-center space-x-2 focus:outline-none group"
+          class="flex items-center space-x-2 focus:outline-none"
         >
-          <div class="h-9 w-9 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-md transition duration-300 ease-in-out group-hover:ring-2 group-hover:ring-green-300 group-hover:ring-opacity-50">
+          <div
+            class="h-9 w-9 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-lg shadow transition group-hover:ring-2 group-hover:ring-green-300 group-hover:ring-opacity-50"
+          >
             {{ userInitials }}
           </div>
-          <ChevronDownIcon class="h-4 w-4 text-gray-500 transition duration-300 ease-in-out group-hover:rotate-180" />
+          <ChevronDownIcon
+            class="h-4 w-4 text-gray-500 transition-transform group-hover:rotate-180"
+          />
         </button>
         <ul
           v-if="showUserMenu"
           @click.away="showUserMenu = false"
-          class="absolute right-0 mt-3 w-48 bg-white border border-gray-200 rounded-xl shadow-xl z-30 overflow-hidden animate-fade-in-down"
+          class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-xl z-30 overflow-hidden animate-fade-in-down"
         >
-          <li class="px-4 py-3 text-gray-800 font-semibold border-b border-gray-100">{{ user.email }}</li>
-          <li>
-            <router-link to="/profile" class="block px-4 py-3 hover:bg-gray-100 text-gray-700 transition duration-200 ease-in-out">Profile</router-link>
+          <li class="px-4 py-3 text-gray-800 font-medium border-b border-gray-100">
+            {{ user.email }}
           </li>
           <li>
-            <button @click="handleLogout" class="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 transition duration-200 ease-in-out">Logout</button>
+            <router-link
+              to="/profile"
+              class="block px-4 py-3 hover:bg-gray-50 text-gray-700 transition"
+            >
+              Profile
+            </router-link>
+          </li>
+          <li>
+            <button
+              @click="handleLogout"
+              class="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 transition"
+            >
+              Logout
+            </button>
           </li>
         </ul>
       </div>
@@ -79,7 +108,7 @@
 
 <script setup>
 import { ref, computed } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter }    from 'vue-router'
 import { useAuthStore } from '@/store/auth'
 import { useShopStore } from '@/store/shops'
 import {
@@ -89,18 +118,17 @@ import {
   ShoppingBagIcon as ShopIcon
 } from '@heroicons/vue/outline'
 
-const router = useRouter()
-const auth = useAuthStore()
-const shopStore = useShopStore()
+const router     = useRouter()
+const auth       = useAuthStore()
+const shopStore  = useShopStore()
 
-// dropdown state
+// dropdown toggles
 const showShopMenu = ref(false)
 const showUserMenu = ref(false)
 
-// reactive stores
-const shops       = computed(() => shopStore.list)
-const activeShop  = computed(() => shopStore.active)
-const user        = computed(() => auth.user || {})
+const shops      = computed(() => shopStore.list)
+const activeShop = computed(() => shopStore.active)
+const user       = computed(() => auth.user || {})
 
 // derive initials
 const userInitials = computed(() => {
@@ -108,7 +136,7 @@ const userInitials = computed(() => {
   return ((first?.[0]||'') + (last?.[0]||'')).toUpperCase() || '?'
 })
 
-// unread notifications (stub)
+// stub unread
 const unreadCount = ref(3)
 
 function handleLogout() {
@@ -129,31 +157,23 @@ function goToShopSelection() {
 </script>
 
 <style scoped>
-/* Custom animations if needed beyond basic Tailwind */
 @keyframes fade-in-down {
   from {
     opacity: 0;
-    transform: translateY(-10px);
+    transform: translateY(-8px);
   }
   to {
     opacity: 1;
     transform: translateY(0);
   }
 }
-
 .animate-fade-in-down {
   animation: fade-in-down 0.2s ease-out forwards;
 }
-
 @keyframes bounce-short {
-  0%, 100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-2px);
-  }
+  0%,100% {transform: translateY(0);}
+  50%     {transform: translateY(-2px);}
 }
-
 .animate-bounce-short {
   animation: bounce-short 0.8s infinite;
 }
