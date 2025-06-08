@@ -1,34 +1,29 @@
 <template>
-  <aside class="flex h-full w-64 flex-col overflow-y-auto border-r border-slate-200 bg-white">
-    <div class="group relative h-20 w-full md:h-32">
-      <div
-        class="absolute inset-0 h-full w-full bg-slate-100 transition-all duration-300"
-        :class="{
-          'bg-cover bg-center': activeShop?.image,
-          'group-hover:scale-105': activeShop?.image,
-        }"
-        :style="activeShop?.image ? `background-image: url(${activeShop.image})` : ''"
-      >
-        <div v-if="!activeShop?.image" class="flex h-full w-full items-center justify-center">
-          <ShopIcon class="h-10 w-10 text-slate-400" />
-        </div>
-      </div>
+  <aside class="flex h-full w-64 flex-col bg-white shadow-lg border-r border-slate-200">
+    <!-- Logo Section -->
+    <div class="flex h-20 items-center justify-center border-b border-slate-200 p-2">
+      <img
+        v-if="activeShop?.image"
+        :src="activeShop.image"
+        alt="Shop Logo"
+        class="h-12 w-12 rounded-md object-cover"
+      />
+      <ShopIcon v-else class="h-12 w-12 text-slate-400" />
     </div>
 
-    <nav class="flex-1 space-y-1 p-2">
-      <SidebarLink to="/dashboard" :icon="HomeIcon" label="Home" />
-      <SidebarLink to="/dashboard/orders" :icon="ClipboardListIcon" label="Orders" />
-      <SidebarLink to="/dashboard/products" :icon="TagIcon" label="Products" />
-      <SidebarLink to="/dashboard/collections" :icon="CollectionIcon" label="Collections" />
-      <SidebarLink to="/dashboard/customers" :icon="UsersIcon" label="Customers" />
-      <SidebarLink to="/dashboard/discounts" :icon="GiftIcon" label="Discounts" />
-      <SidebarLink to="/dashboard/analytics" :icon="ChartBarIcon" label="Analytics" />
-      <SidebarLink to="/dashboard/settings" :icon="CogIcon" label="Settings" />
+    <!-- Navigation -->
+    <nav class="flex-1 overflow-y-auto py-4">
+      <SidebarLink
+        v-for="item in mainLinks"
+        :key="item.to"
+        :to="item.to"
+        :icon="item.icon"
+        :label="item.label"
+      />
 
-      <div v-if="collections.length" class="pt-4">
-        <p class="mb-2 px-3 text-xs font-semibold uppercase text-slate-500">
-          Your Collections
-        </p>
+      <!-- Collections Group -->
+      <div v-if="collections.length" class="mt-6 px-3">
+        <p class="mb-2 text-xs font-semibold uppercase text-slate-500">Collections</p>
         <SidebarLink
           v-for="col in collections"
           :key="col.id"
@@ -40,10 +35,9 @@
       </div>
     </nav>
 
-    <div class="border-t border-slate-200 p-2">
-      <p class="mb-2 px-3 text-xs font-semibold uppercase text-slate-500">
-        Sales Channels
-      </p>
+    <!-- Sales Channels -->
+    <div class="border-t border-slate-200 p-4">
+      <p class="mb-2 text-xs font-semibold uppercase text-slate-500">Sales Channels</p>
       <SidebarLink
         to="/dashboard/online-store"
         :icon="GlobeAltIcon"
@@ -74,4 +68,16 @@ import {
 const shopStore = useShopStore()
 const activeShop = computed(() => shopStore.active)
 const collections = computed(() => activeShop.value?.collections || [])
+
+// your top-level nav settings
+const mainLinks = [
+  { to: '/dashboard',        icon: HomeIcon,          label: 'Home' },
+  { to: '/dashboard/orders',  icon: ClipboardListIcon, label: 'Orders' },
+  { to: '/dashboard/products',icon: TagIcon,           label: 'Products' },
+  { to: '/dashboard/collections', icon: CollectionIcon, label: 'Collections' },
+  { to: '/dashboard/customers',icon: UsersIcon,         label: 'Customers' },
+  { to: '/dashboard/discounts',icon: GiftIcon,          label: 'Discounts' },
+  { to: '/dashboard/analytics',icon: ChartBarIcon,      label: 'Analytics' },
+  { to: '/dashboard/settings', icon: CogIcon,           label: 'Settings' },
+]
 </script>
