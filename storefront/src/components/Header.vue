@@ -1,8 +1,19 @@
 <template>
   <header class="py-4 px-6 flex items-center justify-between relative border-b border-gray-200/70">
-    <router-link to="/" class="text-2xl font-bold text-slate-800 hover:text-indigo-700 transition-colors duration-300">
-      {{ shop.current?.name || 'Your Shop Name' }}
-    </router-link>
+    
+    <router-link
+  to="/"
+  class="flex items-center space-x-2 text-2xl font-bold text-slate-800 hover:text-indigo-700 transition-colors duration-300"
+>
+  <img
+    v-if="shop.current?.image"
+    :src="shop.current.image"
+    alt="Shop Logo"
+    class="h-8 w-8 rounded-md object-cover"
+  />
+  <span>{{ shop.current?.name || 'Your Shop Name' }}</span>
+</router-link>
+
 
     <nav class="hidden md:flex items-center space-x-4 lg:space-x-6">
       <router-link

@@ -13,6 +13,7 @@ export const useShopStore = defineStore('shop', {
         id:          s.id,
         slug:        s.slug,
         name:        s.name,
+        image:       s.image,
         description: s.description,
         banner:      s.banner,
         createdAt:   s.createdAt,

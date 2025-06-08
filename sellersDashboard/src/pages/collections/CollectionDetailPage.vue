@@ -54,8 +54,8 @@
           >
             <div class="w-full h-40 bg-gray-100 flex items-center justify-center">
               <img
-                v-if="prod.main_image"
-                :src="prod.main_image"
+                v-if="prod.image"
+                :src="prod.image"
                 alt=""
                 class="w-full h-full object-cover"
               />

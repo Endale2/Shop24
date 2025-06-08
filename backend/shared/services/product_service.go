@@ -12,6 +12,7 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
+
 // ------------------------------------------------------------
 // Helpers: slugify, normalize, etc.
 // ------------------------------------------------------------
@@ -20,10 +21,7 @@ import (
 // a simple URL‐friendly slug ("catan-base-game").
 func slugify(name string) string {
 	s := strings.ToLower(name)
-	// Replace spaces (and multiple spaces) with a single hyphen
 	s = strings.Join(strings.Fields(s), "-")
-	// Optionally: strip out any unsupported characters (e.g. punctuation).
-	// For now, we’ll assume Fields() has removed most whitespace issues.
 	return s
 }
 
@@ -31,37 +29,36 @@ func slugify(name string) string {
 //  1) If no variants exist, we inject a “default” variant
 //  2) Each variant has a non‐zero VariantID, CreatedAt, UpdatedAt
 //  3) The Product’s DisplayPrice is set to the minimum Variant price
+//  4) The Product’s MainImage is set from Images[0] or first variant image
 func normalizeProduct(p *models.Product) {
 	now := time.Now()
 
-	// 1) If no variants, inject a “default” variant that
-	//    slides in with the top‐level Price (or DisplayPrice if set).
+	// 1) If no variants, inject a “default” variant
 	if len(p.Variants) == 0 {
 		defaultVar := models.Variant{
 			VariantID: primitive.NewObjectID(),
 			Options:   map[string]string{},
 			Price:     p.DisplayPrice,
 			Stock:     0,
-			Image:     p.MainImage,
+			Image:     "", // will be filled below
 			CreatedAt: now,
 			UpdatedAt: now,
 		}
 		p.Variants = []models.Variant{defaultVar}
 	}
 
-	// 2) Ensure every variant has a valid VariantID and timestamps.
+	// 2) Ensure every variant has IDs and timestamps
 	for i := range p.Variants {
 		if p.Variants[i].VariantID.IsZero() {
 			p.Variants[i].VariantID = primitive.NewObjectID()
 		}
-		// If you store CreatedAt/UpdatedAt on Variant, set them here if zero.
 		if p.Variants[i].CreatedAt.IsZero() {
 			p.Variants[i].CreatedAt = now
 		}
 		p.Variants[i].UpdatedAt = now
 	}
 
-	// 3) Compute DisplayPrice = minimum of all variant.Price
+	// 3) Compute DisplayPrice = minimum variant price
 	minPrice := p.Variants[0].Price
 	for _, v := range p.Variants[1:] {
 		if v.Price < minPrice {
@@ -69,6 +66,19 @@ func normalizeProduct(p *models.Product) {
 		}
 	}
 	p.DisplayPrice = minPrice
+
+	// 4) Determine MainImage
+	if len(p.Images) > 0 {
+		p.MainImage = p.Images[0]
+	} else {
+		// fallback: first non‐empty variant image
+		for _, v := range p.Variants {
+			if v.Image != "" {
+				p.MainImage = v.Image
+				break
+			}
+		}
+	}
 }
 
 // ------------------------------------------------------------
@@ -76,49 +86,41 @@ func normalizeProduct(p *models.Product) {
 // ------------------------------------------------------------
 
 // CreateProductService inserts a new Product into MongoDB after applying
-// all necessary business logic (ID assignment, slug generation, normalization).
+// business logic (ID, slug, normalization including MainImage).
 func CreateProductService(p *models.Product) (*mongo.InsertOneResult, error) {
-	// 1) Basic validation
 	if strings.TrimSpace(p.Name) == "" {
 		return nil, errors.New("product name is required")
 	}
 
 	now := time.Now()
-
-	// 2) Assign a new ObjectID to the top‐level product
 	p.ID = primitive.NewObjectID()
 	p.CreatedAt = now
 	p.UpdatedAt = now
 
-	// 3) If no slug was provided, generate one from the name.
 	if strings.TrimSpace(p.Slug) == "" {
 		p.Slug = slugify(p.Name)
 	}
 
-	// 4) Assign each Variant a new VariantID if zero, and stamp timestamps.
+	// Stamp variant IDs & timestamps if provided
 	for i := range p.Variants {
 		if p.Variants[i].VariantID.IsZero() {
 			p.Variants[i].VariantID = primitive.NewObjectID()
 		}
-		// Set variant timestamps if not already set
 		if p.Variants[i].CreatedAt.IsZero() {
 			p.Variants[i].CreatedAt = now
 		}
 		p.Variants[i].UpdatedAt = now
 	}
 
-	// 5) If top‐level DisplayPrice is zero, set it from p.Price
 	if p.DisplayPrice == 0 {
 		p.DisplayPrice = p.Price
 	}
 
-	// 6) Normalize variants & DisplayPrice
+	// Normalize (sets DisplayPrice, ensures variants, sets MainImage)
 	normalizeProduct(p)
 
-	// 7) Delegate to repository
 	return repositories.CreateProduct(p)
 }
-
 // GetProductByIDService retrieves a Product by its hex ID, then normalizes it.
 func GetProductByIDService(id string) (*models.Product, error) {
 	p, err := repositories.GetProductByID(id)
