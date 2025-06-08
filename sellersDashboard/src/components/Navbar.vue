@@ -17,7 +17,16 @@
           @click="showShopMenu = !showShopMenu"
           class="inline-flex items-center bg-white border border-gray-200 hover:bg-gray-50 px-4 py-2 rounded-full text-gray-700 font-medium shadow-sm transition"
         >
-          <ShopIcon class="h-5 w-5 mr-2 text-green-600" />
+          <template v-if="activeShop?.image">
+            <img
+              :src="activeShop.image"
+              alt="Shop logo"
+              class="h-6 w-6 rounded-full object-cover mr-2"
+            />
+          </template>
+          <template v-else>
+            <ShopIcon class="h-5 w-5 mr-2 text-green-600" />
+          </template>
           <span>{{ activeShop?.name || 'Select Shop' }}</span>
           <ChevronDownIcon class="h-4 w-4 ml-2 text-gray-500" />
         </button>
@@ -134,7 +143,7 @@ const user       = computed(() => auth.user || {})
 const userInitials = computed(() => {
   const [first, last] = (user.value?.email || '').split('@')[0].split('.')
   return ((first?.[0]||'') + (last?.[0]||'')).toUpperCase() || '?'
-})
+})  
 
 // stub unread
 const unreadCount = ref(3)
