@@ -11,6 +11,7 @@ import (
 
 var ErrDiscountNotFound = errors.New("discount not found")
 
+
 // GetDiscountByCouponCodeService looks up a discount by coupon code.
 func GetDiscountByCouponCodeService(code string) (*models.Discount, error) {
 	d, err := repositories.GetDiscountByCouponCode(code)
