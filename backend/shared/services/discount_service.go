@@ -1,3 +1,4 @@
+// shared/services/discount_service.go
 package services
 
 import (
@@ -6,20 +7,47 @@ import (
 
 	"github.com/Endale2/DRPS/shared/models"
 	"github.com/Endale2/DRPS/shared/repositories"
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// ErrDiscountNotFound indicates no discount was found.
 var ErrDiscountNotFound = errors.New("discount not found")
 
-// GetDiscountByIDService retrieves a discount by its hex ID string.
-// It converts hex to ObjectID and calls repositories.GetDiscountByID.
-func GetDiscountByIDService(idStr string) (*models.Discount, error) {
-	id, err := primitive.ObjectIDFromHex(idStr)
-	if err != nil {
-		return nil, errors.New("invalid discount ID")
+// CreateDiscountService creates a new Discount in MongoDB, assigning ID/timestamps.
+func CreateDiscountService(d *models.Discount) (*models.Discount, error) {
+	// Basic validation
+	if d.Name == "" {
+		return nil, errors.New("discount name is required")
 	}
-	d, err := repositories.GetDiscountByID(id)
+	if d.ShopID.IsZero() {
+		return nil, errors.New("shop ID is required")
+	}
+	if d.Category == "" {
+		return nil, errors.New("discount category is required")
+	}
+	// Validate time range
+	if !d.StartAt.IsZero() && !d.EndAt.IsZero() && d.EndAt.Before(d.StartAt) {
+		return nil, errors.New("endAt must be after startAt")
+	}
+	// Call repository
+	res, err := repositories.CreateDiscount(d)
+	if err != nil {
+		return nil, err
+	}
+	// Set generated ID
+	if oid, ok := res.InsertedID.(primitive.ObjectID); ok {
+		d.ID = oid
+	}
+	return d, nil
+}
+
+// GetDiscountByIDService retrieves a Discount by its hex ID string.
+func GetDiscountByIDService(idHex string) (*models.Discount, error) {
+	oid, err := primitive.ObjectIDFromHex(idHex)
+	if err != nil {
+		return nil, ErrDiscountNotFound
+	}
+	d, err := repositories.GetDiscountByID(oid)
 	if err != nil {
 		return nil, err
 	}
@@ -29,14 +57,56 @@ func GetDiscountByIDService(idStr string) (*models.Discount, error) {
 	return d, nil
 }
 
-// GetDiscountByCouponCodeService looks up a discount by coupon code (exact match).
-// It directly calls repositories.GetDiscountByCouponCode.
-// The caller (e.g., controller) can then check active/time-range if desired.
-// If you want to enforce active/time here, uncomment the time checks.
-func GetDiscountByCouponCodeService(code string) (*models.Discount, error) {
-	if code == "" {
-		return nil, errors.New("coupon code is required")
+// ListDiscountsByShopService lists all discounts for a given shop ID (hex string).
+func ListDiscountsByShopService(shopIDHex string) ([]models.Discount, error) {
+	shopOID, err := primitive.ObjectIDFromHex(shopIDHex)
+	if err != nil {
+		return nil, errors.New("invalid shop ID")
 	}
+	return repositories.ListDiscountsByShop(shopOID)
+}
+
+// UpdateDiscountService updates fields of a discount by its hex ID string.
+// upd should use BSON field names (e.g. "name", "start_at", "end_at", etc.).
+func UpdateDiscountService(idHex string, upd bson.M) error {
+	oid, err := primitive.ObjectIDFromHex(idHex)
+	if err != nil {
+		return errors.New("invalid discount ID")
+	}
+	// Prevent immutable fields
+	delete(upd, "id")
+	delete(upd, "_id")
+	delete(upd, "shop_id")
+	delete(upd, "seller_id")
+	// Validate time fields if present: expects "start_at" and/or "end_at" in upd as time.Time
+	if startRaw, ok := upd["start_at"]; ok {
+		if startTime, ok2 := startRaw.(time.Time); ok2 {
+			if endRaw, exists := upd["end_at"]; exists {
+				if endTime, ok3 := endRaw.(time.Time); ok3 && endTime.Before(startTime) {
+					return errors.New("endAt must be after startAt")
+				}
+			}
+		}
+	}
+	// Update timestamp
+	upd["updated_at"] = time.Now()
+	_, err = repositories.UpdateDiscount(oid, upd)
+	return err
+}
+
+// DeleteDiscountService deletes a discount by its hex ID string.
+func DeleteDiscountService(idHex string) error {
+	oid, err := primitive.ObjectIDFromHex(idHex)
+	if err != nil {
+		return errors.New("invalid discount ID")
+	}
+	_, err = repositories.DeleteDiscount(oid)
+	return err
+}
+
+// GetDiscountByCouponCodeService looks up a discount by coupon code,
+// verifies active and within date range.
+func GetDiscountByCouponCodeService(code string) (*models.Discount, error) {
 	d, err := repositories.GetDiscountByCouponCode(code)
 	if err != nil {
 		return nil, err
@@ -44,7 +114,6 @@ func GetDiscountByCouponCodeService(code string) (*models.Discount, error) {
 	if d == nil {
 		return nil, ErrDiscountNotFound
 	}
-	// Optionally validate active/time-range:
 	now := time.Now()
 	if !d.Active || now.Before(d.StartAt) || now.After(d.EndAt) {
 		return nil, ErrDiscountNotFound
@@ -52,72 +121,25 @@ func GetDiscountByCouponCodeService(code string) (*models.Discount, error) {
 	return d, nil
 }
 
-// GetActiveDiscountsForShopService wraps repositories.GetActiveDiscountsForShop.
-// Accepts shop ID as hex string.
-func GetActiveDiscountsForShopService(shopIDStr string) ([]models.Discount, error) {
-	shopID, err := primitive.ObjectIDFromHex(shopIDStr)
-	if err != nil {
-		return nil, errors.New("invalid shop ID")
-	}
-	return repositories.GetActiveDiscountsForShop(shopID)
+// (Optionally) other application-level methods, e.g., GetActiveDiscountsForShopService, etc.
+// For example:
+func GetActiveDiscountsForShopService(shopOID primitive.ObjectID) ([]models.Discount, error) {
+	return repositories.GetActiveDiscountsForShop(shopOID)
 }
-
-// GetActiveDiscountsForProductService wraps repositories.GetActiveDiscountsForProduct.
-// Accepts IDs as hex strings. Returns active “product” discounts applying to the given product/variant/customer.
 func GetActiveDiscountsForProductService(
-	shopIDStr, productIDStr, variantIDStr, customerIDStr string,
+	shopID, productID, variantID, customerID primitive.ObjectID,
 ) ([]models.Discount, error) {
-	shopID, err := primitive.ObjectIDFromHex(shopIDStr)
-	if err != nil {
-		return nil, errors.New("invalid shop ID")
-	}
-	productID, err := primitive.ObjectIDFromHex(productIDStr)
-	if err != nil {
-		return nil, errors.New("invalid product ID")
-	}
-	variantID, err := primitive.ObjectIDFromHex(variantIDStr)
-	if err != nil {
-		return nil, errors.New("invalid variant ID")
-	}
-	// customerID may be optional: if empty string, use NilObjectID
-	var customerID primitive.ObjectID
-	if customerIDStr != "" {
-		cID, err := primitive.ObjectIDFromHex(customerIDStr)
-		if err != nil {
-			return nil, errors.New("invalid customer ID")
-		}
-		customerID = cID
-	}
 	return repositories.GetActiveDiscountsForProduct(shopID, productID, variantID, customerID)
 }
-
-// GetActiveOrderDiscountsForShopService wraps repositories.GetActiveOrderDiscountsForShop.
-// Accepts shop ID hex.
-func GetActiveOrderDiscountsForShopService(shopIDStr string) ([]models.Discount, error) {
-	shopID, err := primitive.ObjectIDFromHex(shopIDStr)
-	if err != nil {
-		return nil, errors.New("invalid shop ID")
-	}
+func GetActiveOrderDiscountsForShopService(shopID primitive.ObjectID) ([]models.Discount, error) {
 	return repositories.GetActiveOrderDiscountsForShop(shopID)
 }
-
-// GetActiveShippingDiscountsForShopService wraps repositories.GetActiveShippingDiscountsForShop.
-// Accepts shop ID hex.
-func GetActiveShippingDiscountsForShopService(shopIDStr string) ([]models.Discount, error) {
-	shopID, err := primitive.ObjectIDFromHex(shopIDStr)
-	if err != nil {
-		return nil, errors.New("invalid shop ID")
-	}
+func GetActiveShippingDiscountsForShopService(shopID primitive.ObjectID) ([]models.Discount, error) {
 	return repositories.GetActiveShippingDiscountsForShop(shopID)
 }
 
-// ValidateUsageLimits checks usage limits for a discount.
-// Stub: in a real implementation you would:
-// - Count total uses (global) against discount.UsageLimit
-// - Count per-customer uses against PerCustomerLimit
-// - If within limits, record/increment usage.
-// Here we simply return true.
+// ValidateUsageLimits stub (implement usage tracking separately).
 func ValidateUsageLimits(discount *models.Discount, customerID primitive.ObjectID) (bool, error) {
-	// TODO: implement real usage-tracking
+	// TODO: implement tracking
 	return true, nil
 }

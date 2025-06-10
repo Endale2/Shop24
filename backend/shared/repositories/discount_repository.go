@@ -13,6 +13,20 @@ import (
 
 var discountCollection *mongo.Collection = config.GetCollection("DRPS", "discounts")
 
+// CreateDiscount inserts a new Discount document, assigning ID and timestamps.
+func CreateDiscount(d *models.Discount) (*mongo.InsertOneResult, error) {
+	// assign ID and timestamps here if not already set
+	if d.ID.IsZero() {
+		d.ID = primitive.NewObjectID()
+	}
+	now := time.Now()
+	if d.CreatedAt.IsZero() {
+		d.CreatedAt = now
+	}
+	d.UpdatedAt = now
+	return discountCollection.InsertOne(context.Background(), d)
+}
+
 // GetDiscountByID looks up a Discount document by its ObjectID.
 func GetDiscountByID(id primitive.ObjectID) (*models.Discount, error) {
 	var d models.Discount
@@ -40,12 +54,47 @@ func GetDiscountByCouponCode(code string) (*models.Discount, error) {
 	return &d, nil
 }
 
+// ListDiscountsByShop returns all discounts for a given shop.
+func ListDiscountsByShop(shopID primitive.ObjectID) ([]models.Discount, error) {
+	cursor, err := discountCollection.Find(context.Background(), bson.M{"shop_id": shopID})
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.Background())
+
+	var list []models.Discount
+	for cursor.Next(context.Background()) {
+		var d models.Discount
+		if err := cursor.Decode(&d); err != nil {
+			return nil, err
+		}
+		list = append(list, d)
+	}
+	return list, nil
+}
+
+// UpdateDiscount updates fields of a Discount by its ObjectID.
+func UpdateDiscount(id primitive.ObjectID, upd bson.M) (*mongo.UpdateResult, error) {
+	// ensure updated_at is set
+	upd["updated_at"] = time.Now()
+	return discountCollection.UpdateOne(
+		context.Background(),
+		bson.M{"_id": id},
+		bson.M{"$set": upd},
+	)
+}
+
+// DeleteDiscount removes a Discount document by its ObjectID.
+func DeleteDiscount(id primitive.ObjectID) (*mongo.DeleteResult, error) {
+	return discountCollection.DeleteOne(context.Background(), bson.M{"_id": id})
+}
+
 // GetActiveDiscountsForShop retrieves all “active” discounts for a given shop, whose date range includes now.
 func GetActiveDiscountsForShop(shopID primitive.ObjectID) ([]models.Discount, error) {
 	now := time.Now()
 	filter := bson.M{
-		"shop_id": shopID,
-		"active":  true,
+		"shop_id":  shopID,
+		"active":   true,
 		"start_at": bson.M{"$lte": now},
 		"end_at":   bson.M{"$gte": now},
 	}
@@ -83,8 +132,6 @@ func GetActiveDiscountsForProduct(
 		},
 	}
 
-	// If there’s an AllowedCustomerIDs list, we check if customerID is in it OR it’s empty.
-	// In MongoDB, an empty array doesn’t match the “$in” query, so we handle that in code below.
 	cursor, err := discountCollection.Find(context.Background(), filter)
 	if err != nil {
 		return nil, err
@@ -97,7 +144,7 @@ func GetActiveDiscountsForProduct(
 		if err := cursor.Decode(&d); err != nil {
 			return nil, err
 		}
-		// If AllowedCustomerIDs is non-empty, ensure customerID is listed (or skip).
+		// If AllowedCustomerIDs is non-empty, ensure customerID is listed
 		if len(d.AllowedCustomerIDs) > 0 {
 			allowed := false
 			for _, cid := range d.AllowedCustomerIDs {
@@ -110,7 +157,6 @@ func GetActiveDiscountsForProduct(
 				continue
 			}
 		}
-		// TODO: you may also want to check usage limits here (UsageLimit, PerCustomerLimit).
 		results = append(results, d)
 	}
 	return results, nil
@@ -169,3 +215,4 @@ func GetActiveShippingDiscountsForShop(shopID primitive.ObjectID) ([]models.Disc
 	}
 	return list, nil
 }
+

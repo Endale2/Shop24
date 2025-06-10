@@ -32,12 +32,12 @@ func SellerRoute(r *gin.Engine) {
 			prodGroup.PATCH("/:productId", controllers.UpdateProduct)
 			prodGroup.DELETE("/:productId", controllers.DeleteProduct)
 		}
-  // ─────  nested customers  routes ─────
+		// ─────  nested customers  routes ─────
 		custGroup := shopGroup.Group("/customers")
 		{
 			custGroup.POST("/link", controllers.LinkCustomer)
 			custGroup.GET("", controllers.GetLinkedCustomers)
-			custGroup.GET("/:customerId",     controllers.GetCustomerDetail)
+			custGroup.GET("/:customerId", controllers.GetCustomerDetail)
 			custGroup.DELETE("/:linkId", controllers.UnlinkCustomer)
 		}
 
@@ -60,7 +60,16 @@ func SellerRoute(r *gin.Engine) {
 			collGroup.DELETE("/:collId/products/:productId", controllers.RemoveProductFromCollection)
 		}
 
+		// ─────  nested Discount  routes ─────
+		discGroup := shopGroup.Group("/discounts")
+		{
+			discGroup.POST("", controllers.CreateDiscount)
+			discGroup.GET("", controllers.ListDiscounts)
+			discGroup.GET("/:id", controllers.GetDiscount)
+			discGroup.PATCH("/:id", controllers.UpdateDiscount)
+			discGroup.DELETE("/:id", controllers.DeleteDiscount)
+		}
+
 	}
 
-	
 }
