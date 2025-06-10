@@ -36,6 +36,7 @@ type Discount struct {
     // ── Scope fields ──
     ShopID             primitive.ObjectID   `bson:"shop_id,omitempty"         json:"shop_id,omitempty"`   // if limiting to a specific shop
     SellerID           primitive.ObjectID   `bson:"seller_id,omitempty"       json:"seller_id,omitempty"`
+    AppliesToCollections  []primitive.ObjectID `bson:"applies_to_collections,omitempty" json:"applies_to_collections,omitempty"` 
     AppliesToProducts  []primitive.ObjectID `bson:"applies_to_products,omitempty" json:"applies_to_products,omitempty"` 
     AppliesToVariants  []primitive.ObjectID `bson:"applies_to_variants,omitempty" json:"applies_to_variants,omitempty"` 
     // If Category == "order", you might instead use MinimumOrderSubtotal (see below).
@@ -62,8 +63,8 @@ type Discount struct {
     MinimumOrderForFreeShipping *float64    `bson:"minimum_free_shipping,omitempty"  json:"minimum_free_shipping,omitempty"`  // e.g. $50
 
     // ── Timing & active flag ──
-    StartAt            time.Time           `bson:"start_at"                         json:"start_at"`
-    EndAt              time.Time           `bson:"end_at"                           json:"end_at"`
+    StartAt                     time.Time `json:"startAt" binding:"required"`
+    EndAt                       time.Time `json:"endAt" binding:"required"`
     Active             bool                `bson:"active"                           json:"active"` // manual on/off
 
     CreatedAt          time.Time           `bson:"created_at,omitempty"             json:"created_at,omitempty"`
