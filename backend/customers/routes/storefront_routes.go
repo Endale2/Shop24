@@ -20,16 +20,6 @@ func StorefrontRoutes(r *gin.Engine) {
 			products.GET("/:productSlug", controllers.GetProductDetail)
 		}
 
-		// Cart endpoints nested under /shops/:shopSlug/cart
-		cart := shops.Group("/:shopSlug/cart")
-		{
-			cart.GET("", controllers.GetOrCreateCart)
-			cart.POST("/items", controllers.AddItemToCart)
-			cart.PATCH("/items/:itemID", controllers.UpdateCartItem)
-			cart.DELETE("/items/:itemID", controllers.RemoveCartItem)
-			cart.POST("/clear", controllers.ClearCart)
-			cart.POST("/apply-coupon", controllers.ApplyCoupon)
-			cart.POST("/checkout", controllers.CheckoutCart)
-		}
+		
 	}
 }
