@@ -32,7 +32,6 @@
                     class="w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 px-3 py-2 bg-white">
               <option value="product">Product</option>
               <option value="order">Order</option>
-              <option value="buy_x_get_y">Buy x get y</option>
               <option value="shipping">Shipping</option>
               
             </select>
