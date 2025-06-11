@@ -13,7 +13,7 @@ const (
     DiscountCategoryProduct     DiscountCategory = "product"      // applies to specific product(s) or variant(s)
     DiscountCategoryOrder       DiscountCategory = "order"        // applies to the entire cart/order
     DiscountCategoryShipping    DiscountCategory = "shipping"     // free shipping or shipping‐only promo
-    DiscountCategoryBuyXGetY    DiscountCategory = "buy_x_get_y"   // buy X items, get Y items
+
 )
 
 // DiscountType enumerates how the discount value is interpreted.
@@ -22,6 +22,7 @@ type DiscountType string
 const (
     DiscountTypeFixed      DiscountType = "fixed"      // $X off (product or order)
     DiscountTypePercentage DiscountType = "percentage" // X% off (product or order)
+    DiscountTypeBuyXGetY   DiscountType = "buy_x_get_y" // X% off (product or order)
 )
 
 // Discount represents a promotion you can apply to products, orders, or shipping.
