@@ -1,8 +1,6 @@
-<!-- src/components/Navbar.vue -->
 <template>
   <header class="bg-white shadow-md px-6 py-3 flex items-center justify-between text-gray-800 z-20">
     <div class="flex items-center space-x-4">
-      <!-- Mobile: hamburger -->
       <button
         class="md:hidden p-2 rounded-full hover:bg-gray-100 transition focus:outline-none focus:ring-2 focus:ring-gray-300"
         @click="$emit('toggle-sidebar')"
@@ -11,7 +9,6 @@
         <MenuIcon class="h-6 w-6 text-gray-700" />
       </button>
 
-      <!-- Shop selector -->
       <div v-if="shops.length" class="relative">
         <button
           @click="showShopMenu = !showShopMenu"
@@ -56,7 +53,6 @@
     </div>
 
     <div class="flex items-center space-x-4">
-      <!-- Notifications -->
       <button
         class="relative p-2 rounded-full hover:bg-gray-100 transition focus:outline-none focus:ring-2 focus:ring-gray-300"
         aria-label="Notifications"
@@ -70,17 +66,25 @@
         </span>
       </button>
 
-      <!-- User menu -->
       <div class="relative">
         <button
           @click="showUserMenu = !showUserMenu"
           class="flex items-center space-x-2 focus:outline-none"
         >
-          <div
-            class="h-9 w-9 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-lg shadow transition group-hover:ring-2 group-hover:ring-green-300 group-hover:ring-opacity-50"
-          >
-            {{ userInitials }}
-          </div>
+          <template v-if="user?.profile_image">
+            <img
+              :src="user.profile_image"
+              alt="Profile image"
+              class="h-9 w-9 rounded-full object-cover shadow transition group-hover:ring-2 group-hover:ring-green-300 group-hover:ring-opacity-50"
+            />
+          </template>
+          <template v-else>
+            <div
+              class="h-9 w-9 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-lg shadow transition group-hover:ring-2 group-hover:ring-green-300 group-hover:ring-opacity-50"
+            >
+              {{ userInitials }}
+            </div>
+          </template>
           <ChevronDownIcon
             class="h-4 w-4 text-gray-500 transition-transform group-hover:rotate-180"
           />
@@ -127,9 +131,9 @@ import {
   ShoppingBagIcon as ShopIcon
 } from '@heroicons/vue/outline'
 
-const router     = useRouter()
-const auth       = useAuthStore()
-const shopStore  = useShopStore()
+const router    = useRouter()
+const auth      = useAuthStore()
+const shopStore = useShopStore()
 
 // dropdown toggles
 const showShopMenu = ref(false)
@@ -143,7 +147,7 @@ const user       = computed(() => auth.user || {})
 const userInitials = computed(() => {
   const [first, last] = (user.value?.email || '').split('@')[0].split('.')
   return ((first?.[0]||'') + (last?.[0]||'')).toUpperCase() || '?'
-})  
+})   
 
 // stub unread
 const unreadCount = ref(3)

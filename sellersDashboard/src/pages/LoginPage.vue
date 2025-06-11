@@ -55,44 +55,54 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/store/auth'
-import { authService } from '@/services/auth'
-
 
 const router = useRouter()
-const auth = useAuthStore()
-const loginWithGoogle = () => {
-  authService.loginWithGoogle()
-}
+const route  = useRoute()
+const auth   = useAuthStore()
 
-// Form state
 const email = ref('')
 const password = ref('')
 const loading = ref(false)
-const error = ref(null)
+const error   = ref(null)
 
-// Prevent access if already logged in
-onMounted(() => {
+function loginWithGoogle() {
+  // include redirect param so the backend sends us back here:
+  window.location.href =
+    'http://localhost:8080/auth/seller/oauth/google?redirect_uri=' +
+    encodeURIComponent(window.location.origin + '/login?oauth=google')
+}
+
+// on mount, if we have an oauth query, finish login:
+onMounted(async () => {
+  // 1) if already logged in, go straight in
   if (auth.isAuthenticated) {
-    router.replace({ name: 'ShopSelection' })
+    return router.replace({ name: 'ShopSelection' })
+  }
+
+  // 2) if we have `?oauth=google`, attempt to fetchMe
+  if (route.query.oauth === 'google') {
+    try {
+      await auth.fetchMe()
+      return router.replace({ name: 'ShopSelection' })
+    } catch {
+      // fall through to show login form
+    }
   }
 })
 
 async function handleLogin() {
   loading.value = true
   error.value = null
-
   try {
-    // Attempt login; auth.login should set auth.user internally
     await auth.login({ email: email.value, password: password.value })
-
-    // Redirect to shop selection after success
     router.push({ name: 'ShopSelection' })
-  } catch (err) {
+  } catch {
     error.value = 'Login failed. Please check your credentials.'
   } finally {
     loading.value = false
   }
 }
 </script>
+
