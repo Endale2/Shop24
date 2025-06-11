@@ -132,6 +132,7 @@ func GetDiscount(c *gin.Context) {
         c.JSON(http.StatusForbidden, gin.H{"error": "not authorized"})
         return
     }
+
     idHex := c.Param("id")
     d, err := sharedSvc.GetDiscountByIDService(idHex)
     if err != nil {
@@ -146,8 +147,58 @@ func GetDiscount(c *gin.Context) {
         c.JSON(http.StatusNotFound, gin.H{"error": "discount not found"})
         return
     }
-    c.JSON(http.StatusOK, d)
+
+    // Fetch product summaries for each applied product
+    var products []gin.H
+    for _, pid := range d.AppliesToProducts {
+        p, err := sharedSvc.GetProductByIDService(pid.Hex())
+        if err != nil {
+            // skip products we can’t load
+            continue
+        }
+        if p == nil {
+            continue
+        }
+        products = append(products, gin.H{
+            "id":          p.ID.Hex(),
+            "name":        p.Name,
+            "main_image":  p.MainImage,
+            "description": p.Description,
+        })
+    }
+
+    // Build response
+    resp := gin.H{
+        "id":                         d.ID.Hex(),
+        "name":                       d.Name,
+        "description":                d.Description,
+        "category":                   d.Category,
+        "type":                       d.Type,
+        "value":                      d.Value,
+        "coupon_code":                d.CouponCode,
+        "free_shipping":              d.FreeShipping,
+        "minimum_free_shipping":      d.MinimumOrderForFreeShipping,
+        "minimum_order_subtotal":     d.MinimumOrderSubtotal,
+        "start_at":                   d.StartAt,
+        "end_at":                     d.EndAt,
+        "active":                     d.Active,
+        "applies_to_products":        products,
+        "applies_to_variants":        d.AppliesToVariants,
+        "applies_to_collections":     d.AppliesToCollections,
+        "usage_limit":                d.UsageLimit,
+        "per_customer_limit":         d.PerCustomerLimit,
+        "allowed_customers":          d.AllowedCustomerIDs,
+        "buy_product_ids":            d.BuyProductIDs,
+        "buy_quantity":               d.BuyQuantity,
+        "get_product_ids":            d.GetProductIDs,
+        "get_quantity":               d.GetQuantity,
+        "created_at":                 d.CreatedAt,
+        "updated_at":                 d.UpdatedAt,
+    }
+
+    c.JSON(http.StatusOK, resp)
 }
+
 
 // UpdateDiscount PATCH /seller/shops/:shopId/discounts/:id
 func UpdateDiscount(c *gin.Context) {
