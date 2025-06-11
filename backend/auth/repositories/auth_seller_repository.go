@@ -9,19 +9,30 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-var authSellerCollection *mongo.Collection = config.GetCollection("DRPS", "authsellers")
+var authSellerCollection = config.GetCollection("DRPS", "authsellers")
 
-// CreateAuthSeller inserts a new AuthSeller document.
-func CreateAuthSeller(authSeller *models.AuthSeller) (*mongo.InsertOneResult, error) {
-	return authSellerCollection.InsertOne(context.Background(), authSeller)
+func CreateAuthSeller(a *models.AuthSeller) (*mongo.InsertOneResult, error) {
+    return authSellerCollection.InsertOne(context.Background(), a)
 }
 
-// FindAuthSellerByEmail retrieves an AuthSeller document by email.
 func FindAuthSellerByEmail(email string) (*models.AuthSeller, error) {
-	var authSeller models.AuthSeller
-	err := authSellerCollection.FindOne(context.Background(), bson.M{"email": email}).Decode(&authSeller)
+    var a models.AuthSeller
+    err := authSellerCollection.FindOne(context.Background(), bson.M{"email": email}).Decode(&a)
+    if err == mongo.ErrNoDocuments {
+        return nil, nil
+    }
+    return &a, err
+}
+
+func FindAuthSellerByProvider(provider, providerID string) (*models.AuthSeller, error) {
+	var rec models.AuthSeller
+	filter := bson.M{"provider": provider, "provider_id": providerID}
+	err := authSellerCollection.FindOne(context.Background(), filter).Decode(&rec)
 	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
 		return nil, err
 	}
-	return &authSeller, nil
+	return &rec, nil
 }

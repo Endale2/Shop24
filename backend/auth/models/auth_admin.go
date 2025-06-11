@@ -1,18 +1,15 @@
 package models
 
-import (
-	"go.mongodb.org/mongo-driver/bson/primitive"
-)
+import "go.mongodb.org/mongo-driver/bson/primitive"
 
-// AuthAdmin represents administrator credentials and issued tokens.
+// AuthAdmin links credentials → profile
 type AuthAdmin struct {
-	ID           string             `json:"id" bson:"_id,omitempty"`
-	Username     string             `json:"username" bson:"username"`
-	Email        string             `json:"email" bson:"email"`
-	Password     string             `json:"password" bson:"password"`
-	AdminID      primitive.ObjectID `json:"admin_id" bson:"admin_id"`
-
-	// Tokens issued on successful login
-	AccessToken  string             `json:"access_token,omitempty" bson:"-"`
-	RefreshToken string             `json:"refresh_token,omitempty" bson:"-"`
+    ID           primitive.ObjectID `bson:"_id,omitempty"    json:"id"`
+    Email        string             `bson:"email"            json:"email"`
+    PasswordHash string             `bson:"password_hash"    json:"-"`
+    Provider     string             `bson:"provider"         json:"provider"`    // "local" or "google"
+    ProviderID   string             `bson:"provider_id"      json:"providerId"`  // e.g. Google sub
+    AdminID      primitive.ObjectID `bson:"admin_id"         json:"adminId"`
+    AccessToken  string             `bson:"-"                json:"accessToken,omitempty"`
+    RefreshToken string             `bson:"-"                json:"refreshToken,omitempty"`
 }

@@ -38,16 +38,33 @@
         </p>
       </form>
     </div>
+    <div class="mt-4 text-center">
+    <button
+  @click="loginWithGoogle"
+  class="inline-flex items-center px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 transition"
+>
+  <!-- google icon… -->
+  Log in with Google
+</button>
+
+
   </div>
+  </div>
+   
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/auth'
+import { authService } from '@/services/auth'
+
 
 const router = useRouter()
 const auth = useAuthStore()
+const loginWithGoogle = () => {
+  authService.loginWithGoogle()
+}
 
 // Form state
 const email = ref('')

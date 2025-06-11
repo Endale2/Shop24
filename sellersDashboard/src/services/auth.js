@@ -20,4 +20,7 @@ export const authService = {
     const res = await api.post('/auth/seller/refresh')
     return res.data
   },
+  loginWithGoogle() {
+    window.location.href = 'http://localhost:8080/auth/seller/oauth/google'
+  }
 }

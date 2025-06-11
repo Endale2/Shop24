@@ -1,27 +1,37 @@
 package repositories
 
 import (
-	"context"
+    "context"
 
-	"github.com/Endale2/DRPS/auth/models"
-	"github.com/Endale2/DRPS/config"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
+    "github.com/Endale2/DRPS/auth/models"
+    "github.com/Endale2/DRPS/config"
+    "go.mongodb.org/mongo-driver/bson"
+    "go.mongodb.org/mongo-driver/mongo"
 )
 
-var authAdminCollection *mongo.Collection = config.GetCollection("DRPS", "authadmins")
+var authAdminColl *mongo.Collection = config.GetCollection("DRPS", "authadmins")
 
-// CreateAuthAdmin inserts a new AuthAdmin document.
-func CreateAuthAdmin(authAdmin *models.AuthAdmin) (*mongo.InsertOneResult, error) {
-	return authAdminCollection.InsertOne(context.Background(), authAdmin)
+func CreateAuthAdmin(a *models.AuthAdmin) (*mongo.InsertOneResult, error) {
+    return authAdminColl.InsertOne(context.Background(), a)
 }
 
-// FindAuthAdminByEmail retrieves an AuthAdmin document by email.
 func FindAuthAdminByEmail(email string) (*models.AuthAdmin, error) {
-	var authAdmin models.AuthAdmin
-	err := authAdminCollection.FindOne(context.Background(), bson.M{"email": email}).Decode(&authAdmin)
-	if err != nil {
-		return nil, err
-	}
-	return &authAdmin, nil
+    var a models.AuthAdmin
+    err := authAdminColl.FindOne(context.Background(), bson.M{"email": email, "provider": "local"}).Decode(&a)
+    if err != nil {
+        return nil, err
+    }
+    return &a, nil
+}
+
+func FindAuthAdminByProvider(provider, providerID string) (*models.AuthAdmin, error) {
+    var a models.AuthAdmin
+    err := authAdminColl.FindOne(context.Background(), bson.M{
+        "provider":    provider,
+        "provider_id": providerID,
+    }).Decode(&a)
+    if err != nil {
+        return nil, err
+    }
+    return &a, nil
 }

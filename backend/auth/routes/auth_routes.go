@@ -12,6 +12,7 @@ func AuthRoutes(r *gin.Engine) {
 		// Admin authentication routes
 		authGroup.POST("/admin/login", controllers.AdminLogin)
 		authGroup.POST("/admin/create", controllers.AdminRegister)
+		authGroup.POST("/admin/oauth",    controllers.AdminOAuth)
         authGroup.POST("/admin/logout", controllers.AdminLogout)
 		authGroup.POST("/admin/refresh", controllers.AdminRefresh)
 		authGroup.GET("/admin/me", controllers.GetAuthAdminMe)
@@ -19,6 +20,8 @@ func AuthRoutes(r *gin.Engine) {
 		// Seller authentication routes
 		authGroup.POST("/seller/register", controllers.SellerRegister)
 		authGroup.POST("/seller/login", controllers.SellerLogin)
+		authGroup.GET("/seller/oauth/google",         controllers.SellerOAuthRedirect)
+        authGroup.GET("/seller/oauth/google/callback", controllers.SellerOAuthCallback)
 		authGroup.POST("/seller/refresh",  controllers.SellerRefresh)
 		authGroup.POST("/seller/logout", controllers.SellerLogout)
 		authGroup.GET("/seller/me", controllers.GetCurrentSeller)

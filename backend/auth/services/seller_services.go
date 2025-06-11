@@ -10,75 +10,99 @@ import (
 	sellerRepo "github.com/Endale2/DRPS/sellers/repositories"
 	"github.com/Endale2/DRPS/auth/utils"
 	"go.mongodb.org/mongo-driver/bson/primitive"
+	"golang.org/x/crypto/bcrypt"
 )
 
-// SellerRegisterService handles new seller sign-up.
-// It creates a Seller record, links its ID into authSeller.SellerID,
-// then creates the AuthSeller record.
-func SellerRegisterService(authSeller *models.AuthSeller) error {
-	// Validate required fields
-	if authSeller.Email == "" || authSeller.Password == "" {
-		return errors.New("email and password are required")
-	}
+var ErrSellerNotFound = errors.New("seller not found")
 
-	// Check for existing authentication record
-	if existing, _ := authRepo.FindAuthSellerByEmail(authSeller.Email); existing != nil {
-		return errors.New("seller with that email already exists")
+// SellerRegisterService wraps the local registration (hashing + profile creation).
+func SellerRegisterService(auth *models.AuthSeller) error {
+	if auth.Email == "" || auth.Password == "" {
+		return errors.New("email and password required")
 	}
-
-	// Create the detailed Seller record
-	newSeller := &sellerModels.Seller{
-		// UserID can stay zero unless you track a separate user account
-		
-		Email:     authSeller.Email,
-		CreatedAt: time.Now(),
-		UpdatedAt: time.Now(),
+	if ex, _ := authRepo.FindAuthSellerByEmail(auth.Email); ex != nil {
+		return errors.New("email already in use")
 	}
-	insertRes, err := sellerRepo.CreateSeller(newSeller)
+	// hash password
+	hash, err := bcrypt.GenerateFromPassword([]byte(auth.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return err
 	}
-	newSeller.ID = insertRes.InsertedID.(primitive.ObjectID)
-
-	// Link AuthSeller → Seller
-	authSeller.SellerID = newSeller.ID
-
-	// Insert the AuthSeller record
-	_, err = authRepo.CreateAuthSeller(authSeller)
+	auth.Password = string(hash)
+	auth.Provider = "local"
+	// create seller profile
+	now := time.Now()
+	prof := &sellerModels.Seller{
+		Email:     auth.Email,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	res, err := sellerRepo.CreateSeller(prof)
+	if err != nil {
+		return err
+	}
+	prof.ID = res.InsertedID.(primitive.ObjectID)
+	auth.SellerID = prof.ID
+	_, err = authRepo.CreateAuthSeller(auth)
 	return err
 }
 
-// SellerLoginService authenticates a seller and issues JWTs.
-// Returns the full Seller record, an accessToken, a refreshToken, and error.
-func SellerLoginService(authSeller *models.AuthSeller) (*sellerModels.Seller, string, string, error) {
-	// 1) Lookup credentials
-	foundAuth, err := authRepo.FindAuthSellerByEmail(authSeller.Email)
-	if err != nil {
-		return nil, "", "", errors.New("seller not found")
-	}
-
-	// 2) Verify password (in production use hashed compare)
-	if authSeller.Password != foundAuth.Password {
+// SellerLoginService logs in a local seller.
+func SellerLoginService(auth *models.AuthSeller) (*sellerModels.Seller, string, string, error) {
+	rec, _ := authRepo.FindAuthSellerByEmail(auth.Email)
+	if rec == nil {
 		return nil, "", "", errors.New("invalid credentials")
 	}
-
-	// 3) Load full Seller profile
-	sellerData, err := sellerRepo.GetSellerByID(foundAuth.SellerID)
-	if err != nil {
-		return nil, "", "", errors.New("failed to load seller data")
+	if err := bcrypt.CompareHashAndPassword([]byte(rec.Password), []byte(auth.Password)); err != nil {
+		return nil, "", "", errors.New("invalid credentials")
 	}
-
-	// 4) Issue JWT tokens
-	// Access token: 5 minutes
-	accessToken, err := utils.CreateToken(foundAuth.SellerID.Hex(), 5*time.Minute)
-	if err != nil {
-		return nil, "", "", errors.New("failed to generate access token")
+	prof, err := sellerRepo.GetSellerByID(rec.SellerID)
+	if err != nil || prof == nil {
+		return nil, "", "", ErrSellerNotFound
 	}
-	// Refresh token: 7 days
-	refreshToken, err := utils.CreateToken(foundAuth.SellerID.Hex(), 7*24*time.Hour)
-	if err != nil {
-		return nil, "", "", errors.New("failed to generate refresh token")
-	}
+	at, _ := utils.CreateToken(prof.ID.Hex(), 5*time.Minute)
+	rt, _ := utils.CreateToken(prof.ID.Hex(), 7*24*time.Hour)
+	return prof, at, rt, nil
+}
 
-	return sellerData, accessToken, refreshToken, nil
+// SellerLoginOAuth handles Google (or other) OAuth login.
+func SellerLoginOAuth(provider, idToken string) (*sellerModels.Seller, string, string, error) {
+	payload, err := utils.VerifyGoogleIDToken(idToken)
+	if err != nil {
+		return nil, "", "", err
+	}
+	rec, _ := authRepo.FindAuthSellerByProvider(provider, payload.Sub)
+	if rec == nil {
+		// first‐time: create profile + auth
+		now := time.Now()
+		prof := &sellerModels.Seller{
+			FirstName:    payload.GivenName,
+			LastName:     payload.FamilyName,
+			Email:        payload.Email,
+			ProfileImage: payload.Picture,
+			CreatedAt:    now,
+			UpdatedAt:    now,
+		}
+		res, err := sellerRepo.CreateSeller(prof)
+		if err != nil {
+			return nil, "", "", err
+		}
+		prof.ID = res.InsertedID.(primitive.ObjectID)
+		rec = &models.AuthSeller{
+			Email:      payload.Email,
+			Provider:   provider,
+			ProviderID: payload.Sub,
+			SellerID:   prof.ID,
+		}
+		if _, err := authRepo.CreateAuthSeller(rec); err != nil {
+			return nil, "", "", err
+		}
+	}
+	prof, err := sellerRepo.GetSellerByID(rec.SellerID)
+	if err != nil || prof == nil {
+		return nil, "", "", ErrSellerNotFound
+	}
+	at, _ := utils.CreateToken(prof.ID.Hex(), 5*time.Minute)
+	rt, _ := utils.CreateToken(prof.ID.Hex(), 7*24*time.Hour)
+	return prof, at, rt, nil
 }

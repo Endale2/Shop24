@@ -1,173 +1,138 @@
 package controllers
 
 import (
-	"net/http"
-	"time"
+    "net/http"
+    "time"
 
-	"github.com/Endale2/DRPS/auth/models"
-	"github.com/Endale2/DRPS/auth/services"
-	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"github.com/Endale2/DRPS/auth/utils"
-	adminRepo "github.com/Endale2/DRPS/admin/repositories"
+    
+    "github.com/Endale2/DRPS/auth/services"
+    "github.com/Endale2/DRPS/auth/utils"
+    "github.com/Endale2/DRPS/admin/repositories"
+    "github.com/gin-gonic/gin"
+    "go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// AdminLogin handles admin login requests, issues tokens, and sets them as HTTP-only cookies.
-func AdminLogin(c *gin.Context) {
-	var req models.AuthAdmin
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	authData, adminData, err := services.AdminLoginService(&req)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
-	}
-
-	// Set HTTP-only cookies for access and refresh tokens
-	c.SetCookie("access_token", authData.AccessToken, int((5 * time.Minute).Seconds()), "/", "", false, true)
-	c.SetCookie("refresh_token", authData.RefreshToken, int((7 * 24 * time.Hour).Seconds()), "/", "", false, true)
-
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Admin logged in successfully",
-		"admin":   adminData,
-	})
-}
-
-
-
-
-
-// AdminRegister handles new admin registration requests.
+// RegisterLocalAdmin handles email/password signup.
 func AdminRegister(c *gin.Context) {
-	var req models.AuthAdmin
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	if err := services.AdminRegisterService(&req); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "Admin registered successfully", "admin_id": req.AdminID})
+    var req struct {
+        Email     string `json:"email" binding:"required,email"`
+        Password  string `json:"password" binding:"required,min=8"`
+        FirstName string `json:"firstName" binding:"required"`
+        LastName  string `json:"lastName"  binding:"required"`
+    }
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+    if err := services.RegisterLocalAdmin(req.Email, req.Password, req.FirstName, req.LastName); err != nil {
+        c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+        return
+    }
+    c.JSON(http.StatusCreated, gin.H{"message": "registered"})
 }
 
+// LoginLocalAdmin handles email/password login.
+func AdminLogin(c *gin.Context) {
+    var req struct {
+        Email    string `json:"email" binding:"required,email"`
+        Password string `json:"password" binding:"required"`
+    }
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+    cred, prof, err := services.LoginLocalAdmin(req.Email, req.Password)
+    if err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+        return
+    }
+    // set HTTP-only cookies
+    c.SetCookie("access_token",  cred.AccessToken,  int((5 * time.Minute).Seconds()), "/", "", false, true)
+    c.SetCookie("refresh_token", cred.RefreshToken, int((7 * 24 * time.Hour).Seconds()), "/", "", false, true)
+    c.JSON(http.StatusOK, prof)
+}
 
+// AdminOAuth handles social login (e.g. Google).
+func AdminOAuth(c *gin.Context) {
+    var req struct {
+        Provider   string `json:"provider" binding:"required"`   // e.g. "google"
+        ProviderID string `json:"providerId" binding:"required"` // OAuth subject
+        Email      string `json:"email" binding:"required,email"`
+        FirstName  string `json:"firstName"`
+        LastName   string `json:"lastName"`
+    }
+    if err := c.ShouldBindJSON(&req); err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+        return
+    }
+    cred, prof, err := services.LoginOAuthAdmin(
+        req.Provider, req.ProviderID,
+        req.Email, req.FirstName, req.LastName,
+    )
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+        return
+    }
+    c.SetCookie("access_token",  cred.AccessToken,  int((5 * time.Minute).Seconds()), "/", "", false, true)
+    c.SetCookie("refresh_token", cred.RefreshToken, int((7 * 24 * time.Hour).Seconds()), "/", "", false, true)
+    c.JSON(http.StatusOK, prof)
+}
 
-
-
-
-// RefreshToken handles refresh token requests, verifies the refresh token, and issues a new access token.
+// AdminRefresh issues a new access-token given a valid refresh-token.
 func AdminRefresh(c *gin.Context) {
-	// 1) Read the refresh token cookie
-	refreshToken, err := c.Cookie("refresh_token")
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Refresh token missing"})
-		return
-	}
-
-	// 2) Parse and validate the refresh token
-	claims, err := utils.ParseToken(refreshToken)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired refresh token"})
-		return
-	}
-
-	// 3) Issue new access token (5-minute expiry)
-	newAccessToken, err := utils.CreateToken(claims.UserID, 5*time.Minute)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to create access token"})
-		return
-	}
-
-	// 4) Set the new access token cookie
-	c.SetCookie(
-		"access_token",
-		newAccessToken,
-		int((5 * time.Minute).Seconds()),
-		"/", "", false, true,
-	)
-
-	// 5) Return success
-	c.JSON(http.StatusOK, gin.H{"message": "Access token refreshed"})
+    rt, err := c.Cookie("refresh_token")
+    if err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "refresh token missing"})
+        return
+    }
+    claims, err := utils.ParseToken(rt)
+    if err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid refresh token"})
+        return
+    }
+    newAT, err := utils.CreateToken(claims.UserID, 5*time.Minute)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create token"})
+        return
+    }
+    c.SetCookie("access_token", newAT, int((5*time.Minute).Seconds()), "/", "", false, true)
+    c.JSON(http.StatusOK, gin.H{"message": "access token refreshed"})
 }
 
-
-
-
-
-// GetAuthAdminMe returns the authenticated admin's information from the JWT in the access_token cookie.
+// AdminMe returns the current admin’s profile, based on access-token.
 func GetAuthAdminMe(c *gin.Context) {
-	// Retrieve the access token from cookie
-	tokenStr, err := c.Cookie("access_token")
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Access token missing"})
-		return
-	}
-
-	// Parse the JWT and extract claims
-	claims, err := utils.ParseToken(tokenStr)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid or expired token"})
-		return
-	}
-
-	// Convert string ID to ObjectID
-	adminID, err := primitive.ObjectIDFromHex(claims.UserID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid admin ID in token"})
-		return
-	}
-
-	// Fetch admin data from DB
-	admin, err := adminRepo.GetAdminByID(adminID)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch admin data"})
-		return
-	}
-	if admin == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "Admin not found"})
-		return
-	}
-
-	// Return admin data
-	c.JSON(http.StatusOK, admin)
+    at, err := c.Cookie("access_token")
+    if err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "access token missing"})
+        return
+    }
+    claims, err := utils.ParseToken(at)
+    if err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid access token"})
+        return
+    }
+    aid, err := primitive.ObjectIDFromHex(claims.UserID)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "invalid user ID"})
+        return
+    }
+    prof, err := repositories.GetAdminByID(aid)
+    if err != nil {
+        c.JSON(http.StatusInternalServerError, gin.H{"error": "could not fetch profile"})
+        return
+    }
+    if prof == nil {
+        c.JSON(http.StatusNotFound, gin.H{"error": "admin not found"})
+        return
+    }
+    c.JSON(http.StatusOK, prof)
 }
 
-
-
-
-
-// AdminLogout clears the authentication cookies.
+// AdminLogout clears both cookies.
 func AdminLogout(c *gin.Context) {
-	// Invalidate the access_token cookie
-	c.SetCookie(
-		"access_token",   // name
-		"",               // value
-		-1,               // maxAge < 0 means delete now
-		"/",              // path
-		"",               // domain (same as login)
-		false,            // secure (same as login)
-		true,             // httpOnly
-	)
-
-	// Invalidate the refresh_token cookie
-	c.SetCookie(
-		"refresh_token",
-		"",
-		-1,
-		"/",
-		"",
-		false,
-		true,
-	)
-
-	c.JSON(http.StatusOK, gin.H{"message": "Logged out successfully"})
+    // clear access_token
+    c.SetCookie("access_token",  "", -1, "/", "", false, true)
+    // clear refresh_token
+    c.SetCookie("refresh_token", "", -1, "/", "", false, true)
+    c.JSON(http.StatusOK, gin.H{"message": "logged out"})
 }
-
-
-
