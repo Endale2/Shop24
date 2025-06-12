@@ -23,6 +23,7 @@ const routes = [
       { path: '',                     name: 'Dashboard',      component: DashboardPage },
       { path: 'products',             name: 'Products',       component: () => import('@/pages/products/ProductsPage.vue') },
       { path: 'products/:productId',  name: 'ProductDetail',  component: () => import('@/pages/products/ProductDetailPage.vue'), props: true },
+      { path: 'products/:productId/edit',  name: 'EditProduct',    component: () => import('@/pages/products/EditProductPage.vue'), props: true },
       { path: 'collections',          name: 'Collections',    component: () => import('@/pages/collections/CollectionsPage.vue') },
       { path: 'collections/:collectionId',  name: 'CollectionDetail',  component: () => import('@/pages/collections/CollectionDetailPage.vue'), props: true },
       { path: 'customers',            name: 'Customers',      component: () => import('@/pages/customers/CustomersPage.vue') },
