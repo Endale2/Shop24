@@ -58,6 +58,7 @@ func CreateCollection(c *gin.Context) {
 		in.Description,
 		in.Handle,
 		in.Image,
+		
 	)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create collection"})
@@ -156,6 +157,7 @@ func GetCollection(c *gin.Context) {
 		"description": coll.Description,
 		"handle":      coll.Handle,
 		"image":       coll.Image,
+		"createdAt":   coll.CreatedAt,
 		"products":    summaries,
 	})
 }
