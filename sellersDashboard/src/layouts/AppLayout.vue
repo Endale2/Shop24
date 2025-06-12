@@ -1,4 +1,3 @@
-<!-- src/layouts/AppLayout.vue -->
 <template>
   <div class="flex h-screen bg-gray-100 overflow-hidden">
     <!-- Mobile backdrop -->
