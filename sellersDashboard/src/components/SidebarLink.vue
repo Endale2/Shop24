@@ -1,13 +1,12 @@
-<!-- src/components/SidebarLink.vue -->
 <template>
   <router-link
     :to="to"
-    class="group flex items-center transition-colors duration-150 ease-in-out"
+    class="group flex items-center rounded-md transition-colors duration-150 ease-in-out"
     :class="[
       isActive
-        ? 'bg-green-50 border-l-4 border-green-500 text-green-700'
-        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
-      small ? 'pl-8 py-1 text-sm' : 'pl-4 pr-3 py-2'
+        ? 'bg-slate-100 text-slate-900'
+        : 'text-slate-700 hover:bg-slate-50 hover:text-slate-900',
+      small ? 'pl-6 py-1 text-sm' : 'px-4 py-2'
     ]"
   >
     <component
@@ -16,8 +15,8 @@
       :class="[
         small ? 'h-5 w-5' : 'h-6 w-6',
         isActive
-          ? 'text-green-500 group-hover:text-green-600'
-          : 'text-gray-400 group-hover:text-gray-600'
+          ? 'text-slate-900'
+          : 'text-slate-400 group-hover:text-slate-600'
       ]"
     />
     <span class="truncate">{{ label }}</span>
@@ -28,22 +27,18 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
+// props
 const props = defineProps({
-  to:     { type: String,  required: true },
-  icon:   { type: [Object], required: true },
-  label:  { type: String,  required: true },
-  small:  { type: Boolean, default: false },
-  exact:  { type: Boolean, default: false },  // NEW
+  to:    { type: String,  required: true },
+  icon:  { type: [Object, Function], required: true },
+  label: { type: String,  required: true },
+  small: { type: Boolean, default: false }
 })
 
 const route = useRoute()
 
+// active if the current path matches or starts with `to`
 const isActive = computed(() => {
-  const path = route.path.replace(/\/$/, '')
-  const target = props.to.replace(/\/$/, '')
-  if (props.exact) {
-    return path === target
-  }
-  return path === target || path.startsWith(target + '/')
+  return route.path === props.to || route.path.startsWith(props.to + '/')
 })
 </script>
