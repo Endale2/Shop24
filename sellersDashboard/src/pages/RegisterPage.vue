@@ -55,7 +55,7 @@
               class="mt-1 w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition"
             />
           </div>
-          
+
            <div>
             <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number (Optional)</label>
             <input
@@ -92,6 +92,26 @@
           </div>
           <p v-if="error" class="text-sm text-red-600 text-center">{{ error }}</p>
         </form>
+
+        <div class="mt-6 relative">
+          <div class="absolute inset-0 flex items-center">
+            <div class="w-full border-t border-gray-300"></div>
+          </div>
+          <div class="relative flex justify-center text-sm">
+            <span class="px-2 bg-white text-gray-500">Or continue with</span>
+          </div>
+        </div>
+
+        <div class="mt-6">
+          <button
+            @click="loginWithGoogle"
+            class="w-full flex justify-center items-center space-x-3 border border-gray-300 rounded-lg py-2.5 px-4 hover:bg-gray-50 transition"
+          >
+            <img src="https://www.svgrepo.com/show/355037/google.svg" alt="Google" class="h-5 w-5" />
+            <span class="text-sm font-medium text-gray-700">Continue with Google</span>
+          </button>
+        </div>
+
       </div>
     </div>
   </div>
@@ -100,7 +120,7 @@
 <script setup>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { useAuthStore } from '@/store/auth'; // Assuming a Pinia store similar to previous examples
+import { useAuthStore } from '@/store/auth';
 
 const router = useRouter();
 const auth = useAuthStore();
@@ -117,25 +137,35 @@ const error = ref(null);
 async function handleRegister() {
   loading.value = true;
   error.value = null;
-  
+
   const registrationData = {
     firstName: firstName.value,
     lastName: lastName.value,
     businessName: businessName.value,
     email: email.value,
     phone: phone.value,
-    password: password.value, // The backend will handle hashing
+    password: password.value,
   };
 
   try {
-    // Assuming your auth store has a 'register' action
     await auth.register(registrationData);
-    router.push({ name: 'ShopSelection' }); // Redirect on success
+    router.push({ name: 'ShopSelection' });
   } catch (err) {
     error.value = err.response?.data?.error || 'An error occurred during registration.';
     console.error('Registration error:', err);
   } finally {
     loading.value = false;
   }
+}
+
+// Kick off OAuth login by hitting your backend endpoint
+function loginWithGoogle() {
+  // We redirect to the login page which is already equipped to handle the OAuth callback.
+  // This avoids duplicating the callback logic.
+  const redirect = encodeURIComponent(
+    window.location.origin + '/login?oauth=google'
+  );
+  window.location.href =
+    `http://localhost:8080/auth/seller/oauth/google?redirect_uri=${redirect}`;
 }
 </script>
