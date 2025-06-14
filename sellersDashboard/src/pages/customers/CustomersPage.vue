@@ -3,7 +3,7 @@
     <!-- Header and Search Controls -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
       <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">
-        Customers Overview
+        Customers
       </h2>
 
       <div class="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full md:w-auto">

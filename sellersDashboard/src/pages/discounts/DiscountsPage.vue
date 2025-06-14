@@ -1,7 +1,7 @@
 <template>
   <div class="p-6 bg-gray-50 min-h-screen">
     <div class="flex justify-between items-center mb-8">
-      <h1 class="text-3xl font-bold text-gray-800">Discounts Management</h1>
+      <h1 class="text-3xl font-bold text-gray-800">Discounts</h1>
       <button
         @click="openCreateForm"
         class="bg-indigo-600 text-white py-2 px-5 rounded-lg shadow-md hover:bg-indigo-700 transition duration-300 ease-in-out transform hover:scale-105"

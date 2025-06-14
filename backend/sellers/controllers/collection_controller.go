@@ -157,7 +157,8 @@ func GetCollection(c *gin.Context) {
 		"description": coll.Description,
 		"handle":      coll.Handle,
 		"image":       coll.Image,
-		"createdAt":   coll.CreatedAt,
+		"created_at":   coll.CreatedAt,
+		"filters":      coll.Filters,
 		"products":    summaries,
 	})
 }
