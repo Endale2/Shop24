@@ -21,6 +21,12 @@ export const authService = {
     return res.data
   },
   loginWithGoogle() {
-    window.location.href = 'http://localhost:8080/auth/seller/oauth/google'
-  }
+ // Pick your Vue route to re-enter, e.g. "/shops"
+  const returnTo = window.location.origin + 'shops'
+  const redirectUri = encodeURIComponent(returnTo)
+  window.location.href =
+    `http://localhost:8080/auth/seller/oauth/google?redirect_uri=${redirectUri}`
+
+}
+
 }

@@ -2,14 +2,15 @@ package controllers
 
 import (
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/Endale2/DRPS/auth/models"
 	"github.com/Endale2/DRPS/auth/services"
 	"github.com/Endale2/DRPS/auth/utils"
+	sellerRepo "github.com/Endale2/DRPS/sellers/repositories"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	sellerRepo "github.com/Endale2/DRPS/sellers/repositories"
 	"golang.org/x/oauth2"
 )
 
@@ -90,28 +91,35 @@ func SellerOAuthRedirect(c *gin.Context) {
 
 // SellerOAuthCallback handles Google’s OAuth callback.
 func SellerOAuthCallback(c *gin.Context) {
-	code := c.Query("code")
-	tok, err := utils.GoogleOAuthConfig.Exchange(c, code)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "oauth exchange failed"})
-		return
-	}
-	idToken, _ := tok.Extra("id_token").(string)
+    // 1. Exchange the code for a token
+    code := c.Query("code")
+    tok, err := utils.GoogleOAuthConfig.Exchange(c, code)
+    if err != nil {
+        c.JSON(http.StatusBadRequest, gin.H{"error": "oauth exchange failed"})
+        return
+    }
+    idToken, _ := tok.Extra("id_token").(string)
 
-	sellerData, at, rt, err := services.SellerLoginOAuth("google", idToken)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
-	}
+    // 2. Create or fetch your seller, and issue app tokens
+    _, at, rt, err := services.SellerLoginOAuth("google", idToken)
+    if err != nil {
+        c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+        return
+    }
 
-	c.SetCookie("access_token", at, int((5*time.Minute).Seconds()), "/", "", false, true)
-	c.SetCookie("refresh_token", rt, int((7*24*time.Hour).Seconds()), "/", "", false, true)
+    // 3. Set HTTP‐only cookies so the browser will send them automatically
+    c.SetCookie("access_token",  at, int((5 * time.Minute).Seconds()),    "/", "", false, true)
+    c.SetCookie("refresh_token", rt, int((7 * 24 * time.Hour).Seconds()), "/", "", false, true)
 
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Seller logged in via Google",
-		"seller":  sellerData,
-	})
+    // 4. Redirect into your SPA:
+    //    replace `http://localhost:5174/shops` with your real front-end URL
+    frontend := os.Getenv("FRONTEND_URL")
+    if frontend == "" {
+        frontend = "http://localhost:5174"
+    }
+    c.Redirect(http.StatusFound, frontend+"/shops")
 }
+
 
 // SellerRefresh issues a new access token using the refresh_token cookie.
 func SellerRefresh(c *gin.Context) {
