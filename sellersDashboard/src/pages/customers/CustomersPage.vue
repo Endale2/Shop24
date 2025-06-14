@@ -1,24 +1,34 @@
 <template>
   <div class="p-4 sm:p-6 max-w-7xl mx-auto space-y-8 font-sans">
-    <!-- Header and Search Controls -->
     <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
       <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">
         Customers
       </h2>
 
       <div class="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full md:w-auto">
-        <input
-          v-model="search"
-          type="text"
-          placeholder="Search by name or email..."
-          class="w-full sm:w-64 px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition duration-150 ease-in-out shadow-sm"
-        />
+        <div class="relative w-full sm:w-64">
+          <input
+            v-model="search"
+            type="text"
+            placeholder="Search by name or email..."
+            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-150 ease-in-out shadow-sm"
+          />
+          <SearchIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+        </div>
 
-        <div class="inline-flex rounded-md shadow-sm" role="group">
+        <button
+          @click="goToAddCustomer"
+          class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-150 ease-in-out"
+        >
+          <PlusIcon class="w-5 h-5 mr-2 -ml-1" />
+          Add New Customer
+        </button>
+
+        <div class="inline-flex rounded-full shadow-md overflow-hidden" role="group">
           <button
             @click="currentView = 'cards'"
             :class="buttonClass('cards')"
-            class="px-4 py-2 text-sm font-medium border border-gray-300 rounded-l-lg focus:z-10 transition"
+            class="px-5 py-2.5 text-sm font-medium border border-gray-300 focus:z-10 focus:ring-2 focus:ring-green-500 focus:outline-none transition-colors duration-200 ease-in-out"
           >
             <ViewGridIcon class="w-5 h-5 inline-block mr-1" />
             Cards
@@ -26,7 +36,7 @@
           <button
             @click="currentView = 'list'"
             :class="buttonClass('list')"
-            class="px-4 py-2 text-sm font-medium border border-gray-300 rounded-r-lg focus:z-10 transition"
+            class="px-5 py-2.5 text-sm font-medium border border-gray-300 focus:z-10 focus:ring-2 focus:ring-green-500 focus:outline-none transition-colors duration-200 ease-in-out"
           >
             <ViewListIcon class="w-5 h-5 inline-block mr-1" />
             List
@@ -35,13 +45,11 @@
       </div>
     </div>
 
-    <!-- Loading Spinner -->
     <div v-if="loading" class="flex flex-col items-center justify-center text-gray-600 py-16">
-      <RefreshIcon class="animate-spin h-10 w-10 text-blue-500 mb-3" />
+      <RefreshIcon class="animate-spin h-10 w-10 text-green-500 mb-3" />
       <p class="text-lg">Loading customers...</p>
     </div>
 
-    <!-- Error Message -->
     <div
       v-else-if="error"
       class="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-sm"
@@ -52,10 +60,9 @@
       <p class="text-sm mt-2">Please try again or contact support if the issue persists.</p>
     </div>
 
-    <!-- Empty State -->
     <div
       v-else-if="filteredCustomers.length === 0"
-      class="bg-blue-50 border border-blue-200 text-blue-700 px-6 py-8 rounded-lg text-center mt-8 shadow-sm"
+      class="bg-green-50 border border-green-200 text-green-700 px-6 py-8 rounded-lg text-center mt-8 shadow-sm"
     >
       <p class="text-lg font-medium">
         No customers found<span v-if="search"> matching "{{ search }}"</span>.
@@ -65,7 +72,6 @@
       </p>
     </div>
 
-    <!-- List View -->
     <div v-else-if="currentView === 'list'" class="overflow-x-auto bg-white shadow-lg rounded-xl">
       <table class="min-w-full divide-y divide-gray-200">
         <thead class="bg-gray-100">
@@ -83,13 +89,13 @@
             v-for="(cust, i) in filteredCustomers"
             :key="cust.id"
             @click="goToCustomerDetail(cust.id)"
-            class="cursor-pointer hover:bg-blue-50 transition"
+            class="cursor-pointer transition duration-150 ease-in-out transform hover:scale-[1.005] hover:bg-green-50"
             :class="{ 'bg-gray-50': i % 2 === 1 }"
           >
             <td class="py-3 px-6 text-sm text-gray-800 font-medium">
               <div class="flex items-center">
                 <div
-                  class="h-8 w-8 bg-blue-100 rounded-full flex items-center justify-center text-blue-700 text-xs font-semibold mr-3"
+                  class="h-8 w-8 bg-green-100 rounded-full flex items-center justify-center text-green-700 text-xs font-semibold mr-3"
                 >
                   {{ getInitials(cust.firstName, cust.lastName) }}
                 </div>
@@ -106,17 +112,16 @@
       </table>
     </div>
 
-    <!-- Card View -->
     <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       <div
         v-for="cust in filteredCustomers"
         :key="cust.id"
         @click="goToCustomerDetail(cust.id)"
-        class="bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer transform hover:scale-105 transition duration-200 ease-in-out"
+        class="bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer transform hover:scale-105 hover:shadow-xl transition duration-200 ease-in-out flex flex-col group"
       >
         <div class="flex flex-col items-center p-6 text-center space-y-4">
           <div
-            class="h-20 w-20 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-md"
+            class="h-20 w-20 bg-gradient-to-br from-green-400 to-teal-500 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-md"
           >
             {{ getInitials(cust.firstName, cust.lastName) }}
           </div>
@@ -146,6 +151,8 @@ import {
   ViewListIcon,
   ViewGridIcon,
   RefreshIcon,
+  SearchIcon,
+  PlusIcon
 } from '@heroicons/vue/outline'
 
 const router = useRouter()
@@ -178,11 +185,8 @@ onMounted(async () => {
   }
   loading.value = true
   try {
-    customers.value = await customerService.fetchAll(activeShop.value.id)
-  const result = await customerService.fetchAll(activeShop.value.id)
-customers.value = Array.isArray(result) ? result : []
-
-
+    const result = await customerService.fetchAll(activeShop.value.id)
+    customers.value = Array.isArray(result) ? result : []
   } catch (e) {
     console.error(e)
     error.value = 'Failed to load customers. Please try again later.'
@@ -194,7 +198,7 @@ customers.value = Array.isArray(result) ? result : []
 // Helpers
 function buttonClass(view) {
   return view === currentView.value
-    ? 'bg-blue-600 text-white hover:bg-blue-700'
+    ? 'bg-green-600 text-white hover:bg-green-700 shadow-inner'
     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
 }
 
@@ -212,6 +216,10 @@ function getInitials(firstName, lastName) {
   const fi = firstName?.[0]?.toUpperCase() || ''
   const li = lastName?.[0]?.toUpperCase() || ''
   return fi + li || '?'
+}
+
+function goToAddCustomer() {
+  router.push({ name: 'AddCustomer' }) // Make sure you have a route named 'AddCustomer'
 }
 
 function goToCustomerDetail(customerId) {
