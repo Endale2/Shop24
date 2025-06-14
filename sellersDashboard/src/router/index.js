@@ -32,6 +32,8 @@ const routes = [
       { path: 'discounts',            name: 'Discounts',      component: () => import('@/pages/discounts/DiscountsPage.vue') },
       { path: 'discounts/:discountId',name: 'DiscountDetail', component: () => import('@/pages/discounts/DiscountDetailPage.vue'), props: true},
       { path: 'analytics',            name: 'Analytics',      component: () => import('@/pages/analytics/AnalyticsPage.vue') },
+      { path: 'settings',            name: 'settings',      component: () => import('@/pages/settings/SettingsPage.vue') },
+    
     ]
   },
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFound }
