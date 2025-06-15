@@ -1,7 +1,7 @@
 <template>
   <Transition name="modal-fade">
     <div v-if="isVisible" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-gray-900 bg-opacity-50 backdrop-blur-sm" @click.self="$emit('close')">
-      <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-lg border border-green-100 animate-scale-in" @click.stop>
+      <div class="bg-white p-8 rounded-2xl shadow-2xl w-full max-w-lg border border-green-200 animate-scale-in" @click.stop>
         <div class="flex justify-between items-center mb-6">
           <h3 class="text-3xl font-bold text-green-800">Launch a New Shop</h3>
           <button @click="$emit('close')" class="text-gray-500 hover:text-gray-800 transition-colors duration-200">

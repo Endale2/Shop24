@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-green-50 font-sans antialiased">
+  <div class="min-h-screen flex flex-col bg-amber-100 font-sans antialiased">
     <AppNavbar />
 
     <div class="flex-1 flex flex-col items-center pt-10 px-4 sm:px-8 pb-12">
@@ -17,7 +17,7 @@
       </div>
 
       <div
-        class="bg-white p-8 sm:p-12 rounded-3xl shadow-2xl w-full max-w-4xl border border-green-100 animate-fade-in-up"
+        class="bg-white p-8 sm:p-12 rounded-3xl shadow-2xl w-full max-w-4xl border border-green-200 animate-fade-in-up"
       >
         <h2 class="text-4xl sm:text-5xl font-extrabold mb-4 text-center text-green-800 leading-tight">
           Your Shops
@@ -46,7 +46,7 @@
             </div>
             <div class="p-6 flex-grow flex flex-col justify-between">
               <div>
-                <h3 class="text-2xl font-bold text-gray-800 mb-3 truncate" :title="shop.name">{{ shop.name }}</h3>
+                <h3 class="text-2xl font-bold text-green-800 mb-3 truncate" :title="shop.name">{{ shop.name }}</h3>
                 <p class="text-base text-gray-700 mb-4 line-clamp-3">
                   {{ shop.description || 'No description provided for this shop.' }}
                 </p>
@@ -63,9 +63,9 @@
 
         <div
           v-else
-          class="text-center mb-12 p-10 bg-green-50 rounded-2xl border border-green-200 text-green-800 shadow-md"
+          class="text-center mb-12 p-10 bg-amber-50 rounded-2xl border border-amber-200 text-amber-800 shadow-md"
         >
-          <svg class="mx-auto h-20 w-20 text-green-500 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="mx-auto h-20 w-20 text-amber-500 mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
                   d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 01-18 0 9 9 0 0118 0z"/>
           </svg>

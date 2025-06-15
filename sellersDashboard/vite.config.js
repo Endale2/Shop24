@@ -12,6 +12,17 @@ export default defineConfig({
     vueDevTools(),
     tailwindcss()
   ],
+  safelist: [
+    {
+      pattern: /(bg|text|border|ring)-(green|amber|gray|red)-(50|100|200|300|400|500|600|700|800|900)/,
+      variants: ['hover', 'focus', 'group-hover', 'sm', 'lg'],
+    },
+    'shadow-sm', 'shadow-md', 'shadow-lg', 'shadow-xl', 'shadow-2xl', 'shadow-inner',
+    'backdrop-blur-md', 'object-cover', 'resize-y',
+    'animate-fade-in-up', 'animate-blob', 'animate-scale-in',
+    'animation-delay-200', 'animation-delay-400',
+    'line-clamp-3',
+  ],
  
   resolve: {
     alias: {

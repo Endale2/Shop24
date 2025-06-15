@@ -1,15 +1,15 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-gradient-to-br from-green-50 to-green-100 text-gray-900 antialiased">
+  <div class="min-h-screen flex flex-col bg-amber-100 text-gray-900 antialiased">
     <AppNavbar />
 
     <section class="relative flex-grow flex items-center justify-center overflow-hidden px-4 py-24 sm:py-32">
       <div aria-hidden class="absolute inset-0">
-        <div class="absolute -top-20 -left-20 w-72 h-72 bg-green-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
-        <div class="absolute bottom-0 -right-10 w-96 h-96 bg-amber-100 rounded-full mix-blend-multiply filter blur-2xl opacity-20 animate-blob animation-delay-400"></div>
+        <div class="absolute -top-20 -left-20 w-72 h-72 bg-amber-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+        <div class="absolute bottom-0 -right-10 w-96 h-96 bg-green-200 rounded-full mix-blend-multiply filter blur-2xl opacity-20 animate-blob animation-delay-400"></div>
       </div>
 
       <div class="relative z-10 max-w-4xl text-center space-y-8">
-        <h1 class="text-5xl sm:text-6xl lg:text-7xl font-extrabold leading-tight text-gray-900 animate-fade-in-up">
+        <h1 class="text-5xl sm:text-6xl lg:text-7xl font-extrabold leading-tight animate-fade-in-up">
           Elevate Your <span class="text-green-600 drop-shadow-md">E-commerce</span> Game
         </h1>
         <p class="text-xl sm:text-2xl text-gray-700 max-w-3xl mx-auto animate-fade-in-up animation-delay-200">
@@ -53,7 +53,7 @@
           <FeatureCard
             icon="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
             title="Seamless Payments"
-            text="Effortlessly accept secure payments from customers worldwide, supporting all major credit cards and popular methods."
+            text="Effortlessly accept secure payments worldwide, supporting all major credit cards and popular methods."
             color="amber"
             :delay="200"
           />
@@ -61,7 +61,8 @@
             icon="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
             title="Actionable Analytics"
             text="Unlock powerful insights into your sales, customer behavior, and traffic to make data-driven decisions that fuel growth."
-            color="green" :delay="400"
+            color="green"
+            :delay="400"
           />
         </div>
       </div>
@@ -79,7 +80,7 @@ import AppFooter   from '@/components/AppFooter.vue'
 
 <style>
 body {
-  font-family: 'Inter', sans-serif; /* Ensure this font is imported in your main CSS */
+  font-family: 'Inter', sans-serif;
 }
 
 @keyframes fadeIn {
