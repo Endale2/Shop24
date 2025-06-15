@@ -1,27 +1,35 @@
 <template>
-  <div
-    class="p-8 bg-white rounded-2xl border shadow-lg hover:shadow-2xl transition-all duration-300 ease-in-out transform hover:-translate-y-2 group"
-    :class="`border-${color}-200 animate-fade-in-up animation-delay-${delay}`"
-  >
-    <div
-      class="flex items-center justify-center h-16 w-16 rounded-full mb-6 transition-colors duration-300 group-hover:bg-opacity-80 shadow-md"
-      :class="`bg-${color}-100 text-${color}-600 group-hover:bg-${color}-200`"
-    >
-      <svg xmlns="http://www.w3.org/2000/svg" class="h-9 w-9" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path :d="icon" stroke-linecap="round" stroke-linejoin="round" stroke-width="2"/>
+  <div :class="[bgColor, borderColor]"
+       class="relative p-8 rounded-2xl shadow-lg border text-center animate-fade-in"
+       :style="{ animationDelay: `${delay}ms` }">
+    <div :class="[iconBgColor]" class="w-16 h-16 flex items-center justify-center rounded-full mx-auto mb-6 shadow-md">
+      <svg class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="icon"></path>
       </svg>
     </div>
-    <h3 class="text-2xl font-bold text-gray-900 mb-2">{{ title }}</h3>
-    <p class="text-gray-600 leading-relaxed">{{ text }}</p>
+    <h3 :class="[titleColor]" class="text-2xl font-bold mb-3">{{ title }}</h3>
+    <p class="text-gray-600">{{ text }}</p>
   </div>
 </template>
 
 <script setup>
+import { computed } from 'vue';
+
 const props = defineProps({
-  icon:  { type: String, required: true },
-  title: { type: String, required: true },
-  text:  { type: String, required: true },
-  color: { type: String, default: 'green' },
-  delay: { type: Number, default: 0 }
-})
+  icon: String,
+  title: String,
+  text: String,
+  color: String, // Expects 'green' or 'amber'
+  delay: Number,
+});
+
+const bgColor = computed(() => `bg-${props.color}-50`);
+const borderColor = computed(() => `border-${props.color}-200`);
+const iconBgColor = computed(() => `bg-${props.color}-500`);
+const titleColor = computed(() => `text-${props.color}-800`);
+
 </script>
+
+<style scoped>
+/* Ensure the animations are defined or imported in your main CSS or a global style block */
+</style>
