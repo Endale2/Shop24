@@ -4,7 +4,7 @@
     <AppNavbar />
 
     <div class="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 animate-fade-in-up">
-      <div class="w-full max-w-md bg-white p-8 sm:p-10 rounded-2xl shadow-2xl border border-green-200">
+      <div class="w-full max-w-md md:max-w-xl lg:max-w-2xl bg-white p-8 sm:p-10 shadow-2xl border border-green-200">
         <div class="text-center mb-8">
           <h1 class="text-3xl sm:text-4xl font-extrabold text-green-800">
             Create Your Account
@@ -26,7 +26,7 @@
               type="email"
               v-model="email"
               required
-              class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm text-gray-800 placeholder-gray-500 focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all duration-200"
+              class="w-full px-4 py-2.5 border border-gray-300 shadow-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all duration-200"
             />
           </div>
 
@@ -39,7 +39,7 @@
                 :type="showPassword ? 'text' : 'password'"
                 v-model="password"
                 required
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm text-gray-800 placeholder-gray-500 focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all duration-200 pr-10"
+                class="w-full px-4 py-2.5 border border-gray-300 shadow-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all duration-200 pr-10"
               />
               <button
                 type="button"
@@ -68,7 +68,7 @@
                 :type="showConfirmPassword ? 'text' : 'password'"
                 v-model="confirmPassword"
                 required
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm text-gray-800 placeholder-gray-500 focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all duration-200 pr-10"
+                class="w-full px-4 py-2.5 border border-gray-300 shadow-sm text-gray-800 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all duration-200 pr-10"
               />
               <button
                 type="button"

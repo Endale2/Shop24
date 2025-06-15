@@ -28,17 +28,33 @@
             </div>
           </div>
 
+          <!-- Password Input with Toggle (single eye icon) -->
           <div>
             <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-            <div>
+            <div class="relative">
               <input
                 v-model="password"
                 id="password"
-                type="password"
+                :type="showPassword ? 'text' : 'password'"
                 autocomplete="current-password"
                 required
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm text-gray-800 placeholder-gray-500 focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all duration-200"
+                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm text-gray-800 placeholder-gray-500 focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all duration-200 pr-10"
               />
+              <button
+                type="button"
+                @click="togglePasswordVisibility"
+                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 focus:outline-none"
+              >
+                <!-- Eye icon changes based on password visibility -->
+                <svg v-if="showPassword" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
+                <svg v-else xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.52 18.52 0 0 1 2.16-3.15M2 2l20 20M15 15l-3-3m-3-3L2 2" />
+                  <path d="M9.9 4.24A9.91 9.91 0 0 1 12 4c7 0 11 8 11 8a18.54 18.54 0 0 1-1.67 2.68" />
+                </svg>
+              </button>
             </div>
           </div>
 
@@ -105,6 +121,14 @@ const email = ref('')
 const password = ref('')
 const loading = ref(false)
 const error = ref(null)
+const showPassword = ref(false) // State to control password visibility
+
+/**
+ * Toggles the visibility of the password input field.
+ */
+function togglePasswordVisibility() {
+  showPassword.value = !showPassword.value
+}
 
 function goToShopSelection() {
   router.replace({ name: 'ShopSelection' })
