@@ -4,31 +4,36 @@ import { useShopStore }                from '@/stores/shop'
 import HomePage                        from '@/pages/HomePage.vue'
 import ProductsPage                    from '@/pages/ProductsPage.vue'
 import ProductDetail                   from '@/pages/ProductDetail.vue'
+import CollectionsPage                 from '@/pages/CollectionsPage.vue'
+import CollectionDetailPage            from '@/pages/CollectionDetailPage.vue'
 import NotFoundPage                    from '@/pages/NotFoundPage.vue'
 
 const routes = [
-  { path: '/',         name: 'Home',         component: HomePage },
-  { path: '/products', name: 'Products',     component: ProductsPage },
+  { path: '/',         name: 'Home',        component: HomePage },
+  { path: '/products', name: 'Products',    component: ProductsPage },
   {
     path: '/products/:productSlug',
-    name: 'Product',   // ← make this exactly “Product” if you’re using that name in <router-link>
+    name: 'Product',
     component: ProductDetail,
     props: route => ({
       shopSlug:    window.location.host.split('.')[0],
       productSlug: route.params.productSlug
     })
   },
-  {
+
+  // ← COLLECTIONS listing:
+   {
     path: '/collections',
     name: 'Collections',
     component: CollectionsPage
   },
   {
-    path: '/collections/:collId',
+    path: '/collections/:handle',
     name: 'CollectionDetail',
     component: CollectionDetailPage,
     props: true
   },
+
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFoundPage }
 ]
 
@@ -39,7 +44,7 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
-  const shopSlug = window.location.host.split(':')[0].split('.')[0]
+  const shopSlug = window.location.host.split('.')[0]
   const shop     = useShopStore()
 
   if (!shop.current || shop.current.slug !== shopSlug) {

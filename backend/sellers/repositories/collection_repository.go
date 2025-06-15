@@ -92,3 +92,20 @@ func RemoveProductFromCollection(collID, prodID primitive.ObjectID) (*mongo.Upda
 		bson.M{"$pull": bson.M{"product_ids": prodID}},
 	)
 }
+
+
+// GetCollectionByHandle looks up a collection by its unique handle and shop ID.
+func GetCollectionByHandle(shopID primitive.ObjectID, handle string) (*models.Collection, error) {
+    var coll models.Collection
+    filter := bson.M{"shop_id": shopID, "handle": handle}
+    err := config.GetCollection("DRPS", "collections").
+        FindOne(context.Background(), filter).
+        Decode(&coll)
+    if err == mongo.ErrNoDocuments {
+        return nil, nil
+    }
+    if err != nil {
+        return nil, err
+    }
+    return &coll, nil
+}

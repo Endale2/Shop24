@@ -18,7 +18,7 @@ func StorefrontRoutes(r *gin.Engine) {
             // list all collections for this shop
             collections.GET("", controllers.ListCollections)
             // get one collection + its product summaries
-            collections.GET("/:collId", controllers.GetCollection)
+            collections.GET("/:collectionHandle", controllers.GetCollection)
         }
 
         // Product endpoints nested under /shops/:shopSlug/products

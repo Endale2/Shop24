@@ -1,17 +1,16 @@
+// src/stores/collection.js
 import { defineStore } from 'pinia'
-import {
-  fetchCollections,
-  fetchCollectionDetail
-} from '@/services/collection'
+import { fetchCollections, fetchCollectionDetail } from '@/services/collection'
 
 export const useCollectionStore = defineStore('collection', {
   state: () => ({
-    list:    [],
-    current: null,
+    list: [],      // list of { id, title, handle, image }
+    detail: null,  // full collection object with products
     loading: false
   }),
+
   actions: {
-    async loadList(shopSlug) {
+    async loadAll(shopSlug) {
       this.loading = true
       try {
         this.list = await fetchCollections(shopSlug)
@@ -19,14 +18,14 @@ export const useCollectionStore = defineStore('collection', {
         this.loading = false
       }
     },
-    async loadDetail(shopSlug, collId) {
+
+    async loadDetail(shopSlug, handle) {
       this.loading = true
       try {
-        this.current = await fetchCollectionDetail(shopSlug, collId)
+        this.detail = await fetchCollectionDetail(shopSlug, handle)
       } finally {
         this.loading = false
       }
     }
-  },
-  persist: true
+  }
 })

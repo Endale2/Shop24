@@ -9,11 +9,16 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// CollectionProductSummary is the minimal info we expose for each product.
+// CollectionProductSummary is the richer product info we expose in a collection.
 type CollectionProductSummary struct {
-	ID        primitive.ObjectID `json:"id"`
-	Name      string             `json:"name"`
-	MainImage string             `json:"main_image"`
+	ID           primitive.ObjectID `json:"id"`
+	Slug         string             `json:"slug"`
+	Name         string             `json:"name"`
+	MainImage    string             `json:"main_image"`
+	Description  string             `json:"description"`
+	Price        float64            `json:"price"`
+	DisplayPrice float64            `json:"display_price"`
+	VariantCount int                `json:"variant_count"`
 }
 
 // ListCollections handles GET /shops/:shopSlug/collections
@@ -29,7 +34,6 @@ func ListCollections(c *gin.Context) {
 		return
 	}
 
-	// ← here we call GetCollectionsByShop, not ListCollectionsByShopID
 	cols, err := repositories.GetCollectionsByShop(shop.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not list collections"})
@@ -49,10 +53,10 @@ func ListCollections(c *gin.Context) {
 	c.JSON(http.StatusOK, out)
 }
 
-// GetCollection handles GET /shops/:shopSlug/collections/:collId
+// GetCollection handles GET /shops/:shopSlug/collections/:collectionHandle
 func GetCollection(c *gin.Context) {
-	slug := c.Param("shopSlug")
-	shop, err := services.GetShopBySlugService(slug)
+	shopSlug := c.Param("shopSlug")
+	shop, err := services.GetShopBySlugService(shopSlug)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "error fetching shop"})
 		return
@@ -62,45 +66,44 @@ func GetCollection(c *gin.Context) {
 		return
 	}
 
-	collIDHex := c.Param("collId")
-	collID, err := primitive.ObjectIDFromHex(collIDHex)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid collection ID"})
-		return
-	}
-
-	coll, err := repositories.GetCollectionByID(collID)
+	handle := c.Param("collectionHandle")
+	coll, err := repositories.GetCollectionByHandle(shop.ID, handle)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "error retrieving collection"})
 		return
 	}
-	if coll == nil || coll.ShopID != shop.ID {
+	if coll == nil {
 		c.JSON(http.StatusNotFound, gin.H{"error": "collection not found"})
 		return
 	}
 
-	// Build summaries of products
-	summaries := []CollectionProductSummary{}
+	// Build richer product summaries
+	var products []CollectionProductSummary
 	for _, pid := range coll.ProductIDs {
-		p, err := services.GetProductByIDService(pid.Hex())
-		if err != nil || p == nil {
+		p, _ := services.GetProductByIDService(pid.Hex())
+		if p == nil {
 			continue
 		}
-		summaries = append(summaries, CollectionProductSummary{
-			ID:        p.ID,
-			Name:      p.Name,
-			MainImage: p.MainImage,
+		products = append(products, CollectionProductSummary{
+			ID:           p.ID,
+			Slug:         p.Slug,
+			Name:         p.Name,
+			MainImage:    p.MainImage,
+			Description:  p.Description,
+			Price:        p.Price,
+			DisplayPrice: p.DisplayPrice,
+			VariantCount: len(p.Variants),
 		})
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"id":          coll.ID,
-		"title":       coll.Title,
-		"description": coll.Description,
-		"handle":      coll.Handle,
-		"image":       coll.Image,
-		"created_at":  coll.CreatedAt,
-		"filters":     coll.Filters,
-		"products":    summaries,
+		"id":           coll.ID,
+		"title":        coll.Title,
+		"handle":       coll.Handle,
+		"description":  coll.Description,
+		"image":        coll.Image,
+		"created_at":   coll.CreatedAt,
+		"filters":      coll.Filters,
+		"products":     products,
 	})
 }

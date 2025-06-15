@@ -40,11 +40,11 @@
           All Products
         </router-link>
         <router-link
-          to="/categories"
+          to="/collections"
           class="px-4 py-2 rounded-lg text-base font-medium text-gray-700 hover:bg-green-50 hover:text-green-700 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-300 focus:ring-offset-2"
           active-class="bg-green-100 text-green-700 font-semibold shadow-sm"
         >
-          Categories
+          Collections
         </router-link>
       </nav>
 
