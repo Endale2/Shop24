@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-amber-100 text-gray-900 antialiased">
+  <div class="min-h-screen flex flex-col bg-amber-50 text-gray-900 antialiased">
     <AppNavbar />
 
     <section class="relative flex-grow flex items-center justify-center overflow-hidden px-4 py-24 sm:py-32">
