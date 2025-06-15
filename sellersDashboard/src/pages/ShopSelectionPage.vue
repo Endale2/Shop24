@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-amber-100 font-sans antialiased">
+  <div class="min-h-screen flex flex-col bg-amber-50 font-sans antialiased">
     <AppNavbar />
 
     <div class="flex-1 flex flex-col items-center pt-10 px-4 sm:px-8 pb-12">

@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-amber-100 font-sans antialiased">
+  <div class="min-h-screen flex flex-col bg-amber-50 font-sans antialiased">
     <AppNavbar />
 
     <div class="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 animate-fade-in-up">
