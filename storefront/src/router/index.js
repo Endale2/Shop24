@@ -18,6 +18,17 @@ const routes = [
       productSlug: route.params.productSlug
     })
   },
+  {
+    path: '/collections',
+    name: 'Collections',
+    component: CollectionsPage
+  },
+  {
+    path: '/collections/:collId',
+    name: 'CollectionDetail',
+    component: CollectionDetailPage,
+    props: true
+  },
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFoundPage }
 ]
 

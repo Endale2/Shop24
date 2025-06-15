@@ -1,21 +1,24 @@
 <template>
   <section
-    class="h-72 md:h-96 bg-cover bg-center relative text-white"
+    class="h-96 md:h-[500px] lg:h-[600px] bg-cover bg-center relative text-white flex items-center justify-center p-6"
     :style="shop.banner ? `background-image: url(${shop.banner})` : ''"
-    :class="{ 'bg-gradient-to-r from-slate-700 to-slate-900': !shop.banner }"
+    :class="{ 'bg-gradient-to-br from-green-700 to-green-900': !shop.banner }"
   >
-    <div class="absolute inset-0 bg-black bg-opacity-50 transition-opacity duration-500 hover:bg-opacity-60"></div>
+    <!-- Background Overlay with subtle gradient and dynamic hover -->
+    <div class="absolute inset-0 bg-gradient-to-t from-black/60 to-black/30 transition-opacity duration-500 group-hover:bg-opacity-70"></div>
 
-    <div class="relative z-10 h-full flex flex-col items-center justify-center text-center p-6">
-      <h1 class="text-4xl md:text-5xl lg:text-6xl font-extrabold tracking-tight leading-tight mb-4">
-        <span class="block animate-fade-in-down animation-delay-200">{{ shop.name || 'Welcome to Our Store' }}</span>
+    <div class="relative z-10 flex flex-col items-center justify-center text-center p-6 max-w-4xl mx-auto">
+      <h1 class="text-5xl md:text-6xl lg:text-7xl font-extrabold tracking-tight leading-tight mb-4 drop-shadow-lg">
+        <span class="block animate-fade-in-down animation-delay-200">
+          {{ shop.name || 'Welcome to Our Amazing Store' }}
+        </span>
       </h1>
-      <p class="mt-2 text-lg md:text-xl max-w-2xl mx-auto mb-8 animate-fade-in-up animation-delay-400">
-        {{ shop.description || 'Discover a wide range of quality products curated just for you.' }}
+      <p class="mt-2 text-lg md:text-xl lg:text-2xl max-w-3xl mx-auto mb-8 text-gray-100 drop-shadow-md animate-fade-in-up animation-delay-400">
+        {{ shop.description || 'Discover a wide range of quality products, handcrafted with passion and care, curated just for you.' }}
       </p>
       <router-link
         to="/products"
-        class="mt-4 inline-block bg-indigo-600 hover:bg-indigo-500 text-white font-semibold py-3 px-8 rounded-lg shadow-md hover:shadow-lg transform hover:scale-105 transition-all duration-300 ease-in-out animate-fade-in-up animation-delay-600"
+        class="mt-4 inline-block bg-gradient-to-br from-amber-500 to-amber-600 hover:from-amber-600 hover:to-amber-700 text-white font-bold text-lg py-3.5 px-10 rounded-full shadow-xl hover:shadow-2xl transform hover:-translate-y-1 active:translate-y-0 active:shadow-md transition-all duration-300 ease-in-out animate-fade-in-up animation-delay-600 focus:outline-none focus:ring-2 focus:ring-amber-400 focus:ring-offset-2 focus:ring-offset-white"
       >
         Shop Now
       </router-link>
@@ -32,7 +35,7 @@ defineProps({
     default: () => ({
       name: 'Awesome Store',
       description: 'Your one-stop shop for everything cool.',
-      banner: null
+      banner: null // Default to null for banner
     })
   }
 })

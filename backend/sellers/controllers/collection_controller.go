@@ -1,4 +1,3 @@
-// seller/controllers/collection_controller.go
 package controllers
 
 import (

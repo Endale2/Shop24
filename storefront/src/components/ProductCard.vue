@@ -59,8 +59,8 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits, ref, computed } from 'vue';
-import { useRouter } from 'vue-router'; // Import useRouter for client-side navigation
+import { defineProps, defineEmits, ref, computed, onUnmounted } from 'vue'; // Added onUnmounted
+import { useRouter } from 'vue-router';
 
 const props = defineProps({
   product: {
@@ -77,26 +77,85 @@ const props = defineProps({
   }
 });
 
-const emits = defineEmits(['quick-view', 'add-to-cart']); // quick-view is still emitted but button removed
-const router = useRouter(); // Initialize router
+const emits = defineEmits(['quick-view', 'add-to-cart']);
+const router = useRouter();
 
 const isHovered = ref(false);
+const hoverImageIndex = ref(0); // Tracks which alternative image is currently displayed
+const hoverTimer = ref(null); // Stores the setTimeout ID for the long hover delay
+const imageCycleInterval = ref(null); // Stores the setInterval ID for cycling images
 
-const currentImage = computed(() => {
-  if (isHovered.value && props.product.variants && props.product.variants.length > 0 && props.product.variants[0].image && props.product.variants[0].image !== props.product.main_image) {
-    // Show the first variant image if available and different from main_image
-    return props.product.variants[0].image;
+const LONG_HOVER_DELAY = 500; // milliseconds before image cycling starts
+const CYCLE_INTERVAL = 1500; // milliseconds between image changes during cycling
+
+// Computed property to gather all unique alternative images (excluding main_image)
+const alternativeImages = computed(() => {
+  const images = new Set();
+  const mainImg = props.product.main_image;
+
+  // Add distinct variant images
+  if (props.product.variants && props.product.variants.length > 0) {
+    props.product.variants.forEach(v => {
+      if (v.image && v.image !== mainImg) {
+        images.add(v.image);
+      }
+    });
   }
-  return props.product.main_image || 'https://placehold.co/400x400/F0F9FF/1F2937?text=No+Image';
+
+  // Add distinct general images
+  if (props.product.images && props.product.images.length > 0) {
+    props.product.images.forEach(img => {
+      if (img && img !== mainImg) {
+        images.add(img);
+      }
+    });
+  }
+  return Array.from(images);
+});
+
+// Computed property to determine which image to display
+const currentImage = computed(() => {
+  // If not hovered, or if hovered but no alternative images, show main image
+  if (!isHovered.value || alternativeImages.value.length === 0) {
+    return props.product.main_image || 'https://placehold.co/400x400/F0F9FF/1F2937?text=No+Image';
+  }
+
+  // If hovered and there are alternative images, cycle them
+  const index = hoverImageIndex.value % alternativeImages.value.length;
+  return alternativeImages.value[index];
 });
 
 const handleMouseEnter = () => {
   isHovered.value = true;
+  // Clear any existing timers/intervals to prevent overlaps from previous hovers
+  clearTimeout(hoverTimer.value);
+  clearInterval(imageCycleInterval.value);
+  hoverImageIndex.value = 0; // Reset index for a fresh hover sequence
+
+  if (alternativeImages.value.length > 0) {
+    // Start a timer to initiate cycling after a delay
+    hoverTimer.value = setTimeout(() => {
+      // Start cycling images after the long hover delay
+      imageCycleInterval.value = setInterval(() => {
+        hoverImageIndex.value = (hoverImageIndex.value + 1) % alternativeImages.value.length;
+      }, CYCLE_INTERVAL);
+    }, LONG_HOVER_DELAY);
+  }
 };
 
 const handleMouseLeave = () => {
   isHovered.value = false;
+  // Clear all timers and intervals when mouse leaves
+  clearTimeout(hoverTimer.value);
+  clearInterval(imageCycleInterval.value);
+  hoverImageIndex.value = 0; // Reset index for next hover
 };
+
+// Clean up intervals and timeouts when the component is unmounted
+onUnmounted(() => {
+  clearTimeout(hoverTimer.value);
+  clearInterval(imageCycleInterval.value);
+});
 
 // Function to navigate to product detail page if needed (not directly used by quick-view anymore)
 const navigateToProduct = () => {
