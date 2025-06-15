@@ -2,10 +2,9 @@
   <div class="min-h-screen flex flex-col bg-amber-100 font-sans antialiased">
     <AppNavbar />
 
-    <div class="flex-1 flex flex-col items-center justify-center p-4 sm:p-6 lg:p-8 animate-fade-in-up">
-      <div class="w-full max-w-md bg-white p-8 sm:p-10 rounded-2xl shadow-2xl border border-green-200">
+    <div class="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 animate-fade-in-up">
+      <div class="w-full max-w-2xl bg-white p-8 sm:p-10 rounded-2xl shadow-2xl border border-green-200">
         <div class="text-center mb-8">
-          
           <h1 class="mt-4 text-3xl sm:text-4xl font-extrabold text-green-800">
             Sign in to your account
           </h1>
@@ -14,7 +13,7 @@
           </p>
         </div>
 
-        <form @submit.prevent="handleLogin" class="space-y-6">
+        <form @submit.prevent="handleLogin" class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
           <div>
             <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email address</label>
             <div>
@@ -43,7 +42,7 @@
             </div>
           </div>
 
-          <div>
+          <div class="md:col-span-2">
             <button
               type="submit"
               :disabled="loading"
@@ -56,10 +55,10 @@
               <span>{{ loading ? 'Signing In...' : 'Sign In' }}</span>
             </button>
           </div>
-          <p v-if="error" class="text-sm text-red-600 text-center mt-4">{{ error }}</p>
+          <p v-if="error" class="text-sm text-red-600 text-center md:col-span-2 mt-4">{{ error }}</p>
         </form>
 
-        <div class="mt-8 relative">
+        <div class="mt-8 relative md:col-span-2">
           <div class="absolute inset-0 flex items-center">
             <div class="w-full border-t border-gray-300"></div>
           </div>
@@ -68,7 +67,7 @@
           </div>
         </div>
 
-        <div class="mt-6">
+        <div class="mt-6 md:col-span-2">
           <button
             @click="loginWithGoogle"
             class="w-full flex justify-center items-center space-x-3 border border-gray-300 rounded-lg py-2.5 px-4 hover:bg-gray-50 transition-all duration-200 shadow-sm"
@@ -78,7 +77,7 @@
           </button>
         </div>
 
-        <p class="mt-8 text-center text-gray-600 text-base">
+        <p class="mt-8 text-center text-gray-600 text-base md:col-span-2">
           Don't have an account?
           <router-link to="/register" class="font-semibold text-green-600 hover:text-green-700">
             Sign up now

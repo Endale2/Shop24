@@ -23,17 +23,19 @@ export const useAuthStore = defineStore('auth', {
       await authService.login(payload)
       return this.fetchMe()
     },
-     async logout() {
-      // Perform server-side logout
+    async logout() {
       await authService.logout()
-      // Reset auth store state
       this.$reset()
-      // Completely clear shop store state (list and active)
       const shopStore = useShopStore()
       shopStore.$reset()
-    }
+    },
+   async updateProfile(payload) {
+    const res = await authService.updateProfile(payload)
+    // assume res.data is the updated profile
+    this.user = res.data
   },
- persist: {
-   paths: ['user']
- }
+  },
+  persist: {
+    paths: ['user']
+  }
 })

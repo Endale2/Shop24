@@ -25,6 +25,10 @@ const routes = [
     meta: { public: true }
   },
   {
+  path: '/complete-profile', name: 'CompleteProfile', component: () => import('@/pages/ProfileCompletion.vue'),
+  meta: { requiresAuth: true }
+},
+  {
     path: '/login',
     name: 'Login',
     component: LoginPage,
