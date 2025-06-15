@@ -1,6 +1,6 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex flex-col justify-center items-center p-4">
-    <div class="w-full max-w-lg">
+  <div class="min-h-screen bg-gray-50 flex flex-col justify-center items-center px-6 py-4">
+    <div class="w-full max-w-md">
       <div class="text-center mb-6">
         <h1 class="text-3xl font-extrabold text-gray-900">
           Create a Seller Account
@@ -56,7 +56,7 @@
             />
           </div>
 
-           <div>
+            <div>
             <label for="phone" class="block text-sm font-medium text-gray-700">Phone Number (Optional)</label>
             <input
               id="phone"

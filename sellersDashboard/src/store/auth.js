@@ -1,6 +1,7 @@
 // store/auth.js
 import { defineStore } from 'pinia'
 import { authService } from '@/services/auth'
+import { useShopStore } from './shops'
 
 export const useAuthStore = defineStore('auth', {
   state: () => ({
@@ -22,12 +23,14 @@ export const useAuthStore = defineStore('auth', {
       await authService.login(payload)
       return this.fetchMe()
     },
-    async logout() {
+     async logout() {
+      // Perform server-side logout
       await authService.logout()
-      this.user = null
-      // (optional) clear shop state on logout
-      // const shopStore = useShopStore()
-      // shopStore.clearActiveShop()
+      // Reset auth store state
+      this.$reset()
+      // Completely clear shop store state (list and active)
+      const shopStore = useShopStore()
+      shopStore.$reset()
     }
   },
  persist: {

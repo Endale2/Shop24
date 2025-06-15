@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gray-50 flex flex-col justify-center items-center p-4">
+  <div class="min-h-screen bg-gray-50 flex flex-col justify-center items-center px-6 py-8">
     <div class="w-full max-w-md">
       <div class="text-center mb-6">
         <svg class="mx-auto h-12 w-auto text-gray-800" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -85,17 +85,17 @@
 
 <script setup>
 import { ref, watch, onMounted } from 'vue'
-import { useRouter, useRoute }   from 'vue-router'
-import { useAuthStore }          from '@/store/auth'
+import { useRouter, useRoute }   from 'vue-router'
+import { useAuthStore }          from '@/store/auth'
 
 const router = useRouter()
-const route  = useRoute()
-const auth   = useAuthStore()
+const route  = useRoute()
+const auth   = useAuthStore()
 
-const email    = ref('')
+const email    = ref('')
 const password = ref('')
-const loading  = ref(false)
-const error    = ref(null)
+const loading  = ref(false)
+const error    = ref(null)
 
 function goToShopSelection() {
   router.replace({ name: 'ShopSelection' })
@@ -138,7 +138,7 @@ watch(
 
 async function handleLogin() {
   loading.value = true
-  error.value   = null
+  error.value   = null
   try {
     await auth.login({ email: email.value, password: password.value })
     goToShopSelection()
@@ -151,5 +151,6 @@ async function handleLogin() {
 </script>
 
 <style scoped>
-/* Scoped styles can remain if you have specific needs, but Tailwind covers the redesign. */
+/* No specific scoped styles are needed for this centering approach,
+   as Tailwind utility classes handle it effectively. */
 </style>

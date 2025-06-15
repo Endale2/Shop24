@@ -1,3 +1,4 @@
+// src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/store/auth'
 import { useShopStore } from '@/store/shops'
@@ -11,32 +12,112 @@ import DashboardPage      from '@/pages/dashboard/DashboardPage.vue'
 import NotFound           from '@/pages/NotFound.vue'
 
 const routes = [
-  { path: '/',              name: 'Landing',       component: LandingPage,       meta: { requiresAuth: false } },
-  { path: '/register',      name: 'Register',      component: RegisterPage,      meta: { requiresAuth: false } },
-  { path: '/login',         name: 'Login',         component: LoginPage,         meta: { requiresAuth: false } },
-  { path: '/shops',         name: 'ShopSelection', component: ShopSelectionPage, meta: { requiresAuth: true } },
+  {
+    path: '/',
+    name: 'Landing',
+    component: LandingPage,
+    meta: { requiresAuth: false }
+  },
+  {
+    path: '/register',
+    name: 'Register',
+    component: RegisterPage,
+    meta: { requiresAuth: false }
+  },
+  {
+    path: '/login',
+    name: 'Login',
+    component: LoginPage,
+    meta: { requiresAuth: false }
+  },
+  {
+    path: '/shops',
+    name: 'ShopSelection',
+    component: ShopSelectionPage,
+    meta: { requiresAuth: true }        // must be logged in to pick a shop
+  },
   {
     path: '/dashboard',
     component: DashboardLayout,
     meta: { requiresAuth: true, requiresShop: true },
     children: [
-      { path: '',                     name: 'Dashboard',      component: DashboardPage },
-      { path: 'products',             name: 'Products',       component: () => import('@/pages/products/ProductsPage.vue') },
-      { path: 'products/:productId',  name: 'ProductDetail',  component: () => import('@/pages/products/ProductDetailPage.vue'), props: true },
-      { path: 'products/:productId/edit',  name: 'EditProduct',    component: () => import('@/pages/products/EditProductPage.vue'), props: true },
-      { path: 'collections',          name: 'Collections',    component: () => import('@/pages/collections/CollectionsPage.vue') },
-      { path: 'collections/:collectionId',  name: 'CollectionDetail',  component: () => import('@/pages/collections/CollectionDetailPage.vue'), props: true },
-      { path: 'customers',            name: 'Customers',      component: () => import('@/pages/customers/CustomersPage.vue') },
-      { path: 'customers/:customerId',name: 'CustomerDetail', component: () => import('@/pages/customers/CustomerDetailPage.vue'), props: true },
-      { path: 'orders',               name: 'Orders',         component: () => import('@/pages/orders/OrdersPage.vue') },
-      { path: 'discounts',            name: 'Discounts',      component: () => import('@/pages/discounts/DiscountsPage.vue') },
-      { path: 'discounts/:discountId',name: 'DiscountDetail', component: () => import('@/pages/discounts/DiscountDetailPage.vue'), props: true},
-      { path: 'analytics',            name: 'Analytics',      component: () => import('@/pages/analytics/AnalyticsPage.vue') },
-      { path: 'settings',            name: 'settings',      component: () => import('@/pages/settings/SettingsPage.vue') },
-    
+      {
+        path: '',
+        name: 'Dashboard',
+        component: DashboardPage
+      },
+      {
+        path: 'products',
+        name: 'Products',
+        component: () => import('@/pages/products/ProductsPage.vue')
+      },
+      {
+        path: 'products/:productId',
+        name: 'ProductDetail',
+        component: () => import('@/pages/products/ProductDetailPage.vue'),
+        props: true
+      },
+      {
+        path: 'products/:productId/edit',
+        name: 'EditProduct',
+        component: () => import('@/pages/products/EditProductPage.vue'),
+        props: true
+      },
+      {
+        path: 'collections',
+        name: 'Collections',
+        component: () => import('@/pages/collections/CollectionsPage.vue')
+      },
+      {
+        path: 'collections/:collectionId',
+        name: 'CollectionDetail',
+        component: () => import('@/pages/collections/CollectionDetailPage.vue'),
+        props: true
+      },
+      {
+        path: 'customers',
+        name: 'Customers',
+        component: () => import('@/pages/customers/CustomersPage.vue')
+      },
+      {
+        path: 'customers/:customerId',
+        name: 'CustomerDetail',
+        component: () => import('@/pages/customers/CustomerDetailPage.vue'),
+        props: true
+      },
+      {
+        path: 'orders',
+        name: 'Orders',
+        component: () => import('@/pages/orders/OrdersPage.vue')
+      },
+      {
+        path: 'discounts',
+        name: 'Discounts',
+        component: () => import('@/pages/discounts/DiscountsPage.vue')
+      },
+      {
+        path: 'discounts/:discountId',
+        name: 'DiscountDetail',
+        component: () => import('@/pages/discounts/DiscountDetailPage.vue'),
+        props: true
+      },
+      {
+        path: 'analytics',
+        name: 'Analytics',
+        component: () => import('@/pages/analytics/AnalyticsPage.vue')
+      },
+      {
+        path: 'settings',
+        name: 'Settings',
+        component: () => import('@/pages/settings/SettingsPage.vue')
+      }
     ]
   },
-  { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFound }
+  {
+    path: '/:pathMatch(.*)*',
+    name: 'NotFound',
+    component: NotFound
+  }
 ]
 
 const router = createRouter({
@@ -48,25 +129,34 @@ router.beforeEach(async (to, from, next) => {
   const auth  = useAuthStore()
   const shops = useShopStore()
 
+  // 1) If route requires auth, ensure we have a valid user
   if (to.meta.requiresAuth) {
-    if (!auth.user) {
-      try { await auth.fetchMe() }
-      catch { await auth.logout(); return next({ name: 'Login' }) }
-    }
     if (!auth.isAuthenticated) {
-      return next({ name: 'Login' })
+      try {
+        await auth.fetchMe()
+      } catch {
+        // fetchMe failed (likely 401) → logged out
+        return next({ name: 'Landing' })
+      }
+      if (!auth.isAuthenticated) {
+        // still not authed
+        return next({ name: 'Landing' })
+      }
     }
   }
 
+  // 2) Prevent logged-in users from seeing public pages
   if (!to.meta.requiresAuth && auth.isAuthenticated) {
-    const dest = shops.activeShop ? 'Products' : 'ShopSelection'
-    return next({ name: dest })
+    const destination = shops.activeShop ? 'Dashboard' : 'ShopSelection'
+    return next({ name: destination })
   }
 
+  // 3) If route needs an active shop, enforce it
   if (to.meta.requiresShop && !shops.activeShop) {
     return next({ name: 'ShopSelection' })
   }
 
+  // 4) Everything’s okay → proceed
   next()
 })
 

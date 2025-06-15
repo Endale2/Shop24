@@ -152,11 +152,13 @@ const userInitials = computed(() => {
 // stub unread
 const unreadCount = ref(3)
 
-function handleLogout() {
-  auth.logout()
-  shopStore.clearActiveShop()
-  router.push({ name: 'Login' })
+async function handleLogout() {
+  // Ensure both auth and shop state are fully reset
+  await auth.logout()
+  // Redirect to landing page
+  router.push({ name: 'Landing' })
 }
+
 
 function selectShop(shop) {
   shopStore.setActiveShop(shop)
@@ -184,8 +186,7 @@ function goToShopSelection() {
   animation: fade-in-down 0.2s ease-out forwards;
 }
 @keyframes bounce-short {
-  0%,100% {transform: translateY(0);}
-  50%     {transform: translateY(-2px);}
+  0%,100% {transform: translateY(0);}  50%     {transform: translateY(-2px);}
 }
 .animate-bounce-short {
   animation: bounce-short 0.8s infinite;
