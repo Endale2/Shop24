@@ -1,4 +1,3 @@
-// src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/store/auth'
 import { useShopStore } from '@/store/shops'
@@ -7,6 +6,7 @@ import LandingPage        from '@/pages/LandingPage.vue'
 import RegisterPage       from '@/pages/RegisterPage.vue'
 import LoginPage          from '@/pages/LoginPage.vue'
 import ShopSelectionPage  from '@/pages/ShopSelectionPage.vue'
+import ProfilePage        from '@/pages/ProfilePage.vue'
 import DashboardLayout    from '@/layouts/AppLayout.vue'
 import DashboardPage      from '@/pages/dashboard/DashboardPage.vue'
 import NotFound           from '@/pages/NotFound.vue'
@@ -35,6 +35,12 @@ const routes = [
     name: 'ShopSelection',
     component: ShopSelectionPage,
     // not marked public ⇒ requires auth
+  },
+  {
+   path: '/profile',
+    name: 'Profile',
+   component: ProfilePage,
+  // not marked public ⇒ requires auth
   },
   {
     path: '/dashboard',
