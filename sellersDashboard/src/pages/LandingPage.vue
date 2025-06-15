@@ -1,30 +1,32 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-amber-50 text-gray-900 antialiased">
+  <div class="min-h-screen flex flex-col bg-gradient-to-br from-amber-50 to-green-50 text-gray-900 antialiased font-inter">
     <AppNavbar />
 
-    <section class="relative flex-grow flex items-center justify-center overflow-hidden px-4 py-24 sm:py-32">
-      <div aria-hidden class="absolute inset-0">
-        <div class="absolute -top-20 -left-20 w-72 h-72 bg-amber-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
-        <div class="absolute bottom-0 -right-10 w-96 h-96 bg-green-200 rounded-full mix-blend-multiply filter blur-2xl opacity-20 animate-blob animation-delay-400"></div>
+    <section class="relative flex-grow flex items-center justify-center overflow-hidden px-4 py-24 sm:py-32 lg:py-40">
+      <!-- Background Blob Animations for a dynamic feel -->
+      <div aria-hidden class="absolute inset-0 z-0">
+        <div class="absolute -top-20 -left-20 w-80 h-80 bg-amber-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+        <div class="absolute bottom-0 right-0 w-96 h-96 bg-green-200 rounded-full mix-blend-multiply filter blur-2xl opacity-20 animate-blob animation-delay-400"></div>
+        <div class="absolute top-1/4 left-1/4 w-64 h-64 bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-blob animation-delay-200"></div>
       </div>
 
-      <div class="relative z-10 max-w-4xl text-center space-y-8">
-        <h1 class="text-5xl sm:text-6xl lg:text-7xl font-extrabold leading-tight animate-fade-in-up">
-          Elevate Your <span class="text-green-600 drop-shadow-md">E-commerce</span> Game
+      <div class="relative z-10 max-w-4xl text-center space-y-8 px-4">
+        <h1 class="text-5xl sm:text-6xl lg:text-7xl font-extrabold leading-tight text-gray-800 animate-fade-in-up">
+          Elevate Your <span class="text-green-700 drop-shadow-md">E-commerce</span> Game
         </h1>
         <p class="text-xl sm:text-2xl text-gray-700 max-w-3xl mx-auto animate-fade-in-up animation-delay-200">
-          Focus on your passion—**Seller’s Dash** handles the heavy lifting so you can effortlessly **build, manage, and scale** your online business.
+          Focus on your passion—<strong class="font-bold text-green-800">Seller’s Dash</strong> handles the heavy lifting so you can effortlessly <strong class="font-bold text-green-800">build, manage, and scale</strong> your online business.
         </p>
         <div class="flex flex-col sm:flex-row justify-center gap-4 animate-fade-in-up animation-delay-400">
           <router-link
             to="/register"
-            class="inline-flex items-center justify-center px-8 py-3 bg-green-600 text-white text-lg font-bold rounded-full shadow-xl hover:bg-green-700 transition transform hover:-translate-y-1"
+            class="inline-flex items-center justify-center px-8 py-3 bg-green-600 text-white text-lg font-bold rounded-full shadow-xl hover:bg-green-700 transition transform hover:-translate-y-1 hover:shadow-2xl"
           >
             Start Free Trial
           </router-link>
           <router-link
             to="#features"
-            class="inline-flex items-center justify-center px-8 py-3 bg-white text-green-700 text-lg font-bold rounded-full border border-green-300 shadow-lg hover:bg-green-50 transition transform hover:scale-105"
+            class="inline-flex items-center justify-center px-8 py-3 bg-white text-green-700 text-lg font-bold rounded-full border border-green-300 shadow-lg hover:bg-green-50 transition transform hover:scale-105 hover:shadow-xl"
           >
             View Features
           </router-link>
@@ -32,11 +34,11 @@
       </div>
     </section>
 
-    <section id="features" class="py-20 sm:py-28 lg:py-36 px-4 bg-white">
+    <section id="features" class="py-20 sm:py-28 lg:py-36 px-4 bg-white rounded-t-3xl shadow-inner-top">
       <div class="max-w-7xl mx-auto">
         <div class="text-center mb-16 animate-fade-in">
           <h2 class="text-4xl sm:text-5xl font-extrabold text-gray-900">
-            Everything You Need to <span class="text-green-600">Thrive</span> Online
+            Everything You Need to <span class="text-green-700">Thrive</span> Online
           </h2>
           <p class="mt-4 text-lg text-gray-600 max-w-2xl mx-auto">
             From dazzling storefronts to seamless analytics, we’ve got your entire sales journey covered.
@@ -79,10 +81,12 @@ import AppFooter   from '@/components/AppFooter.vue'
 </script>
 
 <style>
+/* Added 'Inter' font for better typography */
 body {
   font-family: 'Inter', sans-serif;
 }
 
+/* Keyframe animations for subtle visual effects */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(20px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -104,6 +108,7 @@ body {
 .animation-delay-200 { animation-delay: 0.2s; }
 .animation-delay-400 { animation-delay: 0.4s; }
 
+/* Blob animation for dynamic background elements */
 @keyframes blob {
   0%, 100% { transform: scale(1) translate(0,0); }
   33% { transform: scale(1.2) translate(30px,-20px); }
@@ -111,5 +116,10 @@ body {
 }
 .animate-blob {
   animation: blob 8s infinite ease-in-out;
+}
+
+/* Custom utility for inner shadow effect */
+.shadow-inner-top {
+  box-shadow: inset 0 8px 10px -6px rgba(0, 0, 0, 0.1);
 }
 </style>
