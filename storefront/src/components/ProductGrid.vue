@@ -15,7 +15,7 @@
 
 <script setup>
 import { defineProps, ref, onMounted } from 'vue'
-import ProductCard from './ProductCard.vue'
+import ProductCard from './ProductCard.vue' // Ensure this path is correct
 
 defineProps({
   products: { type: Array, required: true }
@@ -24,6 +24,7 @@ defineProps({
 const animateCards = ref(false)
 
 onMounted(() => {
+  // Delay animation slightly to ensure cards are rendered before animating
   setTimeout(() => {
     animateCards.value = true
   }, 50);
@@ -31,17 +32,19 @@ onMounted(() => {
 
 // Placeholder event handlers for events emitted by ProductCard
 const handleQuickView = (product) => {
-  console.log('Grid: Quick view triggered for', product.name);
-  // Logic to show a quick view modal, potentially emitting an event up to a page component
+  // console.log('Grid: Quick view triggered for', product.name);
+  // This event is still emitted by ProductCard but its button is removed per previous request.
+  // This handler can be removed if quick-view logic is no longer needed upstream.
 }
 
 const handleAddToCart = (product) => {
-  console.log('Grid: Add to cart triggered for', product.name);
+  // console.log('Grid: Add to cart triggered for', product.name);
   // Logic to add product to cart, potentially using a store or emitting an event
 }
 </script>
 
 <style scoped>
+/* Keyframe for fadeInUp animation */
 @keyframes fadeInUp {
   from {
     opacity: 0;
@@ -55,6 +58,6 @@ const handleAddToCart = (product) => {
 
 .animate-fadeInUp {
   animation: fadeInUp 0.5s ease-out forwards;
-  opacity: 0; 
+  opacity: 0; /* Ensure initial state is hidden before animation */
 }
 </style>
