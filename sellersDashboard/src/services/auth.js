@@ -46,7 +46,7 @@ export const authService = {
    * Step 2: Complete or update the seller profile.
    * Expects any subset of { firstName, lastName, phone, address, businessName, profileImage }.
    */
-  updateProfile: async (payload) => {
+   updateProfile: async (payload) => {
     const res = await api.patch('/auth/seller/update-profile', payload)
     return res.data
   },

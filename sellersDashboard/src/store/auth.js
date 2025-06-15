@@ -30,10 +30,10 @@ export const useAuthStore = defineStore('auth', {
       shopStore.$reset()
     },
    async updateProfile(payload) {
-    const res = await authService.updateProfile(payload)
-    // assume res.data is the updated profile
-    this.user = res.data
-  },
+  const res = await authService.updateProfile(payload)
+  // assume res.data is the updated profile
+  this.user = res.data
+}
   },
   persist: {
     paths: ['user']

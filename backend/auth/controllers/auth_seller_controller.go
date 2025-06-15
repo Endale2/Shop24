@@ -119,7 +119,7 @@ func SellerOAuthCallback(c *gin.Context) {
     if frontend == "" {
         frontend = "http://localhost:5174"
     }
-    c.Redirect(http.StatusFound, frontend+"/profile")
+    c.Redirect(http.StatusFound, frontend+"/shops")
 }
 
 
