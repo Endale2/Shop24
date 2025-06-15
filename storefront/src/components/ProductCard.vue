@@ -4,10 +4,9 @@
     @mouseenter="handleMouseEnter"
     @mouseleave="handleMouseLeave"
   >
-    <!-- New and Sale Badges -->
-    <div v-if="product.isNew || (product.price > product.display_price)" class="absolute top-3 left-3 z-10 flex space-x-1">
-      <span v-if="product.isNew" class="bg-green-600 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-md">NEW</span>
-      <span v-if="product.price > product.display_price" class="bg-red-600 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-md">SALE</span>
+    <!-- New Badge (Sale badge removed) -->
+    <div v-if="product.isNew" class="absolute top-3 left-3 z-10 flex space-x-1">
+      <span class="bg-green-600 text-white text-xs font-bold px-2.5 py-1 rounded-full shadow-md">NEW</span>
     </div>
 
     <!-- Product Image -->
@@ -59,7 +58,7 @@
 </template>
 
 <script setup>
-import { defineProps, defineEmits, ref, computed, onUnmounted } from 'vue'; // Added onUnmounted
+import { defineProps, defineEmits, ref, computed, onUnmounted } from 'vue';
 import { useRouter } from 'vue-router';
 
 const props = defineProps({
