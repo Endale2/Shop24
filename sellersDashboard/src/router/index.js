@@ -12,6 +12,7 @@ import DashboardLayout    from '@/layouts/AppLayout.vue'
 import DashboardPage      from '@/pages/dashboard/DashboardPage.vue'
 import NotFound           from '@/pages/NotFound.vue'
 import ProfilePage from '@/pages/ProfilePage.vue'
+import AddProduct from '@/pages/products/AddProduct.vue'
 
 const routes = [
   { path: '/',              name: 'Landing',       component: LandingPage,      meta: { public: true } },
@@ -43,6 +44,7 @@ const routes = [
       { path: 'products',             name: 'Products',       component: () => import('@/pages/products/ProductsPage.vue') },
       { path: 'products/:productId',  name: 'ProductDetail',  component: () => import('@/pages/products/ProductDetailPage.vue'), props: true },
       { path: 'products/:productId/edit', name: 'EditProduct', component: () => import('@/pages/products/EditProductPage.vue'), props: true },
+      { path: 'products/add',         name: 'AddProduct',      component: () => import('@/pages/products/AddProduct.vue'), props: true  },
       { path: 'collections',          name: 'Collections',    component: () => import('@/pages/collections/CollectionsPage.vue') },
       { path: 'collections/:collectionId', name: 'CollectionDetail', component: () => import('@/pages/collections/CollectionDetailPage.vue'), props: true },
       { path: 'customers',            name: 'Customers',      component: () => import('@/pages/customers/CustomersPage.vue') },
