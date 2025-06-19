@@ -1,8 +1,9 @@
 package routes
 
 import (
-    "github.com/Endale2/DRPS/customers/controllers"
-    "github.com/gin-gonic/gin"
+	"github.com/Endale2/DRPS/auth/middlewares"
+	"github.com/Endale2/DRPS/customers/controllers"
+	"github.com/gin-gonic/gin"
 )
 
 func StorefrontRoutes(r *gin.Engine) {
@@ -27,5 +28,12 @@ func StorefrontRoutes(r *gin.Engine) {
             products.GET("", controllers.GetProductsByShop)
             products.GET("/:productSlug", controllers.GetProductDetail)
         }
+        // Orders: require customer to be logged in
+		auth := shops.Group("", middlewares.AuthMiddleware())
+		{
+			auth.POST("/orders", controllers.PlaceOrder)
+			auth.GET("/orders", controllers.ListShopOrders)
+			auth.GET("/orders/:orderId", controllers.GetOrderDetail)
+		}
     }
 }
