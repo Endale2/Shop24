@@ -31,6 +31,7 @@ func StorefrontRoutes(r *gin.Engine) {
         // Orders: require customer to be logged in
 		auth := shops.Group("", middlewares.AuthMiddleware())
 		{
+            
 			auth.POST("/orders", controllers.PlaceOrder)
 			auth.GET("/orders", controllers.ListShopOrders)
 			auth.GET("/orders/:orderId", controllers.GetOrderDetail)
