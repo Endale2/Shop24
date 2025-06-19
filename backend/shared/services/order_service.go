@@ -1,40 +1,49 @@
+// shared/services/order_services.go
 package services
 
 import (
+	"context"
+	"time"
+
 	"github.com/Endale2/DRPS/shared/models"
 	"github.com/Endale2/DRPS/shared/repositories"
 	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// CreateOrderService creates a new order.
-func CreateOrderService(order *models.Order) (*mongo.InsertOneResult, error) {
-	return repositories.CreateOrder(order)
+func CreateOrderService(o *models.Order) (*models.Order, error) {
+	now := time.Now()
+	o.CreatedAt = now
+	o.UpdatedAt = now
+	res, err := repositories.CreateOrder(context.Background(), o)
+	if err != nil {
+		return nil, err
+	}
+	o.ID = res.InsertedID.(primitive.ObjectID)
+	return o, nil
 }
 
-// GetOrderByIDService retrieves a single order by its ID.
-func GetOrderByIDService(id string) (*models.Order, error) {
-	return repositories.GetOrderByID(id)
+func GetOrderByIDService(idHex string) (*models.Order, error) {
+	return repositories.GetOrderByID(context.Background(), idHex)
 }
 
-// GetAllOrdersService returns all orders.
-func GetAllOrdersService() ([]models.Order, error) {
-	return repositories.GetAllOrders()
+func ListOrdersByShopService(shopIDHex string) ([]models.Order, error) {
+	shopID, err := primitive.ObjectIDFromHex(shopIDHex)
+	if err != nil {
+		return nil, err
+	}
+	return repositories.ListOrders(context.Background(), bson.M{"shop_id": shopID})
 }
 
-// UpdateOrderService updates fields of an order identified by its ID.
-func UpdateOrderService(id string, updatedData bson.M) (*mongo.UpdateResult, error) {
-	return repositories.UpdateOrder(id, updatedData)
+func UpdateOrderService(idHex string, updates bson.M) (*models.Order, error) {
+	updates["updated_at"] = time.Now()
+	if _, err := repositories.UpdateOrder(context.Background(), idHex, updates); err != nil {
+		return nil, err
+	}
+	return GetOrderByIDService(idHex)
 }
 
-// DeleteOrderService removes an order by its ID.
-func DeleteOrderService(id string) (*mongo.DeleteResult, error) {
-	return repositories.DeleteOrder(id)
+func DeleteOrderService(idHex string) error {
+	_, err := repositories.DeleteOrder(context.Background(), idHex)
+	return err
 }
-
-
-
-
-// Also purely delegates.
-
-// Suggestion: At order creation time, you probably call cart_service.recalcCart one last time, subtract inventory, set OrderNumber, etc. You could add that in CreateOrderService.

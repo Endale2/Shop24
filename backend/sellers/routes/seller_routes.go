@@ -70,6 +70,16 @@ func SellerRoute(r *gin.Engine) {
 			discGroup.DELETE("/:id", controllers.DeleteDiscount)
 		}
 
+		//orders
+		orders := shopGroup.Group("/orders")
+		{
+			orders.POST("", controllers.CreateOrder)
+			orders.GET("", controllers.ListOrders)
+			orders.GET("/:orderId", controllers.GetOrder)
+			orders.PATCH("/:orderId", controllers.UpdateOrder)
+			orders.DELETE("/:orderId", controllers.DeleteOrder)
+		}
+
 	}
 
 }

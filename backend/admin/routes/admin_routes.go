@@ -64,13 +64,13 @@ func AdminRoutes(r *gin.Engine) {
 	 }
 
 
-	 // Order sub-group 
-	 orderGroup := adminGroup.Group("/orders", middlewares.AuthMiddleware() )
-	 {
-	 	orderGroup.GET("/",  controllers.GetOrders)
-		orderGroup.GET("/:id",  controllers.GetOrder)
-	 	orderGroup.POST("/create",   controllers.CreateOrder)
-		orderGroup.PATCH("/update/:id",  controllers.UpdateOrder)
-		orderGroup.DELETE("/delete/:id",  controllers.DeleteOrder)
-	 }
+	//  // Order sub-group 
+	//  orderGroup := adminGroup.Group("/orders", middlewares.AuthMiddleware() )
+	//  {
+	//  	orderGroup.GET("/",  controllers.GetOrders)
+	// 	orderGroup.GET("/:id",  controllers.GetOrder)
+	//  	orderGroup.POST("/create",   controllers.CreateOrder)
+	// 	orderGroup.PATCH("/update/:id",  controllers.UpdateOrder)
+	// 	orderGroup.DELETE("/delete/:id",  controllers.DeleteOrder)
+	//  }
 }

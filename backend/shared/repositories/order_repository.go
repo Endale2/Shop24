@@ -1,85 +1,55 @@
+// shared/repositories/order_repository.go
 package repositories
 
 import (
 	"context"
-	"errors"
-	"time"
 
-	"github.com/Endale2/DRPS/shared/models"
 	"github.com/Endale2/DRPS/config"
+	"github.com/Endale2/DRPS/shared/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
-// orderCollection is the MongoDB collection for orders.
-var orderCollection *mongo.Collection = config.GetCollection("DRPS", "orders")
-
-// CreateOrder inserts a new order into the collection.
-func CreateOrder(order *models.Order) (*mongo.InsertOneResult, error) {
-	order.ID = primitive.NewObjectID()
-	order.CreatedAt = time.Now()
-	order.UpdatedAt = time.Now()
-
-	return orderCollection.InsertOne(context.Background(), order)
+var orderCol *mongo.Collection = config.GetCollection("DRPS", "orders")
+func CreateOrder(ctx context.Context, o *models.Order) (*mongo.InsertOneResult, error){
+	return orderCol.InsertOne(ctx, o)
 }
 
-// GetOrderByID retrieves an order by its hex ID.
-func GetOrderByID(id string) (*models.Order, error) {
-	objID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return nil, errors.New("invalid order ID")
+func GetOrderByID(ctx context.Context, hexID string) (*models.Order, error) {
+	var o models.Order
+	id, _ := primitive.ObjectIDFromHex(hexID)
+	err := orderCol.FindOne(ctx, bson.M{"_id": id}).Decode(&o)
+	if err == mongo.ErrNoDocuments {
+		return nil, nil
 	}
+	return &o, err
+}
 
-	var ord models.Order
-	err = orderCollection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&ord)
+func ListOrders(ctx context.Context, filter bson.M) ([]models.Order, error) {
+	cur, err := orderCol.Find(ctx, filter, options.Find().SetSort(bson.D{{"created_at", -1}}))
 	if err != nil {
 		return nil, err
 	}
-	return &ord, nil
-}
-
-// GetAllOrders returns all orders in the collection.
-func GetAllOrders() ([]models.Order, error) {
-	cursor, err := orderCollection.Find(context.Background(), bson.M{})
-	if err != nil {
-		return nil, err
-	}
-	defer cursor.Close(context.Background())
-
-	var orders []models.Order
-	for cursor.Next(context.Background()) {
-		var ord models.Order
-		if err := cursor.Decode(&ord); err != nil {
-			return nil, err
+	defer cur.Close(ctx)
+	var out []models.Order
+	for cur.Next(ctx) {
+		var o models.Order
+		if err := cur.Decode(&o); err != nil {
+			continue
 		}
-		orders = append(orders, ord)
+		out = append(out, o)
 	}
-	return orders, nil
+	return out, nil
 }
 
-// UpdateOrder updates fields of an order by its hex ID.
-func UpdateOrder(id string, updatedData bson.M) (*mongo.UpdateResult, error) {
-	objID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return nil, errors.New("invalid order ID")
-	}
-
-	updatedData["updated_at"] = time.Now()
-
-	return orderCollection.UpdateOne(
-		context.Background(),
-		bson.M{"_id": objID},
-		bson.M{"$set": updatedData},
-	)
+func UpdateOrder(ctx context.Context, hexID string, upd bson.M) (*mongo.UpdateResult, error) {
+	id, _ := primitive.ObjectIDFromHex(hexID)
+	return orderCol.UpdateOne(ctx, bson.M{"_id": id}, bson.M{"$set": upd})
 }
 
-// DeleteOrder removes an order from the collection by its hex ID.
-func DeleteOrder(id string) (*mongo.DeleteResult, error) {
-	objID, err := primitive.ObjectIDFromHex(id)
-	if err != nil {
-		return nil, errors.New("invalid order ID")
-	}
-
-	return orderCollection.DeleteOne(context.Background(), bson.M{"_id": objID})
+func DeleteOrder(ctx context.Context, hexID string) (*mongo.DeleteResult, error) {
+	id, _ := primitive.ObjectIDFromHex(hexID)
+	return orderCol.DeleteOne(ctx, bson.M{"_id": id})
 }
