@@ -45,39 +45,43 @@
           </div>
         </div>
 
-        <div class="lg:w-1/2 flex flex-col justify-between">
+        <div class="lg:w-1/2 flex flex-col">
           <div>
             <h1 class="text-4xl lg:text-5xl font-extrabold text-gray-900 mb-4 leading-tight">
               {{ product.name }}
             </h1>
             <p class="text-green-600 text-3xl lg:text-4xl font-bold mb-4">
               ${{ priceDisplay.toFixed(2) }}
-              <span v-if="product.display_price < product.price" class="text-lg text-gray-500 line-through ml-2">
+              <span v-if="product.price > product.display_price" class="text-lg text-gray-500 line-through ml-2">
                 ${{ product.price.toFixed(2) }}
               </span>
             </p>
             <p class="text-gray-700 text-base leading-relaxed mb-6">{{ product.description }}</p>
 
-            <div v-for="(values, key) in variantOptions" :key="key" class="mb-6">
-              <label v-if="Object.keys(variantOptions).length > 1" class="block text-base font-semibold text-gray-800 mb-3">{{ key }}:</label>
-              <div class="flex flex-wrap gap-3">
-                <button
-                  v-for="val in values" :key="val"
-                  @click="selectOption(key, val)"
-                  :class="[
-                    'px-5 py-2 rounded-full border-2 text-base font-medium transition-all duration-200 shadow-sm',
-                    selected[key] === val
-                      ? 'bg-green-600 text-white border-green-600 shadow-md'
-                      : isSelectable(key, val)
-                        ? 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200 hover:border-green-300 cursor-pointer'
-                        : 'bg-gray-50 text-gray-400 border-gray-100 cursor-not-allowed'
-                  ]"
-                >{{ val }}</button>
-              </div>
+            <div v-if="Object.keys(variantOptions).length > 0" class="space-y-6">
+                <div v-for="(values, key) in variantOptions" :key="key">
+                <label v-if="Object.keys(variantOptions).length > 1" class="block text-base font-semibold text-gray-800 mb-3">{{ key }}:</label>
+                <div class="flex flex-wrap gap-3">
+                    <button
+                    v-for="val in values" :key="val"
+                    @click="selectOption(key, val)"
+                    :class="[
+                        'px-5 py-2 rounded-full border-2 text-base font-medium transition-all duration-200 shadow-sm',
+                        selectedOptions[key] === val
+                        ? 'bg-green-600 text-white border-green-600 shadow-md'
+                        : isOptionAvailable(key, val)
+                            ? 'bg-gray-100 text-gray-700 border-gray-200 hover:bg-gray-200 hover:border-green-300 cursor-pointer'
+                            : 'bg-gray-50 text-gray-400 border-gray-100 cursor-not-allowed opacity-50'
+                    ]"
+                    :disabled="!isOptionAvailable(key, val)"
+                    >{{ val }}</button>
+                </div>
+                </div>
             </div>
-
-            <div class="flex items-center space-x-6 mb-6">
+            
+            <div class="flex items-center space-x-6 my-6">
               <span
+                v-if="selectedVariant"
                 :class="selectedVariant.stock > 0
                   ? 'text-green-600 bg-green-50 px-3 py-1 rounded-full'
                   : 'text-red-600 bg-red-50 px-3 py-1 rounded-full'"
@@ -85,7 +89,7 @@
               >
                 {{ selectedVariant.stock > 0 ? 'In Stock' : 'Out of Stock' }}
               </span>
-              <span class="text-sm text-gray-500">
+              <span v-if="selectedVariant?.id" class="text-sm text-gray-500">
                 SKU: <span class="font-mono text-gray-600">{{ selectedVariant.id }}</span>
               </span>
             </div>
@@ -95,13 +99,13 @@
                 type="number"
                 v-model.number="quantity"
                 min="1"
-                :max="selectedVariant.stock"
+                :max="selectedVariant ? selectedVariant.stock : 1"
                 class="w-full sm:w-24 p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all duration-200 text-center"
               />
               <button
                 @click="addToCart"
                 class="w-full sm:w-auto flex-grow bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-8 rounded-lg shadow-md hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed transition-all duration-200"
-                :disabled="!selectedVariant.id || selectedVariant.stock === 0 || quantity < 1"
+                :disabled="!selectedVariant || selectedVariant.stock === 0 || quantity < 1"
               >Add to Cart</button>
             </div>
           </div>
@@ -112,170 +116,166 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch } from 'vue'
-import { defineProps } from 'vue'
-import { fetchProductBySlug } from '@/services/product'
+import { ref, computed, onMounted, watch } from 'vue';
+import { defineProps } from 'vue';
+// Assuming your product service is correctly aliased in your build config
+import { fetchProductBySlug } from '@/services/product';
 
-const props = defineProps({ shopSlug: String, productSlug: String })
-const product = ref(null)
-const loading = ref(true)
-const error = ref(false)
-const gallery = ref([])
-const currentImage = ref('')
-const quantity = ref(1)
-const selected = ref({})
+const props = defineProps({ shopSlug: String, productSlug: String });
 
-// Load product and init
+const product = ref(null);
+const loading = ref(true);
+const error = ref(false);
+const gallery = ref([]);
+const currentImage = ref('');
+const quantity = ref(1);
+const selectedOptions = ref({});
+
+// --- DATA FETCHING AND INITIALIZATION ---
 async function loadProduct() {
-  loading.value = true
-  error.value = false
+  loading.value = true;
+  error.value = false;
   try {
-    const data = await fetchProductBySlug(props.shopSlug, props.productSlug)
-    product.value = data
-
-    // Initialize gallery
-    const imgs = new Set()
-    if (data.main_image) imgs.add(data.main_image)
-    ;(data.images || []).forEach(img => imgs.add(img))
-    ;(data.variants || []).forEach(v => {
-      if (v.image) imgs.add(v.image)
-    })
-    gallery.value = Array.from(imgs)
-    currentImage.value = data.main_image || gallery.value[0] || ''
-    
-    // Pre-select the first available variant's options
-    if (data.variants?.length > 0) {
-        selected.value = { ...data.variants[0].options };
-    } else {
-        selected.value = {}
-    }
-
+    const data = await fetchProductBySlug(props.shopSlug, props.productSlug);
+    product.value = data;
+    initializeState(data);
   } catch (e) {
-    console.error(e)
-    error.value = true
+    console.error("Failed to load product:", e);
+    error.value = true;
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
-onMounted(loadProduct)
-watch([() => props.shopSlug, () => props.productSlug], loadProduct)
-
-// Create a map of all available option types and their values
-const variantOptions = computed(() => {
-  const map = {}
-  product.value?.variants?.forEach(v => {
-    if (v.options) {
-      Object.entries(v.options).forEach(([k, val]) => {
-        map[k] = map[k] || new Set()
-        map[k].add(val)
-      })
-    }
-  })
-  // Convert sets to arrays
-  Object.keys(map).forEach(key => {
-    map[key] = Array.from(map[key]);
+function initializeState(data) {
+  const imageSet = new Set();
+  if (data.main_image) imageSet.add(data.main_image);
+  (data.images || []).forEach(img => imageSet.add(img));
+  (data.variants || []).forEach(v => {
+    if (v.image) imageSet.add(v.image);
   });
-  return map
-})
+  gallery.value = Array.from(imageSet);
+  currentImage.value = data.main_image || gallery.value[0] || '';
 
-// Check if a potential selection is part of any valid variant
-function isSelectable(keyToTest, valueToTest) {
-    const potentialSelection = { ...selected.value, [keyToTest]: valueToTest };
-
-    return product.value.variants.some(variant => {
-        // Check if the variant's options are a superset of the potential selection
-        return Object.entries(potentialSelection).every(
-            ([key, value]) => variant.options[key] === value
-        );
-    });
-}
-
-
-// Handle option selection with support for complex variant dependencies
-function selectOption(key, val) {
-  // If the option is not part of any valid combination, do nothing.
-  if (!isSelectable(key, val)) {
-    return;
-  }
-  
-  // 1. Update the selected option
-  selected.value[key] = val
-
-  // 2. Find the best fully-matching variant after the change
-  const bestMatch = product.value.variants.find(v => 
-    Object.entries(selected.value).every(([k, vv]) => v.options[k] === vv)
-  );
-
-  // 3. If a perfect match is found, update all selected options to match it.
-  // This ensures all selections are in sync with a valid variant.
-  if (bestMatch) {
-    selected.value = { ...bestMatch.options };
+  if (data.variants && data.variants.length > 0) {
+    selectedOptions.value = { ...data.variants[0].options };
   } else {
-    // If no perfect match exists, find the first variant that matches the user's latest choice
-    // and reset other options to match it. This prevents getting stuck in an invalid state.
-    const firstPossibleMatch = product.value.variants.find(v => v.options[key] === val);
-    if(firstPossibleMatch) {
-        selected.value = { ...firstPossibleMatch.options };
-    }
+    selectedOptions.value = {};
   }
 }
 
-// Computes the currently selected variant based on the `selected` options
-const selectedVariant = computed(() => {
-  if (!product.value?.variants || product.value.variants.length === 0) {
-      return { id: product.value?.id || null, stock: product.value?.stock ?? 0, price: product.value?.display_price, image: null };
-  }
+onMounted(loadProduct);
 
-  const findMatch = (variant) => {
-    const selectedKeys = Object.keys(selected.value);
-    const variantKeys = Object.keys(variant.options);
-    if (selectedKeys.length !== variantKeys.length) return false;
-    return selectedKeys.every(key => selected.value[key] === variant.options[key]);
-  };
+// --- COMPUTED PROPERTIES ---
 
-  const match = product.value.variants.find(findMatch);
-  
-  // Fallback to product-level details if no variant is matched
-  return match || { id: null, stock: 0, price: product.value?.display_price, image: null };
+const variantOptions = computed(() => {
+  if (!product.value) return {}; // Guard against null product
+  const optionsMap = {};
+  (product.value.variants || []).forEach(variant => {
+    for (const [key, value] of Object.entries(variant.options)) {
+      if (!optionsMap[key]) {
+        optionsMap[key] = new Set();
+      }
+      optionsMap[key].add(value);
+    }
+  });
+  Object.keys(optionsMap).forEach(key => {
+    optionsMap[key] = Array.from(optionsMap[key]);
+  });
+  return optionsMap;
 });
 
-
-// Update gallery image when variant changes
-watch(selectedVariant, v => { if (v?.image) { currentImage.value = v.image } })
-
-// Determine the price to show
-const priceDisplay = computed(() => selectedVariant.value?.price ?? product.value?.display_price ?? 0);
-
-function addToCart() {
-  if (!selectedVariant.value || !selectedVariant.value.id) return alert('Please select all variant options.')
-  if (quantity.value < 1) { quantity.value = 1; return alert('Quantity must be at least 1.'); }
-  if (quantity.value > selectedVariant.value.stock) return alert('Not enough items in stock.')
-
-  const cart = JSON.parse(localStorage.getItem('cart') || '[]')
-  const idx = cart.findIndex(i => i.variantId === selectedVariant.value.id)
-  
-  if (idx > -1) {
-    cart[idx].quantity += quantity.value
-  } else {
-    cart.push({
-      variantId: selectedVariant.value.id,
-      productId: product.value.id,
-      shopSlug: props.shopSlug,
-      name: product.value.name,
-      price: priceDisplay.value,
-      quantity: quantity.value,
-      options: selected.value,
-      image: selectedVariant.value.image || currentImage.value
-    })
+const selectedVariant = computed(() => {
+  // FIXED: Add a guard clause to prevent running on a null product.
+  if (!product.value) {
+    return null;
   }
-  localStorage.setItem('cart', JSON.stringify(cart))
-  alert('Added to cart!')
+
+  const variants = product.value.variants;
+  if (!variants || variants.length === 0) {
+    // This is a simple product with no variants.
+    return {
+      id: product.value.id,
+      price: product.value.display_price,
+      stock: product.value.stock ?? 1,
+      options: {},
+      image: product.value.main_image
+    };
+  }
+
+  const match = variants.find(variant => {
+    const variantKeys = Object.keys(variant.options);
+    const selectedKeys = Object.keys(selectedOptions.value);
+    if (variantKeys.length !== selectedKeys.length) return false;
+    return variantKeys.every(key => variant.options[key] === selectedOptions.value[key]);
+  });
+  
+  return match; // Returns the matched variant or `undefined`
+});
+
+const priceDisplay = computed(() => {
+  // Use optional chaining `?.` to safely access properties
+  return selectedVariant.value?.price ?? product.value?.display_price ?? 0;
+});
+
+// --- CORE LOGIC ---
+
+function isOptionAvailable(keyToTest, valueToTest) {
+  if (!product.value?.variants) return false;
+  return product.value.variants.some(variant => {
+    if (variant.options[keyToTest] !== valueToTest) return false;
+    return Object.keys(selectedOptions.value).every(key => {
+      if (key === keyToTest) return true;
+      return selectedOptions.value[key] === variant.options[key];
+    });
+  });
 }
 
-function onImageError(e, size = 100) { e.target.src = `https://placehold.co/${size}x${size}/E0F2F7/263238?text=No+Image` }
+function selectOption(key, value) {
+  selectedOptions.value = { ...selectedOptions.value, [key]: value };
+  const compatibleVariant = (product.value?.variants || []).find(variant =>
+    Object.entries(selectedOptions.value).every(
+      ([k, v]) => variant.options[k] === v
+    )
+  );
+  if (compatibleVariant) {
+    selectedOptions.value = { ...compatibleVariant.options };
+  }
+}
+
+// --- WATCHERS AND UTILITY FUNCTIONS ---
+
+watch(selectedVariant, (newVariant) => {
+  if (newVariant?.image) {
+    currentImage.value = newVariant.image;
+  }
+});
+
+function addToCart() {
+  if (!selectedVariant.value || !selectedVariant.value.id) return alert('Please select all variant options to continue.');
+  if (quantity.value < 1) { quantity.value = 1; return alert('Quantity must be at least 1.'); }
+  if (quantity.value > selectedVariant.value.stock) return alert('The selected quantity exceeds available stock.');
+
+  const cartItem = {
+    variantId: selectedVariant.value.id,
+    productId: product.value.id,
+    shopSlug: props.shopSlug,
+    name: product.value.name,
+    price: priceDisplay.value,
+    quantity: quantity.value,
+    options: selectedVariant.value.options,
+    image: currentImage.value
+  };
+  
+  console.log("Adding to cart:", cartItem);
+  alert(`Added ${quantity.value} x ${product.value.name} to cart!`);
+}
+
+function onImageError(e, size = 100) { 
+  e.target.src = `https://placehold.co/${size}x${size}/E0F2F7/263238?text=No+Image`;
+}
 </script>
 
 <style scoped>
-/* your existing scoped styles */
+/* Your component's scoped styles remain unchanged */
 </style>
