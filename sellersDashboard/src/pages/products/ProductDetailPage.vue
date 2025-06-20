@@ -74,11 +74,11 @@
             {{ product.description || 'No description available.' }}
           </p>
 
-          <div v-if="product.variants && product.variants.length" class="mt-6 border-t border-gray-200 pt-6">
+          <div v-if="displayableVariants.length > 0" class="mt-6 border-t border-gray-200 pt-6">
             <h3 class="font-semibold text-gray-800 text-xl mb-4">Available Variants</h3>
             <ul class="space-y-3">
               <li
-                v-for="(v, i) in product.variants"
+                v-for="(v, i) in displayableVariants"
                 :key="i"
                 class="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center p-4 bg-green-50 rounded-lg shadow-sm border border-green-100 transition-all duration-200 ease-in-out hover:shadow-md hover:border-green-200"
               >
@@ -158,6 +158,20 @@ const mainImage = ref(null)
 
 const activeShop = computed(() => shopStore.activeShop)
 
+// ADDED: Computed property to determine if variants should be displayed
+const displayableVariants = computed(() => {
+  const variants = product.value?.variants;
+  if (!variants || variants.length === 0) {
+    return [];
+  }
+  // Hide variants section if there is only one variant AND it has no options (e.g. options: {})
+  if (variants.length === 1 && Object.keys(variants[0].options).length === 0) {
+    return [];
+  }
+  return variants;
+});
+
+
 function goBack() {
   router.push({ name: 'Products' })
 }
@@ -206,11 +220,14 @@ function formatPrice(p) {
 }
 
 function formatVariant(options) {
-  // Ensure options is an object before trying to iterate
   if (!options || typeof options !== 'object') {
-    return 'N/A';
+    return ''; // Return an empty string instead of 'N/A' for cleaner display
   }
-  return Object.entries(options).map(([k, v]) => `${k}: ${v}`).join(', ')
+  const entries = Object.entries(options);
+  if (entries.length === 0) {
+    return ''; // Also return empty if the options object is empty
+  }
+  return entries.map(([k, v]) => `${k}: ${v}`).join(', ')
 }
 
 function setMainImage(imageUrl) {
@@ -242,8 +259,7 @@ async function fetchProductDetails() {
         mainImage.value = product.value.main_image;
     } else if (product.value.images && product.value.images.length > 0) {
       mainImage.value = product.value.images[0];
-    } else if (product.value.variants && product.value.variants.length > 0 && product.value.variants[0] && product.value.variants[0].image) {
-      // Ensure product.value.variants[0] exists before accessing .image
+    } else if (product.value.variants && product.value.variants.length > 0 && product.value.variants[0]?.image) {
       mainImage.value = product.value.variants[0].image;
     } else {
       mainImage.value = null; // No images available

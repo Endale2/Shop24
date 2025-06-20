@@ -1,3 +1,4 @@
+// src/services/product.js
 import api from './api'
 
 export const productService = {
@@ -13,13 +14,13 @@ export const productService = {
       category:     p.Category ?? p.category,
       price:        Number(p.Price ?? p.price) || 0,
       variants:     (p.Variants ?? p.variants ?? []).map(v => ({
-        id:       v.VariantID ?? v.id,
-        options:  v.Options   ?? v.options   ?? {},
-        price:    Number(v.Price ?? v.price) || 0,
-        stock:    v.Stock     ?? v.stock     ?? 0,
-        image:    v.Image     ?? v.image     ?? '',
-        createdAt:v.CreatedAt ?? v.createdAt,
-        updatedAt:v.UpdatedAt ?? v.updatedAt,
+        id:        v.VariantID ?? v.id,
+        options:   v.Options   ?? v.options   ?? {},
+        price:     Number(v.Price ?? v.price) || 0,
+        stock:     v.Stock     ?? v.stock     ?? 0,
+        image:     v.Image     ?? v.image     ?? '',
+        createdAt: v.CreatedAt ?? v.createdAt,
+        updatedAt: v.UpdatedAt ?? v.updatedAt,
       })),
       createdAt:    p.CreatedAt ?? p.createdAt,
       updatedAt:    p.UpdatedAt ?? p.updatedAt,
@@ -39,13 +40,13 @@ export const productService = {
       category:     p.Category ?? p.category,
       price:        Number(p.Price ?? p.price) || 0,
       variants:     (p.Variants ?? p.variants ?? []).map(v => ({
-        id:       v.VariantID ?? v.id,
-        options:  v.Options   ?? v.options   ?? {},
-        price:    Number(v.Price ?? v.price) || 0,
-        stock:    v.Stock     ?? v.stock     ?? 0,
-        image:    v.Image     ?? v.image     ?? '',
-        createdAt:v.CreatedAt ?? v.createdAt,
-        updatedAt:v.UpdatedAt ?? v.updatedAt,
+        id:        v.VariantID ?? v.id,
+        options:   v.Options   ?? v.options   ?? {},
+        price:     Number(v.Price ?? v.price) || 0,
+        stock:     v.Stock     ?? v.stock     ?? 0,
+        image:     v.Image     ?? v.image     ?? '',
+        createdAt: v.CreatedAt ?? v.createdAt,
+        updatedAt: v.UpdatedAt ?? v.updatedAt,
       })),
       createdAt:    p.CreatedAt ?? p.createdAt,
       updatedAt:    p.UpdatedAt ?? p.updatedAt,
@@ -54,8 +55,16 @@ export const productService = {
 
   async create(shopId, data) {
     const res = await api.post(`/seller/shops/${shopId}/products`, data)
-    const newId = res.data.id ?? res.data.insertedId
-    return this.fetchById(shopId, newId)
+    const created = res.data
+    // backend now returns { "InsertedID": "68556ea524a7a87f641c3d5c" }
+    const id = created.id        // in case your backend ever returns lowercase
+             ?? created._id
+             ?? created.ID
+             ?? created.InsertedID
+    if (!id) {
+      throw new Error('Failed to retrieve new product ID from response')
+    }
+    return this.fetchById(shopId, id)
   },
 
   async update(shopId, productId, data) {
