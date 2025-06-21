@@ -42,6 +42,8 @@ const routes = [
     component: CartPage,
     meta: { requiresAuth: true }
   },
+  { path: '/account', name: 'Account', component: () => import('@/pages/AccountPage.vue'), meta: { requiresAuth: true } },
+
 
   { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFoundPage }
 ]

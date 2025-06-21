@@ -1,17 +1,11 @@
+// src/services/api.js
 import axios from 'axios'
 
+const BACKEND = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080'
+
 const api = axios.create({
-  baseURL: 'http://localhost:8080',
+  baseURL: BACKEND,
   withCredentials: true,
 })
-
-let isRefreshing = false
-let failedQueue = []
-function processQueue(error, token = null) {
-  failedQueue.forEach(p => error ? p.reject(error) : p.resolve(token))
-  failedQueue = []
-}
-
-// (interceptor logic…)
 
 export default api
