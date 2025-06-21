@@ -1,55 +1,51 @@
 // src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router'
-import { useShopStore }                   from '@/stores/shop'
+import { useShopStore } from '@/stores/shop'
+import { useAuthStore } from '@/stores/auth'
 
-import HomePage              from '@/pages/HomePage.vue'
-import ProductsPage          from '@/pages/ProductsPage.vue'
-import ProductDetail         from '@/pages/ProductDetail.vue'
-import CollectionsPage       from '@/pages/CollectionsPage.vue'
-import CollectionDetailPage  from '@/pages/CollectionDetailPage.vue'
-import CartPage              from '@/pages/CartPage.vue'
-import NotFoundPage          from '@/pages/NotFoundPage.vue'
+import HomePage from '@/pages/HomePage.vue'
+import ProductsPage from '@/pages/ProductsPage.vue'
+import ProductDetail from '@/pages/ProductDetail.vue'
+import CollectionsPage from '@/pages/CollectionsPage.vue'
+import CollectionDetailPage from '@/pages/CollectionDetailPage.vue'
+import CartPage from '@/pages/CartPage.vue'
+import AuthPage from '@/pages/AuthPage.vue'
+import NotFoundPage from '@/pages/NotFoundPage.vue'
 
 const routes = [
   { path: '/', name: 'Home', component: HomePage },
+  { path: '/auth', name: 'Auth', component: AuthPage },
 
+  // Public product routes
   { path: '/products', name: 'Products', component: ProductsPage },
-
-  {
-    path: '/products/:productSlug',
-    name: 'Product',
-    component: ProductDetail,
+  { 
+    path: '/products/:productSlug', 
+    name: 'Product', 
+    component: ProductDetail, 
     props: route => ({
       shopSlug: window.location.host.split('.')[0],
       productSlug: route.params.productSlug
     })
   },
-
-  {
-    path: '/collections',
-    name: 'Collections',
-    component: CollectionsPage
+  { path: '/collections', name: 'Collections', component: CollectionsPage },
+  { 
+    path: '/collections/:handle', 
+    name: 'CollectionDetail', 
+    component: CollectionDetailPage, 
+    props: true 
   },
 
-  {
-    path: '/collections/:handle',
-    name: 'CollectionDetail',
-    component: CollectionDetailPage,
-    props: true
+  // Protect only cart (and future private pages)
+  { 
+    path: '/cart', 
+    name: 'Cart', 
+    component: CartPage,
+    meta: { requiresAuth: true }
   },
 
-  {
-    path: '/cart',
-    name: 'Cart',
-    component: CartPage
-  },
-
-  {
-    path: '/:pathMatch(.*)*',
-    name: 'NotFound',
-    component: NotFoundPage
-  }
+  { path: '/:pathMatch(.*)*', name: 'NotFound', component: NotFoundPage }
 ]
+
 
 const router = createRouter({
   history: createWebHistory(),
@@ -60,7 +56,9 @@ const router = createRouter({
 router.beforeEach(async (to, from, next) => {
   const shopSlug = window.location.host.split('.')[0]
   const shop     = useShopStore()
+  const auth     = useAuthStore()
 
+  // Always ensure shop data is loaded from subdomain
   if (!shop.current || shop.current.slug !== shopSlug) {
     try {
       await shop.fetchShopAndProducts(shopSlug)
@@ -69,7 +67,14 @@ router.beforeEach(async (to, from, next) => {
     }
   }
 
+  // If the route has `requiresAuth` and user isn't logged in, send to /auth
+  if (to.meta.requiresAuth && !auth.isAuthenticated) {
+    return next({ name: 'Auth' })
+  }
+
+  // Otherwise proceed normally
   next()
 })
+
 
 export default router
