@@ -31,6 +31,8 @@ func AuthRoutes(r *gin.Engine) {
 		// Customer authentication routes
 		authGroup.POST("/customer/register", controllers.CustomerRegister)
 		authGroup.POST("/customer/login", controllers.CustomerLogin)
+		authGroup.GET("/customer/oauth/google",         controllers.CustomerOAuthRedirect)
+        authGroup.GET("/customer/oauth/google/callback", controllers.CustomerOAuthCallback)
 		authGroup.POST("/customer/refresh",  controllers.CustomerRefresh)
 		authGroup.POST("/customer/logout", controllers.CustomerLogout)
 		authGroup.GET("/customer/me", controllers.CustomerMe)

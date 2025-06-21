@@ -2,24 +2,28 @@ package controllers
 
 import (
 	"net/http"
+	"os" // Needed for os.Getenv
 	"time"
+	"fmt"
+	"strings"
 
 	authModels "github.com/Endale2/DRPS/auth/models"
 	authServices "github.com/Endale2/DRPS/auth/services"
-	sharedServices "github.com/Endale2/DRPS/shared/services"
+	sharedServices "github.com/Endale2/DRPS/shared/services" // Ensure this path is correct
 	customerRepo "github.com/Endale2/DRPS/customers/repositories"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"github.com/Endale2/DRPS/auth/utils"
+	"github.com/Endale2/DRPS/auth/utils" // Ensure utils package has GoogleOAuthConfig and ParseToken
+	"golang.org/x/oauth2" // Needed for oauth2.AccessTypeOffline
 )
 
 // CustomerLogin handles POST /customers/login.
 // Expects JSON: { "email", "password", "shopId" }.
 func CustomerLogin(c *gin.Context) {
 	var req struct {
-		Email    string `json:"email" binding:"required,email"`
+		Email string `json:"email" binding:"required,email"`
 		Password string `json:"password" binding:"required"`
-		ShopID   string `json:"shopId" binding:"required"`
+		ShopID string `json:"shopId" binding:"required"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -47,18 +51,18 @@ func CustomerLogin(c *gin.Context) {
 // Expects JSON: { "username", "email", "password", "shopId", plus any optional profile fields }.
 func CustomerRegister(c *gin.Context) {
 	var req struct {
-		Username  string `json:"username" binding:"required"`
-		Email     string `json:"email" binding:"required,email"`
-		Password  string `json:"password" binding:"required"`
-		ShopID    string `json:"shopId" binding:"required"`
+		Username string `json:"username" binding:"required"`
+		Email string `json:"email" binding:"required,email"`
+		Password string `json:"password" binding:"required"`
+		ShopID string `json:"shopId" binding:"required"`
 		FirstName string `json:"firstName"`
-		LastName  string `json:"lastName"`
-		Phone     string `json:"phone"`
-		Address   string `json:"address"`
-		City      string `json:"city"`
-		State     string `json:"state"`
-		Postal    string `json:"postalCode"`
-		Country   string `json:"country"`
+		LastName string `json:"lastName"`
+		Phone string `json:"phone"`
+		Address string `json:"address"`
+		City string `json:"city"`
+		State string `json:"state"`
+		Postal string `json:"postalCode"`
+		Country string `json:"country"`
 	}
 	if err := c.ShouldBindJSON(&req); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -67,18 +71,18 @@ func CustomerRegister(c *gin.Context) {
 
 	authCust := &authModels.AuthCustomer{
 		Username: req.Username,
-		Email:    req.Email,
+		Email: req.Email,
 		Password: req.Password,
 	}
 	profile := &authServices.OptionalProfile{
-		FirstName:  req.FirstName,
-		LastName:   req.LastName,
-		Phone:      req.Phone,
-		Address:    req.Address,
-		City:       req.City,
-		State:      req.State,
+		FirstName: req.FirstName,
+		LastName: req.LastName,
+		Phone: req.Phone,
+		Address: req.Address,
+		City: req.City,
+		State: req.State,
 		PostalCode: req.Postal,
-		Country:    req.Country,
+		Country: req.Country,
 	}
 
 	cust, err := authServices.CustomerRegisterService(authCust, profile)
@@ -92,10 +96,72 @@ func CustomerRegister(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusCreated, gin.H{
-		"message":    "customer registered successfully",
+		"message": "customer registered successfully",
 		"customerId": cust.ID.Hex(),
 	})
 }
+
+// CustomerOAuthRedirect redirects to Google’s OAuth consent page for customers.
+// It accepts an optional shopId query parameter to link the customer to a shop.
+func CustomerOAuthRedirect(c *gin.Context) {
+	shopID := c.Query("shopId")
+	// Encode state as "customer_state:<shopId>" or just "customer_state:" if empty
+	state := fmt.Sprintf("customer_state:%s", shopID)
+	url := utils.GoogleOAuthConfig.AuthCodeURL(state, oauth2.AccessTypeOffline)
+	c.Redirect(http.StatusFound, url)
+}
+
+// CustomerOAuthCallback handles Google’s OAuth callback for customers.
+// It links the customer to a shop if a shopId was passed in the state.
+func CustomerOAuthCallback(c *gin.Context) {
+	// 1. Parse state to extract shopId
+	rawState := c.Query("state")
+	parts := strings.SplitN(rawState, ":", 2)
+	var shopID string
+	if len(parts) == 2 {
+		shopID = parts[1]
+	}
+
+	// 2. Exchange the code for a token
+	code := c.Query("code")
+	tok, err := utils.GoogleOAuthConfig.Exchange(c, code)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "OAuth exchange failed for customer"})
+		return
+	}
+	// Extract ID token
+	idToken, ok := tok.Extra("id_token").(string)
+	if !ok {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "ID token not found in OAuth response"})
+		return
+	}
+
+	// 3. Create or fetch your customer, and issue app tokens
+	cust, at, rt, err := authServices.CustomerLoginOAuth("google", idToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
+
+	// 4. Link customer to shop if shopID present
+	if shopID != "" {
+		if shopOID, err := primitive.ObjectIDFromHex(shopID); err == nil {
+			_, _, _ = sharedServices.LinkIfNotLinked(shopOID, cust.ID)
+		}
+	}
+
+	// 5. Set HTTP-only cookies
+	c.SetCookie("access_token", at, int((5*time.Minute).Seconds()), "/", "", false, true)
+	c.SetCookie("refresh_token", rt, int((7*24*time.Hour).Seconds()), "/", "", false, true)
+
+	// 6. Redirect to your customer-specific SPA route
+	frontend := os.Getenv("FRONTEND_URL")
+	if frontend == "" {
+		frontend = "http://localhost:5174"
+	}
+	c.Redirect(http.StatusFound, fmt.Sprintf("%s/customer/dashboard", frontend))
+}
+
 
 // CustomerRefresh issues a new access token.
 func CustomerRefresh(c *gin.Context) {

@@ -8,5 +8,7 @@ type AuthCustomer struct {
 	Username   string             `bson:"username" json:"username" binding:"required"`
 	Email      string             `bson:"email" json:"email" binding:"required"`
 	Password   string             `bson:"password" json:"password" binding:"required"`
+	Provider     string             `bson:"provider"         json:"provider"`    // "local" or "google"
+    ProviderID   string             `bson:"provider_id"      json:"providerId"`  // e.g. Google sub
 	CustomerID primitive.ObjectID `bson:"customer_id,omitempty" json:"customer_id"` // Reference to Customer model
 }

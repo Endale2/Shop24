@@ -8,7 +8,7 @@ type Customer struct {
     ID         primitive.ObjectID `bson:"_id,omitempty" json:"id"`
     FirstName  string             `bson:"firstName" json:"firstName"`
     LastName   string             `bson:"lastName" json:"lastName"`
-	UserName   string             `bson:"username" json:"username"`
+    ProfileImage     string        `bson:"profile_image,omitempty"  json:"profile_image,omitempty"`
     Email      string             `bson:"email" json:"email"`
     Phone      string             `bson:"phone" json:"phone"`
     Address    string             `bson:"address" json:"address"`
