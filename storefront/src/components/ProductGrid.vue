@@ -1,14 +1,11 @@
 <template>
-  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 xl:gap-8">
-    <router-link
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-8 xl:gap-10"> <router-link
       v-for="(p, index) in products"
       :key="p.id"
       :to="`/products/${p.slug}`"
-      class="block group"
-      :style="{ animationDelay: `${index * 100}ms` }"
-      :class="{ 'animate-fadeInUp': animateCards }"
+      class="block group will-change-transform" :style="{ animationDelay: `${index * 80}ms` }" :class="{ 'animate-fadeInUp': animateCards }"
     >
-      <ProductCard :product="p" @quick-view="handleQuickView" @add-to-cart="handleAddToCart" />
+      <ProductCard :product="p" @add-to-cart="handleAddToCart" />
     </router-link>
   </div>
 </template>
@@ -25,21 +22,17 @@ const animateCards = ref(false)
 
 onMounted(() => {
   // Delay animation slightly to ensure cards are rendered before animating
+  // Increased timeout for a smoother reveal after page load
   setTimeout(() => {
     animateCards.value = true
-  }, 50);
+  }, 150);
 })
 
-// Placeholder event handlers for events emitted by ProductCard
-const handleQuickView = (product) => {
-  // console.log('Grid: Quick view triggered for', product.name);
-  // This event is still emitted by ProductCard but its button is removed per previous request.
-  // This handler can be removed if quick-view logic is no longer needed upstream.
-}
-
+// Placeholder event handler for add-to-cart emitted by ProductCard
 const handleAddToCart = (product) => {
-  // console.log('Grid: Add to cart triggered for', product.name);
-  // Logic to add product to cart, potentially using a store or emitting an event
+  console.log('Grid: Add to cart triggered for', product.name);
+  // Implement actual add-to-cart logic here, e.g., using a Vuex/Pinia store
+  // Example: cartStore.addItem(product);
 }
 </script>
 
@@ -48,7 +41,7 @@ const handleAddToCart = (product) => {
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translateY(24px); /* Slightly larger initial translateY */
   }
   to {
     opacity: 1;
@@ -57,7 +50,7 @@ const handleAddToCart = (product) => {
 }
 
 .animate-fadeInUp {
-  animation: fadeInUp 0.5s ease-out forwards;
+  animation: fadeInUp 0.6s cubic-bezier(0.23, 1, 0.32, 1) forwards; /* Smoother cubic-bezier ease */
   opacity: 0; /* Ensure initial state is hidden before animation */
 }
 </style>
