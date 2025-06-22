@@ -70,6 +70,19 @@
             {{ formatPrice(product.price) }}
           </p>
 
+          <div class="mt-4">
+            <p class="text-lg text-gray-800">
+              Availability:
+              <span
+                :class="{
+                  'text-green-600 font-semibold': product.stock > 0,
+                  'text-red-600 font-semibold': product.stock <= 0
+                }"
+              >
+                {{ product.stock > 0 ? `${product.stock} In Stock` : 'Out of Stock' }}
+              </span>
+            </p>
+          </div>
           <p class="text-gray-700 leading-relaxed text-base md:text-lg">
             {{ product.description || 'No description available.' }}
           </p>
@@ -82,20 +95,25 @@
                 :key="i"
                 class="flex flex-col sm:flex-row sm:justify-between items-start sm:items-center p-4 bg-green-50 rounded-lg shadow-sm border border-green-100 transition-all duration-200 ease-in-out hover:shadow-md hover:border-green-200"
               >
-                <div class="flex items-center gap-2">
-                    <img
-                        v-if="v && v.image" :src="v.image"
-                        alt="Variant thumbnail"
-                        class="w-10 h-10 object-cover rounded-md border border-gray-200"
-                    />
-                    <span class="text-gray-700 font-medium text-base mb-1 sm:mb-0">
-                        {{ formatVariant(v.options) }}
-                    </span>
+                <div class="flex items-center gap-2 mb-2 sm:mb-0">
+                  <img
+                    v-if="v && v.image" :src="v.image"
+                    alt="Variant thumbnail"
+                    class="w-10 h-10 object-cover rounded-md border border-gray-200"
+                  />
+                  <span class="text-gray-700 font-medium text-base">
+                    {{ formatVariant(v.options) }}
+                  </span>
                 </div>
-                <span class="font-bold text-green-800 text-lg sm:text-xl">
-                  {{ formatPrice(v.price) }}
-                </span>
-              </li>
+                <div class="text-right">
+                  <span class="font-bold text-green-800 text-lg sm:text-xl">
+                    {{ formatPrice(v.price) }}
+                  </span>
+                  <p class="text-sm font-medium" :class="{ 'text-green-600': v.stock > 0, 'text-red-600': v.stock <= 0 }">
+                    {{ v.stock > 0 ? `${v.stock} in stock` : 'Out of Stock' }}
+                  </p>
+                </div>
+                </li>
             </ul>
           </div>
 

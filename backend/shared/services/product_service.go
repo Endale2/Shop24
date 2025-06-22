@@ -12,7 +12,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo"
 )
 
-
 // ------------------------------------------------------------
 // Helpers: slugify, normalize, etc.
 // ------------------------------------------------------------
@@ -30,6 +29,7 @@ func slugify(name string) string {
 //  2) Each variant has a non‐zero VariantID, CreatedAt, UpdatedAt
 //  3) The Product’s DisplayPrice is set to the minimum Variant price
 //  4) The Product’s MainImage is set from Images[0] or first variant image
+//  5) The Product's Stock is the sum of its variant stocks
 func normalizeProduct(p *models.Product) {
 	now := time.Now()
 
@@ -39,8 +39,8 @@ func normalizeProduct(p *models.Product) {
 			VariantID: primitive.NewObjectID(),
 			Options:   map[string]string{},
 			Price:     p.DisplayPrice,
-			Stock:     0,
-			Image:     "", // will be filled below
+			Stock:     p.Stock, // Use the product's stock for the default variant
+			Image:     "",      // will be filled below
 			CreatedAt: now,
 			UpdatedAt: now,
 		}
@@ -79,6 +79,13 @@ func normalizeProduct(p *models.Product) {
 			}
 		}
 	}
+
+	// 5) Compute Stock = sum of variant stocks
+	totalStock := 0
+	for _, v := range p.Variants {
+		totalStock += v.Stock
+	}
+	p.Stock = totalStock
 }
 
 // ------------------------------------------------------------
@@ -86,7 +93,7 @@ func normalizeProduct(p *models.Product) {
 // ------------------------------------------------------------
 
 // CreateProductService inserts a new Product into MongoDB after applying
-// business logic (ID, slug, normalization including MainImage).
+// business logic (ID, slug, normalization including MainImage and Stock).
 func CreateProductService(p *models.Product) (*mongo.InsertOneResult, error) {
 	if strings.TrimSpace(p.Name) == "" {
 		return nil, errors.New("product name is required")
@@ -101,26 +108,12 @@ func CreateProductService(p *models.Product) (*mongo.InsertOneResult, error) {
 		p.Slug = slugify(p.Name)
 	}
 
-	// Stamp variant IDs & timestamps if provided
-	for i := range p.Variants {
-		if p.Variants[i].VariantID.IsZero() {
-			p.Variants[i].VariantID = primitive.NewObjectID()
-		}
-		if p.Variants[i].CreatedAt.IsZero() {
-			p.Variants[i].CreatedAt = now
-		}
-		p.Variants[i].UpdatedAt = now
-	}
-
-	if p.DisplayPrice == 0 {
-		p.DisplayPrice = p.Price
-	}
-
-	// Normalize (sets DisplayPrice, ensures variants, sets MainImage)
+	// Normalize (sets DisplayPrice, ensures variants, sets MainImage, and calculates total Stock)
 	normalizeProduct(p)
 
 	return repositories.CreateProduct(p)
 }
+
 // GetProductByIDService retrieves a Product by its hex ID, then normalizes it.
 func GetProductByIDService(id string) (*models.Product, error) {
 	p, err := repositories.GetProductByID(id)
@@ -145,14 +138,29 @@ func GetAllProductsService() ([]models.Product, error) {
 	return list, nil
 }
 
-// UpdateProductService updates fields by ID, then (optionally) you can choose
-// to reload & normalize if critical fields changed. For now, it just updates.
+// UpdateProductService updates fields by ID. It also handles recalculating
+// the total stock if the variants are updated.
 func UpdateProductService(id string, updatedData bson.M) (*mongo.UpdateResult, error) {
 	updatedData["updatedAt"] = time.Now()
 
 	// If the client attempts to change the Name, you may want to regenerate slug:
 	if newName, ok := updatedData["name"].(string); ok && strings.TrimSpace(newName) != "" {
 		updatedData["slug"] = slugify(newName)
+	}
+
+	// If the 'variants' field is being updated, recalculate the total stock
+	if variants, ok := updatedData["variants"].([]interface{}); ok {
+		totalStock := 0
+		for _, v := range variants {
+			if variantMap, isMap := v.(map[string]interface{}); isMap {
+				// JSON numbers are often decoded as float64, so we handle that
+				if stock, hasStock := variantMap["stock"].(float64); hasStock {
+					totalStock += int(stock)
+				}
+			}
+		}
+		// Set the main stock field in the update payload to the calculated sum
+		updatedData["stock"] = totalStock
 	}
 
 	return repositories.UpdateProduct(id, updatedData)

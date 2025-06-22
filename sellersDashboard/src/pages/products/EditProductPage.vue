@@ -55,6 +55,17 @@
         </div>
 
         <div>
+          <label for="stock" class="block text-sm font-medium text-gray-700 mb-1">Stock Quantity</label>
+          <input
+            type="number"
+            id="stock"
+            v-model.number="productToEdit.stock"
+            min="0"
+            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+            required
+          />
+        </div>
+        <div>
           <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
           <input
             type="text"
@@ -139,6 +150,17 @@
               </div>
 
               <div>
+                <label :for="`variant-stock-${vIndex}`" class="block text-sm font-medium text-gray-700 mt-3">Variant Stock</label>
+                <input
+                  :id="`variant-stock-${vIndex}`"
+                  type="number"
+                  v-model.number="productToEdit.variants[vIndex].stock"
+                  min="0"
+                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 sm:text-sm"
+                  required
+                />
+              </div>
+              <div>
                 <label :for="`variant-image-${vIndex}`" class="block text-sm font-medium text-gray-700 mt-3">Variant Image URL</label>
                 <input
                   :id="`variant-image-${vIndex}`"
@@ -208,9 +230,10 @@ const productToEdit = ref({
   name: '',
   description: '',
   price: 0,
+  stock: 0, // <-- Stock added
   category: '',
   images: [],
-  main_image: null, // Initialize main_image
+  main_image: null,
   variants: [],
 });
 const loading = ref(true);
@@ -237,7 +260,6 @@ function removeImage(index) {
 }
 
 function addVariant() {
-  // Initialize with 'options' as an empty object and 'image' as null
   productToEdit.value.variants.push({ options: {}, price: 0, stock: 0, image: null });
 }
 
@@ -279,7 +301,6 @@ async function fetchProductDetails() {
   error.value = null;
   try {
     const fetchedProduct = await productService.fetchById(activeShop.value.id, productId);
-    // Deep clone the product to avoid direct mutation of fetched data
     productToEdit.value = JSON.parse(JSON.stringify(fetchedProduct));
   } catch (e) {
     console.error('Failed to load product details for editing:', e);
@@ -298,25 +319,22 @@ async function submitChanges() {
   saving.value = true;
   error.value = null;
   try {
-    // Construct the data to send. Ensure it matches your backend's expected payload for PATCH.
-    // Clean up empty image URLs or options before sending if your backend expects it.
     const dataToSend = {
       name: productToEdit.value.name,
       description: productToEdit.value.description,
       price: productToEdit.value.price,
+      stock: productToEdit.value.stock, // <-- Stock added to payload
       category: productToEdit.value.category,
-      main_image: productToEdit.value.main_image || null, // Send null if empty
-      images: productToEdit.value.images.filter(img => img), // Filter out empty strings
+      main_image: productToEdit.value.main_image || null,
+      images: productToEdit.value.images.filter(img => img),
       variants: productToEdit.value.variants.map(v => ({
-        // variantID: v.variantID, // Include if backend expects it on update
         options: v.options,
         price: v.price,
-        stock: v.stock, // Assuming stock is part of your variant model
-        image: v.image || null, // Send null if empty
+        stock: v.stock,
+        image: v.image || null,
       })),
     };
 
-    // Use productService.patch for partial updates.
     await productService.patch(activeShop.value.id, productToEdit.value.id, dataToSend);
     alert('Product updated successfully!');
     router.push({ name: 'ProductDetail', params: { productId: productToEdit.value.id } });
@@ -347,4 +365,3 @@ watch([() => activeShop.value?.id, () => route.params.productId], () => {
   animation: fadeIn 0.5s ease-out forwards;
 }
 </style>
-
