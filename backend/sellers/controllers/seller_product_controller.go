@@ -11,12 +11,16 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
+// variantInput represents a single variant with exactly one option.
 type variantInput struct {
-	Name    string    `json:"name" binding:"required"`
-	Options []string  `json:"options" binding:"required"`
-	Prices  []float64 `json:"prices" binding:"required"`
+	OptionName  string   `json:"optionName" binding:"required"`
+	OptionValue string   `json:"optionValue" binding:"required"`
+	Price       float64  `json:"price" binding:"required"`
+	Stock       int      `json:"stock"`
+	Image       string   `json:"image"`
 }
 
+// createProductInput represents the payload for creating a product.
 type createProductInput struct {
 	Name        string         `json:"name" binding:"required"`
 	Description string         `json:"description" binding:"required"`
@@ -27,7 +31,7 @@ type createProductInput struct {
 	Variants    []variantInput `json:"variants"`
 }
 
-// slugify converts a name to a URL-friendly slug
+// slugify converts a name to a URL-friendly slug.
 func slugify(name string) string {
 	slug := strings.ToLower(name)
 	slug = strings.ReplaceAll(slug, " ", "-")
@@ -75,18 +79,17 @@ func CreateProduct(c *gin.Context) {
 		CreatedBy:   sellerID,
 	}
 
+	// Build variants: one option per variant
 	for _, v := range in.Variants {
-		if len(v.Options) != len(v.Prices) {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "variant '" + v.Name + "' options/prices mismatch"})
-			return
-		}
-		for i, opt := range v.Options {
-			p.Variants = append(p.Variants, models.Variant{
-				Options: map[string]string{v.Name: opt},
-				Price:   v.Prices[i],
-				Stock:   0,
-			})
-		}
+		p.Variants = append(p.Variants, models.Variant{
+			Option: models.Option{
+				Name:  v.OptionName,
+				Value: v.OptionValue,
+			},
+			Price: v.Price,
+			Stock: v.Stock,
+			Image: v.Image,
+		})
 	}
 
 	res, err := services.CreateProductService(p)
@@ -97,6 +100,7 @@ func CreateProduct(c *gin.Context) {
 	c.JSON(http.StatusCreated, res)
 }
 
+// GetProducts handles GET /seller/shops/:shopId/products
 func GetProducts(c *gin.Context) {
 	sellerHex, _ := c.Get("user_id")
 	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
@@ -121,6 +125,7 @@ func GetProducts(c *gin.Context) {
 	c.JSON(http.StatusOK, products)
 }
 
+// GetProduct handles GET /seller/shops/:shopId/products/:productId
 func GetProduct(c *gin.Context) {
 	sellerHex, _ := c.Get("user_id")
 	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
@@ -140,6 +145,7 @@ func GetProduct(c *gin.Context) {
 	c.JSON(http.StatusOK, p)
 }
 
+// UpdateProduct handles PATCH /seller/shops/:shopId/products/:productId
 func UpdateProduct(c *gin.Context) {
 	sellerHex, _ := c.Get("user_id")
 	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
@@ -165,6 +171,7 @@ func UpdateProduct(c *gin.Context) {
 	c.JSON(http.StatusOK, res)
 }
 
+// DeleteProduct handles DELETE /seller/shops/:shopId/products/:productId
 func DeleteProduct(c *gin.Context) {
 	sellerHex, _ := c.Get("user_id")
 	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))

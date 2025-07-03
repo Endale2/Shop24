@@ -17,7 +17,7 @@ type CollectionProductSummary struct {
 	MainImage    string             `json:"main_image"`
 	Description  string             `json:"description"`
 	Price        float64            `json:"price"`
-	DisplayPrice float64            `json:"display_price"`
+	DisplayPrice *float64           `json:"display_price,omitempty"`
 	VariantCount int                `json:"variant_count"`
 }
 
@@ -84,6 +84,7 @@ func GetCollection(c *gin.Context) {
 		if p == nil {
 			continue
 		}
+
 		products = append(products, CollectionProductSummary{
 			ID:           p.ID,
 			Slug:         p.Slug,
