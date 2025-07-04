@@ -32,6 +32,7 @@ onMounted(async () => {
   // It's good practice to ensure that fetchCollectionDetail always returns an object
   // with a 'products' array, even if empty, or handle the null/undefined case
   // more explicitly if the service can return null for 'products'.
+  
   collection.value = await fetchCollectionDetail(handle)
 })
 </script>
