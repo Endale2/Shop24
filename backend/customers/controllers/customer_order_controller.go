@@ -34,8 +34,8 @@ func PlaceOrder(c *gin.Context) {
 	// 3) Stamp the shop ID
 	in.ShopID = shop.ID
 
-	// 4) If you have customer auth, pull the customer ID from context:
-	if cidVal, exists := c.Get("customer_id"); exists {
+	// 4) If you have customer auth, pull the user ID from context:
+	if cidVal, exists := c.Get("user_id"); exists {
 		if cidHex, ok := cidVal.(string); ok {
 			if cid, err := primitive.ObjectIDFromHex(cidHex); err == nil {
 				in.CustomerID = cid
@@ -73,7 +73,7 @@ func ListShopOrders(c *gin.Context) {
 	}
 
 	// Filter to only the current customer, if logged in
-	if cidVal, exists := c.Get("customer_id"); exists {
+	if cidVal, exists := c.Get("user_id"); exists {
 		if cidHex, ok := cidVal.(string); ok {
 			if cid, err := primitive.ObjectIDFromHex(cidHex); err == nil {
 				filtered := make([]models.Order, 0, len(list))
@@ -115,7 +115,7 @@ func GetOrderDetail(c *gin.Context) {
 	}
 
 	// Only the placing customer may view it
-	if cidVal, exists := c.Get("customer_id"); exists {
+	if cidVal, exists := c.Get("user_id"); exists {
 		if cidHex, ok := cidVal.(string); ok {
 			if cid, err := primitive.ObjectIDFromHex(cidHex); err == nil {
 				if order.CustomerID != cid {

@@ -1,15 +1,14 @@
-<!-- src/App.vue -->
 <template>
-  <!-- Wrap all pages in your DefaultLayout -->
-  <DefaultLayout>
-    <router-view />
-  </DefaultLayout>
+  <router-view />
 </template>
 
-<script setup>
-import DefaultLayout from '@/layouts/DefaultLayout.vue'
+<script setup lang="ts">
+// entry point
 </script>
 
 <style>
-/* Global styles (if any) can go here */
+body {
+  margin: 0;
+  font-family: system-ui, sans-serif;
+}
 </style>

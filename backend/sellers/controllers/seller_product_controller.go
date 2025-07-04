@@ -1,10 +1,13 @@
 package controllers
 
 import (
+	"math/rand"
 	"net/http"
 	"strings"
+	"time"
 
 	"github.com/Endale2/DRPS/shared/models"
+	"github.com/Endale2/DRPS/shared/repositories"
 	"github.com/Endale2/DRPS/shared/services"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -13,11 +16,11 @@ import (
 
 // variantInput represents a single variant with exactly one option.
 type variantInput struct {
-	OptionName  string   `json:"optionName" binding:"required"`
-	OptionValue string   `json:"optionValue" binding:"required"`
-	Price       float64  `json:"price" binding:"required"`
-	Stock       int      `json:"stock"`
-	Image       string   `json:"image"`
+	OptionName  string  `json:"optionName" binding:"required"`
+	OptionValue string  `json:"optionValue" binding:"required"`
+	Price       float64 `json:"price" binding:"required"`
+	Stock       int     `json:"stock"`
+	Image       string  `json:"image"`
 }
 
 // createProductInput represents the payload for creating a product.
@@ -31,12 +34,39 @@ type createProductInput struct {
 	Variants    []variantInput `json:"variants"`
 }
 
-// slugify converts a name to a URL-friendly slug.
-func slugify(name string) string {
+// slugify converts a name to a URL-friendly slug and ensures uniqueness within the shop.
+func slugifyUnique(name string, shopID primitive.ObjectID) string {
 	slug := strings.ToLower(name)
 	slug = strings.ReplaceAll(slug, " ", "-")
 	slug = strings.ReplaceAll(slug, "_", "-")
-	return slug
+	baseSlug := slug
+
+	rand.Seed(time.Now().UnixNano())
+	try := 0
+	for {
+		// Check if a product with this slug exists in this shop
+		filter := bson.M{"slug": slug, "shop_id": shopID}
+		products, _ := repositories.GetProductsByFilter(filter)
+		if len(products) == 0 {
+			return slug
+		}
+		// If exists, append random 4 chars
+		slug = baseSlug + "-" + randSeq(4)
+		try++
+		if try > 5 { // fallback: add timestamp
+			slug = baseSlug + "-" + time.Now().Format("20060102150405")
+		}
+	}
+}
+
+var letters = []rune("abcdefghijklmnopqrstuvwxyz0123456789")
+
+func randSeq(n int) string {
+	b := make([]rune, n)
+	for i := range b {
+		b[i] = letters[rand.Intn(len(letters))]
+	}
+	return string(b)
 }
 
 // CreateProduct handles POST /seller/shops/:shopId/products
@@ -66,7 +96,7 @@ func CreateProduct(c *gin.Context) {
 		return
 	}
 
-	slug := slugify(in.Name)
+	slug := slugifyUnique(in.Name, shopID)
 	p := &models.Product{
 		ShopID:      shopID,
 		UserID:      sellerID,
