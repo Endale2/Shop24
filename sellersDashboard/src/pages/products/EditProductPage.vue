@@ -41,30 +41,57 @@
           ></textarea>
         </div>
 
-        <div>
-          <label for="price" class="block text-sm font-medium text-gray-700 mb-1">Price</label>
-          <input
-            type="number"
-            id="price"
-            v-model.number="productToEdit.price"
-            step="0.01"
-            min="0"
-            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
-            required
-          />
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+          <template v-if="productToEdit.variants && productToEdit.variants.length > 0">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Starting Price</label>
+              <input type="number" :value="computedPrice" disabled class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-gray-100" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Highest Display Price</label>
+              <input type="number" :value="computedDisplayPrice" disabled class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-gray-100" />
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Total Stock</label>
+              <input type="number" :value="computedStock" disabled class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 bg-gray-100" />
+            </div>
+            <div>
+              <label for="main_image" class="block text-sm font-medium text-gray-700 mb-1">Main Image URL</label>
+              <input
+                type="url"
+                id="main_image"
+                v-model="productToEdit.main_image"
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                placeholder="URL for the main product image (optional)"
+              />
+            </div>
+          </template>
+          <template v-else>
+            <div>
+              <label for="price" class="block text-sm font-medium text-gray-700 mb-1">Product Price</label>
+              <input id="price" type="number" v-model.number="productToEdit.price" step="0.01" min="0" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm" />
+            </div>
+            <div>
+              <label for="display_price" class="block text-sm font-medium text-gray-700 mb-1">Display Price</label>
+              <input id="display_price" type="number" v-model.number="productToEdit.display_price" step="0.01" min="0" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm" />
+            </div>
+            <div>
+              <label for="stock" class="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+              <input id="stock" type="number" v-model.number="productToEdit.stock" min="0" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm" />
+            </div>
+            <div>
+              <label for="main_image" class="block text-sm font-medium text-gray-700 mb-1">Main Image URL</label>
+              <input
+                type="url"
+                id="main_image"
+                v-model="productToEdit.main_image"
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
+                placeholder="URL for the main product image (optional)"
+              />
+            </div>
+          </template>
         </div>
 
-        <div>
-          <label for="stock" class="block text-sm font-medium text-gray-700 mb-1">Stock Quantity</label>
-          <input
-            type="number"
-            id="stock"
-            v-model.number="productToEdit.stock"
-            min="0"
-            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
-            required
-          />
-        </div>
         <div>
           <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
           <input
@@ -72,17 +99,6 @@
             id="category"
             v-model="productToEdit.category"
             class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
-          />
-        </div>
-
-        <div>
-          <label for="main_image" class="block text-sm font-medium text-gray-700 mb-1">Main Image URL</label>
-          <input
-            type="url"
-            id="main_image"
-            v-model="productToEdit.main_image"
-            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
-            placeholder="URL for the main product image (optional)"
           />
         </div>
 
@@ -113,63 +129,71 @@
               </button>
             </div>
             <div class="space-y-3">
-              <label class="block text-sm font-medium text-gray-700">Options:</label>
-              <div v-for="(optionValue, optionKey) in variant.options" :key="optionKey" class="flex items-center space-x-2 mb-2">
+              <label class="block text-sm font-medium text-gray-700">Options</label>
+              <div v-for="(opt, oi) in variant.options" :key="oi" class="flex items-center space-x-2 mb-2">
                 <input
-                  type="text"
-                  :value="optionKey"
-                  @input="e => updateVariantOptionKey(vIndex, optionKey, e.target.value)"
+                  v-model="productToEdit.variants[vIndex].options[oi].name"
                   class="w-1/3 border border-gray-300 rounded-md py-2 px-3 text-sm"
                   placeholder="Option Name (e.g., Color)"
                 />
                 <input
-                  type="text"
-                  v-model="productToEdit.variants[vIndex].options[optionKey]"
-                  class="flex-1 border border-gray-300 rounded-md py-2 px-3 text-sm"
+                  v-model="productToEdit.variants[vIndex].options[oi].value"
+                  class="w-1/3 border border-gray-300 rounded-md py-2 px-3 text-sm"
                   placeholder="Option Value (e.g., Red)"
                 />
-                 <button type="button" @click="removeVariantOption(vIndex, optionKey)" class="p-1 text-red-600 hover:text-red-800">
-                   <MinusCircleIcon class="h-4 w-4" />
-                 </button>
+                <button type="button" @click="removeVariantOption(vIndex, oi)" class="p-1 text-red-600 hover:text-red-800">
+                  <MinusCircleIcon class="h-4 w-4" />
+                </button>
               </div>
               <button type="button" @click="addVariantOption(vIndex)" class="mt-2 inline-flex items-center text-sm font-medium text-blue-600 hover:text-blue-800">
                 <PlusCircleIcon class="h-4 w-4 mr-1" /> Add Option
               </button>
+            </div>
+            <div>
+              <label :for="`variant-price-${vIndex}`" class="block text-sm font-medium text-gray-700 mt-3">Variant Price</label>
+              <input
+                :id="`variant-price-${vIndex}`"
+                type="number"
+                v-model.number="productToEdit.variants[vIndex].price"
+                step="0.01"
+                min="0"
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 sm:text-sm"
+                required
+              />
+            </div>
 
-              <div>
-                <label :for="`variant-price-${vIndex}`" class="block text-sm font-medium text-gray-700 mt-3">Variant Price</label>
-                <input
-                  :id="`variant-price-${vIndex}`"
-                  type="number"
-                  v-model.number="productToEdit.variants[vIndex].price"
-                  step="0.01"
-                  min="0"
-                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 sm:text-sm"
-                  required
-                />
-              </div>
-
-              <div>
-                <label :for="`variant-stock-${vIndex}`" class="block text-sm font-medium text-gray-700 mt-3">Variant Stock</label>
-                <input
-                  :id="`variant-stock-${vIndex}`"
-                  type="number"
-                  v-model.number="productToEdit.variants[vIndex].stock"
-                  min="0"
-                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 sm:text-sm"
-                  required
-                />
-              </div>
-              <div>
-                <label :for="`variant-image-${vIndex}`" class="block text-sm font-medium text-gray-700 mt-3">Variant Image URL</label>
-                <input
-                  :id="`variant-image-${vIndex}`"
-                  type="url"
-                  v-model="productToEdit.variants[vIndex].image"
-                  class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 sm:text-sm"
-                  placeholder="URL for variant image (optional)"
-                />
-              </div>
+            <div>
+              <label :for="`variant-stock-${vIndex}`" class="block text-sm font-medium text-gray-700 mt-3">Variant Stock</label>
+              <input
+                :id="`variant-stock-${vIndex}`"
+                type="number"
+                v-model.number="productToEdit.variants[vIndex].stock"
+                min="0"
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 sm:text-sm"
+                required
+              />
+            </div>
+            <div>
+              <label :for="`variant-image-${vIndex}`" class="block text-sm font-medium text-gray-700 mt-3">Variant Image URL</label>
+              <input
+                :id="`variant-image-${vIndex}`"
+                type="url"
+                v-model="productToEdit.variants[vIndex].image"
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 sm:text-sm"
+                placeholder="URL for variant image (optional)"
+              />
+            </div>
+            <div>
+              <label :for="`variant-display-price-${vIndex}`" class="block text-sm font-medium text-gray-700 mt-3">Variant Display Price (optional)</label>
+              <input
+                :id="`variant-display-price-${vIndex}`"
+                type="number"
+                v-model.number="productToEdit.variants[vIndex].display_price"
+                step="0.01"
+                min="0"
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 sm:text-sm"
+                placeholder="Display price (optional)"
+              />
             </div>
           </div>
           <button type="button" @click="addVariant" class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
@@ -177,6 +201,10 @@
           </button>
         </div>
 
+        <div v-if="variantOptionError" class="bg-red-50 border border-red-300 text-red-700 px-4 py-2 rounded mb-4">
+          <ExclamationCircleIcon class="h-5 w-5 inline-block mr-2" />
+          {{ variantOptionError }}
+        </div>
 
         <div class="flex justify-end space-x-4 mt-8">
           <button
@@ -188,7 +216,7 @@
           </button>
           <button
             type="submit"
-            :disabled="saving"
+            :disabled="saving || !!variantOptionError"
             class="px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out"
           >
             <SpinnerIcon v-if="saving" class="animate-spin h-5 w-5 mr-3 inline-block" />
@@ -218,7 +246,8 @@ import {
   PlusCircleIcon,
   MinusCircleIcon,
   XIcon,
-  PlusIcon
+  PlusIcon,
+  ExclamationCircleIcon
 } from '@heroicons/vue/outline';
 
 const router = useRouter();
@@ -229,8 +258,9 @@ const productToEdit = ref({
   id: '',
   name: '',
   description: '',
-  price: 0,
-  stock: 0, // <-- Stock added
+  price: null,
+  display_price: null,
+  stock: null,
   category: '',
   images: [],
   main_image: null,
@@ -239,8 +269,23 @@ const productToEdit = ref({
 const loading = ref(true);
 const saving = ref(false);
 const error = ref(null);
+const variantOptionError = ref(null);
 
 const activeShop = computed(() => shopStore.activeShop);
+
+const computedPrice = computed(() => {
+  if (!productToEdit.value.variants || productToEdit.value.variants.length === 0) return productToEdit.value.price;
+  return Math.min(...productToEdit.value.variants.map(v => v.price));
+});
+const computedDisplayPrice = computed(() => {
+  if (!productToEdit.value.variants || productToEdit.value.variants.length === 0) return productToEdit.value.display_price;
+  const displayPrices = productToEdit.value.variants.map(v => v.display_price).filter(p => p != null);
+  return displayPrices.length ? Math.max(...displayPrices) : '';
+});
+const computedStock = computed(() => {
+  if (!productToEdit.value.variants || productToEdit.value.variants.length === 0) return productToEdit.value.stock;
+  return productToEdit.value.variants.reduce((sum, v) => sum + (v.stock || 0), 0);
+});
 
 function goBack() {
   const productId = route.params.productId;
@@ -260,27 +305,19 @@ function removeImage(index) {
 }
 
 function addVariant() {
-  productToEdit.value.variants.push({ options: {}, price: 0, stock: 0, image: null });
+  productToEdit.value.variants.push({ options: [{ name: '', value: '' }], price: 0, stock: 0, image: null });
 }
 
 function removeVariant(index) {
   productToEdit.value.variants.splice(index, 1);
 }
 
-function addVariantOption(variantIndex) {
-  const newKey = `new_option_${Date.now()}`;
-  productToEdit.value.variants[variantIndex].options[newKey] = '';
+function addVariantOption(vi) {
+  productToEdit.value.variants[vi].options.push({ name: '', value: '' });
 }
 
-function removeVariantOption(variantIndex, optionKey) {
-  delete productToEdit.value.variants[variantIndex].options[optionKey];
-}
-
-function updateVariantOptionKey(variantIndex, oldKey, newKey) {
-  if (oldKey === newKey) return;
-  const value = productToEdit.value.variants[variantIndex].options[oldKey];
-  delete productToEdit.value.variants[variantIndex].options[oldKey];
-  productToEdit.value.variants[variantIndex].options[newKey] = value;
+function removeVariantOption(vi, oi) {
+  productToEdit.value.variants[vi].options.splice(oi, 1);
 }
 
 async function fetchProductDetails() {
@@ -301,7 +338,26 @@ async function fetchProductDetails() {
   error.value = null;
   try {
     const fetchedProduct = await productService.fetchById(activeShop.value.id, productId);
-    productToEdit.value = JSON.parse(JSON.stringify(fetchedProduct));
+    // Map backend fields to frontend
+    productToEdit.value = {
+      id: fetchedProduct.id || fetchedProduct._id,
+      name: fetchedProduct.name,
+      slug: fetchedProduct.slug,
+      images: fetchedProduct.images || [],
+      main_image: fetchedProduct.main_image,
+      category: fetchedProduct.category,
+      price: (typeof fetchedProduct.price === 'number' && !isNaN(fetchedProduct.price)) ? fetchedProduct.price : 0,
+      stock: (typeof fetchedProduct.stock === 'number' && !isNaN(fetchedProduct.stock)) ? fetchedProduct.stock : 0,
+      display_price: (typeof fetchedProduct.display_price === 'number' && !isNaN(fetchedProduct.display_price)) ? fetchedProduct.display_price : 0,
+      description: fetchedProduct.description,
+      variants: (fetchedProduct.variants || []).map(v => ({
+        ...v,
+        options: v.option || v.options || {},
+        price: v.price,
+        stock: v.stock,
+        image: v.image
+      })),
+    };
   } catch (e) {
     console.error('Failed to load product details for editing:', e);
     error.value = 'Failed to load product details for editing. Please try again later.';
@@ -318,23 +374,45 @@ async function submitChanges() {
 
   saving.value = true;
   error.value = null;
-  try {
-    const dataToSend = {
-      name: productToEdit.value.name,
-      description: productToEdit.value.description,
-      price: productToEdit.value.price,
-      stock: productToEdit.value.stock, // <-- Stock added to payload
-      category: productToEdit.value.category,
-      main_image: productToEdit.value.main_image || null,
-      images: productToEdit.value.images.filter(img => img),
-      variants: productToEdit.value.variants.map(v => ({
-        options: v.options,
-        price: v.price,
-        stock: v.stock,
-        image: v.image || null,
-      })),
-    };
+  variantOptionError.value = null;
 
+  let dataToSend = {
+    name: productToEdit.value.name,
+    description: productToEdit.value.description,
+    category: productToEdit.value.category,
+    images: productToEdit.value.images.filter(img => img),
+    main_image: productToEdit.value.main_image || null,
+  };
+
+  if (productToEdit.value.variants.length > 0) {
+    dataToSend.variants = productToEdit.value.variants.map(v => ({
+      options: v.options.filter(o => o.name && o.value),
+      price: v.price,
+      stock: v.stock,
+      image: v.image || null,
+    }));
+    // Do NOT send price/display_price/stock for variant products
+  } else {
+    // Only include price/display_price/stock if they are not null/undefined
+    if (typeof productToEdit.value.price === 'number') {
+      dataToSend.price = productToEdit.value.price;
+    }
+    // Always send display_price as a number or null
+    if (typeof productToEdit.value.display_price === 'number') {
+      dataToSend.display_price = productToEdit.value.display_price;
+    } else {
+      dataToSend.display_price = null;
+    }
+    if (typeof productToEdit.value.stock === 'number') {
+      dataToSend.stock = productToEdit.value.stock;
+    }
+    // Always send main_image as a string (even if empty)
+    dataToSend.main_image = productToEdit.value.main_image || '';
+  }
+
+  try {
+    // Debug: log the payload being sent
+    console.log('PATCH payload:', JSON.stringify(dataToSend, null, 2));
     await productService.patch(activeShop.value.id, productToEdit.value.id, dataToSend);
     alert('Product updated successfully!');
     router.push({ name: 'ProductDetail', params: { productId: productToEdit.value.id } });

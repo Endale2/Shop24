@@ -7,7 +7,7 @@ import (
 
 	"github.com/Endale2/DRPS/shared/models"
 	"github.com/Endale2/DRPS/shared/repositories"
-	
+
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -32,13 +32,10 @@ func normalizeProduct(p *models.Product) {
 
 	// 1) If no variants, inject a "default" variant
 	if len(p.Variants) == 0 {
-		// You can fill in a real default name/value if desired,
-		// e.g. Name: "Default", Value: "Default"
 		defaultOpt := models.Option{Name: "", Value: ""}
-
 		defaultVar := models.Variant{
 			VariantID:    primitive.NewObjectID(),
-			Option:       defaultOpt,
+			Options:      []models.Option{defaultOpt},
 			Price:        p.Price,        // use product price as fallback
 			DisplayPrice: p.DisplayPrice, // inherit if set
 			Stock:        p.Stock,
@@ -62,16 +59,29 @@ func normalizeProduct(p *models.Product) {
 		v.UpdatedAt = now
 	}
 
-	// 3) Compute DisplayPrice = minimum variant price
-	minPrice := p.Variants[0].Price
-	for _, v := range p.Variants[1:] {
-		if v.Price < minPrice {
-			minPrice = v.Price
+	if len(p.Variants) > 0 {
+		// 3) If product has variants, set price to lowest variant price, display_price to highest variant display_price, and stock to sum of variant stocks. Lock these fields from being edited directly.
+		minPrice := p.Variants[0].Price
+		maxDisplayPrice := p.Variants[0].DisplayPrice
+		totalStock := 0
+		for _, v := range p.Variants {
+			if v.Price < minPrice {
+				minPrice = v.Price
+			}
+			if v.DisplayPrice != nil && (maxDisplayPrice == nil || *v.DisplayPrice > *maxDisplayPrice) {
+				maxDisplayPrice = v.DisplayPrice
+			}
+			totalStock += v.Stock
 		}
+		p.Price = minPrice
+		p.DisplayPrice = maxDisplayPrice
+		p.Stock = totalStock
+	} else {
+		// 4) If no variants, allow product.price, display_price, and stock to be set/edited directly.
+		// (No action needed; use as provided)
 	}
-	p.DisplayPrice = &minPrice
 
-	// 4) Determine MainImage
+	// 5) Determine MainImage
 	if len(p.Images) > 0 {
 		p.MainImage = p.Images[0]
 	} else {
@@ -82,13 +92,6 @@ func normalizeProduct(p *models.Product) {
 			}
 		}
 	}
-
-	// 5) Compute Stock = sum of variant stocks
-	totalStock := 0
-	for _, v := range p.Variants {
-		totalStock += v.Stock
-	}
-	p.Stock = totalStock
 }
 
 // CreateProductService inserts a new Product into MongoDB after applying
@@ -144,30 +147,57 @@ func UpdateProductService(id string, updatedData bson.M) (*mongo.UpdateResult, e
 		updatedData["slug"] = slugify(newName)
 	}
 
-	// If variants are updated, we expect each to include one 'option' map[string]interface{}
+	// If variants are updated, we expect each to include an 'options' array
 	if rawVariants, ok := updatedData["variants"].([]interface{}); ok {
 		totalStock := 0
+		minPrice := 0.0
+		maxDisplayPrice := (*float64)(nil)
 		for idx, rv := range rawVariants {
 			if vMap, isMap := rv.(map[string]interface{}); isMap {
-				// Convert the incoming 'option' field to our Option struct
-				if optRaw, hasOpt := vMap["option"].(map[string]interface{}); hasOpt {
-					name, _ := optRaw["name"].(string)
-					value, _ := optRaw["value"].(string)
-					// overwrite in-place
-					rawVariants[idx].(map[string]interface{})["option"] = models.Option{
-						Name:  name,
-						Value: value,
+				// Convert the incoming 'options' field to []Option
+				if optsRaw, hasOpts := vMap["options"].([]interface{}); hasOpts {
+					var opts []models.Option
+					for _, o := range optsRaw {
+						if oMap, ok := o.(map[string]interface{}); ok {
+							name, _ := oMap["name"].(string)
+							value, _ := oMap["value"].(string)
+							opts = append(opts, models.Option{Name: name, Value: value})
+						}
+					}
+					rawVariants[idx].(map[string]interface{})["options"] = opts
+				}
+				if priceF, hasPrice := vMap["price"].(float64); hasPrice {
+					if idx == 0 || priceF < minPrice {
+						minPrice = priceF
 					}
 				}
-
+				if dispF, hasDisp := vMap["display_price"].(float64); hasDisp {
+					if maxDisplayPrice == nil || dispF > *maxDisplayPrice {
+						maxDisplayPrice = new(float64)
+						*maxDisplayPrice = dispF
+					}
+				}
 				if stockF, hasStock := vMap["stock"].(float64); hasStock {
 					totalStock += int(stockF)
 				}
 			}
 		}
-		updatedData["variants"] = rawVariants
+		updatedData["price"] = minPrice
+		updatedData["display_price"] = maxDisplayPrice
 		updatedData["stock"] = totalStock
+		// Lock these fields from being edited directly ONLY if variants are present
+		if _, exists := updatedData["price"]; exists {
+			delete(updatedData, "price")
+		}
+		if _, exists := updatedData["display_price"]; exists {
+			delete(updatedData, "display_price")
+		}
+		if _, exists := updatedData["stock"]; exists {
+			delete(updatedData, "stock")
+		}
 	}
+	// For products with NO variants, allow price, display_price, stock, and main_image to be updated directly
+	// No further action needed
 
 	return repositories.UpdateProduct(id, updatedData)
 }
@@ -255,4 +285,58 @@ func GetAllProductsWithDiscountsService(customerID *primitive.ObjectID) ([]model
 		ApplyDiscountsToProduct(&list[i], discounts)
 	}
 	return list, nil
+}
+
+// Add a function to produce the correct JSON response for a product
+func ProductToAPIResponse(p *models.Product) map[string]interface{} {
+	resp := map[string]interface{}{
+		"id":          p.ID.Hex(),
+		"name":        p.Name,
+		"slug":        p.Slug,
+		"description": p.Description,
+		"main_image":  p.MainImage,
+		"images":      p.Images,
+		"category":    p.Category,
+		"createdBy":   p.CreatedBy.Hex(),
+		"createdAt":   p.CreatedAt,
+		"updatedAt":   p.UpdatedAt,
+	}
+	if len(p.Variants) > 0 {
+		// Only include variants if they are real (not a default injected one)
+		realVariants := []models.Variant{}
+		for _, v := range p.Variants {
+			if len(v.Options) > 0 && (v.Options[0].Name != "" || v.Options[0].Value != "") {
+				realVariants = append(realVariants, v)
+			}
+		}
+		if len(realVariants) > 0 {
+			// Compute starting_price, highest_display_price, total_stock
+			minPrice := realVariants[0].Price
+			maxDisplayPrice := realVariants[0].DisplayPrice
+			totalStock := 0
+			for _, v := range realVariants {
+				if v.Price < minPrice {
+					minPrice = v.Price
+				}
+				if v.DisplayPrice != nil && (maxDisplayPrice == nil || *v.DisplayPrice > *maxDisplayPrice) {
+					maxDisplayPrice = v.DisplayPrice
+				}
+				totalStock += v.Stock
+			}
+			resp["starting_price"] = minPrice
+			if maxDisplayPrice != nil {
+				resp["highest_display_price"] = *maxDisplayPrice
+			}
+			resp["total_stock"] = totalStock
+			resp["variants"] = realVariants
+			return resp
+		}
+	}
+	// No real variants: treat as plain product
+	resp["price"] = p.Price
+	if p.DisplayPrice != nil {
+		resp["display_price"] = *p.DisplayPrice
+	}
+	resp["stock"] = p.Stock
+	return resp
 }

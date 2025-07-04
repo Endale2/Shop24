@@ -14,13 +14,18 @@ import (
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// variantInput represents a single variant with exactly one option.
+// optionInput represents a single option for a variant.
+type optionInput struct {
+	Name  string `json:"name" binding:"required"`
+	Value string `json:"value" binding:"required"`
+}
+
+// variantInput represents a single variant with multiple options.
 type variantInput struct {
-	OptionName  string  `json:"optionName" binding:"required"`
-	OptionValue string  `json:"optionValue" binding:"required"`
-	Price       float64 `json:"price" binding:"required"`
-	Stock       int     `json:"stock"`
-	Image       string  `json:"image"`
+	Options []optionInput `json:"options" binding:"required"`
+	Price   float64       `json:"price" binding:"required"`
+	Stock   int           `json:"stock"`
+	Image   string        `json:"image"`
 }
 
 // createProductInput represents the payload for creating a product.
@@ -29,8 +34,7 @@ type createProductInput struct {
 	Description string         `json:"description" binding:"required"`
 	Images      []string       `json:"images" binding:"required"`
 	Category    string         `json:"category" binding:"required"`
-	Price       float64        `json:"price" binding:"required"`
-	CreatedBy   string         `json:"createdBy" binding:"required"`
+	Price       *float64       `json:"price"`
 	Variants    []variantInput `json:"variants"`
 }
 
@@ -96,6 +100,30 @@ func CreateProduct(c *gin.Context) {
 		return
 	}
 
+	// Custom validation for price/variants
+	if len(in.Variants) == 0 {
+		if in.Price == nil || *in.Price <= 0 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Product price is required and must be positive if no variants are provided"})
+			return
+		}
+	}
+
+	// Build variants: multiple options per variant
+	if len(in.Variants) > 0 {
+		for _, v := range in.Variants {
+			if len(v.Options) == 0 {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Each variant must have at least one option (name:value)"})
+				return
+			}
+			for _, o := range v.Options {
+				if strings.TrimSpace(o.Name) == "" || strings.TrimSpace(o.Value) == "" {
+					c.JSON(http.StatusBadRequest, gin.H{"error": "Variant option name and value cannot be empty"})
+					return
+				}
+			}
+		}
+	}
+
 	slug := slugifyUnique(in.Name, shopID)
 	p := &models.Product{
 		ShopID:      shopID,
@@ -105,29 +133,39 @@ func CreateProduct(c *gin.Context) {
 		Description: in.Description,
 		Images:      in.Images,
 		Category:    in.Category,
-		Price:       in.Price,
+		Price:       0,
 		CreatedBy:   sellerID,
 	}
 
-	// Build variants: one option per variant
-	for _, v := range in.Variants {
-		p.Variants = append(p.Variants, models.Variant{
-			Option: models.Option{
-				Name:  v.OptionName,
-				Value: v.OptionValue,
-			},
-			Price: v.Price,
-			Stock: v.Stock,
-			Image: v.Image,
-		})
+	if in.Price != nil {
+		p.Price = *in.Price
 	}
 
-	res, err := services.CreateProductService(p)
+	// Only add variants if explicitly provided
+	if len(in.Variants) > 0 {
+		for _, v := range in.Variants {
+			var opts []models.Option
+			for _, o := range v.Options {
+				opts = append(opts, models.Option{Name: o.Name, Value: o.Value})
+			}
+			p.Variants = append(p.Variants, models.Variant{
+				Options: opts,
+				Price:   v.Price,
+				Stock:   v.Stock,
+				Image:   v.Image,
+			})
+		}
+	}
+
+	_, err = services.CreateProductService(p)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "creation failed: " + err.Error()})
 		return
 	}
-	c.JSON(http.StatusCreated, res)
+
+	// Fetch the created product and return the correct API response
+	createdProduct, _ := services.GetProductByIDService(p.ID.Hex())
+	c.JSON(http.StatusCreated, services.ProductToAPIResponse(createdProduct))
 }
 
 // GetProducts handles GET /seller/shops/:shopId/products
@@ -152,7 +190,12 @@ func GetProducts(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "fetch failed"})
 		return
 	}
-	c.JSON(http.StatusOK, products)
+
+	apiProducts := make([]map[string]interface{}, 0, len(products))
+	for i := range products {
+		apiProducts = append(apiProducts, services.ProductToAPIResponse(&products[i]))
+	}
+	c.JSON(http.StatusOK, apiProducts)
 }
 
 // GetProduct handles GET /seller/shops/:shopId/products/:productId
@@ -172,7 +215,7 @@ func GetProduct(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "product not found"})
 		return
 	}
-	c.JSON(http.StatusOK, p)
+	c.JSON(http.StatusOK, services.ProductToAPIResponse(p))
 }
 
 // UpdateProduct handles PATCH /seller/shops/:shopId/products/:productId
@@ -193,12 +236,49 @@ func UpdateProduct(c *gin.Context) {
 	}
 	upd["shop_id"] = shop.ID
 
-	res, err := services.UpdateProductService(c.Param("productId"), upd)
+	// Custom validation for price/variants on update
+	if variants, ok := upd["variants"].([]interface{}); ok && len(variants) == 0 {
+		if price, hasPrice := upd["price"]; hasPrice {
+			if priceFloat, isFloat := price.(float64); !isFloat || priceFloat < 0 {
+				c.JSON(http.StatusBadRequest, gin.H{"error": "Product price must be a non-negative number if provided and no variants exist"})
+				return
+			}
+		}
+		// Do not require price/display_price/stock to be present for PATCH; only validate if present
+	}
+
+	// Validate variants if present
+	if rawVariants, ok := upd["variants"].([]interface{}); ok && len(rawVariants) > 0 {
+		for _, rv := range rawVariants {
+			if vMap, isMap := rv.(map[string]interface{}); isMap {
+				opts, hasOpts := vMap["options"].([]interface{})
+				if !hasOpts || len(opts) == 0 {
+					c.JSON(http.StatusBadRequest, gin.H{"error": "Each variant must have at least one option (name:value)"})
+					return
+				}
+				for _, o := range opts {
+					if oMap, ok := o.(map[string]interface{}); ok {
+						name, _ := oMap["name"].(string)
+						value, _ := oMap["value"].(string)
+						if strings.TrimSpace(name) == "" || strings.TrimSpace(value) == "" {
+							c.JSON(http.StatusBadRequest, gin.H{"error": "Variant option name and value cannot be empty"})
+							return
+						}
+					}
+				}
+			}
+		}
+	}
+
+	_, err = services.UpdateProductService(c.Param("productId"), upd)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "update failed"})
 		return
 	}
-	c.JSON(http.StatusOK, res)
+
+	// Fetch the updated product and return the correct API response
+	updatedProduct, _ := services.GetProductByIDService(c.Param("productId"))
+	c.JSON(http.StatusOK, services.ProductToAPIResponse(updatedProduct))
 }
 
 // DeleteProduct handles DELETE /seller/shops/:shopId/products/:productId

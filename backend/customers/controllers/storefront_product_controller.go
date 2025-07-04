@@ -4,6 +4,7 @@ package controllers
 import (
 	"net/http"
 
+	"github.com/Endale2/DRPS/shared/models"
 	"github.com/Endale2/DRPS/shared/services"
 	"github.com/gin-gonic/gin"
 )
@@ -30,8 +31,18 @@ func GetProductsByShop(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch products"})
 		return
 	}
-	// It’s valid for a shop to have zero products; return empty array
-	c.JSON(http.StatusOK, products)
+	// Patch: Ensure variant options is never null
+	apiProducts := make([]map[string]interface{}, 0, len(products))
+	for i := range products {
+		for j := range products[i].Variants {
+			if products[i].Variants[j].Options == nil {
+				products[i].Variants[j].Options = []models.Option{}
+			}
+		}
+		apiProducts = append(apiProducts, services.ProductToAPIResponse(&products[i]))
+	}
+	// It's valid for a shop to have zero products; return empty array
+	c.JSON(http.StatusOK, apiProducts)
 }
 
 // GetProductDetail returns one product by its slug, verifying it belongs to this shop.
@@ -68,5 +79,5 @@ func GetProductDetail(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, product)
+	c.JSON(http.StatusOK, services.ProductToAPIResponse(product))
 }

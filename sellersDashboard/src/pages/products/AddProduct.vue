@@ -61,37 +61,62 @@
 
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
             <div>
-              <label for="product-price" class="block text-sm font-medium text-gray-700 mb-1">
-                Price <span class="text-red-500">*</span>
-              </label>
-              <div class="relative mt-1">
-                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span class="text-gray-500 sm:text-sm">$</span>
-                </div>
-                <input
-                  id="product-price"
-                  v-model.number="form.price"
-                  type="number"
-                  min="0"
-                  step="0.01"
-                  required
-                  class="w-full pl-7 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-300 focus:border-green-300 transition duration-150 shadow-sm"
-                  placeholder="0.00"
-                />
+              <label for="price" class="block text-sm font-medium text-gray-700 mb-1">Product Price</label>
+              <input
+                id="price"
+                type="number"
+                v-model.number="form.price"
+                step="0.01"
+                min="0"
+                :disabled="form.variants && form.variants.length > 0"
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm bg-gray-100"
+              />
+              <div v-if="form.variants && form.variants.length > 0" class="text-xs text-gray-500 mt-1">
+                Computed from variants: {{ computedPrice }}
               </div>
             </div>
             <div>
-              <label for="product-category" class="block text-sm font-medium text-gray-700 mb-1">
-                Category
-              </label>
+              <label for="display_price" class="block text-sm font-medium text-gray-700 mb-1">Display Price</label>
               <input
-                id="product-category"
-                v-model="form.category"
-                type="text"
-                class="mt-1 w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-green-300 focus:border-green-300 transition duration-150 shadow-sm"
-                placeholder="e.g., Home Goods"
+                id="display_price"
+                type="number"
+                v-model.number="form.display_price"
+                step="0.01"
+                min="0"
+                :disabled="form.variants && form.variants.length > 0"
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm bg-gray-100"
               />
+              <div v-if="form.variants && form.variants.length > 0" class="text-xs text-gray-500 mt-1">
+                Computed from variants: {{ computedDisplayPrice }}
+              </div>
             </div>
+            <div>
+              <label for="stock" class="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+              <input
+                id="stock"
+                type="number"
+                v-model.number="form.stock"
+                min="0"
+                :disabled="form.variants && form.variants.length > 0"
+                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm bg-gray-100"
+              />
+              <div v-if="form.variants && form.variants.length > 0" class="text-xs text-gray-500 mt-1">
+                Computed from variants: {{ computedStock }}
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <label for="product-category" class="block text-sm font-medium text-gray-700 mb-1">
+              Category
+            </label>
+            <input
+              id="product-category"
+              v-model="form.category"
+              type="text"
+              class="mt-1 w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-green-300 focus:border-green-300 transition duration-150 shadow-sm"
+              placeholder="e.g., Home Goods"
+            />
           </div>
         </div>
 
@@ -145,98 +170,99 @@
 
         <div class="space-y-5">
           <h3 class="text-xl font-bold text-gray-700">Product Variants</h3>
-          <div
-            v-for="(v, vi) in form.variants"
-            :key="vi"
-            class="border border-gray-200 rounded-xl p-5 mb-6 bg-gray-50 relative shadow-sm"
+          <button
+            v-if="!showVariants"
+            type="button"
+            @click="showVariants = true"
+            class="inline-flex items-center px-5 py-2.5 bg-purple-600 text-white rounded-full font-bold hover:bg-purple-700 transition-colors duration-200 shadow-md mb-4"
           >
-            <div class="flex justify-between items-center mb-4">
-              <span class="text-lg font-semibold text-gray-700">Variant {{ vi + 1 }}</span>
-              <button
-                type="button"
-                @click="removeVariant(vi)"
-                class="text-red-500 hover:text-red-700 transition duration-150 p-2 rounded-full hover:bg-red-50"
-              >
-                <XCircleIcon class="h-6 w-6" />
-              </button>
-            </div>
-
-            <div class="space-y-3 mb-4">
-              <label class="block text-sm font-medium text-gray-700">Options</label>
-              <div
-                v-for="(val, key) in v.options"
-                :key="key"
-                class="flex items-center space-x-3"
-              >
-                <input
-                  v-model="variantKeyTemp[vi][key]"
-                  @blur="renameOptionKey(vi, key, variantKeyTemp[vi][key])"
-                  placeholder="Option Name (e.g., Size)"
-                  class="w-1/3 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-purple-300 focus:border-purple-300 transition duration-150"
-                />
-                <input
-                  v-model="v.options[key]"
-                  placeholder="Option Value (e.g., Large)"
-                  class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-1 focus:ring-purple-300 focus:border-purple-300 transition duration-150"
-                />
+            <PlusIcon class="h-6 w-6 mr-2" /> Add Variant
+          </button>
+          <div v-if="showVariants">
+            <div
+              v-for="(v, vi) in form.variants"
+              :key="vi"
+              class="border border-gray-200 rounded-xl p-5 mb-6 bg-gray-50 relative shadow-sm"
+            >
+              <div class="flex justify-between items-center mb-4">
+                <span class="text-lg font-semibold text-gray-700">Variant {{ vi + 1 }}</span>
                 <button
                   type="button"
-                  @click="removeVariantOption(vi, key)"
-                  class="text-red-500 hover:text-red-700 transition duration-150 p-1 rounded-full hover:bg-red-50"
+                  @click="removeVariant(vi)"
+                  class="text-red-500 hover:text-red-700 transition duration-150 p-2 rounded-full hover:bg-red-50"
                 >
-                  <MinusCircleIcon class="h-5 w-5" />
+                  <XCircleIcon class="h-6 w-6" />
                 </button>
               </div>
-              <button
-                type="button"
-                @click="addVariantOption(vi)"
-                class="inline-flex items-center text-sm px-3 py-1.5 bg-purple-50 text-purple-600 rounded-full font-medium hover:bg-purple-100 transition-colors duration-200 shadow-sm"
-              >
-                <PlusCircleIcon class="h-4 w-4 mr-1.5" /> Add Option
-              </button>
-            </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-5">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                  Variant Price <span class="text-red-500">*</span>
-                </label>
-                <div class="relative mt-1">
-                  <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <span class="text-gray-500 sm:text-sm">$</span>
-                  </div>
+              <div class="space-y-3 mb-4">
+                <label class="block text-sm font-medium text-gray-700">Options</label>
+                <div v-for="(opt, oi) in v.options" :key="oi" class="flex items-center space-x-2 mb-2">
                   <input
-                    v-model.number="v.price"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    required
-                    class="w-full pl-7 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-300 focus:border-green-300 transition duration-150 shadow-sm"
-                    placeholder="0.00"
+                    v-model="form.variants[vi].options[oi].name"
+                    placeholder="Option Name (e.g., Size)"
+                    class="w-1/3 border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                  />
+                  <input
+                    v-model="form.variants[vi].options[oi].value"
+                    placeholder="Option Value (e.g., Large)"
+                    class="w-1/3 border border-gray-300 rounded-lg px-3 py-2 text-sm"
+                  />
+                  <button type="button" @click="removeVariantOption(vi, oi)" class="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50">
+                    <MinusCircleIcon class="h-5 w-5" />
+                  </button>
+                </div>
+                <button type="button" @click="addVariantOption(vi)" class="inline-flex items-center text-sm px-3 py-1.5 bg-purple-50 text-purple-600 rounded-full font-medium hover:bg-purple-100 transition-colors duration-200 shadow-sm">
+                  <PlusCircleIcon class="h-4 w-4 mr-1.5" /> Add Option
+                </button>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-5">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Variant Price <span class="text-red-500">*</span>
+                  </label>
+                  <div class="relative mt-1">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                      <span class="text-gray-500 sm:text-sm">$</span>
+                    </div>
+                    <input
+                      v-model.number="v.price"
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      required
+                      class="w-full pl-7 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-300 focus:border-green-300 transition duration-150 shadow-sm"
+                      placeholder="0.00"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-1">
+                    Variant Image URL
+                  </label>
+                  <input
+                    v-model="v.image"
+                    type="url"
+                    placeholder="https://example.com/variant-red.jpg"
+                    class="mt-1 w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-green-300 focus:border-green-300 transition duration-150 shadow-sm"
                   />
                 </div>
               </div>
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">
-                  Variant Image URL
-                </label>
-                <input
-                  v-model="v.image"
-                  type="url"
-                  placeholder="https://example.com/variant-red.jpg"
-                  class="mt-1 w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-green-300 focus:border-green-300 transition duration-150 shadow-sm"
-                />
-              </div>
             </div>
+            <button
+              type="button"
+              @click="addVariant"
+              class="inline-flex items-center px-5 py-2.5 bg-green-600 text-white rounded-full font-bold hover:bg-green-700 transition-colors duration-200 shadow-md"
+            >
+              <PlusIcon class="h-6 w-6 mr-2" /> Add New Variant
+            </button>
           </div>
+        </div>
 
-          <button
-            type="button"
-            @click="addVariant"
-            class="inline-flex items-center px-5 py-2.5 bg-green-600 text-white rounded-full font-bold hover:bg-green-700 transition-colors duration-200 shadow-md"
-          >
-            <PlusIcon class="h-6 w-6 mr-2" /> Add New Variant
-          </button>
+        <div v-if="variantOptionError" class="bg-red-50 border border-red-300 text-red-700 px-4 py-2 rounded mb-4">
+          <ExclamationCircleIcon class="h-5 w-5 inline-block mr-2" />
+          {{ variantOptionError }}
         </div>
 
         <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
@@ -249,7 +275,7 @@
           </button>
           <button
             type="submit"
-            :disabled="saving"
+            :disabled="saving || !!variantOptionError"
             class="px-6 py-2.5 bg-green-600 text-white rounded-full font-bold hover:bg-green-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
           >
             <SpinnerIcon v-if="saving" class="animate-spin h-5 w-5 mr-2 inline-block" />
@@ -262,7 +288,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useShopStore } from '@/store/shops'
 import { useAuthStore } from '@/store/auth'
@@ -284,6 +310,7 @@ const authStore = useAuthStore()
 const loading = ref(true)
 const saving = ref(false)
 const error = ref(null)
+const variantOptionError = ref(null)
 
 // Form state
 const form = reactive({
@@ -292,12 +319,17 @@ const form = reactive({
   main_image: '',
   images: [],
   category: '',
-  price: 0,
+  price: null,
+  display_price: null,
+  stock: null,
   variants: []
 })
 
 // temp keys for option renaming
 const variantKeyTemp = reactive({})
+
+// Add a flag to control variant section visibility
+const showVariants = ref(false)
 
 function goBack() {
   router.push({ name: 'Products' })
@@ -320,9 +352,8 @@ function removeImage(i) {
 
 // Variants
 function addVariant() {
-  form.variants.push({ options: {}, price: 0, image: '' })
-  // Initialize variantKeyTemp for the new variant
-  variantKeyTemp[form.variants.length - 1] = {}
+  if (!showVariants.value) showVariants.value = true
+  form.variants.push({ options: [{ name: '', value: '' }], price: 0, stock: 0, image: '' })
 }
 function removeVariant(i) {
   form.variants.splice(i, 1)
@@ -341,18 +372,10 @@ function removeVariant(i) {
 
 // Options
 function addVariantOption(vi) {
-  const key = `opt_${Date.now()}` // Unique key for options
-  form.variants[vi].options[key] = ''
-  if (!variantKeyTemp[vi]) {
-    variantKeyTemp[vi] = {};
-  }
-  variantKeyTemp[vi][key] = ''; // Initialize temp key input as empty
+  form.variants[vi].options.push({ name: '', value: '' })
 }
-function removeVariantOption(vi, key) {
-  delete form.variants[vi].options[key]
-  if (variantKeyTemp[vi]) {
-    delete variantKeyTemp[vi][key]
-  }
+function removeVariantOption(vi, oi) {
+  form.variants[vi].options.splice(oi, 1)
 }
 function renameOptionKey(vi, oldKey, newKey) {
   if (!newKey || oldKey === newKey) {
@@ -383,6 +406,7 @@ function renameOptionKey(vi, oldKey, newKey) {
 async function submitForm() {
   saving.value = true
   error.value = null
+  variantOptionError.value = null
 
   try {
     // Basic validation
@@ -390,8 +414,9 @@ async function submitForm() {
       error.value = 'Product name is required.'
       return;
     }
-    if (form.price <= 0) {
-      error.value = 'Price must be a positive number.'
+    if (form.price == null || form.price <= 0) {
+      error.value = 'Product price is required and must be positive if no variants are provided.'
+      saving.value = false;
       return;
     }
     // Validate variant prices
@@ -401,23 +426,42 @@ async function submitForm() {
         return;
       }
     }
+    // Validate variant options
+    if (form.variants.length > 0) {
+      for (const v of form.variants) {
+        if (!v.options || v.options.length === 0) {
+          variantOptionError.value = 'Each variant must have at least one option (name:value).';
+          saving.value = false;
+          return;
+        }
+        for (const o of v.options) {
+          if (!o.name.trim() || !o.value.trim()) {
+            variantOptionError.value = 'Variant option name and value cannot be empty.';
+            saving.value = false;
+            return;
+          }
+        }
+      }
+    }
 
     const payload = {
       name: form.name.trim(),
       description: form.description.trim(),
       main_image: form.main_image.trim() || undefined,
-      images: form.images.filter((i) => i.trim()), // Filter out empty and trim whitespace
+      images: form.images.filter((i) => i.trim()),
       category: form.category.trim(),
-      price: form.price,
-      createdBy: authStore.user.id,
-      variants: form.variants.map((v) => ({
-        // Transform options from object to array of objects as expected by backend
-        options: Object.entries(v.options).map(([key, val]) => ({ [key]: val.trim() })),
-        prices: [v.price],
-        image: v.image.trim() || undefined // Ensure image is undefined if empty
-      }))
+      ...(form.variants.length === 0 ? {
+        price: form.price,
+        display_price: form.display_price,
+        stock: form.stock
+      } : {}),
+      variants: showVariants.value && form.variants.length > 0 ? form.variants.map((v) => ({
+        options: v.options.filter(o => o.name && o.value),
+        price: v.price,
+        stock: v.stock || 0,
+        image: v.image || undefined
+      })) : []
     }
-    
     // Debugging: Log the payload before sending
     console.log("Submitting payload:", payload);
 
@@ -430,6 +474,20 @@ async function submitForm() {
     saving.value = false
   }
 }
+
+const computedPrice = computed(() => {
+  if (!form.variants || form.variants.length === 0) return form.price;
+  return Math.min(...form.variants.map(v => v.price));
+});
+const computedDisplayPrice = computed(() => {
+  if (!form.variants || form.variants.length === 0) return form.display_price;
+  const displayPrices = form.variants.map(v => v.display_price).filter(p => p != null);
+  return displayPrices.length ? Math.max(...displayPrices) : '';
+});
+const computedStock = computed(() => {
+  if (!form.variants || form.variants.length === 0) return form.stock;
+  return form.variants.reduce((sum, v) => sum + (v.stock || 0), 0);
+});
 </script>
 
 <style scoped>

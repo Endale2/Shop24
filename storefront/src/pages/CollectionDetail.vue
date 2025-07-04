@@ -6,7 +6,7 @@
       </div>
     </div>
     <p class="text-gray-700">{{ collection.description }}</p>
-    <h2 class="text-2xl">Products ({{ collection.products.length }})</h2>
+    <h2 class="text-2xl">Products ({{ collection.products ? collection.products.length : 0 }})</h2>
     <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
       <div v-for="p in collection.products" :key="p.id" class="border rounded p-4 hover:shadow">
         <img :src="p.main_image" alt="" class="w-full h-40 object-cover mb-2"/>
@@ -29,6 +29,9 @@ const collection = ref<CollectionDetail | null>(null)
 
 onMounted(async () => {
   const handle = route.params.handle as string
+  // It's good practice to ensure that fetchCollectionDetail always returns an object
+  // with a 'products' array, even if empty, or handle the null/undefined case
+  // more explicitly if the service can return null for 'products'.
   collection.value = await fetchCollectionDetail(handle)
 })
 </script>

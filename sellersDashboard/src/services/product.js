@@ -22,6 +22,8 @@ export const productService = {
         createdAt:  v.CreatedAt ?? v.createdAt,
         updatedAt:  v.UpdatedAt ?? v.updatedAt,
       })),
+      starting_price: p.starting_price,
+      total_stock: p.total_stock,
       createdAt:    p.CreatedAt ?? p.createdAt,
       updatedAt:    p.UpdatedAt ?? p.updatedAt,
     }))

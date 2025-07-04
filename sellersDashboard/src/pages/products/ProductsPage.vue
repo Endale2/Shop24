@@ -112,7 +112,13 @@
                 <td class="py-3 px-6">
                   <div class="w-12 h-12 rounded-lg overflow-hidden border border-gray-200 flex items-center justify-center bg-gray-100 shadow-sm">
                     <img
-                      v-if="prod.images?.length"
+                      v-if="prod.main_image"
+                      :src="prod.main_image"
+                      alt="thumbnail"
+                      class="w-full h-full object-cover"
+                    />
+                    <img
+                      v-else-if="prod.images?.length"
                       :src="prod.images[0]"
                       alt="thumbnail"
                       class="w-full h-full object-cover"
@@ -123,7 +129,15 @@
                 <td class="py-3 px-6 text-sm text-gray-800 font-medium">{{ prod.name }}</td>
                 <td class="py-3 px-6 text-sm text-gray-700">{{ prod.category || 'Uncategorized' }}</td>
                 <td class="py-3 px-6 text-sm text-green-600 font-semibold">
-                  {{ formatPrice(prod.price) }}
+                  <template v-if="prod.starting_price != null">
+                    <span class="italic text-gray-700">from</span> {{ formatPrice(prod.starting_price) }}
+                  </template>
+                  <template v-else-if="prod.price != null">
+                    {{ formatPrice(prod.price) }}
+                  </template>
+                  <template v-else>
+                    N/A
+                  </template>
                 </td>
                 <td class="py-3 px-6 text-sm text-gray-600">{{ formatDate(prod.createdAt) }}</td>
               </tr>
@@ -140,7 +154,13 @@
           >
             <div class="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-400 relative overflow-hidden rounded-t-xl">
               <img
-                v-if="prod.images?.length"
+                v-if="prod.main_image"
+                :src="prod.main_image"
+                alt="product"
+                class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-300 ease-in-out"
+              />
+              <img
+                v-else-if="prod.images?.length"
                 :src="prod.images[0]"
                 alt="product"
                 class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-300 ease-in-out"
@@ -151,7 +171,17 @@
               <h3 class="text-xl font-semibold text-gray-900 mb-2 truncate">{{ prod.name }}</h3>
               <p class="text-sm text-gray-600 mb-3">{{ prod.category || 'Uncategorized' }}</p>
               <div class="mt-auto">
-                <p class="text-2xl font-bold text-green-700">{{ formatPrice(prod.price) }}</p>
+                <p class="text-2xl font-bold text-green-700">
+                  <template v-if="prod.starting_price != null">
+                    <span class="italic text-gray-700">from</span> {{ formatPrice(prod.starting_price) }}
+                  </template>
+                  <template v-else-if="prod.price != null">
+                    {{ formatPrice(prod.price) }}
+                  </template>
+                  <template v-else>
+                    N/A
+                  </template>
+                </p>
               </div>
             </div>
           </div>
@@ -250,7 +280,14 @@ async function fetchProducts() {
   loading.value = true
   error.value = null
   try {
-    allProducts.value = await productService.fetchAllByShop(activeShop.value.id)
+    // Fetch products using the shop ID
+    const fetchedData = await productService.fetchAllByShop(activeShop.value.id)
+    // Ensure mapping for new/updated backend fields
+    allProducts.value = fetchedData.map(prod => ({
+      ...prod, // Keep all original product properties
+      id: prod.id || prod._id, // Standardize ID
+      images: prod.images || [], // Ensure images is always an array
+    }))
     applySearchFilter() // Apply initial search filter (empty string)
     currentPage.value = 1 // Reset pagination on new fetch
   } catch (e) {
