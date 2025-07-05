@@ -33,8 +33,8 @@ func CreateOrder(c *gin.Context) {
 	}
 
 	in.ShopID = shopID
-	in.Status = "pending"      // default status
-	in.CreatedAt = time.Now()  // service will override, but good practice
+	in.Status = "pending"     // default status
+	in.CreatedAt = time.Now() // service will override, but good practice
 	in.UpdatedAt = time.Now()
 
 	created, err := services.CreateOrderService(&in)
@@ -88,6 +88,39 @@ func GetOrder(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, o)
+}
+
+// GET    /seller/shops/:shopId/orders/:orderId/details
+func GetOrderWithCustomerDetails(c *gin.Context) {
+	_, _ = c.Get("user_id")
+
+	shopHex := c.Param("shopId")
+	shopID, err := primitive.ObjectIDFromHex(shopHex)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid shop ID"})
+		return
+	}
+
+	// TODO: verify that shop belongs to seller
+
+	orderID := c.Param("orderId")
+	orderWithCustomer, err := services.GetOrderWithCustomerDetails(orderID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if orderWithCustomer == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "order not found"})
+		return
+	}
+
+	// Verify the order belongs to this shop
+	if orderWithCustomer.Order.ShopID != shopID {
+		c.JSON(http.StatusNotFound, gin.H{"error": "order not found"})
+		return
+	}
+
+	c.JSON(http.StatusOK, orderWithCustomer)
 }
 
 // PATCH  /seller/shops/:shopId/orders/:orderId

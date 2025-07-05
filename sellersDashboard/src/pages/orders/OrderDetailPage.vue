@@ -7,7 +7,7 @@
           Order Details
         </h2>
         <p v-if="order" class="text-lg text-gray-600 mt-2">
-          {{ formatOrderId(order.id) }} • {{ formatDate(order.createdAt) }}
+          {{ formatOrderId(order.id, order.orderNumber) }} • {{ formatDate(order.createdAt) }}
         </p>
       </div>
       
@@ -59,8 +59,8 @@
         <div class="p-6">
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div>
-              <p class="text-sm font-medium text-gray-500">Order ID</p>
-              <p class="text-lg font-mono text-gray-900">{{ formatOrderId(order.id) }}</p>
+              <p class="text-sm font-medium text-gray-500">Order Number</p>
+              <p class="text-lg font-mono text-gray-900">{{ formatOrderId(order.id, order.orderNumber) }}</p>
             </div>
             <div>
               <p class="text-sm font-medium text-gray-500">Customer ID</p>
@@ -75,6 +75,58 @@
             <div>
               <p class="text-sm font-medium text-gray-500">Total</p>
               <p class="text-2xl font-bold text-green-600">{{ formatPrice(order.total) }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Customer Information -->
+      <div v-if="customer" class="bg-white rounded-xl shadow-lg overflow-hidden">
+        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
+          <h3 class="text-lg font-semibold text-gray-900">Customer Information</h3>
+        </div>
+        <div class="p-6">
+          <div class="flex items-start space-x-4">
+            <div class="flex-shrink-0">
+              <img
+                :src="customer.profileImage || '/placeholder-avatar.png'"
+                :alt="`${customer.firstName} ${customer.lastName}`"
+                class="h-16 w-16 rounded-full object-cover border border-gray-200"
+                @error="$event.target.src='/placeholder-avatar.png'"
+              />
+            </div>
+            <div class="flex-1 min-w-0">
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <p class="text-sm font-medium text-gray-500">Name</p>
+                  <p class="text-lg font-semibold text-gray-900">
+                    {{ customer.firstName }} {{ customer.lastName }}
+                  </p>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-gray-500">Email</p>
+                  <p class="text-lg text-gray-900">{{ customer.email }}</p>
+                </div>
+                <div v-if="customer.phone">
+                  <p class="text-sm font-medium text-gray-500">Phone</p>
+                  <p class="text-lg text-gray-900">{{ customer.phone }}</p>
+                </div>
+                <div v-if="customer.address">
+                  <p class="text-sm font-medium text-gray-500">Address</p>
+                  <p class="text-lg text-gray-900">
+                    {{ customer.address }}
+                    <span v-if="customer.city">, {{ customer.city }}</span>
+                    <span v-if="customer.state">, {{ customer.state }}</span>
+                    <span v-if="customer.postalCode"> {{ customer.postalCode }}</span>
+                    <span v-if="customer.country">, {{ customer.country }}</span>
+                  </p>
+                </div>
+              </div>
+              <div class="mt-4 pt-4 border-t border-gray-200">
+                <p class="text-sm text-gray-500">
+                  Customer since {{ formatDate(customer.createdAt) }}
+                </p>
+              </div>
             </div>
           </div>
         </div>
@@ -279,6 +331,7 @@ const shopStore = useShopStore()
 
 // Reactive state
 const order = ref(null)
+const customer = ref(null)
 const loading = ref(false)
 const error = ref(null)
 const showStatusModal = ref(false)
@@ -297,7 +350,7 @@ const hasVariants = computed(() => {
 })
 
 /**
- * Fetches the order details.
+ * Fetches the order details with customer information.
  */
 async function fetchOrder() {
   if (!activeShop.value?.id) {
@@ -308,14 +361,16 @@ async function fetchOrder() {
   loading.value = true
   error.value = null
   try {
-    const fetchedOrder = await orderService.fetchById(activeShop.value.id, route.params.orderId)
-    if (fetchedOrder) {
+    const orderData = await orderService.fetchByIdWithCustomer(activeShop.value.id, route.params.orderId)
+    if (orderData) {
       order.value = {
-        ...fetchedOrder,
-        id: fetchedOrder.id || fetchedOrder._id,
+        ...orderData.order,
+        id: orderData.order.id || orderData.order._id,
       }
+      customer.value = orderData.customer
     } else {
       order.value = null
+      customer.value = null
     }
   } catch (e) {
     console.error('Failed to load order:', e)
@@ -370,9 +425,13 @@ async function saveStatusUpdate() {
 /**
  * Formats an order ID for display.
  * @param {string} id - The order ID.
+ * @param {string} orderNumber - The order number.
  * @returns {string} Formatted order ID.
  */
-function formatOrderId(id) {
+function formatOrderId(id, orderNumber) {
+  if (orderNumber) {
+    return orderNumber
+  }
   return id ? `#${id.slice(-8).toUpperCase()}` : 'N/A'
 }
 

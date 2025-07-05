@@ -421,6 +421,7 @@ func PlaceOrder(c *gin.Context) {
 		DiscountTotal: totalDiscount,
 		Total:         finalTotal,
 		Status:        "pending", // Default status
+		CouponCode:    req.CouponCode,
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
 	}

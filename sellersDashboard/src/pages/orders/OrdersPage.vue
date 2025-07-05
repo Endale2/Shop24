@@ -178,7 +178,7 @@
                 :class="{ 'bg-gray-50': i % 2 === 1 }"
               >
                 <td class="py-3 px-6 text-sm text-gray-800 font-mono">
-                  {{ formatOrderId(order.id) }}
+                  {{ formatOrderId(order.id, order.orderNumber) }}
                 </td>
                 <td class="py-3 px-6 text-sm text-gray-800">
                   {{ formatCustomerId(order.customerId) }}
@@ -230,7 +230,7 @@
             <div class="p-5 flex-grow flex flex-col">
               <div class="flex justify-between items-start mb-3">
                 <h3 class="text-lg font-semibold text-gray-900 truncate">
-                  {{ formatOrderId(order.id) }}
+                  {{ formatOrderId(order.id, order.orderNumber) }}
                 </h3>
                 <span :class="getStatusClass(order.status)" class="px-2 py-1 text-xs font-medium rounded-full">
                   {{ formatStatus(order.status) }}
@@ -451,9 +451,13 @@ function goToDetail(orderId) {
 /**
  * Formats an order ID for display.
  * @param {string} id - The order ID.
+ * @param {string} orderNumber - The order number.
  * @returns {string} Formatted order ID.
  */
-function formatOrderId(id) {
+function formatOrderId(id, orderNumber) {
+  if (orderNumber) {
+    return orderNumber
+  }
   return id ? `#${id.slice(-8).toUpperCase()}` : 'N/A'
 }
 

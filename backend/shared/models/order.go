@@ -21,6 +21,7 @@ type OrderItem struct {
 // Order represents a shop order.
 type Order struct {
 	ID            primitive.ObjectID `bson:"_id,omitempty"     json:"id"`
+	OrderNumber   string             `bson:"order_number"      json:"order_number"` // Unique human-readable order number
 	ShopID        primitive.ObjectID `bson:"shop_id"           json:"shop_id"`
 	CustomerID    primitive.ObjectID `bson:"customer_id"       json:"customer_id"`
 	Items         []OrderItem        `bson:"items"             json:"items"`
@@ -28,6 +29,31 @@ type Order struct {
 	DiscountTotal float64            `bson:"discount_total"    json:"discount_total"`
 	Total         float64            `bson:"total"             json:"total"`
 	Status        string             `bson:"status"            json:"status"` // e.g. "pending","paid","shipped"
+	CouponCode    string             `bson:"coupon_code,omitempty" json:"coupon_code,omitempty"`
 	CreatedAt     time.Time          `bson:"created_at"        json:"created_at"`
 	UpdatedAt     time.Time          `bson:"updated_at"        json:"updated_at"`
+}
+
+// OrderWithCustomer represents an order with customer information populated
+type OrderWithCustomer struct {
+	Order    Order     `json:"order"`
+	Customer *Customer `json:"customer"`
+}
+
+// Customer represents customer information (imported from customers package)
+// This is a duplicate of the customer model for JSON serialization purposes
+type Customer struct {
+	ID           primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	FirstName    string             `bson:"firstName" json:"firstName"`
+	LastName     string             `bson:"lastName" json:"lastName"`
+	ProfileImage string             `bson:"profile_image,omitempty" json:"profile_image,omitempty"`
+	Email        string             `bson:"email" json:"email"`
+	Phone        string             `bson:"phone" json:"phone"`
+	Address      string             `bson:"address" json:"address"`
+	City         string             `bson:"city" json:"city"`
+	State        string             `bson:"state" json:"state"`
+	PostalCode   string             `bson:"postalCode" json:"postalCode"`
+	Country      string             `bson:"country" json:"country"`
+	CreatedAt    time.Time          `bson:"createdAt" json:"createdAt"`
+	UpdatedAt    time.Time          `bson:"updatedAt" json:"updatedAt"`
 }
