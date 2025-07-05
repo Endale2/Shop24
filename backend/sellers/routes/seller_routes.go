@@ -82,6 +82,12 @@ func SellerRoute(r *gin.Engine) {
 			discGroup.GET("/:id", controllers.GetDiscount)
 			discGroup.PATCH("/:id", controllers.UpdateDiscount)
 			discGroup.DELETE("/:id", controllers.DeleteDiscount)
+
+			// Enhanced discount functionality
+			discGroup.POST("/:id/customers", controllers.AddCustomersToDiscount)
+			discGroup.POST("/:id/segments", controllers.AddSegmentsToDiscount)
+			discGroup.GET("/:id/usage", controllers.GetDiscountUsageStats)
+			discGroup.POST("/:id/validate", controllers.ValidateDiscountForCustomer)
 		}
 
 		//orders

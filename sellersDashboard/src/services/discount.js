@@ -34,7 +34,11 @@ export const discountService = {
       minimumFreeShipping: d.minimum_free_shipping,
       usageLimit: d.usage_limit,
       perCustomerLimit: d.per_customer_limit,
+      currentUsage: d.current_usage ?? 0,
+      usageTracking: d.usage_tracking ?? [],
+      eligibilityType: d.eligibility_type ?? 'all',
       allowedCustomers: d.allowed_customers ?? [],
+      allowedSegments: d.allowed_segments ?? [],
       buyProductIds: d.buy_product_ids ?? [],
       buyQuantity: d.buy_quantity,
       getProductIds: d.get_product_ids ?? [],
@@ -81,6 +85,11 @@ export const discountService = {
    * @param {string} [data.startAt] ISO string
    * @param {string} [data.endAt] ISO string
    * @param {boolean} [data.active]
+   * @param {string} [data.eligibilityType]
+   * @param {Array<string>} [data.allowedCustomers]
+   * @param {Array<string>} [data.allowedSegments]
+   * @param {number} [data.usageLimit]
+   * @param {number} [data.perCustomerLimit]
    * @returns {Promise<Object>}
    */
   async create(shopId, data) {
@@ -101,7 +110,9 @@ export const discountService = {
       minimum_free_shipping: data.minimumFreeShipping,
       usage_limit:          data.usageLimit,
       per_customer_limit:   data.perCustomerLimit,
+      eligibility_type:     data.eligibilityType,
       allowed_customers:    data.allowedCustomers,
+      allowed_segments:     data.allowedSegments,
       buy_product_ids:      data.buyProductIds,
       buy_quantity:         data.buyQuantity,
       get_product_ids:      data.getProductIds,
@@ -141,13 +152,14 @@ export const discountService = {
     if (data.minimumFreeShipping !== undefined) payload.minimum_free_shipping = data.minimumFreeShipping;
     if (data.usageLimit !== undefined) payload.usage_limit = data.usageLimit;
     if (data.perCustomerLimit !== undefined) payload.per_customer_limit = data.perCustomerLimit;
+    if (data.eligibilityType !== undefined) payload.eligibility_type = data.eligibilityType;
     if (data.allowedCustomers !== undefined) payload.allowed_customers = data.allowedCustomers;
+    if (data.allowedSegments !== undefined) payload.allowed_segments = data.allowedSegments;
     if (data.buyProductIds !== undefined) payload.buy_product_ids = data.buyProductIds;
     if (data.buyQuantity !== undefined) payload.buy_quantity = data.buyQuantity;
     if (data.getProductIds !== undefined) payload.get_product_ids = data.getProductIds;
     if (data.getQuantity !== undefined) payload.get_quantity = data.getQuantity;
     if (data.appliesToVariants !== undefined) payload.applies_to_variants = data.appliesToVariants;
-
 
     await api.put(`/seller/shops/${shopId}/discounts/${discountId}`, payload);
     return this.fetchById(shopId, discountId); // Fetch updated discount for consistent data structure
@@ -161,5 +173,87 @@ export const discountService = {
    */
   async delete(shopId, discountId) {
     await api.delete(`/seller/shops/${shopId}/discounts/${discountId}`);
+  },
+
+  /**
+   * Add customers to a discount's allowed list.
+   * @param {string} shopId
+   * @param {string} discountId
+   * @param {Array<string>} customerIds
+   * @returns {Promise<Object>}
+   */
+  async addCustomers(shopId, discountId, customerIds) {
+    const res = await api.post(`/seller/shops/${shopId}/discounts/${discountId}/customers`, {
+      customerIds: customerIds
+    });
+    return res.data;
+  },
+
+  /**
+   * Add customer segments to a discount's allowed list.
+   * @param {string} shopId
+   * @param {string} discountId
+   * @param {Array<string>} segmentIds
+   * @returns {Promise<Object>}
+   */
+  async addSegments(shopId, discountId, segmentIds) {
+    const res = await api.post(`/seller/shops/${shopId}/discounts/${discountId}/segments`, {
+      segmentIds: segmentIds
+    });
+    return res.data;
+  },
+
+  /**
+   * Get usage statistics for a discount.
+   * @param {string} shopId
+   * @param {string} discountId
+   * @returns {Promise<Object>}
+   */
+  async getUsageStats(shopId, discountId) {
+    const res = await api.get(`/seller/shops/${shopId}/discounts/${discountId}/usage`);
+    return res.data;
+  },
+
+  /**
+   * Validate if a customer can use a discount.
+   * @param {string} shopId
+   * @param {string} discountId
+   * @param {string} customerId
+   * @param {Array<string>} customerSegmentIds
+   * @returns {Promise<Object>}
+   */
+  async validateForCustomer(shopId, discountId, customerId, customerSegmentIds = []) {
+    const res = await api.post(`/seller/shops/${shopId}/discounts/${discountId}/validate`, {
+      customerId: customerId,
+      customerSegmentIds: customerSegmentIds
+    });
+    return res.data;
+  },
+
+  /**
+   * Get eligible discounts for a customer.
+   * @param {string} shopId
+   * @param {string} customerId
+   * @param {Array<string>} customerSegmentIds
+   * @returns {Promise<Array<Object>>}
+   */
+  async getEligibleForCustomer(shopId, customerId, customerSegmentIds = []) {
+    // This would need a new endpoint, but for now we'll filter client-side
+    const allDiscounts = await this.fetchAllByShop(shopId);
+    const eligibleDiscounts = [];
+    
+    for (const discount of allDiscounts) {
+      try {
+        const validation = await this.validateForCustomer(shopId, discount.id, customerId, customerSegmentIds);
+        if (validation.valid) {
+          eligibleDiscounts.push(discount);
+        }
+      } catch (error) {
+        // Skip invalid discounts
+        continue;
+      }
+    }
+    
+    return eligibleDiscounts;
   }
 };
