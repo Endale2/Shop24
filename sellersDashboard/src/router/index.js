@@ -50,6 +50,7 @@ const routes = [
       { path: 'customers',            name: 'Customers',      component: () => import('@/pages/customers/CustomersPage.vue') },
       { path: 'customers/:customerId',name: 'CustomerDetail', component: () => import('@/pages/customers/CustomerDetailPage.vue'), props: true },
       { path: 'orders',               name: 'Orders',         component: () => import('@/pages/orders/OrdersPage.vue') },
+      { path: 'orders/:orderId',      name: 'OrderDetail',    component: () => import('@/pages/orders/OrderDetailPage.vue'), props: true },
       { path: 'discounts',            name: 'Discounts',      component: () => import('@/pages/discounts/DiscountsPage.vue') },
       { path: 'discounts/:discountId',name: 'DiscountDetail', component: () => import('@/pages/discounts/DiscountDetailPage.vue'), props: true },
       { path: 'analytics',            name: 'Analytics',      component: () => import('@/pages/analytics/AnalyticsPage.vue') },

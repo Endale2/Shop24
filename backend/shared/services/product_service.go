@@ -2,6 +2,7 @@ package services
 
 import (
 	"errors"
+	"fmt"
 	"strings"
 	"time"
 
@@ -30,37 +31,28 @@ func slugify(name string) string {
 func normalizeProduct(p *models.Product) {
 	now := time.Now()
 
-	// 1) If no variants, inject a "default" variant
-	if len(p.Variants) == 0 {
-		defaultOpt := models.Option{Name: "", Value: ""}
-		defaultVar := models.Variant{
-			VariantID:    primitive.NewObjectID(),
-			Options:      []models.Option{defaultOpt},
-			Price:        p.Price,        // use product price as fallback
-			DisplayPrice: p.DisplayPrice, // inherit if set
-			Stock:        p.Stock,
-			Image:        "",
-			Total:        nil, // or set to a calculated value
-			CreatedAt:    now,
-			UpdatedAt:    now,
+	// 1) Only create default variant if the product truly has variants in the database
+	// Products without variants should remain as simple products
+	hasRealVariants := false
+	for _, v := range p.Variants {
+		// A real variant has meaningful options (not empty name/value)
+		if len(v.Options) > 0 && (v.Options[0].Name != "" || v.Options[0].Value != "") {
+			hasRealVariants = true
+			break
 		}
-		p.Variants = []models.Variant{defaultVar}
 	}
 
-	// 2) Ensure every variant has IDs and timestamps
+	// 2) Ensure every variant has timestamps (IDs are handled by EnsureProductVariantIDs)
 	for i := range p.Variants {
 		v := &p.Variants[i]
-		if v.VariantID.IsZero() {
-			v.VariantID = primitive.NewObjectID()
-		}
 		if v.CreatedAt.IsZero() {
 			v.CreatedAt = now
 		}
 		v.UpdatedAt = now
 	}
 
-	if len(p.Variants) > 0 {
-		// 3) If product has variants, set price to lowest variant price, display_price to highest variant display_price, and stock to sum of variant stocks. Lock these fields from being edited directly.
+	// 3) If product has real variants, calculate aggregate values
+	if hasRealVariants {
 		minPrice := p.Variants[0].Price
 		maxDisplayPrice := p.Variants[0].DisplayPrice
 		totalStock := 0
@@ -76,12 +68,10 @@ func normalizeProduct(p *models.Product) {
 		p.Price = minPrice
 		p.DisplayPrice = maxDisplayPrice
 		p.Stock = totalStock
-	} else {
-		// 4) If no variants, allow product.price, display_price, and stock to be set/edited directly.
-		// (No action needed; use as provided)
 	}
+	// If no real variants, keep the product's original price, display_price, and stock
 
-	// 5) Determine MainImage
+	// 4) Determine MainImage
 	if len(p.Images) > 0 {
 		p.MainImage = p.Images[0]
 	} else {
@@ -121,6 +111,11 @@ func GetProductByIDService(id string) (*models.Product, error) {
 		return nil, err
 	}
 	if p != nil {
+		// Ensure variant IDs are set and saved to database
+		err = EnsureProductVariantIDs(p)
+		if err != nil {
+			return nil, err
+		}
 		normalizeProduct(p)
 	}
 	return p, nil
@@ -238,6 +233,11 @@ func GetProductsByShopSlugService(slug string) ([]models.Product, error) {
 		return nil, err
 	}
 	for i := range list {
+		// Ensure variant IDs are set and saved to database
+		err = EnsureProductVariantIDs(&list[i])
+		if err != nil {
+			return nil, err
+		}
 		normalizeProduct(&list[i])
 	}
 	return list, nil
@@ -251,9 +251,86 @@ func GetProductBySlugService(slug string) (*models.Product, error) {
 		return nil, err
 	}
 	if p != nil {
+		// Ensure variant IDs are set and saved to database
+		err = EnsureProductVariantIDs(p)
+		if err != nil {
+			return nil, err
+		}
 		normalizeProduct(p)
 	}
 	return p, nil
+}
+
+// ReduceProductStock reduces stock for a product (no variants)
+func ReduceProductStock(productID primitive.ObjectID, quantity int) error {
+	// Get current product
+	product, err := repositories.GetProductByID(productID.Hex())
+	if err != nil {
+		return err
+	}
+	if product == nil {
+		return errors.New("product not found")
+	}
+
+	// Check if we have enough stock
+	if product.Stock < quantity {
+		return errors.New("insufficient stock")
+	}
+
+	// Update stock
+	newStock := product.Stock - quantity
+	_, err = repositories.UpdateProduct(productID.Hex(), bson.M{
+		"stock":     newStock,
+		"updatedAt": time.Now(),
+	})
+	return err
+}
+
+// ReduceVariantStock reduces stock for a specific variant
+func ReduceVariantStock(productID, variantID primitive.ObjectID, quantity int) error {
+	// Get current product
+	product, err := repositories.GetProductByID(productID.Hex())
+	if err != nil {
+		return err
+	}
+	if product == nil {
+		return errors.New("product not found")
+	}
+
+	// Find the variant
+	var targetVariant *models.Variant
+	for i := range product.Variants {
+		if product.Variants[i].VariantID == variantID {
+			targetVariant = &product.Variants[i]
+			break
+		}
+	}
+	if targetVariant == nil {
+		return errors.New("variant not found")
+	}
+
+	// Check if we have enough stock
+	if targetVariant.Stock < quantity {
+		return errors.New("insufficient stock for variant")
+	}
+
+	// Update variant stock
+	targetVariant.Stock -= quantity
+	targetVariant.UpdatedAt = time.Now()
+
+	// Recalculate total stock
+	totalStock := 0
+	for _, v := range product.Variants {
+		totalStock += v.Stock
+	}
+
+	// Update product with new variant stock and total stock
+	_, err = repositories.UpdateProduct(productID.Hex(), bson.M{
+		"variants":  product.Variants,
+		"stock":     totalStock,
+		"updatedAt": time.Now(),
+	})
+	return err
 }
 
 // GetProductByIDWithDiscountsService retrieves a Product by its hex ID, applies active discounts, and normalizes it.
@@ -265,6 +342,13 @@ func GetProductByIDWithDiscountsService(id string, customerID *primitive.ObjectI
 	if p == nil {
 		return nil, nil
 	}
+
+	// Ensure variant IDs are set and saved to database
+	err = EnsureProductVariantIDs(p)
+	if err != nil {
+		return nil, err
+	}
+
 	normalizeProduct(p)
 	// Fetch active discounts for this shop/product/variants
 	discounts, _ := GetActiveDiscountsForProductService(p.ShopID, p.ID, primitive.NilObjectID, nil)
@@ -287,6 +371,72 @@ func GetAllProductsWithDiscountsService(customerID *primitive.ObjectID) ([]model
 	return list, nil
 }
 
+// UpdateProductVariantIDs updates existing products to ensure all variants have proper IDs
+// This is a one-time migration function to fix existing data
+func UpdateProductVariantIDs() error {
+	products, err := repositories.GetAllProducts()
+	if err != nil {
+		return err
+	}
+
+	for _, product := range products {
+		needsUpdate := false
+		updatedVariants := make([]models.Variant, len(product.Variants))
+
+		for i, variant := range product.Variants {
+			updatedVariants[i] = variant
+			// If variant has no ID but has real options, generate one
+			if variant.VariantID.IsZero() && len(variant.Options) > 0 && (variant.Options[0].Name != "" || variant.Options[0].Value != "") {
+				updatedVariants[i].VariantID = primitive.NewObjectID()
+				needsUpdate = true
+			}
+		}
+
+		if needsUpdate {
+			_, err := repositories.UpdateProduct(product.ID.Hex(), bson.M{
+				"variants": updatedVariants,
+			})
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// EnsureProductVariantIDs ensures that a specific product has proper variant IDs
+// This function is called during product retrieval to fix variant IDs on-the-fly
+func EnsureProductVariantIDs(product *models.Product) error {
+	needsUpdate := false
+	updatedVariants := make([]models.Variant, len(product.Variants))
+
+	for i, variant := range product.Variants {
+		updatedVariants[i] = variant
+		// If variant has no ID but has real options, generate one
+		if variant.VariantID.IsZero() && len(variant.Options) > 0 && (variant.Options[0].Name != "" || variant.Options[0].Value != "") {
+			newID := primitive.NewObjectID()
+			updatedVariants[i].VariantID = newID
+			needsUpdate = true
+			fmt.Printf("Generated new variant ID %s for product %s variant %d\n", newID.Hex(), product.ID.Hex(), i)
+		}
+	}
+
+	if needsUpdate {
+		_, err := repositories.UpdateProduct(product.ID.Hex(), bson.M{
+			"variants": updatedVariants,
+		})
+		if err != nil {
+			return err
+		}
+		// Update the product in memory with the new variant IDs
+		product.Variants = updatedVariants
+		fmt.Printf("Updated product %s with %d variants in database\n", product.ID.Hex(), len(updatedVariants))
+	}
+
+	return nil
+}
+
 // Add a function to produce the correct JSON response for a product
 func ProductToAPIResponse(p *models.Product) map[string]interface{} {
 	resp := map[string]interface{}{
@@ -301,38 +451,49 @@ func ProductToAPIResponse(p *models.Product) map[string]interface{} {
 		"createdAt":   p.CreatedAt,
 		"updatedAt":   p.UpdatedAt,
 	}
+
+	// Check if product has real variants (not just empty ones)
+	hasRealVariants := false
 	if len(p.Variants) > 0 {
-		// Only include variants if they are real (not a default injected one)
-		realVariants := []models.Variant{}
 		for _, v := range p.Variants {
+			// A real variant has meaningful options (not empty name/value)
 			if len(v.Options) > 0 && (v.Options[0].Name != "" || v.Options[0].Value != "") {
-				realVariants = append(realVariants, v)
+				hasRealVariants = true
+				break
 			}
-		}
-		if len(realVariants) > 0 {
-			// Compute starting_price, highest_display_price, total_stock
-			minPrice := realVariants[0].Price
-			maxDisplayPrice := realVariants[0].DisplayPrice
-			totalStock := 0
-			for _, v := range realVariants {
-				if v.Price < minPrice {
-					minPrice = v.Price
-				}
-				if v.DisplayPrice != nil && (maxDisplayPrice == nil || *v.DisplayPrice > *maxDisplayPrice) {
-					maxDisplayPrice = v.DisplayPrice
-				}
-				totalStock += v.Stock
-			}
-			resp["starting_price"] = minPrice
-			if maxDisplayPrice != nil {
-				resp["highest_display_price"] = *maxDisplayPrice
-			}
-			resp["total_stock"] = totalStock
-			resp["variants"] = realVariants
-			return resp
 		}
 	}
-	// No real variants: treat as plain product
+
+	if hasRealVariants {
+		// Product has real variants - include variant information
+		realVariants := []models.Variant{}
+		for _, v := range p.Variants {
+			realVariants = append(realVariants, v)
+		}
+
+		// Compute starting_price, highest_display_price, total_stock
+		minPrice := realVariants[0].Price
+		maxDisplayPrice := realVariants[0].DisplayPrice
+		totalStock := 0
+		for _, v := range realVariants {
+			if v.Price < minPrice {
+				minPrice = v.Price
+			}
+			if v.DisplayPrice != nil && (maxDisplayPrice == nil || *v.DisplayPrice > *maxDisplayPrice) {
+				maxDisplayPrice = v.DisplayPrice
+			}
+			totalStock += v.Stock
+		}
+		resp["starting_price"] = minPrice
+		if maxDisplayPrice != nil {
+			resp["highest_display_price"] = *maxDisplayPrice
+		}
+		resp["total_stock"] = totalStock
+		resp["variants"] = realVariants
+		return resp
+	}
+
+	// No real variants: treat as simple product (no variants array)
 	resp["price"] = p.Price
 	if p.DisplayPrice != nil {
 		resp["display_price"] = *p.DisplayPrice

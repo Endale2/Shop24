@@ -2,18 +2,20 @@
 package models
 
 import (
-	"go.mongodb.org/mongo-driver/bson/primitive"
 	"time"
+
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // OrderItem represents a line in an order.
 type OrderItem struct {
-	ProductID   primitive.ObjectID `bson:"product_id"   json:"product_id"`
-	VariantID   primitive.ObjectID `bson:"variant_id"   json:"variant_id"`
-	Name        string             `bson:"name"         json:"name"`
-	Quantity    int                `bson:"quantity"     json:"quantity"`
-	UnitPrice   float64            `bson:"unit_price"   json:"unit_price"`
-	TotalPrice  float64            `bson:"total_price"  json:"total_price"`
+	ProductID  primitive.ObjectID `bson:"product_id"   json:"product_id"`
+	VariantID  primitive.ObjectID `bson:"variant_id"   json:"variant_id,omitempty"` // omitempty will hide zero ObjectID
+	Name       string             `bson:"name"         json:"name"`
+	Quantity   int                `bson:"quantity"     json:"quantity"`
+	UnitPrice  float64            `bson:"unit_price"   json:"unit_price"`
+	TotalPrice float64            `bson:"total_price"  json:"total_price"`
+	Image      string             `bson:"image"        json:"image"` // Product or variant image
 }
 
 // Order represents a shop order.

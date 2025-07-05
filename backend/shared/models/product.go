@@ -14,7 +14,7 @@ type Option struct {
 
 // Variant represents a specific version of a product.
 type Variant struct {
-	VariantID primitive.ObjectID `bson:"_id,omitempty"        json:"id"`
+	VariantID primitive.ObjectID `bson:"variant_id,omitempty" json:"id"`
 	Options   []Option           `bson:"options"             json:"options"`
 
 	// Price is the base price; DisplayPrice can override it in the UI

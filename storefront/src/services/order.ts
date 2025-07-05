@@ -1,0 +1,69 @@
+import { api, shopUrl } from './api'
+
+export interface OrderItem {
+  product_id: string
+  variant_id?: string
+  quantity: number
+}
+
+export interface PlaceOrderRequest {
+  items: OrderItem[]
+  coupon_code?: string
+}
+
+export interface OrderItemResponse {
+  product_id: string
+  variant_id: string
+  name: string
+  quantity: number
+  unit_price: number
+  total_price: number
+  image: string
+}
+
+export interface OrderResponse {
+  id: string
+  shop_id: string
+  customer_id: string
+  items: OrderItemResponse[]
+  subtotal: number
+  discount_total: number
+  total: number
+  status: string
+  created_at: string
+  updated_at: string
+}
+
+export const orderService = {
+  async placeOrder(orderData: PlaceOrderRequest): Promise<OrderResponse> {
+    const response = await api.post(shopUrl('/orders'), orderData)
+    return response.data
+  },
+
+  async getOrders(): Promise<OrderResponse[]> {
+    const response = await api.get(shopUrl('/orders'))
+    return response.data
+  },
+
+  async getOrderDetail(orderId: string): Promise<OrderResponse> {
+    const response = await api.get(shopUrl(`/orders/${orderId}`))
+    return response.data
+  },
+
+  // Helper method to create order from cart items
+  async createFromCartItems(items: OrderItem[], couponCode?: string): Promise<OrderResponse> {
+    const orderData: PlaceOrderRequest = {
+      items: items.map(item => ({
+        product_id: item.product_id,
+        variant_id: item.variant_id || '',
+        quantity: item.quantity
+      }))
+    }
+    
+    if (couponCode) {
+      orderData.coupon_code = couponCode
+    }
+    
+    return this.placeOrder(orderData)
+  }
+} 

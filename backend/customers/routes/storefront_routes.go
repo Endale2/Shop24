@@ -29,6 +29,11 @@ func StorefrontRoutes(r *gin.Engine) {
 			products.GET("/:productSlug", controllers.GetProductDetail)
 		}
 
+		// Debug endpoints (no auth required for testing)
+		shops.GET("/:shopSlug/debug/product/:productId", controllers.DebugProduct)
+		shops.POST("/:shopSlug/debug/product/:productId/price", controllers.UpdateProductPrice)
+		shops.POST("/:shopSlug/debug/fix-variant-ids", controllers.FixVariantIDs)
+
 		// Protected endpoints: all under /shops/:shopSlug/ and require auth
 		auth := shops.Group("/:shopSlug", middlewares.AuthMiddleware())
 		{

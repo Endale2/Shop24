@@ -154,13 +154,19 @@ func applyDiscountToProduct(product *models.Product, discount *models.Discount) 
 		if discounted < 0 {
 			discounted = 0
 		}
-		product.DisplayPrice = &discounted
+		// Only set DisplayPrice if the discount actually reduces the price
+		if discounted < product.Price {
+			product.DisplayPrice = &discounted
+		}
 	} else if discount.Type == models.DiscountTypePercentage {
 		discounted := product.Price * (1 - discount.Value/100)
 		if discounted < 0 {
 			discounted = 0
 		}
-		product.DisplayPrice = &discounted
+		// Only set DisplayPrice if the discount actually reduces the price
+		if discounted < product.Price {
+			product.DisplayPrice = &discounted
+		}
 	}
 }
 
@@ -171,13 +177,19 @@ func applyDiscountToVariant(variant *models.Variant, discount *models.Discount) 
 		if discounted < 0 {
 			discounted = 0
 		}
-		variant.DisplayPrice = &discounted
+		// Only set DisplayPrice if the discount actually reduces the price
+		if discounted < variant.Price {
+			variant.DisplayPrice = &discounted
+		}
 	} else if discount.Type == models.DiscountTypePercentage {
 		discounted := variant.Price * (1 - discount.Value/100)
 		if discounted < 0 {
 			discounted = 0
 		}
-		variant.DisplayPrice = &discounted
+		// Only set DisplayPrice if the discount actually reduces the price
+		if discounted < variant.Price {
+			variant.DisplayPrice = &discounted
+		}
 	}
 }
 
