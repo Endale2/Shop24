@@ -38,7 +38,20 @@ func SellerRoute(r *gin.Engine) {
 			custGroup.POST("/link", controllers.LinkCustomer)
 			custGroup.GET("", controllers.GetLinkedCustomers)
 			custGroup.GET("/:customerId", controllers.GetCustomerDetail)
-			custGroup.DELETE("/:linkId", controllers.UnlinkCustomer)
+			custGroup.DELETE("/link/:linkId", controllers.UnlinkCustomer)
+		}
+
+		// ─────  nested customer segments  routes ─────
+		segmentGroup := shopGroup.Group("/customer-segments")
+		{
+			segmentGroup.POST("", controllers.CreateCustomerSegment)
+			segmentGroup.GET("", controllers.GetCustomerSegments)
+			segmentGroup.PATCH("/:segmentId", controllers.UpdateCustomerSegment)
+			segmentGroup.DELETE("/:segmentId", controllers.DeleteCustomerSegment)
+
+			// Add/remove customers from segments
+			segmentGroup.POST("/:segmentId/customers", controllers.AddCustomerToSegment)
+			segmentGroup.DELETE("/:segmentId/customers/:customerId", controllers.RemoveCustomerFromSegment)
 		}
 
 		// ─────  nested collections ─────

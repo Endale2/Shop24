@@ -32,7 +32,7 @@ export const customerService = {
 
   /**
    * Fetch a single customer by ID.
-   * The endpoint may return { customer: {...}, linkId } or the raw customer object.
+   * The endpoint may return { customer: {...}, segments: [...], linkId } or the raw customer object.
    * @param {string} shopId
    * @param {string} customerId
    * @returns {Promise<Object>}
@@ -55,7 +55,8 @@ export const customerService = {
       country:      payload.country,
       createdAt:    payload.createdAt,
       updatedAt:    payload.updatedAt,
-      linkId:       res.data.linkId ?? null
+      linkId:       res.data.linkId ?? null,
+      segments:     res.data.segments ?? []
     }
   },
 
@@ -92,12 +93,12 @@ export const customerService = {
   },
 
   /**
-   * Delete a customer.
+   * Unlink a customer from a shop (doesn't delete customer data).
    * @param {string} shopId
-   * @param {string} customerId
+   * @param {string} linkId - The link ID from the customer data
    * @returns {Promise<void>}
    */
-  async delete(shopId, customerId) {
-    await api.delete(`/seller/shops/${shopId}/customers/${customerId}`)
+  async delete(shopId, linkId) {
+    await api.delete(`/seller/shops/${shopId}/customers/link/${linkId}`)
   }
 }
