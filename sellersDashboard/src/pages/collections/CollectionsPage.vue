@@ -1,8 +1,67 @@
-<template>
+  <template>
   <div class="p-4 sm:p-6 max-w-7xl mx-auto font-sans">
     <h2 class="text-3xl sm:text-4xl font-extrabold mb-8 text-gray-900 leading-tight">
       Collections
     </h2>
+
+    <!-- Statistics Dashboard -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+              <CollectionIcon class="w-5 h-5 text-green-600" />
+            </div>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600">Total Collections</p>
+            <p class="text-2xl font-bold text-gray-900">{{ allCollections.length }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+              <CubeIcon class="w-5 h-5 text-blue-600" />
+            </div>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600">Total Products</p>
+            <p class="text-2xl font-bold text-gray-900">{{ totalProducts }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-yellow-500">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
+              <StarIcon class="w-5 h-5 text-yellow-600" />
+            </div>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600">Avg Products/Collection</p>
+            <p class="text-2xl font-bold text-gray-900">{{ averageProductsPerCollection }}</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
+        <div class="flex items-center">
+          <div class="flex-shrink-0">
+            <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+              <ClockIcon class="w-5 h-5 text-purple-600" />
+            </div>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-600">Recently Updated</p>
+            <p class="text-2xl font-bold text-gray-900">{{ recentlyUpdatedCount }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <div class="flex flex-col sm:flex-row justify-between items-center mb-6 space-y-4 sm:space-y-0">
       <div class="w-full sm:w-1/2 relative">
@@ -83,9 +142,19 @@
     </div>
 
     <div v-else-if="error" class="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-sm mb-6" role="alert">
-      <strong class="font-bold">Error:</strong>
-      <span class="block sm:inline ml-2">{{ error }}</span>
-      <p class="text-sm mt-2">Please try again later.</p>
+      <div class="flex">
+        <ExclamationCircleIcon class="h-5 w-5 text-red-400 mr-2 mt-0.5" />
+        <div>
+          <strong class="font-bold">Error:</strong>
+          <span class="block sm:inline ml-2">{{ error }}</span>
+          <button 
+            @click="fetchCollections" 
+            class="mt-2 text-sm underline hover:no-underline"
+          >
+            Try again
+          </button>
+        </div>
+      </div>
     </div>
 
     <div v-else>
@@ -99,14 +168,14 @@
                 <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Handle</th>
                 <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Products</th>
                 <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Created</th>
+                <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
               <tr
                 v-for="(col, i) in paginatedCollections"
                 :key="col.id"
-                @click="goToDetail(col.id)"
-                class="cursor-pointer transition transform hover:scale-[1.005] hover:bg-green-50"
+                class="transition transform hover:scale-[1.005] hover:bg-green-50"
                 :class="{ 'bg-gray-50': i % 2 === 1 }"
               >
                 <td class="py-3 px-6">
@@ -120,10 +189,46 @@
                     <PlaceholderIcon v-else class="w-8 h-8 text-gray-400" />
                   </div>
                 </td>
-                <td class="py-3 px-6 text-sm text-gray-800 font-medium">{{ col.title }}</td>
-                <td class="py-3 px-6 text-sm text-gray-700">{{ col.handle }}</td>
-                <td class="py-3 px-6 text-sm text-gray-700">{{ col.productIds.length }}</td>
+                <td class="py-3 px-6">
+                  <button
+                    @click="goToDetail(col.id)"
+                    class="text-sm text-gray-800 font-medium hover:text-green-600 transition-colors text-left"
+                  >
+                    {{ col.title }}
+                  </button>
+                </td>
+                <td class="py-3 px-6 text-sm text-gray-700 font-mono">{{ col.handle }}</td>
+                <td class="py-3 px-6 text-sm text-gray-700">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    {{ col.productIds.length }} products
+                  </span>
+                </td>
                 <td class="py-3 px-6 text-sm text-gray-600">{{ formatDate(col.createdAt) }}</td>
+                <td class="py-3 px-6 text-sm text-gray-600">
+                  <div class="flex space-x-2">
+                    <button
+                      @click="goToDetail(col.id)"
+                      class="text-green-600 hover:text-green-800 transition-colors"
+                      title="View Details"
+                    >
+                      <EyeIcon class="h-4 w-4" />
+                    </button>
+                    <button
+                      @click="editCollection(col.id)"
+                      class="text-blue-600 hover:text-blue-800 transition-colors"
+                      title="Edit Collection"
+                    >
+                      <PencilIcon class="h-4 w-4" />
+                    </button>
+                    <button
+                      @click="deleteCollection(col.id, col.title)"
+                      class="text-red-600 hover:text-red-800 transition-colors"
+                      title="Delete Collection"
+                    >
+                      <TrashIcon class="h-4 w-4" />
+                    </button>
+                  </div>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -133,8 +238,7 @@
           <div
             v-for="col in paginatedCollections"
             :key="col.id"
-            @click="goToDetail(col.id)"
-            class="bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer transform hover:scale-105 hover:shadow-xl transition duration-200 ease-in-out flex flex-col"
+            class="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col group"
           >
             <div class="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-400 relative overflow-hidden rounded-t-xl">
               <img
@@ -144,12 +248,40 @@
                 class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-300 ease-in-out"
               />
               <PlaceholderIcon v-else class="w-16 h-16" />
+              <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <div class="flex space-x-1">
+                  <button
+                    @click="editCollection(col.id)"
+                    class="p-1 bg-white rounded-full shadow-md text-blue-600 hover:text-blue-800 transition-colors"
+                    title="Edit Collection"
+                  >
+                    <PencilIcon class="h-3 w-3" />
+                  </button>
+                  <button
+                    @click="deleteCollection(col.id, col.title)"
+                    class="p-1 bg-white rounded-full shadow-md text-red-600 hover:text-red-800 transition-colors"
+                    title="Delete Collection"
+                  >
+                    <TrashIcon class="h-3 w-3" />
+                  </button>
+                </div>
+              </div>
             </div>
             <div class="p-5 flex-grow flex flex-col">
-              <h3 class="text-xl font-semibold text-gray-900 mb-2 truncate">{{ col.title }}</h3>
+              <button
+                @click="goToDetail(col.id)"
+                class="text-left group-hover:text-green-600 transition-colors"
+              >
+                <h3 class="text-xl font-semibold text-gray-900 mb-2 truncate">{{ col.title }}</h3>
+              </button>
               <p class="text-sm text-gray-600 mb-3 truncate">{{ col.description }}</p>
-              <div class="mt-auto">
-                <p class="text-sm text-gray-700">Items: {{ col.productIds.length }}</p>
+              <div class="mt-auto space-y-2">
+                <p class="text-sm text-gray-700">
+                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    {{ col.productIds.length }} products
+                  </span>
+                </p>
+                <p class="text-xs text-gray-500">{{ formatDate(col.createdAt) }}</p>
               </div>
             </div>
           </div>
@@ -175,8 +307,16 @@
       </div>
 
       <div v-else class="bg-green-50 border border-green-200 text-green-700 px-6 py-8 rounded-lg text-center mt-8 shadow-sm">
+        <CollectionIcon class="w-16 h-16 text-green-400 mx-auto mb-4" />
         <p class="text-lg font-medium">No collections found for this search.</p>
-        <p class="mt-2">Try adjusting your search query or adding a new collection.</p>
+        <p class="mt-2">Try adjusting your search query or create your first collection.</p>
+        <button
+          @click="goToAddCollection"
+          class="mt-4 inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition duration-150 ease-in-out"
+        >
+          <PlusIcon class="w-4 h-4 mr-2" />
+          Create First Collection
+        </button>
       </div>
     </div>
   </div>
@@ -192,8 +332,16 @@ import {
   ViewGridIcon as GridIcon,
   RefreshIcon as SpinnerIcon,
   PhotographIcon as PlaceholderIcon,
-  SearchIcon, // Added for search bar
-  PlusIcon // Added for add new product button
+  SearchIcon,
+  PlusIcon,
+  CollectionIcon,
+  CubeIcon,
+  StarIcon,
+  ClockIcon,
+  EyeIcon,
+  PencilIcon,
+  TrashIcon,
+  ExclamationCircleIcon
 } from '@heroicons/vue/outline'
 
 const router = useRouter()
@@ -225,10 +373,30 @@ const paginatedCollections = computed(() => {
   return collections.value.slice(start, end)
 })
 
+// Statistics computed properties
+const totalProducts = computed(() => {
+  return allCollections.value.reduce((total, col) => total + (col.productIds?.length || 0), 0)
+})
+
+const averageProductsPerCollection = computed(() => {
+  if (allCollections.value.length === 0) return 0
+  return Math.round(totalProducts.value / allCollections.value.length)
+})
+
+const recentlyUpdatedCount = computed(() => {
+  const oneWeekAgo = new Date()
+  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
+  
+  return allCollections.value.filter(col => {
+    if (!col.updatedAt) return false
+    return new Date(col.updatedAt) > oneWeekAgo
+  }).length
+})
+
 // Helper for toggle buttons
 function viewButtonClass(view) {
   return view === currentView.value
-    ? 'bg-green-600 text-white hover:bg-green-700 shadow-inner' // Changed to green
+    ? 'bg-green-600 text-white hover:bg-green-700 shadow-inner'
     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
 }
 
@@ -263,7 +431,7 @@ function applySearchFilter() {
     collections.value = allCollections.value.filter(col =>
       col.title.toLowerCase().includes(query) ||
       col.handle?.toLowerCase().includes(query) ||
-      col.description?.toLowerCase().includes(query) // Added description to search
+      col.description?.toLowerCase().includes(query)
     )
   } else {
     collections.value = [...allCollections.value] // Clone to ensure reactivity
@@ -302,14 +470,36 @@ function nextPage() {
 // Navigate to collection detail
 function goToDetail(collectionId) {
   router.push({
-    name: 'CollectionDetail', // Assuming you have a route named 'CollectionDetail'
+    name: 'CollectionDetail',
     params: { collectionId }
   })
 }
 
 // Navigate to add new collection page
 function goToAddCollection() {
-  router.push({ name: 'AddCollection' }) // Assuming you have a route named 'AddCollection'
+  router.push({ name: 'AddCollection' })
+}
+
+// Edit collection (navigate to detail page with edit mode)
+function editCollection(collectionId) {
+  router.push({
+    name: 'CollectionDetail',
+    params: { collectionId }
+  })
+}
+
+// Delete collection
+async function deleteCollection(collectionId, collectionTitle) {
+  if (confirm(`Are you sure you want to delete "${collectionTitle}"? This action cannot be undone.`)) {
+    try {
+      await collectionService.delete(activeShop.value.id, collectionId)
+      // Refresh the collections list
+      await fetchCollections()
+    } catch (error) {
+      console.error('Failed to delete collection:', error)
+      alert('Failed to delete collection. Please try again.')
+    }
+  }
 }
 
 // Format helpers

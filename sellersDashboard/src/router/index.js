@@ -46,6 +46,7 @@ const routes = [
       { path: 'products/:productId/edit', name: 'EditProduct', component: () => import('@/pages/products/EditProductPage.vue'), props: true },
       { path: 'products/add',         name: 'AddProduct',      component: () => import('@/pages/products/AddProduct.vue'), props: true  },
       { path: 'collections',          name: 'Collections',    component: () => import('@/pages/collections/CollectionsPage.vue') },
+      { path: 'collections/add',      name: 'AddCollection',  component: () => import('@/pages/collections/AddCollection.vue') },
       { path: 'collections/:collectionId', name: 'CollectionDetail', component: () => import('@/pages/collections/CollectionDetailPage.vue'), props: true },
       { path: 'customers',            name: 'Customers',      component: () => import('@/pages/customers/CustomersPage.vue') },
       { path: 'customers/:customerId',name: 'CustomerDetail', component: () => import('@/pages/customers/CustomerDetailPage.vue'), props: true },

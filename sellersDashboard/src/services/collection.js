@@ -90,7 +90,7 @@ export const collectionService = {
     if (data.image       !== undefined) payload.image       = data.image
     if (data.productIds  !== undefined) payload.product_ids = data.productIds
 
-    await api.put(
+    await api.patch(
       `/seller/shops/${shopId}/collections/${collectionId}`,
       payload
     )
@@ -106,6 +106,33 @@ export const collectionService = {
   async delete(shopId, collectionId) {
     await api.delete(
       `/seller/shops/${shopId}/collections/${collectionId}`
+    )
+  },
+
+  /**
+   * Add a product to a collection.
+   * @param {string} shopId
+   * @param {string} collectionId
+   * @param {string} productId
+   * @returns {Promise<void>}
+   */
+  async addProduct(shopId, collectionId, productId) {
+    await api.post(
+      `/seller/shops/${shopId}/collections/${collectionId}/products`,
+      { productId }
+    )
+  },
+
+  /**
+   * Remove a product from a collection.
+   * @param {string} shopId
+   * @param {string} collectionId
+   * @param {string} productId
+   * @returns {Promise<void>}
+   */
+  async removeProduct(shopId, collectionId, productId) {
+    await api.delete(
+      `/seller/shops/${shopId}/collections/${collectionId}/products/${productId}`
     )
   }
 }

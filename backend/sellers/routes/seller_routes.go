@@ -53,6 +53,7 @@ func SellerRoute(r *gin.Engine) {
 			// CRUD on a single collection
 			collGroup.GET("/:collId", controllers.GetCollection)
 			collGroup.PATCH("/:collId", controllers.UpdateCollection)
+			collGroup.PUT("/:collId", controllers.UpdateCollection)
 			collGroup.DELETE("/:collId", controllers.DeleteCollection)
 
 			// Add/remove products in a given collection

@@ -11,7 +11,6 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
-	
 )
 
 var collectionColl *mongo.Collection = config.GetCollection("DRPS", "collections")
@@ -67,7 +66,7 @@ func UpdateCollection(id primitive.ObjectID, updates bson.M) (*mongo.UpdateResul
 	)
 }
 
-// DeleteCollection removes a collection by its ObjectID.
+// DeleteCollection removes a Collection by its ObjectID.
 func DeleteCollection(id primitive.ObjectID) (*mongo.DeleteResult, error) {
 	if id.IsZero() {
 		return nil, errors.New("invalid collection ID")
@@ -75,7 +74,7 @@ func DeleteCollection(id primitive.ObjectID) (*mongo.DeleteResult, error) {
 	return collectionColl.DeleteOne(context.Background(), bson.M{"_id": id})
 }
 
-// AddProductToCollection pushes a productID into the collection’s product_ids array.
+// AddProductToCollection pushes a productID into the collection's product_ids array.
 func AddProductToCollection(collID, prodID primitive.ObjectID) (*mongo.UpdateResult, error) {
 	return collectionColl.UpdateOne(
 		context.Background(),
@@ -84,7 +83,7 @@ func AddProductToCollection(collID, prodID primitive.ObjectID) (*mongo.UpdateRes
 	)
 }
 
-// RemoveProductFromCollection pulls a productID out of the collection’s product_ids array.
+// RemoveProductFromCollection pulls a productID out of the collection's product_ids array.
 func RemoveProductFromCollection(collID, prodID primitive.ObjectID) (*mongo.UpdateResult, error) {
 	return collectionColl.UpdateOne(
 		context.Background(),
@@ -93,19 +92,18 @@ func RemoveProductFromCollection(collID, prodID primitive.ObjectID) (*mongo.Upda
 	)
 }
 
-
 // GetCollectionByHandle looks up a collection by its unique handle and shop ID.
 func GetCollectionByHandle(shopID primitive.ObjectID, handle string) (*models.Collection, error) {
-    var coll models.Collection
-    filter := bson.M{"shop_id": shopID, "handle": handle}
-    err := config.GetCollection("DRPS", "collections").
-        FindOne(context.Background(), filter).
-        Decode(&coll)
-    if err == mongo.ErrNoDocuments {
-        return nil, nil
-    }
-    if err != nil {
-        return nil, err
-    }
-    return &coll, nil
+	var coll models.Collection
+	filter := bson.M{"shop_id": shopID, "handle": handle}
+	err := config.GetCollection("DRPS", "collections").
+		FindOne(context.Background(), filter).
+		Decode(&coll)
+	if err == mongo.ErrNoDocuments {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &coll, nil
 }

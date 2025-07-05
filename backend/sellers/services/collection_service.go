@@ -6,8 +6,8 @@ import (
 	"time"
 
 	"github.com/Endale2/DRPS/sellers/models"
-	sharedShopService "github.com/Endale2/DRPS/shared/services"
 	"github.com/Endale2/DRPS/sellers/repositories"
+	sharedShopService "github.com/Endale2/DRPS/shared/services"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -60,13 +60,10 @@ func (svc *CollectionService) GetCollectionsByShopService(shopID primitive.Objec
 	return repositories.GetCollectionsByShop(shopID)
 }
 
-// UpdateCollectionService updates a collection’s fields (title, description, handle, image).
+// UpdateCollectionService updates a collection's fields (title, description, handle, image).
 // Only allowed if sellerID matches collection.ShopID owner (checked in controller).
-func (svc *CollectionService) UpdateCollectionService(
-	collID, sellerID primitive.ObjectID,
-	updates bson.M,
-) error {
-	// 1) Fetch collection
+func (svc *CollectionService) UpdateCollectionService(collID primitive.ObjectID, sellerID primitive.ObjectID, updates bson.M) error {
+	// Verify collection exists and belongs to seller
 	coll, err := repositories.GetCollectionByID(collID)
 	if err != nil {
 		return err
@@ -75,23 +72,23 @@ func (svc *CollectionService) UpdateCollectionService(
 		return errors.New("collection not found")
 	}
 
-	// 2) Verify shop’s owner
+	// Verify shop ownership
 	shop, err := sharedShopService.GetShopByIDService(coll.ShopID.Hex())
 	if err != nil {
 		return err
 	}
-	if shop.OwnerID != sellerID {
+	if shop == nil || shop.OwnerID != sellerID {
 		return errors.New("not authorized to update this collection")
 	}
 
-	// 3) Perform update
 	_, err = repositories.UpdateCollection(collID, updates)
 	return err
 }
 
-// DeleteCollectionService deletes an existing collection.
-func (svc *CollectionService) DeleteCollectionService(collID, sellerID primitive.ObjectID) error {
-	// 1) Fetch and verify
+// DeleteCollectionService removes a collection.
+// Only allowed if sellerID matches collection.ShopID owner (checked in controller).
+func (svc *CollectionService) DeleteCollectionService(collID primitive.ObjectID, sellerID primitive.ObjectID) error {
+	// Verify collection exists and belongs to seller
 	coll, err := repositories.GetCollectionByID(collID)
 	if err != nil {
 		return err
@@ -100,24 +97,23 @@ func (svc *CollectionService) DeleteCollectionService(collID, sellerID primitive
 		return errors.New("collection not found")
 	}
 
+	// Verify shop ownership
 	shop, err := sharedShopService.GetShopByIDService(coll.ShopID.Hex())
 	if err != nil {
 		return err
 	}
-	if shop.OwnerID != sellerID {
+	if shop == nil || shop.OwnerID != sellerID {
 		return errors.New("not authorized to delete this collection")
 	}
 
-	// 2) Delete
 	_, err = repositories.DeleteCollection(collID)
 	return err
 }
 
 // AddProductToCollectionService adds a product to a collection.
-func (svc *CollectionService) AddProductToCollectionService(
-	collID, prodID, sellerID primitive.ObjectID,
-) error {
-	// 1) Fetch collection
+// Only allowed if sellerID matches collection.ShopID owner (checked in controller).
+func (svc *CollectionService) AddProductToCollectionService(collID primitive.ObjectID, productID primitive.ObjectID, sellerID primitive.ObjectID) error {
+	// Verify collection exists and belongs to seller
 	coll, err := repositories.GetCollectionByID(collID)
 	if err != nil {
 		return err
@@ -126,25 +122,35 @@ func (svc *CollectionService) AddProductToCollectionService(
 		return errors.New("collection not found")
 	}
 
-	// 2) Verify shop’s owner
+	// Verify shop ownership
 	shop, err := sharedShopService.GetShopByIDService(coll.ShopID.Hex())
 	if err != nil {
 		return err
 	}
-	if shop.OwnerID != sellerID {
+	if shop == nil || shop.OwnerID != sellerID {
 		return errors.New("not authorized to modify this collection")
 	}
 
-	// 3) Add product
-	_, err = repositories.AddProductToCollection(collID, prodID)
+	// Check if product is already in collection
+	for _, existingID := range coll.ProductIDs {
+		if existingID == productID {
+			return errors.New("product already in collection")
+		}
+	}
+
+	// Add product to collection
+	updates := bson.M{
+		"product_ids": append(coll.ProductIDs, productID),
+		"updated_at":  time.Now(),
+	}
+	_, err = repositories.UpdateCollection(collID, updates)
 	return err
 }
 
 // RemoveProductFromCollectionService removes a product from a collection.
-func (svc *CollectionService) RemoveProductFromCollectionService(
-	collID, prodID, sellerID primitive.ObjectID,
-) error {
-	// 1) Fetch collection
+// Only allowed if sellerID matches collection.ShopID owner (checked in controller).
+func (svc *CollectionService) RemoveProductFromCollectionService(collID primitive.ObjectID, productID primitive.ObjectID, sellerID primitive.ObjectID) error {
+	// Verify collection exists and belongs to seller
 	coll, err := repositories.GetCollectionByID(collID)
 	if err != nil {
 		return err
@@ -153,16 +159,72 @@ func (svc *CollectionService) RemoveProductFromCollectionService(
 		return errors.New("collection not found")
 	}
 
-	// 2) Verify shop’s owner
+	// Verify shop ownership
 	shop, err := sharedShopService.GetShopByIDService(coll.ShopID.Hex())
 	if err != nil {
 		return err
 	}
-	if shop.OwnerID != sellerID {
+	if shop == nil || shop.OwnerID != sellerID {
 		return errors.New("not authorized to modify this collection")
 	}
 
-	// 3) Remove product
-	_, err = repositories.RemoveProductFromCollection(collID, prodID)
+	// Remove product from collection
+	var newProductIDs []primitive.ObjectID
+	for _, existingID := range coll.ProductIDs {
+		if existingID != productID {
+			newProductIDs = append(newProductIDs, existingID)
+		}
+	}
+
+	updates := bson.M{
+		"product_ids": newProductIDs,
+		"updated_at":  time.Now(),
+	}
+	_, err = repositories.UpdateCollection(collID, updates)
+	return err
+}
+
+// ReplaceCollectionProductsService replaces all products in a collection with new ones.
+// Only allowed if sellerID matches collection.ShopID owner (checked in controller).
+func (svc *CollectionService) ReplaceCollectionProductsService(collID primitive.ObjectID, productIDStrings []string, shopID primitive.ObjectID, sellerID primitive.ObjectID) error {
+	// Verify collection exists and belongs to seller
+	coll, err := repositories.GetCollectionByID(collID)
+	if err != nil {
+		return err
+	}
+	if coll == nil {
+		return errors.New("collection not found")
+	}
+
+	// Verify shop ownership
+	shop, err := sharedShopService.GetShopByIDService(coll.ShopID.Hex())
+	if err != nil {
+		return err
+	}
+	if shop == nil || shop.OwnerID != sellerID {
+		return errors.New("not authorized to modify this collection")
+	}
+
+	// Convert string IDs to ObjectIDs and validate they belong to this shop
+	var newProductIDs []primitive.ObjectID
+	for _, productIDStr := range productIDStrings {
+		productID, err := primitive.ObjectIDFromHex(productIDStr)
+		if err != nil {
+			continue // skip invalid product IDs
+		}
+
+		// Verify product belongs to this shop
+		product, err := sharedShopService.GetProductByIDService(productID.Hex())
+		if err == nil && product != nil && product.ShopID == shopID {
+			newProductIDs = append(newProductIDs, productID)
+		}
+	}
+
+	// Update collection with new product IDs
+	updates := bson.M{
+		"product_ids": newProductIDs,
+		"updated_at":  time.Now(),
+	}
+	_, err = repositories.UpdateCollection(collID, updates)
 	return err
 }
