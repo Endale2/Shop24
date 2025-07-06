@@ -3,7 +3,7 @@ import api from './api'
 
 export const authService = {
   /**
-   * Step 1: Create a bare auth record (email+password).
+   * Step 1: Create a bare auth record (email+password).
    * The backend will issue tokens immediately.
    */
   register: async ({ email, password }) => {
@@ -43,7 +43,7 @@ export const authService = {
   },
 
   /**
-   * Step 2: Complete or update the seller profile.
+   * Step 2: Complete or update the seller profile.
    * Expects any subset of { firstName, lastName, phone, address, businessName, profileImage }.
    */
    updateProfile: async (payload) => {
@@ -57,11 +57,14 @@ export const authService = {
    */
   loginWithGoogle: () => {
     // Where in your SPA you want to land after OAuth:
-    const returnTo = window.location.origin + '/shops'
+    // Use the current page to maintain context (login or register)
+    const currentPath = window.location.pathname
+    const returnTo = window.location.origin + currentPath + '?oauth=google'
     const redirectUri = encodeURIComponent(returnTo)
 
     // Hit your backend's OAuth redirect endpoint:
+    const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:8080'
     window.location.href =
-      `${import.meta.env.VITE_API_BASE}/auth/seller/oauth/google?redirect_uri=${redirectUri}`
+      `${apiBase}/auth/seller/oauth/google?redirect_uri=${redirectUri}`
   }
 }

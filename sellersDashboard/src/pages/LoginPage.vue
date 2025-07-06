@@ -1,36 +1,53 @@
 <template>
-  <div class="min-h-screen flex flex-col bg-amber-50 font-sans antialiased">
+  <div class="min-h-screen flex flex-col bg-gradient-to-br from-amber-50 to-green-50 font-sans antialiased">
     <AppNavbar />
 
     <div class="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8 animate-fade-in-up">
-      <div class="w-full max-w-2xl bg-white p-8 sm:p-10 rounded-2xl shadow-2xl border border-green-200">
-        <div class="text-center mb-8">
-          <h1 class="mt-4 text-3xl sm:text-4xl font-extrabold text-green-800">
+      <div class="w-full max-w-md md:max-w-xl lg:max-w-2xl bg-white rounded-3xl shadow-2xl border border-green-200 p-8 sm:p-10 lg:p-12">
+        <!-- Header -->
+        <div class="text-center mb-10">
+          <div class="w-20 h-20 bg-gradient-to-br from-green-100 to-amber-100 rounded-full flex items-center justify-center mx-auto mb-6 shadow-lg">
+            <svg class="w-10 h-10 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+            </svg>
+          </div>
+          <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-3">
             Sign in to your account
           </h1>
-          <p class="mt-2 text-base text-gray-700">
+          <p class="text-lg text-gray-600">
             Welcome back, seller! Let's get you back to business.
           </p>
         </div>
 
-        <form @submit.prevent="handleLogin" class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+        <form @submit.prevent="handleLogin" class="space-y-6">
+          <!-- Email Input -->
           <div>
-            <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email address</label>
-            <div>
+            <label for="email" class="block text-sm font-semibold text-gray-700 mb-2">
+              Email Address <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
               <input
                 v-model="email"
                 id="email"
                 type="email"
                 autocomplete="email"
                 required
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm text-gray-800 placeholder-gray-500 focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all duration-200"
+                placeholder="Enter your email address"
+                class="w-full px-4 py-3 pl-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all duration-200 bg-gray-50 hover:bg-white focus:bg-white"
               />
+              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 12a4 4 0 10-8 0 4 4 0 008 0zm0 0v1.5a2.5 2.5 0 005 0V12a9 9 0 10-9 9m4.5-1.206a8.959 8.959 0 01-4.5 1.207" />
+                </svg>
+              </div>
             </div>
           </div>
 
-          <!-- Password Input with Toggle (single eye icon) -->
+          <!-- Password Input with Toggle -->
           <div>
-            <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+            <label for="password" class="block text-sm font-semibold text-gray-700 mb-2">
+              Password <span class="text-red-500">*</span>
+            </label>
             <div class="relative">
               <input
                 v-model="password"
@@ -38,14 +55,19 @@
                 :type="showPassword ? 'text' : 'password'"
                 autocomplete="current-password"
                 required
-                class="w-full px-4 py-2.5 border border-gray-300 rounded-lg shadow-sm text-gray-800 placeholder-gray-500 focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all duration-200 pr-10"
+                placeholder="Enter your password"
+                class="w-full px-4 py-3 pl-12 pr-12 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 transition-all duration-200 bg-gray-50 hover:bg-white focus:bg-white"
               />
+              <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                </svg>
+              </div>
               <button
                 type="button"
                 @click="togglePasswordVisibility"
-                class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-500 hover:text-gray-700 focus:outline-none"
+                class="absolute inset-y-0 right-0 pr-4 flex items-center text-gray-500 hover:text-gray-700 transition-colors duration-200"
               >
-                <!-- Eye icon changes based on password visibility -->
                 <svg v-if="showPassword" xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
                   <circle cx="12" cy="12" r="3" />
@@ -58,11 +80,12 @@
             </div>
           </div>
 
-          <div class="md:col-span-2">
+          <!-- Submit Button -->
+          <div class="pt-4">
             <button
               type="submit"
               :disabled="loading"
-              class="w-full flex justify-center items-center bg-green-700 text-white py-3 px-4 rounded-lg font-semibold text-lg hover:bg-green-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200 disabled:opacity-60 disabled:cursor-not-allowed shadow-md"
+              class="w-full flex justify-center items-center bg-gradient-to-r from-green-600 to-green-700 text-white py-4 px-6 rounded-xl font-semibold text-lg hover:from-green-700 hover:to-green-800 disabled:opacity-60 disabled:cursor-not-allowed shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2"
             >
               <svg v-if="loading" class="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
@@ -71,34 +94,62 @@
               <span>{{ loading ? 'Signing In...' : 'Sign In' }}</span>
             </button>
           </div>
-          <p v-if="error" class="text-sm text-red-600 text-center md:col-span-2 mt-4">{{ error }}</p>
+
+          <!-- Error Message -->
+          <div v-if="error" class="bg-red-50 border border-red-200 rounded-xl p-4">
+            <div class="flex items-center">
+              <svg class="w-5 h-5 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+              </svg>
+              <p class="text-red-700 font-medium">{{ error }}</p>
+            </div>
+          </div>
         </form>
 
-        <div class="mt-8 relative md:col-span-2">
+        <!-- Divider -->
+        <div class="mt-8 relative">
           <div class="absolute inset-0 flex items-center">
             <div class="w-full border-t border-gray-300"></div>
           </div>
           <div class="relative flex justify-center text-sm">
-            <span class="px-3 bg-white text-gray-500">Or continue with</span>
+            <span class="px-4 bg-white text-gray-500 font-medium">Or continue with</span>
           </div>
         </div>
 
-        <div class="mt-6 md:col-span-2">
+        <!-- Google Login Button -->
+        <div class="mt-6">
           <button
             @click="loginWithGoogle"
-            class="w-full flex justify-center items-center space-x-3 border border-gray-300 rounded-lg py-2.5 px-4 hover:bg-gray-50 transition-all duration-200 shadow-sm"
+            :disabled="loading"
+            class="w-full flex justify-center items-center space-x-3 border-2 border-gray-300 rounded-xl py-3 px-4 hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 shadow-sm disabled:opacity-60 disabled:cursor-not-allowed"
           >
-            <img src="https://www.svgrepo.com/show/355037/google.svg" alt="Google icon" class="h-5 w-5" />
-            <span class="text-base font-medium text-gray-700">Continue with Google</span>
+            <svg v-if="loading" class="animate-spin h-5 w-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+            </svg>
+            <img v-else src="https://www.svgrepo.com/show/355037/google.svg" alt="Google icon" class="h-5 w-5" />
+            <span class="text-base font-medium text-gray-700">
+              {{ loading ? 'Connecting to Google...' : 'Continue with Google' }}
+            </span>
           </button>
         </div>
 
-        <p class="mt-8 text-center text-gray-600 text-base md:col-span-2">
-          Don't have an account?
-          <router-link to="/register" class="font-semibold text-green-600 hover:text-green-700">
-            Sign up now
-          </router-link>
-        </p>
+        <!-- Sign Up Link -->
+        <div class="mt-8 text-center">
+          <p class="text-gray-600 text-base">
+            Don't have an account?
+            <router-link to="/register" class="font-semibold text-green-600 hover:text-green-700 transition-colors duration-200">
+              Sign up now
+            </router-link>
+          </p>
+        </div>
+
+        <!-- Forgot Password Link -->
+        <div class="mt-4 text-center">
+          <a href="#" class="text-sm text-gray-500 hover:text-green-600 transition-colors duration-200">
+            Forgot your password?
+          </a>
+        </div>
       </div>
     </div>
 
@@ -121,7 +172,7 @@ const email = ref('')
 const password = ref('')
 const loading = ref(false)
 const error = ref(null)
-const showPassword = ref(false) // State to control password visibility
+const showPassword = ref(false)
 
 /**
  * Toggles the visibility of the password input field.
@@ -134,14 +185,19 @@ function goToShopSelection() {
   router.replace({ name: 'ShopSelection' })
 }
 
-// Kick off OAuth login by hitting your backend endpoint
+/**
+ * Initiates Google OAuth login using the auth store.
+ */
 function loginWithGoogle() {
-  // Ensure this URL matches your actual backend's OAuth initiation endpoint
-  const redirect = encodeURIComponent(
-    window.location.origin + '/login?oauth=google'
-  )
-  window.location.href =
-    `http://localhost:8080/auth/seller/oauth/google?redirect_uri=${redirect}`
+  try {
+    loading.value = true
+    error.value = null
+    auth.loginWithGoogle()
+  } catch (err) {
+    console.error('Google login error:', err)
+    error.value = 'Failed to initiate Google login. Please try again.'
+    loading.value = false
+  }
 }
 
 // If already logged in, skip straight to shop picker
@@ -151,23 +207,43 @@ onMounted(() => {
   }
 })
 
-// Watch for `?oauth=google` after Google callback
+// Watch for OAuth callback parameters
 watch(
-  () => route.query.oauth,
-  async (val) => {
-    if (val === 'google') {
+  () => route.query,
+  async (query) => {
+    // Handle Google OAuth callback
+    if (query.oauth === 'google' || query.code) {
       loading.value = true
+      error.value = null
+      
       try {
+        // Fetch user data after successful OAuth
         await auth.fetchMe()
-        goToShopSelection()
-      } catch {
+        
+        // Check if user has completed profile
+        const user = auth.user
+        if (user && (user.first_name || user.last_name)) {
+          // User has completed profile, go to shop selection
+          goToShopSelection()
+        } else {
+          // New user from Google, go to profile completion
+          router.replace({ name: 'CompleteProfile' })
+        }
+      } catch (err) {
+        console.error('OAuth callback error:', err)
         error.value = 'Google login failed. Please try again.'
       } finally {
         loading.value = false
       }
     }
+    
+    // Handle OAuth errors
+    if (query.error) {
+      error.value = `Login failed: ${query.error}`
+      loading.value = false
+    }
   },
-  { immediate: true }
+  { immediate: true, deep: true }
 )
 
 async function handleLogin() {
@@ -177,8 +253,8 @@ async function handleLogin() {
     await auth.login({ email: email.value, password: password.value })
     goToShopSelection()
   } catch (e) {
-    console.error('Login error:', e); // Log the actual error for debugging
-    error.value = 'Invalid email or password. Please check your credentials.';
+    console.error('Login error:', e)
+    error.value = 'Invalid email or password. Please check your credentials.'
   } finally {
     loading.value = false
   }
@@ -187,9 +263,16 @@ async function handleLogin() {
 
 <style scoped>
 @keyframes fade-in-up {
-  from { opacity: 0; transform: translateY(20px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from { 
+    opacity: 0; 
+    transform: translateY(30px); 
+  }
+  to { 
+    opacity: 1; 
+    transform: translateY(0); 
+  }
 }
+
 .animate-fade-in-up {
   animation: fade-in-up 0.6s ease-out forwards;
 }

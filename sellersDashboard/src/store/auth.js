@@ -29,11 +29,17 @@ export const useAuthStore = defineStore('auth', {
       const shopStore = useShopStore()
       shopStore.$reset()
     },
-   async updateProfile(payload) {
-  const res = await authService.updateProfile(payload)
-  // assume res.data is the updated profile
-  this.user = res.data
-}
+    async updateProfile(payload) {
+      const res = await authService.updateProfile(payload)
+      // assume res.data is the updated profile
+      this.user = res.data
+    },
+    /**
+     * Initiate Google OAuth login
+     */
+    loginWithGoogle() {
+      authService.loginWithGoogle()
+    }
   },
   persist: {
     paths: ['user']
