@@ -1,4 +1,4 @@
-import { api, shopUrl } from './api'
+import { api, getShopUrl } from './api'
 
 export interface Shop {
   id: string
@@ -8,6 +8,6 @@ export interface Shop {
   description: string
 }
 
-export function fetchShop(): Promise<Shop> {
-  return api.get(shopUrl('')).then(r => r.data)
+export function fetchShop(shopSlug: string): Promise<Shop> {
+  return api.get(getShopUrl(shopSlug, '')).then(r => r.data)
 }

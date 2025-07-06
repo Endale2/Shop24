@@ -39,7 +39,7 @@ func GetProductsByShop(c *gin.Context) {
 				products[i].Variants[j].Options = []models.Option{}
 			}
 		}
-		apiProducts = append(apiProducts, services.ProductToAPIResponse(&products[i]))
+		apiProducts = append(apiProducts, services.ProductToAPIResponseWithDiscounts(&products[i]))
 	}
 	// It's valid for a shop to have zero products; return empty array
 	c.JSON(http.StatusOK, apiProducts)
@@ -79,5 +79,5 @@ func GetProductDetail(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, services.ProductToAPIResponse(product))
+	c.JSON(http.StatusOK, services.ProductToAPIResponseWithDiscounts(product))
 }

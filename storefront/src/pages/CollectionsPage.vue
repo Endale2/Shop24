@@ -4,7 +4,7 @@
     <router-link
       v-for="c in collections"
       :key="c.id"
-      :to="`/collections/${c.handle}`"
+      :to="`/shops/${shopSlug}/collections/${c.handle}`"
       class="block border rounded overflow-hidden hover:shadow"
     >
       <img :src="c.image" class="w-full h-40 object-cover" alt="" />
@@ -17,12 +17,16 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import { fetchCollections } from '@/services/collections'
 import type { Collection } from '@/services/collections'
+
+const route = useRoute()
+const shopSlug = route.params.shopSlug as string
 
 const collections = ref<Collection[]>([])
 
 onMounted(async () => {
-  collections.value = await fetchCollections()
+  collections.value = await fetchCollections(shopSlug)
 })
 </script>

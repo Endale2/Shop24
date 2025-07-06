@@ -6,11 +6,13 @@ import ProductDetail from '@/pages/ProductDetail.vue'
 import CollectionsPage from '@/pages/CollectionsPage.vue'
 import CollectionDetail from '@/pages/CollectionDetail.vue'
 import AuthPage from '@/pages/AuthPage.vue'
+import ShopSelection from '@/pages/ShopSelection.vue'
 
 const routes = [
   {
-    path: '/',
+    path: '/shops/:shopSlug',
     component: StoreLayout,
+    props: true,
     children: [
       { path: '', component: HomePage },
       { path: 'products', component: ProductsPage },
@@ -24,6 +26,11 @@ const routes = [
       { path: 'auth', component: AuthPage },
     ],
   },
+  // Shop selection page
+  {
+    path: '/',
+    component: ShopSelection
+  }
 ]
 
 export const router = createRouter({

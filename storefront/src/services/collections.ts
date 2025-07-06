@@ -1,4 +1,4 @@
-import { api, shopUrl } from './api'
+import { api, getShopUrl } from './api'
 
 export interface Collection {
   handle: string
@@ -23,14 +23,15 @@ export interface CollectionDetail extends Collection {
   }>
 }
 
-export function fetchCollections(): Promise<Collection[]> {
-  return api.get(shopUrl('/collections')).then(r => r.data)
+export function fetchCollections(shopSlug: string): Promise<Collection[]> {
+  return api.get(getShopUrl(shopSlug, '/collections')).then(r => r.data)
 }
 
 export function fetchCollectionDetail(
+  shopSlug: string,
   handle: string
 ): Promise<CollectionDetail> {
   return api
-    .get(shopUrl(`/collections/${encodeURIComponent(handle)}`))
+    .get(getShopUrl(shopSlug, `/collections/${encodeURIComponent(handle)}`))
     .then(r => r.data)
 }

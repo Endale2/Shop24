@@ -6,6 +6,7 @@ import (
 	"strings"
 	"time"
 
+	sellerRepos "github.com/Endale2/DRPS/sellers/repositories"
 	"github.com/Endale2/DRPS/shared/models"
 	"github.com/Endale2/DRPS/shared/repositories"
 
@@ -437,7 +438,52 @@ func EnsureProductVariantIDs(product *models.Product) error {
 	return nil
 }
 
-// Add a function to produce the correct JSON response for a product
+// DiscountToAPIResponse converts a discount model to API response format for storefront
+func DiscountToAPIResponse(d *models.Discount) map[string]interface{} {
+	return map[string]interface{}{
+		"id":          d.ID.Hex(),
+		"name":        d.Name,
+		"description": d.Description,
+		"category":    d.Category,
+		"type":        d.Type,
+		"value":       d.Value,
+		"coupon_code": d.CouponCode,
+		"start_at":    d.StartAt,
+		"end_at":      d.EndAt,
+		"active":      d.Active,
+	}
+}
+
+// GetActiveDiscountsForProductAPI fetches active discounts for a product and converts them to API format
+func GetActiveDiscountsForProductAPI(shopID, productID primitive.ObjectID, variantIDs []primitive.ObjectID, collectionIDs []primitive.ObjectID) ([]map[string]interface{}, error) {
+	// Get all active discounts for this product
+	discounts, err := GetActiveDiscountsForProductService(shopID, productID, primitive.NilObjectID, collectionIDs)
+	if err != nil {
+		return nil, err
+	}
+
+	// Also get discounts for specific variants
+	for _, variantID := range variantIDs {
+		variantDiscounts, err := GetActiveDiscountsForProductService(shopID, productID, variantID, collectionIDs)
+		if err != nil {
+			continue // Skip if error, but continue with other variants
+		}
+		discounts = append(discounts, variantDiscounts...)
+	}
+
+	// Convert to API format and remove duplicates
+	seen := make(map[string]bool)
+	var apiDiscounts []map[string]interface{}
+	for _, d := range discounts {
+		if !seen[d.ID.Hex()] {
+			seen[d.ID.Hex()] = true
+			apiDiscounts = append(apiDiscounts, DiscountToAPIResponse(&d))
+		}
+	}
+
+	return apiDiscounts, nil
+}
+
 func ProductToAPIResponse(p *models.Product) map[string]interface{} {
 	resp := map[string]interface{}{
 		"id":          p.ID.Hex(),
@@ -499,5 +545,50 @@ func ProductToAPIResponse(p *models.Product) map[string]interface{} {
 		resp["display_price"] = *p.DisplayPrice
 	}
 	resp["stock"] = p.Stock
+	return resp
+}
+
+// GetCollectionIDsForProduct returns the collection IDs that contain this product
+func GetCollectionIDsForProduct(productID primitive.ObjectID) ([]primitive.ObjectID, error) {
+	// Use the seller collection repository
+	collections, err := sellerRepos.GetCollectionsByFilter(bson.M{"product_ids": productID})
+	if err != nil {
+		return nil, err
+	}
+
+	var collectionIDs []primitive.ObjectID
+	for _, coll := range collections {
+		collectionIDs = append(collectionIDs, coll.ID)
+	}
+
+	return collectionIDs, nil
+}
+
+// ProductToAPIResponseWithDiscounts converts a product to API response format and includes active discounts
+func ProductToAPIResponseWithDiscounts(p *models.Product) map[string]interface{} {
+	// Get base product response
+	resp := ProductToAPIResponse(p)
+
+	// Get collection IDs for this product
+	collectionIDs, err := GetCollectionIDsForProduct(p.ID)
+	if err != nil {
+		// If we can't get collection IDs, just use empty slice
+		collectionIDs = []primitive.ObjectID{}
+	}
+
+	// Get variant IDs for discount lookup
+	var variantIDs []primitive.ObjectID
+	for _, v := range p.Variants {
+		if !v.VariantID.IsZero() {
+			variantIDs = append(variantIDs, v.VariantID)
+		}
+	}
+
+	// Fetch active discounts for this product
+	discounts, err := GetActiveDiscountsForProductAPI(p.ShopID, p.ID, variantIDs, collectionIDs)
+	if err == nil && len(discounts) > 0 {
+		resp["discounts"] = discounts
+	}
+
 	return resp
 }

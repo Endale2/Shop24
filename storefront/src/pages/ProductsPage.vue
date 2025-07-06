@@ -7,13 +7,17 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { useRoute } from 'vue-router'
 import ProductCard from '@/components/ProductCard.vue'
 import { fetchAllProducts } from '@/services/product'
 import type { Product } from '@/services/product'
 
+const route = useRoute()
+const shopSlug = route.params.shopSlug as string
+
 const products = ref<Product[]>([])
 
 onMounted(async () => {
-  products.value = await fetchAllProducts()
+  products.value = await fetchAllProducts(shopSlug)
 })
 </script>

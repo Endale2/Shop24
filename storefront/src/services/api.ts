@@ -1,8 +1,5 @@
 import axios from 'axios'
-
-// Derive shop slug from subdomain (e.g. sophiaboutique.localhost)
-const host = window.location.hostname
-const slug = host.split('.')[0]
+import { useRoute } from 'vue-router'
 
 export const api = axios.create({
   baseURL: 'http://localhost:8080',
@@ -10,5 +7,12 @@ export const api = axios.create({
 })
 
 export function shopUrl(path: string) {
-  return `/shops/${slug}${path}`
+  const route = useRoute()
+  const shopSlug = route.params.shopSlug as string
+  return `/shops/${shopSlug}${path}`
+}
+
+// Alternative function that takes shopSlug as parameter
+export function getShopUrl(shopSlug: string, path: string) {
+  return `/shops/${shopSlug}${path}`
 }

@@ -107,3 +107,22 @@ func GetCollectionByHandle(shopID primitive.ObjectID, handle string) (*models.Co
 	}
 	return &coll, nil
 }
+
+// GetCollectionsByFilter returns collections that match the given filter
+func GetCollectionsByFilter(filter bson.M) ([]models.Collection, error) {
+	cursor, err := collectionColl.Find(context.Background(), filter)
+	if err != nil {
+		return nil, err
+	}
+	defer cursor.Close(context.Background())
+
+	var result []models.Collection
+	for cursor.Next(context.Background()) {
+		var c models.Collection
+		if err := cursor.Decode(&c); err != nil {
+			return nil, err
+		}
+		result = append(result, c)
+	}
+	return result, nil
+}

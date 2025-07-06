@@ -31,6 +31,24 @@
         <h1 class="text-3xl font-bold">{{ product?.name }}</h1>
         <p class="text-gray-700 my-2">{{ product?.description }}</p>
 
+        <!-- Discount Information -->
+        <div v-if="product.discounts && product.discounts.length > 0" class="mb-4">
+          <div class="bg-green-50 border border-green-200 rounded-lg p-3">
+            <h3 class="text-sm font-medium text-green-800 mb-2">Active Discounts:</h3>
+            <div class="space-y-2">
+              <div v-for="discount in product.discounts" :key="discount.id" class="text-sm">
+                <span class="font-medium text-green-700">{{ discount.name }}</span>
+                <span class="text-green-600 ml-2">
+                  {{ discount.type === 'percentage' ? `${discount.value}% off` : `$${discount.value} off` }}
+                </span>
+                <div v-if="discount.coupon_code" class="text-xs text-green-600 mt-1">
+                  Code: {{ discount.coupon_code }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <p class="text-xl font-semibold mb-4">
           <template v-if="selectedVariant">
             ${{ selectedVariant.price.toFixed(2) }}
@@ -77,6 +95,8 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRoute } from 'vue-router'
+import { fetchProductDetail } from '@/services/product'
+import type { Product } from '@/services/product'
 
 // Define interfaces to match your data structure for better type safety
 interface ProductOption {
@@ -92,51 +112,17 @@ interface Variant {
   image?: string;
 }
 
-interface Product {
-  id: string;
-  name: string;
-  description: string;
-  main_image: string;
-  images: string[];
-  price?: number;
-  starting_price?: number;
-  stock: number;
-  variants?: Variant[];
-}
-
-// --- REAL DATA FETCHING ---
-async function fetchProductDetail(handle: string): Promise<Product | null> {
-  // NOTE: 'sophiaboutique' is hardcoded based on your example URL.
-  // In a real app, you might get this from a store or route params.
-  const url = `http://localhost:8080/shops/sophiaboutique/products/${handle}`;
-
-  try {
-    const response = await fetch(url);
-
-    if (!response.ok) {
-      // Handle HTTP errors like 404 Not Found
-      console.error(`Error fetching product: ${response.status} ${response.statusText}`);
-      return null;
-    }
-
-    const data: Product = await response.json();
-    return data;
-  } catch (error) {
-    // Handle network errors (e.g., server is down)
-    console.error("A network error occurred:", error);
-    return null;
-  }
-}
-
 const route = useRoute()
+const shopSlug = route.params.shopSlug as string
+const handle = route.params.handle as string
+
 const product = ref<Product | null>(null)
 const selectedVariant = ref<Variant | null>(null)
 const currentImage = ref<string>('')
 
 onMounted(async () => {
-  const handle = route.params.handle as string;
   if (handle) {
-    product.value = await fetchProductDetail(handle);
+    product.value = await fetchProductDetail(shopSlug, handle);
     if (product.value) {
       currentImage.value = product.value.main_image;
     }

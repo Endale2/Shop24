@@ -12,7 +12,7 @@
         <img :src="p.main_image" alt="" class="w-full h-40 object-cover mb-2"/>
         <h3 class="font-semibold">{{ p.name }}</h3>
         <p class="text-gray-700">${{ p.display_price.toFixed(2) }}</p>
-        <router-link :to="`/products/${p.slug}`" class="text-blue-500">View</router-link>
+        <router-link :to="`/shops/${shopSlug}/products/${p.slug}`" class="text-blue-500">View</router-link>
       </div>
     </div>
   </div>
@@ -25,14 +25,15 @@ import { useRoute } from 'vue-router'
 import { fetchCollectionDetail, CollectionDetail } from '@/services/collections'
 
 const route = useRoute()
+const shopSlug = route.params.shopSlug as string
+const handle = route.params.handle as string
 const collection = ref<CollectionDetail | null>(null)
 
 onMounted(async () => {
-  const handle = route.params.handle as string
   // It's good practice to ensure that fetchCollectionDetail always returns an object
   // with a 'products' array, even if empty, or handle the null/undefined case
   // more explicitly if the service can return null for 'products'.
   
-  collection.value = await fetchCollectionDetail(handle)
+  collection.value = await fetchCollectionDetail(shopSlug, handle)
 })
 </script>

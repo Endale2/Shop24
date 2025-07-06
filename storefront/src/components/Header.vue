@@ -10,19 +10,23 @@
       <span class="text-xl font-bold">{{ shop?.name || 'Store' }}</span>
     </div>
     <nav>
-      <router-link to="/">Home</router-link> |
-      <router-link to="/products">Products</router-link> |
-      <router-link to="/collections">Collections</router-link> |
-      <router-link to="/auth">Login/Register</router-link>
+      <router-link :to="`/shops/${shopSlug}`">Home</router-link> |
+      <router-link :to="`/shops/${shopSlug}/products`">Products</router-link> |
+      <router-link :to="`/shops/${shopSlug}/collections`">Collections</router-link> |
+      <router-link :to="`/shops/${shopSlug}/auth`">Login/Register</router-link>
     </nav>
   </header>
 </template>
 
 <script setup lang="ts">
 import { defineProps } from 'vue'
+import { useRoute } from 'vue-router'
 
 interface Props {
   shop: { name: string; image?: string } | null
 }
 defineProps<Props>()
+
+const route = useRoute()
+const shopSlug = route.params.shopSlug as string
 </script>
