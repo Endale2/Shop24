@@ -17,8 +17,6 @@ export const discountService = {
       category:           d.category,
       type:               d.type,
       value:              d.value,
-      shopId:             d.shop_id,
-      sellerId:           d.seller_id,
       couponCode:         d.coupon_code,
       startAt:            d.start_at, // Directly use as ISO string
       endAt:              d.end_at,   // Directly use as ISO string

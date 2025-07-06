@@ -156,7 +156,91 @@ func ListDiscounts(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, list)
+
+	// Convert each discount to the same format as GetDiscount
+	var response []gin.H
+	for _, d := range list {
+		// Fetch product summaries for each applied product
+		var products []gin.H
+		for _, pid := range d.AppliesToProducts {
+			p, err := sharedSvc.GetProductByIDService(pid.Hex())
+			if err != nil {
+				// skip products we can't load
+				continue
+			}
+			if p == nil {
+				continue
+			}
+			products = append(products, gin.H{
+				"id":          p.ID.Hex(),
+				"name":        p.Name,
+				"main_image":  p.MainImage,
+				"description": p.Description,
+			})
+		}
+
+		// Convert ObjectID arrays to string arrays
+		var allowedCustomers []string
+		for _, id := range d.AllowedCustomerIDs {
+			allowedCustomers = append(allowedCustomers, id.Hex())
+		}
+		var allowedSegments []string
+		for _, id := range d.AllowedSegmentIDs {
+			allowedSegments = append(allowedSegments, id.Hex())
+		}
+		var buyProductIds []string
+		for _, id := range d.BuyProductIDs {
+			buyProductIds = append(buyProductIds, id.Hex())
+		}
+		var getProductIds []string
+		for _, id := range d.GetProductIDs {
+			getProductIds = append(getProductIds, id.Hex())
+		}
+		var appliesToVariants []string
+		for _, id := range d.AppliesToVariants {
+			appliesToVariants = append(appliesToVariants, id.Hex())
+		}
+		var appliesToCollections []string
+		for _, id := range d.AppliesToCollections {
+			appliesToCollections = append(appliesToCollections, id.Hex())
+		}
+
+		// Build response for each discount
+		resp := gin.H{
+			"id":                     d.ID.Hex(),
+			"name":                   d.Name,
+			"description":            d.Description,
+			"category":               d.Category,
+			"type":                   d.Type,
+			"value":                  d.Value,
+			"coupon_code":            d.CouponCode,
+			"free_shipping":          d.FreeShipping,
+			"minimum_free_shipping":  d.MinimumOrderForFreeShipping,
+			"minimum_order_subtotal": d.MinimumOrderSubtotal,
+			"start_at":               d.StartAt,
+			"end_at":                 d.EndAt,
+			"active":                 d.Active,
+			"applies_to_products":    products,
+			"applies_to_variants":    appliesToVariants,
+			"applies_to_collections": appliesToCollections,
+			"usage_limit":            d.UsageLimit,
+			"per_customer_limit":     d.PerCustomerLimit,
+			"current_usage":          d.CurrentUsage,
+			"usage_tracking":         d.UsageTracking,
+			"eligibility_type":       d.EligibilityType,
+			"allowed_customers":      allowedCustomers,
+			"allowed_segments":       allowedSegments,
+			"buy_product_ids":        buyProductIds,
+			"buy_quantity":           d.BuyQuantity,
+			"get_product_ids":        getProductIds,
+			"get_quantity":           d.GetQuantity,
+			"created_at":             d.CreatedAt,
+			"updated_at":             d.UpdatedAt,
+		}
+		response = append(response, resp)
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
 // GetDiscount GET /seller/shops/:shopId/discounts/:id
@@ -204,6 +288,32 @@ func GetDiscount(c *gin.Context) {
 		})
 	}
 
+	// Convert ObjectID arrays to string arrays
+	var allowedCustomers []string
+	for _, id := range d.AllowedCustomerIDs {
+		allowedCustomers = append(allowedCustomers, id.Hex())
+	}
+	var allowedSegments []string
+	for _, id := range d.AllowedSegmentIDs {
+		allowedSegments = append(allowedSegments, id.Hex())
+	}
+	var buyProductIds []string
+	for _, id := range d.BuyProductIDs {
+		buyProductIds = append(buyProductIds, id.Hex())
+	}
+	var getProductIds []string
+	for _, id := range d.GetProductIDs {
+		getProductIds = append(getProductIds, id.Hex())
+	}
+	var appliesToVariants []string
+	for _, id := range d.AppliesToVariants {
+		appliesToVariants = append(appliesToVariants, id.Hex())
+	}
+	var appliesToCollections []string
+	for _, id := range d.AppliesToCollections {
+		appliesToCollections = append(appliesToCollections, id.Hex())
+	}
+
 	// Build response
 	resp := gin.H{
 		"id":                     d.ID.Hex(),
@@ -220,18 +330,18 @@ func GetDiscount(c *gin.Context) {
 		"end_at":                 d.EndAt,
 		"active":                 d.Active,
 		"applies_to_products":    products,
-		"applies_to_variants":    d.AppliesToVariants,
-		"applies_to_collections": d.AppliesToCollections,
+		"applies_to_variants":    appliesToVariants,
+		"applies_to_collections": appliesToCollections,
 		"usage_limit":            d.UsageLimit,
 		"per_customer_limit":     d.PerCustomerLimit,
 		"current_usage":          d.CurrentUsage,
 		"usage_tracking":         d.UsageTracking,
 		"eligibility_type":       d.EligibilityType,
-		"allowed_customers":      d.AllowedCustomerIDs,
-		"allowed_segments":       d.AllowedSegmentIDs,
-		"buy_product_ids":        d.BuyProductIDs,
+		"allowed_customers":      allowedCustomers,
+		"allowed_segments":       allowedSegments,
+		"buy_product_ids":        buyProductIds,
 		"buy_quantity":           d.BuyQuantity,
-		"get_product_ids":        d.GetProductIDs,
+		"get_product_ids":        getProductIds,
 		"get_quantity":           d.GetQuantity,
 		"created_at":             d.CreatedAt,
 		"updated_at":             d.UpdatedAt,

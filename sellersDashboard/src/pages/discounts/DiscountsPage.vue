@@ -446,7 +446,7 @@ async function loadDiscounts() {
   
   loading.value = true;
   try {
-    discounts.value = await discountService.fetchAll(shopId.value);
+    discounts.value = await discountService.fetchAllByShop(shopId.value);
   } catch (err) {
     console.error('Failed to load discounts:', err);
   } finally {
