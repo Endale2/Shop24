@@ -1,8 +1,8 @@
 <template>
-  <header class="bg-white shadow-md px-6 py-3 flex items-center justify-between text-gray-800 z-20">
-    <div class="flex items-center space-x-4">
+  <header class="bg-white shadow-lg border-b border-gray-100 px-6 py-4 flex items-center justify-between text-gray-800 z-20 sticky top-0 backdrop-blur-sm bg-white/95">
+    <div class="flex items-center space-x-6">
       <button
-        class="md:hidden p-2 rounded-full hover:bg-gray-100 transition focus:outline-none focus:ring-2 focus:ring-gray-300"
+        class="md:hidden p-2.5 rounded-xl hover:bg-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-300 focus:ring-offset-2"
         @click="$emit('toggle-sidebar')"
         aria-label="Toggle menu"
       >
@@ -12,52 +12,63 @@
       <div v-if="shops.length" class="relative" ref="shopDropdownRef">
         <button
           @click="showShopMenu = !showShopMenu"
-          class="inline-flex items-center bg-white border border-gray-200 hover:bg-gray-50 px-4 py-2 rounded-full text-gray-700 font-medium shadow-sm transition"
+          class="inline-flex items-center bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 hover:from-green-100 hover:to-emerald-100 px-5 py-2.5 rounded-xl text-gray-700 font-semibold shadow-sm transition-all duration-200 hover:shadow-md group"
         >
           <template v-if="activeShop?.image">
             <img
               :src="activeShop.image"
               alt="Shop logo"
-              class="h-6 w-6 rounded-full object-cover mr-2"
+              class="h-7 w-7 rounded-lg object-cover mr-3 ring-2 ring-white shadow-sm"
             />
           </template>
           <template v-else>
-            <ShopIcon class="h-5 w-5 mr-2 text-green-600" />
+            <div class="h-7 w-7 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center mr-3 shadow-sm">
+              <ShopIcon class="h-4 w-4 text-white" />
+            </div>
           </template>
-          <span>{{ activeShop?.name || 'Select Shop' }}</span>
-          <ChevronDownIcon class="h-4 w-4 ml-2 text-gray-500 transition-transform duration-200"
+          <span class="text-gray-800">{{ activeShop?.name || 'Select Shop' }}</span>
+          <ChevronDownIcon class="h-4 w-4 ml-2 text-gray-500 transition-transform duration-200 group-hover:text-gray-700"
             :class="{ 'rotate-180': showShopMenu }"
           />
         </button>
         <ul
           v-if="showShopMenu"
-          class="absolute mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-xl z-30 overflow-hidden animate-fade-in-down"
+          class="absolute mt-3 w-56 bg-white border border-gray-200 rounded-2xl shadow-2xl z-30 overflow-hidden animate-fade-in-down"
         >
+          <li class="px-4 py-3 bg-gray-50 border-b border-gray-100">
+            <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Your Shops</p>
+          </li>
           <li
             v-for="shop in shops"
             :key="shop.id"
             @click="selectShop(shop)"
-            class="px-4 py-3 hover:bg-gray-50 cursor-pointer text-gray-800 transition flex items-center"
-            :class="{ 'bg-gray-100 font-semibold': shop.id === activeShop?.id }"
+            class="px-4 py-3 hover:bg-gray-50 cursor-pointer text-gray-800 transition-all duration-200 flex items-center group"
+            :class="{ 'bg-green-50 border-r-4 border-green-500': shop.id === activeShop?.id }"
           >
             <template v-if="shop.image">
               <img
                 :src="shop.image"
                 alt="Shop logo"
-                class="h-5 w-5 rounded-full object-cover mr-2"
+                class="h-8 w-8 rounded-lg object-cover mr-3 shadow-sm"
               />
             </template>
             <template v-else>
-              <ShopIcon class="h-4 w-4 mr-2 text-gray-400" />
+              <div class="h-8 w-8 bg-gradient-to-br from-gray-400 to-gray-500 rounded-lg flex items-center justify-center mr-3 shadow-sm">
+                <ShopIcon class="h-4 w-4 text-white" />
+              </div>
             </template>
-            <span>{{ shop.name }}</span>
-            <CheckIcon v-if="shop.id === activeShop?.id" class="h-5 w-5 text-green-500 ml-auto" />
+            <div class="flex-1">
+              <span class="font-medium">{{ shop.name }}</span>
+              <p class="text-xs text-gray-500 mt-0.5">{{ shop.description || 'No description' }}</p>
+            </div>
+            <CheckIcon v-if="shop.id === activeShop?.id" class="h-5 w-5 text-green-500 ml-2" />
           </li>
           <li class="border-t border-gray-100">
             <button
               @click="goToShopSelection"
-              class="w-full text-left px-4 py-3 hover:bg-gray-50 text-green-600 font-medium transition"
+              class="w-full text-left px-4 py-3 hover:bg-green-50 text-green-600 font-medium transition-all duration-200 flex items-center group"
             >
+              <PlusIcon class="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-200" />
               Manage Shops…
             </button>
           </li>
@@ -65,66 +76,105 @@
       </div>
     </div>
 
-    <div class="flex items-center space-x-4">
+    <div class="flex items-center space-x-3">
+      <!-- Search Bar -->
+      <div class="hidden md:block relative">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+          <SearchIcon class="h-5 w-5 text-gray-400" />
+        </div>
+        <input
+          type="text"
+          placeholder="Search..."
+          class="w-64 pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-green-300 focus:border-transparent transition-all duration-200 bg-gray-50 hover:bg-white focus:bg-white"
+        />
+      </div>
+
+      <!-- Notifications -->
       <button
-        class="relative p-2 rounded-full hover:bg-gray-100 transition focus:outline-none focus:ring-2 focus:ring-gray-300"
+        class="relative p-2.5 rounded-xl hover:bg-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-300 focus:ring-offset-2 group"
         aria-label="Notifications"
       >
-        <BellIcon class="h-6 w-6 text-gray-700" />
+        <BellIcon class="h-6 w-6 text-gray-700 group-hover:text-gray-900 transition-colors duration-200" />
         <span
           v-if="unreadCount"
-          class="absolute -top-1 -right-1 bg-red-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-white animate-bounce-short"
+          class="absolute -top-1 -right-1 bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold w-5 h-5 rounded-full flex items-center justify-center ring-2 ring-white animate-bounce-short shadow-lg"
         >
           {{ unreadCount }}
         </span>
       </button>
 
+      <!-- Help/Support -->
+      <button
+        class="p-2.5 rounded-xl hover:bg-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-300 focus:ring-offset-2 group"
+        aria-label="Help"
+      >
+        <QuestionMarkCircleIcon class="h-6 w-6 text-gray-700 group-hover:text-gray-900 transition-colors duration-200" />
+      </button>
+
+      <!-- User Menu -->
       <div class="relative" ref="userDropdownRef">
         <button
           @click="showUserMenu = !showUserMenu"
-          class="flex items-center space-x-2 focus:outline-none"
+          class="flex items-center space-x-3 p-2 rounded-xl hover:bg-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-300 focus:ring-offset-2 group"
         >
           <template v-if="user?.profile_image">
             <img
               :src="user.profile_image"
               alt="Profile image"
-              class="h-9 w-9 rounded-full object-cover shadow transition group-hover:ring-2 group-hover:ring-green-300 group-hover:ring-opacity-50"
+              class="h-10 w-10 rounded-xl object-cover shadow-md transition-all duration-200 group-hover:ring-2 group-hover:ring-green-300 group-hover:ring-opacity-50 group-hover:scale-105"
             />
           </template>
           <template v-else>
             <div
-              class="h-9 w-9 bg-green-500 rounded-full flex items-center justify-center text-white font-bold text-lg shadow transition group-hover:ring-2 group-hover:ring-green-300 group-hover:ring-opacity-50"
+              class="h-10 w-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-md transition-all duration-200 group-hover:ring-2 group-hover:ring-green-300 group-hover:ring-opacity-50 group-hover:scale-105"
             >
               {{ userInitials }}
             </div>
           </template>
+          <div class="hidden md:block text-left">
+            <p class="text-sm font-semibold text-gray-800">{{ user.email?.split('@')[0] || 'User' }}</p>
+            <p class="text-xs text-gray-500">Seller</p>
+          </div>
           <ChevronDownIcon
-            class="h-4 w-4 text-gray-500 transition-transform duration-200"
+            class="h-4 w-4 text-gray-500 transition-transform duration-200 group-hover:text-gray-700"
             :class="{ 'rotate-180': showUserMenu }"
           />
         </button>
         <ul
           v-if="showUserMenu"
-          class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-xl shadow-xl z-30 overflow-hidden animate-fade-in-down"
+          class="absolute right-0 mt-3 w-64 bg-white border border-gray-200 rounded-2xl shadow-2xl z-30 overflow-hidden animate-fade-in-down"
         >
-          <li class="px-4 py-3 text-gray-800 font-medium border-b border-gray-100">
-            {{ user.email }}
+          <li class="px-4 py-4 bg-gradient-to-r from-gray-50 to-gray-100 border-b border-gray-200">
+            <p class="text-sm font-semibold text-gray-800">{{ user.email }}</p>
+            <p class="text-xs text-gray-500 mt-1">Seller Account</p>
           </li>
           <li>
             <router-link
               to="/profile"
               @click="showUserMenu = false"
-              class="block px-4 py-3 hover:bg-gray-50 text-gray-700 transition"
+              class="block px-4 py-3 hover:bg-gray-50 text-gray-700 transition-all duration-200 flex items-center group"
             >
-              Profile
+              <UserIcon class="h-4 w-4 mr-3 text-gray-400 group-hover:text-gray-600" />
+              Profile Settings
             </router-link>
           </li>
           <li>
+            <router-link
+              to="/settings"
+              @click="showUserMenu = false"
+              class="block px-4 py-3 hover:bg-gray-50 text-gray-700 transition-all duration-200 flex items-center group"
+            >
+              <CogIcon class="h-4 w-4 mr-3 text-gray-400 group-hover:text-gray-600" />
+              Account Settings
+            </router-link>
+          </li>
+          <li class="border-t border-gray-100">
             <button
               @click="handleLogout"
-              class="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 transition"
+              class="w-full text-left px-4 py-3 text-red-600 hover:bg-red-50 transition-all duration-200 flex items-center group"
             >
-              Logout
+              <LogoutIcon class="h-4 w-4 mr-3 group-hover:scale-110 transition-transform duration-200" />
+              Sign Out
             </button>
           </li>
         </ul>
@@ -134,7 +184,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, onUnmounted } from 'vue' // Import onMounted, onUnmounted
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/store/auth'
 import { useShopStore } from '@/store/shops'
@@ -143,7 +193,13 @@ import {
   BellIcon,
   ChevronDownIcon,
   ShoppingBagIcon as ShopIcon,
-  CheckIcon // Import CheckIcon for active shop indicator
+  CheckIcon,
+  SearchIcon,
+  QuestionMarkCircleIcon,
+  UserIcon,
+  CogIcon,
+  LogoutIcon,
+  PlusIcon
 } from '@heroicons/vue/outline'
 
 const router = useRouter()
@@ -212,7 +268,7 @@ onUnmounted(() => {
 @keyframes fade-in-down {
   from {
     opacity: 0;
-    transform: translateY(-8px);
+    transform: translateY(-12px);
   }
   to {
     opacity: 1;
@@ -220,7 +276,7 @@ onUnmounted(() => {
   }
 }
 .animate-fade-in-down {
-  animation: fade-in-down 0.2s ease-out forwards;
+  animation: fade-in-down 0.3s ease-out forwards;
 }
 @keyframes bounce-short {
   0%,
@@ -228,10 +284,28 @@ onUnmounted(() => {
     transform: translateY(0);
   }
   50% {
-    transform: translateY(-2px);
+    transform: translateY(-3px);
   }
 }
 .animate-bounce-short {
-  animation: bounce-short 0.8s infinite;
+  animation: bounce-short 1s infinite;
+}
+
+/* Custom scrollbar for dropdowns */
+ul::-webkit-scrollbar {
+  width: 4px;
+}
+
+ul::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+ul::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 2px;
+}
+
+ul::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
 }
 </style>

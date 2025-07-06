@@ -53,6 +53,7 @@ const routes = [
       { path: 'orders',               name: 'Orders',         component: () => import('@/pages/orders/OrdersPage.vue') },
       { path: 'orders/:orderId',      name: 'OrderDetail',    component: () => import('@/pages/orders/OrderDetailPage.vue'), props: true },
       { path: 'discounts',            name: 'Discounts',      component: () => import('@/pages/discounts/DiscountsPage.vue') },
+      { path: 'discounts/create',     name: 'CreateDiscount', component: () => import('@/pages/discounts/CreateDiscountPage.vue') },
       { path: 'discounts/:discountId',name: 'DiscountDetail', component: () => import('@/pages/discounts/DiscountDetailPage.vue'), props: true },
       { path: 'analytics',            name: 'Analytics',      component: () => import('@/pages/analytics/AnalyticsPage.vue') },
       { path: 'settings',             name: 'Settings',       component: () => import('@/pages/settings/SettingsPage.vue') },
