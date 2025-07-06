@@ -25,15 +25,20 @@ type DiscountInput struct {
 	FreeShipping                bool     `json:"freeShipping,omitempty"`
 	MinimumOrderSubtotal        *float64 `json:"minimumOrderSubtotal,omitempty"`
 	MinimumOrderForFreeShipping *float64 `json:"minimumOrderForFreeShipping,omitempty"`
-	StartAt                     string   `json:"startAt" binding:"required"` // ISO8601
-	EndAt                       string   `json:"endAt" binding:"required"`
+	StartAt                     string   `json:"startAt" binding:"required"` // RFC3339
+	EndAt                       string   `json:"endAt" binding:"required"`   // RFC3339
 	Active                      bool     `json:"active"`
-	// New fields for enhanced discount functionality
+	// Enhanced discount functionality
 	EligibilityType  string   `json:"eligibilityType,omitempty"`
 	AllowedCustomers []string `json:"allowedCustomers,omitempty"`
 	AllowedSegments  []string `json:"allowedSegments,omitempty"`
 	UsageLimit       *int     `json:"usageLimit,omitempty"`
 	PerCustomerLimit *int     `json:"perCustomerLimit,omitempty"`
+	// Buy X Get Y fields
+	BuyProductIds []string `json:"buyProductIds,omitempty"`
+	BuyQuantity   *int     `json:"buyQuantity,omitempty"`
+	GetProductIds []string `json:"getProductIds,omitempty"`
+	GetQuantity   *int     `json:"getQuantity,omitempty"`
 }
 
 // helper to parse time
@@ -114,6 +119,19 @@ func CreateDiscount(c *gin.Context) {
 			d.AllowedSegmentIDs = append(d.AllowedSegmentIDs, oid)
 		}
 	}
+	// Parse Buy X Get Y fields
+	for _, pid := range in.BuyProductIds {
+		if oid, err := primitive.ObjectIDFromHex(pid); err == nil {
+			d.BuyProductIDs = append(d.BuyProductIDs, oid)
+		}
+	}
+	for _, pid := range in.GetProductIds {
+		if oid, err := primitive.ObjectIDFromHex(pid); err == nil {
+			d.GetProductIDs = append(d.GetProductIDs, oid)
+		}
+	}
+	d.BuyQuantity = in.BuyQuantity
+	d.GetQuantity = in.GetQuantity
 	// Call service
 	created, err := sharedSvc.CreateDiscountService(d)
 	if err != nil {
@@ -242,11 +260,15 @@ func UpdateDiscount(c *gin.Context) {
 	upd := bson.M{}
 	for k, v := range in {
 		switch k {
-		case "name", "description", "couponCode", "freeShipping", "value", "active":
+		case "name", "description", "couponCode", "freeShipping", "value", "active", "category", "type", "eligibilityType":
 			// map json keys to bson keys if needed: e.g. "couponCode"->"coupon_code"
 			field := k
 			if k == "couponCode" {
 				field = "coupon_code"
+			} else if k == "freeShipping" {
+				field = "free_shipping"
+			} else if k == "eligibilityType" {
+				field = "eligibility_type"
 			}
 			upd[field] = v
 		case "startAt":
@@ -307,6 +329,70 @@ func UpdateDiscount(c *gin.Context) {
 		case "minimumOrderForFreeShipping":
 			if num, ok := v.(float64); ok {
 				upd["minimum_free_shipping"] = num
+			}
+		case "usageLimit":
+			if num, ok := v.(float64); ok {
+				limit := int(num)
+				upd["usage_limit"] = &limit
+			}
+		case "perCustomerLimit":
+			if num, ok := v.(float64); ok {
+				limit := int(num)
+				upd["per_customer_limit"] = &limit
+			}
+		case "allowedCustomers":
+			arr, _ := v.([]interface{})
+			var oids []primitive.ObjectID
+			for _, e := range arr {
+				if str, ok := e.(string); ok {
+					if oid, err := primitive.ObjectIDFromHex(str); err == nil {
+						oids = append(oids, oid)
+					}
+				}
+			}
+			upd["allowed_customers"] = oids
+		case "allowedSegments":
+			arr, _ := v.([]interface{})
+			var oids []primitive.ObjectID
+			for _, e := range arr {
+				if str, ok := e.(string); ok {
+					if oid, err := primitive.ObjectIDFromHex(str); err == nil {
+						oids = append(oids, oid)
+					}
+				}
+			}
+			upd["allowed_segments"] = oids
+		case "buyProductIds":
+			arr, _ := v.([]interface{})
+			var oids []primitive.ObjectID
+			for _, e := range arr {
+				if str, ok := e.(string); ok {
+					if oid, err := primitive.ObjectIDFromHex(str); err == nil {
+						oids = append(oids, oid)
+					}
+				}
+			}
+			upd["buy_product_ids"] = oids
+		case "getProductIds":
+			arr, _ := v.([]interface{})
+			var oids []primitive.ObjectID
+			for _, e := range arr {
+				if str, ok := e.(string); ok {
+					if oid, err := primitive.ObjectIDFromHex(str); err == nil {
+						oids = append(oids, oid)
+					}
+				}
+			}
+			upd["get_product_ids"] = oids
+		case "buyQuantity":
+			if num, ok := v.(float64); ok {
+				quantity := int(num)
+				upd["buy_quantity"] = &quantity
+			}
+		case "getQuantity":
+			if num, ok := v.(float64); ok {
+				quantity := int(num)
+				upd["get_quantity"] = &quantity
 			}
 		// ignore other fields (shopID, sellerID, createdAt, etc.)
 		default:

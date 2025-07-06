@@ -48,6 +48,18 @@ export const discountService = {
   },
 
   /**
+   * Convert datetime-local format to RFC3339 for backend
+   * @param {string} datetimeLocal - datetime-local format string
+   * @returns {string} RFC3339 format string
+   */
+  _convertToRFC3339(datetimeLocal) {
+    if (!datetimeLocal) return undefined;
+    // datetime-local format: "2024-01-15T10:30"
+    // RFC3339 format: "2024-01-15T10:30:00Z"
+    return new Date(datetimeLocal).toISOString();
+  },
+
+  /**
    * Fetch all discounts for a given shop.
    * @param {string} shopId
    * @returns {Promise<Array<Object>>}
@@ -82,14 +94,18 @@ export const discountService = {
    * @param {Array<string>} [data.appliesToProducts] // Expects product IDs
    * @param {Array<string>} [data.appliesToCollections] // Expects collection IDs
    * @param {string} [data.couponCode]
-   * @param {string} [data.startAt] ISO string
-   * @param {string} [data.endAt] ISO string
+   * @param {string} [data.startAt] datetime-local format
+   * @param {string} [data.endAt] datetime-local format
    * @param {boolean} [data.active]
    * @param {string} [data.eligibilityType]
    * @param {Array<string>} [data.allowedCustomers]
    * @param {Array<string>} [data.allowedSegments]
    * @param {number} [data.usageLimit]
    * @param {number} [data.perCustomerLimit]
+   * @param {Array<string>} [data.buyProductIds]
+   * @param {number} [data.buyQuantity]
+   * @param {Array<string>} [data.getProductIds]
+   * @param {number} [data.getQuantity]
    * @returns {Promise<Object>}
    */
   async create(shopId, data) {
@@ -99,25 +115,25 @@ export const discountService = {
       category:             data.category,
       type:                 data.type,
       value:                data.value,
-      applies_to_products:  data.appliesToProducts,   // Sending IDs
-      applies_to_collections: data.appliesToCollections, // Sending IDs
-      coupon_code:          data.couponCode,
-      start_at:             data.startAt,
-      end_at:               data.endAt,
+      appliesToProducts:    data.appliesToProducts,   // Sending IDs
+      appliesToCollections: data.appliesToCollections, // Sending IDs
+      appliesToVariants:    data.appliesToVariants,
+      couponCode:           data.couponCode,
+      startAt:              this._convertToRFC3339(data.startAt),
+      endAt:                this._convertToRFC3339(data.endAt),
       active:               data.active,
-      free_shipping:        data.freeShipping,
-      minimum_order_subtotal: data.minimumOrderSubtotal,
-      minimum_free_shipping: data.minimumFreeShipping,
-      usage_limit:          data.usageLimit,
-      per_customer_limit:   data.perCustomerLimit,
-      eligibility_type:     data.eligibilityType,
-      allowed_customers:    data.allowedCustomers,
-      allowed_segments:     data.allowedSegments,
-      buy_product_ids:      data.buyProductIds,
-      buy_quantity:         data.buyQuantity,
-      get_product_ids:      data.getProductIds,
-      get_quantity:         data.getQuantity,
-      applies_to_variants:  data.appliesToVariants,
+      freeShipping:         data.freeShipping,
+      minimumOrderSubtotal: data.minimumOrderSubtotal,
+      minimumOrderForFreeShipping: data.minimumFreeShipping,
+      usageLimit:           data.usageLimit,
+      perCustomerLimit:     data.perCustomerLimit,
+      eligibilityType:      data.eligibilityType,
+      allowedCustomers:     data.allowedCustomers,
+      allowedSegments:      data.allowedSegments,
+      buyProductIds:        data.buyProductIds,
+      buyQuantity:          data.buyQuantity,
+      getProductIds:        data.getProductIds,
+      getQuantity:          data.getQuantity,
     };
     // Clean up undefined fields before sending
     Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
@@ -141,27 +157,27 @@ export const discountService = {
     if (data.category !== undefined) payload.category = data.category;
     if (data.type !== undefined) payload.type = data.type;
     if (data.value !== undefined) payload.value = data.value;
-    if (data.appliesToProducts !== undefined) payload.applies_to_products = data.appliesToProducts; // Sending IDs
-    if (data.appliesToCollections !== undefined) payload.applies_to_collections = data.appliesToCollections; // Sending IDs
-    if (data.couponCode !== undefined) payload.coupon_code = data.couponCode;
-    if (data.startAt !== undefined) payload.start_at = data.startAt;
-    if (data.endAt !== undefined) payload.end_at = data.endAt;
+    if (data.appliesToProducts !== undefined) payload.appliesToProducts = data.appliesToProducts; // Sending IDs
+    if (data.appliesToCollections !== undefined) payload.appliesToCollections = data.appliesToCollections; // Sending IDs
+    if (data.appliesToVariants !== undefined) payload.appliesToVariants = data.appliesToVariants;
+    if (data.couponCode !== undefined) payload.couponCode = data.couponCode;
+    if (data.startAt !== undefined) payload.startAt = this._convertToRFC3339(data.startAt);
+    if (data.endAt !== undefined) payload.endAt = this._convertToRFC3339(data.endAt);
     if (data.active !== undefined) payload.active = data.active;
-    if (data.freeShipping !== undefined) payload.free_shipping = data.freeShipping;
-    if (data.minimumOrderSubtotal !== undefined) payload.minimum_order_subtotal = data.minimumOrderSubtotal;
-    if (data.minimumFreeShipping !== undefined) payload.minimum_free_shipping = data.minimumFreeShipping;
-    if (data.usageLimit !== undefined) payload.usage_limit = data.usageLimit;
-    if (data.perCustomerLimit !== undefined) payload.per_customer_limit = data.perCustomerLimit;
-    if (data.eligibilityType !== undefined) payload.eligibility_type = data.eligibilityType;
-    if (data.allowedCustomers !== undefined) payload.allowed_customers = data.allowedCustomers;
-    if (data.allowedSegments !== undefined) payload.allowed_segments = data.allowedSegments;
-    if (data.buyProductIds !== undefined) payload.buy_product_ids = data.buyProductIds;
-    if (data.buyQuantity !== undefined) payload.buy_quantity = data.buyQuantity;
-    if (data.getProductIds !== undefined) payload.get_product_ids = data.getProductIds;
-    if (data.getQuantity !== undefined) payload.get_quantity = data.getQuantity;
-    if (data.appliesToVariants !== undefined) payload.applies_to_variants = data.appliesToVariants;
+    if (data.freeShipping !== undefined) payload.freeShipping = data.freeShipping;
+    if (data.minimumOrderSubtotal !== undefined) payload.minimumOrderSubtotal = data.minimumOrderSubtotal;
+    if (data.minimumFreeShipping !== undefined) payload.minimumOrderForFreeShipping = data.minimumFreeShipping;
+    if (data.usageLimit !== undefined) payload.usageLimit = data.usageLimit;
+    if (data.perCustomerLimit !== undefined) payload.perCustomerLimit = data.perCustomerLimit;
+    if (data.eligibilityType !== undefined) payload.eligibilityType = data.eligibilityType;
+    if (data.allowedCustomers !== undefined) payload.allowedCustomers = data.allowedCustomers;
+    if (data.allowedSegments !== undefined) payload.allowedSegments = data.allowedSegments;
+    if (data.buyProductIds !== undefined) payload.buyProductIds = data.buyProductIds;
+    if (data.buyQuantity !== undefined) payload.buyQuantity = data.buyQuantity;
+    if (data.getProductIds !== undefined) payload.getProductIds = data.getProductIds;
+    if (data.getQuantity !== undefined) payload.getQuantity = data.getQuantity;
 
-    await api.put(`/seller/shops/${shopId}/discounts/${discountId}`, payload);
+    await api.patch(`/seller/shops/${shopId}/discounts/${discountId}`, payload);
     return this.fetchById(shopId, discountId); // Fetch updated discount for consistent data structure
   },
 

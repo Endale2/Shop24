@@ -71,9 +71,9 @@
                     :class="getStatusClass(discount)"
                     class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
                   >
-                    <CheckCircleIcon v-if="isActive(discount)" class="w-4 h-4 mr-1" />
+                    <CheckCircleIcon v-if="isActive" class="w-4 h-4 mr-1" />
                     <XCircleIcon v-else-if="!discount.active" class="w-4 h-4 mr-1" />
-                    <ClockIcon v-else-if="isUpcoming(discount)" class="w-4 h-4 mr-1" />
+                    <ClockIcon v-else-if="isUpcoming" class="w-4 h-4 mr-1" />
                     <ExclamationIcon v-else class="w-4 h-4 mr-1" />
                     {{ getStatusText(discount) }}
                   </span>
@@ -104,6 +104,21 @@
               <div class="bg-gray-50 p-4 rounded-lg">
                 <h3 class="text-sm font-medium text-gray-500 mb-2">Eligibility</h3>
                 <p class="text-lg font-semibold text-gray-900">{{ formatEligibility(discount.eligibilityType) }}</p>
+              </div>
+              <!-- Buy X Get Y specific info -->
+              <div v-if="discount.category === 'buy_x_get_y'" class="bg-pink-50 p-4 rounded-lg border border-pink-200">
+                <h3 class="text-sm font-medium text-pink-700 mb-2">Buy X Get Y</h3>
+                <div class="space-y-1">
+                  <p class="text-lg font-semibold text-pink-900">
+                    Buy {{ discount.buyQuantity || 0 }}x → Get {{ discount.getQuantity || 0 }}x
+                  </p>
+                  <div v-if="discount.buyProductIds?.length" class="text-sm text-pink-700">
+                    {{ discount.buyProductIds.length }} buy products
+                  </div>
+                  <div v-if="discount.getProductIds?.length" class="text-sm text-pink-700">
+                    {{ discount.getProductIds.length }} get products
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -437,38 +452,76 @@
 
     <!-- Add Customers Modal -->
     <div v-if="showAddCustomersModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 relative">
+      <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6 relative">
         <h3 class="text-xl font-bold mb-4 text-gray-800">Add Customers to Discount</h3>
-        <form @submit.prevent="addCustomersToDiscount" class="space-y-4">
-          <div>
-            <label for="customerIds" class="block text-sm font-medium text-gray-700 mb-1">Customer IDs (comma-separated)</label>
-            <textarea
-              id="customerIds"
-              v-model="addCustomersForm.customerIds"
-              rows="4"
-              placeholder="e.g. 507f1f77bcf86cd799439011, 507f1f77bcf86cd799439012"
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Search and Select Customers</label>
+          <div class="relative customer-dropdown">
+            <input
+              type="text"
+              v-model="customerSearchQuery"
+              @input="filterCustomers"
+              placeholder="Search customers by name or email..."
               class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out"
-              required
-            ></textarea>
-            <p class="text-xs text-gray-500 mt-1">Enter customer IDs separated by commas</p>
+            />
+            <div v-if="filteredCustomers.length > 0 && showCustomerDropdown" class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <div
+                v-for="customer in filteredCustomers"
+                :key="customer.id"
+                @click="toggleCustomerSelection(customer)"
+                class="flex items-center p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
+              >
+                <input
+                  type="checkbox"
+                  :checked="selectedCustomers.some(c => c.id === customer.id)"
+                  class="mr-3 h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
+                  readonly
+                />
+                <div class="flex-1">
+                  <div class="font-medium text-gray-900">{{ customer.firstName }} {{ customer.lastName }}</div>
+                  <div class="text-sm text-gray-500">{{ customer.email }}</div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="flex justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              @click="showAddCustomersModal = false"
-              class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+        </div>
+        
+        <div v-if="selectedCustomers.length > 0" class="mb-4">
+          <h4 class="text-sm font-medium text-gray-700 mb-2">Selected Customers:</h4>
+          <div class="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+            <span
+              v-for="customer in selectedCustomers"
+              :key="customer.id"
+              class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
             >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition duration-300 ease-in-out"
-            >
-              Add Customers
-            </button>
+              {{ customer.firstName }} {{ customer.lastName }}
+              <button
+                @click="removeCustomer(customer)"
+                class="ml-2 text-blue-600 hover:text-blue-800"
+              >
+                ×
+              </button>
+            </span>
           </div>
-        </form>
-        <button @click="showAddCustomersModal = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-200">
+        </div>
+        
+        <div class="flex justify-end space-x-3 pt-4">
+          <button
+            type="button"
+            @click="closeAddCustomersModal"
+            class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+          >
+            Cancel
+          </button>
+          <button
+            @click="addCustomersToDiscount"
+            :disabled="selectedCustomers.length === 0"
+            class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Add {{ selectedCustomers.length }} Customer{{ selectedCustomers.length !== 1 ? 's' : '' }}
+          </button>
+        </div>
+        <button @click="closeAddCustomersModal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-200">
           <XIcon class="h-6 w-6" />
         </button>
       </div>
@@ -476,38 +529,76 @@
 
     <!-- Add Segments Modal -->
     <div v-if="showAddSegmentsModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-xl shadow-2xl w-full max-w-md p-6 relative">
+      <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6 relative">
         <h3 class="text-xl font-bold mb-4 text-gray-800">Add Segments to Discount</h3>
-        <form @submit.prevent="addSegmentsToDiscount" class="space-y-4">
-          <div>
-            <label for="segmentIds" class="block text-sm font-medium text-gray-700 mb-1">Segment IDs (comma-separated)</label>
-            <textarea
-              id="segmentIds"
-              v-model="addSegmentsForm.segmentIds"
-              rows="4"
-              placeholder="e.g. 507f1f77bcf86cd799439011, 507f1f77bcf86cd799439012"
+        <div class="mb-4">
+          <label class="block text-sm font-medium text-gray-700 mb-2">Search and Select Segments</label>
+          <div class="relative segment-dropdown">
+            <input
+              type="text"
+              v-model="segmentSearchQuery"
+              @input="filterSegments"
+              placeholder="Search segments by name..."
               class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out"
-              required
-            ></textarea>
-            <p class="text-xs text-gray-500 mt-1">Enter segment IDs separated by commas</p>
+            />
+            <div v-if="filteredSegments.length > 0 && showSegmentDropdown" class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+              <div
+                v-for="segment in filteredSegments"
+                :key="segment.id"
+                @click="toggleSegmentSelection(segment)"
+                class="flex items-center p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
+              >
+                <input
+                  type="checkbox"
+                  :checked="selectedSegments.some(s => s.id === segment.id)"
+                  class="mr-3 h-4 w-4 text-purple-600 rounded focus:ring-purple-500"
+                  readonly
+                />
+                <div class="flex-1">
+                  <div class="font-medium text-gray-900">{{ segment.name }}</div>
+                  <div class="text-sm text-gray-500">{{ segment.description || 'No description' }}</div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="flex justify-end space-x-3 pt-4">
-            <button
-              type="button"
-              @click="showAddSegmentsModal = false"
-              class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+        </div>
+        
+        <div v-if="selectedSegments.length > 0" class="mb-4">
+          <h4 class="text-sm font-medium text-gray-700 mb-2">Selected Segments:</h4>
+          <div class="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+            <span
+              v-for="segment in selectedSegments"
+              :key="segment.id"
+              class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800"
             >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              class="px-4 py-2 bg-purple-600 text-white rounded-lg shadow-md hover:bg-purple-700 transition duration-300 ease-in-out"
-            >
-              Add Segments
-            </button>
+              {{ segment.name }}
+              <button
+                @click="removeSegment(segment)"
+                class="ml-2 text-purple-600 hover:text-purple-800"
+              >
+                ×
+              </button>
+            </span>
           </div>
-        </form>
-        <button @click="showAddSegmentsModal = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-200">
+        </div>
+        
+        <div class="flex justify-end space-x-3 pt-4">
+          <button
+            type="button"
+            @click="closeAddSegmentsModal"
+            class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+          >
+            Cancel
+          </button>
+          <button
+            @click="addSegmentsToDiscount"
+            :disabled="selectedSegments.length === 0"
+            class="px-4 py-2 bg-purple-600 text-white rounded-lg shadow-md hover:bg-purple-700 transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            Add {{ selectedSegments.length }} Segment{{ selectedSegments.length !== 1 ? 's' : '' }}
+          </button>
+        </div>
+        <button @click="closeAddSegmentsModal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-200">
           <XIcon class="h-6 w-6" />
         </button>
       </div>
@@ -516,11 +607,13 @@
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useShopStore } from '@/store/shops'
 import { discountService } from '@/services/discount'
 import { collectionService } from '@/services/collection'
+import { customerService } from '@/services/customer'
+import { customerSegmentService } from '@/services/customerSegment'
 import { format } from 'date-fns'
 import {
   PencilIcon,
@@ -542,7 +635,7 @@ import {
   ClockIcon
 } from '@heroicons/vue/outline'
 
-// State for detail page
+// State
 const loading = ref(true)
 const discount = ref(null)
 const fetchedCollections = ref([])
@@ -554,9 +647,11 @@ const shopStore = useShopStore()
 
 const shopId = ref(shopStore.activeShop?.id);
 watch(() => shopStore.activeShop, (newShop) => {
-  if (newShop) {
+  if (newShop?.id) {
     shopId.value = newShop.id;
-    loadDiscount();
+    loadDiscount()
+    loadCustomers()
+    loadSegments()
   }
 });
 
@@ -596,11 +691,74 @@ const form = ref({
 const showUsageDetails = ref(false)
 const showAddCustomersModal = ref(false)
 const showAddSegmentsModal = ref(false)
+
+// Data for dropdowns
+const customers = ref([])
+const segments = ref([])
+const loadingCustomers = ref(false)
+const loadingSegments = ref(false)
+
+// Search states
+const customerSearchQuery = ref('')
+const segmentSearchQuery = ref('')
+
+// Dropdown visibility states
+const showCustomerDropdown = ref(false)
+const showSegmentDropdown = ref(false)
+
+// Selected items
+const selectedCustomers = ref([])
+const selectedSegments = ref([])
+
+// Form states
 const addCustomersForm = ref({
   customerIds: ''
 })
 const addSegmentsForm = ref({
   segmentIds: ''
+})
+
+// Computed properties
+const isActive = computed(() => {
+  if (!discount.value || !discount.value.active) return false
+  const now = new Date()
+  const start = new Date(discount.value.startAt)
+  const end = new Date(discount.value.endAt)
+  return now >= start && now <= end
+})
+
+const isExpired = computed(() => {
+  if (!discount.value) return false
+  const now = new Date()
+  const end = new Date(discount.value.endAt)
+  return now > end
+})
+
+const isUpcoming = computed(() => {
+  if (!discount.value) return false
+  const now = new Date()
+  const start = new Date(discount.value.startAt)
+  return now < start
+})
+
+// Filtered results for dropdowns
+const filteredCustomers = computed(() => {
+  if (!customerSearchQuery.value) return customers.value.slice(0, 10)
+  const query = customerSearchQuery.value.toLowerCase()
+  return customers.value.filter(c => 
+    c.firstName.toLowerCase().includes(query) ||
+    c.lastName.toLowerCase().includes(query) ||
+    c.email.toLowerCase().includes(query)
+  ).slice(0, 10)
+})
+
+const filteredSegments = computed(() => {
+  if (!segmentSearchQuery.value) return segments.value.slice(0, 10)
+  const query = segmentSearchQuery.value.toLowerCase()
+  return segments.value.filter(s => 
+    s.name.toLowerCase().includes(query) ||
+    s.description?.toLowerCase().includes(query)
+  ).slice(0, 10)
 })
 
 // Helpers
@@ -645,37 +803,27 @@ function formatEligibility(eligibility) {
   return eligibilities[eligibility] || eligibility
 }
 
-function isActive(discount) {
-  if (!discount.active) return false
-  const now = new Date()
-  const start = new Date(discount.startAt)
-  const end = new Date(discount.endAt)
-  return now >= start && now <= end
-}
-
-function isExpired(discount) {
-  const now = new Date()
-  const end = new Date(discount.endAt)
-  return now > end
-}
-
-function isUpcoming(discount) {
-  const now = new Date()
-  const start = new Date(discount.startAt)
-  return now < start
-}
-
 function getStatusClass(discount) {
   if (!discount.active) return 'bg-red-100 text-red-800'
-  if (isExpired(discount)) return 'bg-gray-100 text-gray-800'
-  if (isUpcoming(discount)) return 'bg-yellow-100 text-yellow-800'
+  
+  const now = new Date()
+  const end = new Date(discount.endAt)
+  const start = new Date(discount.startAt)
+  
+  if (now > end) return 'bg-gray-100 text-gray-800'
+  if (now < start) return 'bg-yellow-100 text-yellow-800'
   return 'bg-green-100 text-green-800'
 }
 
 function getStatusText(discount) {
   if (!discount.active) return 'Inactive'
-  if (isExpired(discount)) return 'Expired'
-  if (isUpcoming(discount)) return 'Upcoming'
+  
+  const now = new Date()
+  const end = new Date(discount.endAt)
+  const start = new Date(discount.startAt)
+  
+  if (now > end) return 'Expired'
+  if (now < start) return 'Upcoming'
   return 'Active'
 }
 
@@ -728,26 +876,26 @@ function goToCollectionDetail(collectionId) {
 
 // Form management
 function openEditForm(disc) {
-  formMode.value = 'edit';
-  form.value.id = disc.id;
-  form.value.name = disc.name;
-  form.value.description = disc.description;
-  form.value.category = disc.category;
-  form.value.type = disc.type;
-  form.value.value = disc.value;
-  form.value.couponCode = disc.couponCode || '';
-  form.value.startAt = disc.startAt ? new Date(disc.startAt).toISOString().slice(0, 16) : '';
-  form.value.endAt = disc.endAt ? new Date(disc.endAt).toISOString().slice(0, 16) : '';
-  form.value.active = !!disc.active;
-  form.value.freeShipping = disc.freeShipping;
-  form.value.minimumOrderSubtotal = disc.minimumOrderSubtotal;
-  form.value.minimumFreeShipping = disc.minimumFreeShipping;
-  form.value.usageLimit = disc.usageLimit;
-  form.value.perCustomerLimit = disc.perCustomerLimit;
-  form.value.buyQuantity = disc.buyQuantity;
-  form.value.getQuantity = disc.getQuantity;
+  formMode.value = 'edit'
+  form.value.id = disc.id
+  form.value.name = disc.name
+  form.value.description = disc.description
+  form.value.category = disc.category
+  form.value.type = disc.type
+  form.value.value = disc.value
+  form.value.couponCode = disc.couponCode || ''
+  form.value.startAt = disc.startAt ? new Date(disc.startAt).toISOString().slice(0, 16) : ''
+  form.value.endAt = disc.endAt ? new Date(disc.endAt).toISOString().slice(0, 16) : ''
+  form.value.active = !!disc.active
+  form.value.freeShipping = disc.freeShipping
+  form.value.minimumOrderSubtotal = disc.minimumOrderSubtotal
+  form.value.minimumFreeShipping = disc.minimumFreeShipping
+  form.value.usageLimit = disc.usageLimit
+  form.value.perCustomerLimit = disc.perCustomerLimit
+  form.value.buyQuantity = disc.buyQuantity
+  form.value.getQuantity = disc.getQuantity
 
-  showForm.value = true;
+  showForm.value = true
 }
 
 function closeForm() {
@@ -757,10 +905,37 @@ function closeForm() {
 // Submit form
 async function submitForm() {
   if (!shopId.value || !form.value.id) {
-    console.error('Missing shop ID or discount ID for update operation.');
-    return;
+    console.error('Missing shop ID or discount ID for update operation.')
+    return
   }
-  formLoading.value = true;
+
+  // Basic validation
+  if (!form.value.name.trim()) {
+    alert('Please enter a discount name')
+    return
+  }
+  if (!form.value.startAt) {
+    alert('Please select a start date and time')
+    return
+  }
+  if (!form.value.endAt) {
+    alert('Please select an end date and time')
+    return
+  }
+  if (new Date(form.value.endAt) <= new Date(form.value.startAt)) {
+    alert('End date must be after start date')
+    return
+  }
+  if (form.value.value <= 0) {
+    alert('Discount value must be greater than 0')
+    return
+  }
+  if (form.value.type === 'percentage' && form.value.value > 100) {
+    alert('Percentage discount cannot exceed 100%')
+    return
+  }
+
+  formLoading.value = true
 
   const payload = {
     name: form.value.name,
@@ -769,25 +944,26 @@ async function submitForm() {
     type: form.value.type,
     value: form.value.value,
     couponCode: form.value.couponCode || undefined,
-    startAt: form.value.startAt ? new Date(form.value.startAt).toISOString() : undefined,
-    endAt: form.value.endAt ? new Date(form.value.endAt).toISOString() : undefined,
+    startAt: form.value.startAt,
+    endAt: form.value.endAt,
     active: form.value.active,
     freeShipping: form.value.freeShipping,
     minimumOrderSubtotal: form.value.minimumOrderSubtotal,
     minimumFreeShipping: form.value.minimumFreeShipping,
     usageLimit: form.value.usageLimit,
     perCustomerLimit: form.value.perCustomerLimit,
-  };
+  }
 
   try {
-    await discountService.update(shopId.value, form.value.id, payload);
-    await loadDiscount();
-    closeForm();
+    await discountService.update(shopId.value, form.value.id, payload)
+    await loadDiscount()
+    closeForm()
   } catch (err) {
-    console.error('Failed to update discount:', err.response?.data || err.message);
-    alert('Failed to update discount: ' + (err.response?.data?.message || err.message));
+    console.error('Failed to update discount:', err.response?.data || err.message)
+    const errorMessage = err.response?.data?.message || err.response?.data?.error || err.message
+    alert('Failed to update discount: ' + errorMessage)
   } finally {
-    formLoading.value = false;
+    formLoading.value = false
   }
 }
 
@@ -811,60 +987,64 @@ async function confirmDelete(disc) {
 
 // Enhanced discount management functions
 function openAddCustomersModal() {
-  addCustomersForm.value.customerIds = ''
   showAddCustomersModal.value = true
+  selectedCustomers.value = []
+  customerSearchQuery.value = ''
+  showCustomerDropdown.value = false
+  if (customers.value.length === 0) {
+    loadCustomers()
+  }
+}
+
+function closeAddCustomersModal() {
+  showAddCustomersModal.value = false
+  selectedCustomers.value = []
+  customerSearchQuery.value = ''
+  showCustomerDropdown.value = false
 }
 
 function openAddSegmentsModal() {
-  addSegmentsForm.value.segmentIds = ''
   showAddSegmentsModal.value = true
+  selectedSegments.value = []
+  segmentSearchQuery.value = ''
+  showSegmentDropdown.value = false
+  if (segments.value.length === 0) {
+    loadSegments()
+  }
+}
+
+function closeAddSegmentsModal() {
+  showAddSegmentsModal.value = false
+  selectedSegments.value = []
+  segmentSearchQuery.value = ''
+  showSegmentDropdown.value = false
 }
 
 async function addCustomersToDiscount() {
-  if (!shopId.value || !discount.value?.id) return
-  
-  const customerIds = addCustomersForm.value.customerIds
-    .split(',')
-    .map(s => s.trim())
-    .filter(s => s.length > 0)
-  
-  if (customerIds.length === 0) {
-    alert('Please enter at least one customer ID')
-    return
-  }
+  if (!discount.value || selectedCustomers.value.length === 0) return
   
   try {
+    const customerIds = selectedCustomers.value.map(c => c.id)
     await discountService.addCustomers(shopId.value, discount.value.id, customerIds)
     await loadDiscount()
-    showAddCustomersModal.value = false
-    alert('Customers added successfully!')
-  } catch (error) {
-    console.error('Failed to add customers:', error)
-    alert('Failed to add customers: ' + (error.response?.data?.error || error.message))
+    closeAddCustomersModal()
+  } catch (err) {
+    console.error('Failed to add customers:', err)
+    alert('Failed to add customers: ' + (err.response?.data?.message || err.message))
   }
 }
 
 async function addSegmentsToDiscount() {
-  if (!shopId.value || !discount.value?.id) return
-  
-  const segmentIds = addSegmentsForm.value.segmentIds
-    .split(',')
-    .map(s => s.trim())
-    .filter(s => s.length > 0)
-  
-  if (segmentIds.length === 0) {
-    alert('Please enter at least one segment ID')
-    return
-  }
+  if (!discount.value || selectedSegments.value.length === 0) return
   
   try {
+    const segmentIds = selectedSegments.value.map(s => s.id)
     await discountService.addSegments(shopId.value, discount.value.id, segmentIds)
     await loadDiscount()
-    showAddSegmentsModal.value = false
-    alert('Segments added successfully!')
-  } catch (error) {
-    console.error('Failed to add segments:', error)
-    alert('Failed to add segments: ' + (error.response?.data?.error || error.message))
+    closeAddSegmentsModal()
+  } catch (err) {
+    console.error('Failed to add segments:', err)
+    alert('Failed to add segments: ' + (err.response?.data?.message || err.message))
   }
 }
 
@@ -882,13 +1062,105 @@ async function refreshUsageStats() {
   }
 }
 
+// Load data for dropdowns
+async function loadCustomers() {
+  if (!shopId.value) return
+  loadingCustomers.value = true
+  try {
+    customers.value = await customerService.fetchAll(shopId.value)
+  } catch (err) {
+    console.error('Failed to load customers:', err)
+  } finally {
+    loadingCustomers.value = false
+  }
+}
+
+async function loadSegments() {
+  if (!shopId.value) return
+  loadingSegments.value = true
+  try {
+    segments.value = await customerSegmentService.fetchAll(shopId.value)
+  } catch (err) {
+    console.error('Failed to load segments:', err)
+  } finally {
+    loadingSegments.value = false
+  }
+}
+
+// Dropdown filter functions
+function filterCustomers() {
+  showCustomerDropdown.value = true
+}
+
+function filterSegments() {
+  showSegmentDropdown.value = true
+}
+
+// Selection functions
+function toggleCustomerSelection(customer) {
+  const index = selectedCustomers.value.findIndex(c => c.id === customer.id)
+  if (index > -1) {
+    selectedCustomers.value.splice(index, 1)
+  } else {
+    selectedCustomers.value.push(customer)
+  }
+  showCustomerDropdown.value = false
+}
+
+function toggleSegmentSelection(segment) {
+  const index = selectedSegments.value.findIndex(s => s.id === segment.id)
+  if (index > -1) {
+    selectedSegments.value.splice(index, 1)
+  } else {
+    selectedSegments.value.push(segment)
+  }
+  showSegmentDropdown.value = false
+}
+
+// Remove functions
+function removeCustomer(customer) {
+  const index = selectedCustomers.value.findIndex(c => c.id === customer.id)
+  if (index > -1) {
+    selectedCustomers.value.splice(index, 1)
+  }
+}
+
+function removeSegment(segment) {
+  const index = selectedSegments.value.findIndex(s => s.id === segment.id)
+  if (index > -1) {
+    selectedSegments.value.splice(index, 1)
+  }
+}
+
+// Click outside handlers
+function handleClickOutside(event) {
+  // Close customer dropdown
+  if (!event.target.closest('.customer-dropdown')) {
+    showCustomerDropdown.value = false
+  }
+  
+  // Close segment dropdown
+  if (!event.target.closest('.segment-dropdown')) {
+    showSegmentDropdown.value = false
+  }
+}
+
 // Initial data load when component is mounted
 onMounted(() => {
-  if (shopStore.activeShop?.id) {
-    shopId.value = shopStore.activeShop.id;
-    loadDiscount();
+  if (shopId.value) {
+    loadDiscount()
+    loadCustomers()
+    loadSegments()
   }
-});
+  
+  // Add click outside listener
+  document.addEventListener('click', handleClickOutside)
+})
+
+// Clean up event listener
+onUnmounted(() => {
+  document.removeEventListener('click', handleClickOutside)
+})
 </script>
 
 <style scoped>
