@@ -1,4 +1,4 @@
-import { api, getShopUrl } from './api'
+import api, { getShopUrl } from './api'
 
 export interface Collection {
   handle: string

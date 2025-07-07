@@ -1,4 +1,4 @@
-import { api, shopUrl } from './api'
+import api from './api'
 
 export interface OrderItem {
   product_id: string
@@ -36,17 +36,17 @@ export interface OrderResponse {
 
 export const orderService = {
   async placeOrder(orderData: PlaceOrderRequest): Promise<OrderResponse> {
-    const response = await api.post(shopUrl('/orders'), orderData)
+    const response = await api.post('/orders', orderData)
     return response.data
   },
 
   async getOrders(): Promise<OrderResponse[]> {
-    const response = await api.get(shopUrl('/orders'))
+    const response = await api.get('/orders')
     return response.data
   },
 
   async getOrderDetail(orderId: string): Promise<OrderResponse> {
-    const response = await api.get(shopUrl(`/orders/${orderId}`))
+    const response = await api.get(`/orders/${orderId}`)
     return response.data
   },
 
@@ -66,4 +66,12 @@ export const orderService = {
     
     return this.placeOrder(orderData)
   }
+}
+
+export async function placeOrder(shopSlug: string, items: Array<{ product_id: string, variant_id: string, quantity: number }>, couponCode?: string) {
+  return api.post(`/shops/${shopSlug}/orders`, { items, coupon_code: couponCode });
+}
+
+export async function getOrderDetail(shopSlug: string, orderId: string) {
+  return api.get(`/shops/${shopSlug}/orders/${orderId}`);
 } 

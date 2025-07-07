@@ -1,4 +1,4 @@
-import { api } from './api'
+import api from './api'
 
 export interface RegisterPayload {
   firstName: string
@@ -20,15 +20,22 @@ export interface LoginPayload {
   shopId: string
 }
 
-export function register(payload: RegisterPayload) {
-  return api.post('/auth/customer/register', payload)
+export async function register(data: { username: string; email: string; password: string; shopId: string; firstName?: string; lastName?: string }) {
+  return api.post('/customers/register', data)
 }
-export function login(payload: LoginPayload) {
-  return api.post('/auth/customer/login', payload)
+
+export async function login(email: string, password: string, shopId: string) {
+  return api.post('/auth/customer/login', { email, password, shopId })
 }
-export function fetchMe() {
-  return api.get('/auth/customer/me').then(r => r.data)
+
+export async function getProfile() {
+  return api.get('/auth/customer/me')
 }
-export function logout() {
+
+export async function logout() {
   return api.post('/auth/customer/logout')
+}
+
+export async function refreshToken() {
+  return api.post('/auth/customer/refresh')
 }

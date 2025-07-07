@@ -47,9 +47,24 @@
           <router-link :to="`/shops/${shopSlug}/cart`" class="text-gray-600 hover:text-black transition" title="Cart">
             <ShoppingBagIcon class="w-6 h-6" />
           </router-link>
-          <router-link :to="`/shops/${shopSlug}/account`" class="text-gray-600 hover:text-black transition" title="Account">
-            <UserIcon class="w-6 h-6" />
-          </router-link>
+          <template v-if="user">
+            <router-link :to="`/shops/${shopSlug}/account`" class="text-gray-600 hover:text-black transition" title="Account">
+              <template v-if="user">
+                <img v-if="user.profilePic" :src="user.profilePic" alt="Profile" class="w-8 h-8 rounded-full object-cover" />
+                <span v-else class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-lg font-bold text-gray-700">
+                  {{ getAvatarText() }}
+                </span>
+              </template>
+              <template v-else>
+                <UserIcon class="w-6 h-6" />
+              </template>
+            </router-link>
+          </template>
+          <template v-else>
+            <router-link :to="`/shops/${shopSlug}/login`" class="text-gray-600 hover:text-black transition" title="Login">
+              <UserIcon class="w-6 h-6" />
+            </router-link>
+          </template>
         </div>
       </div>
 
@@ -80,8 +95,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { useRoute } from 'vue-router';
+import { useAuthStore } from '../stores/auth';
 import {
   MagnifyingGlassIcon,
   HeartIcon,
@@ -99,4 +115,14 @@ const route = useRoute();
 const shopSlug = route.params.shopSlug as string;
 
 const isMobileSearchVisible = ref(false);
+
+const authStore = useAuthStore();
+const user = computed(() => authStore.user);
+
+function getAvatarText() {
+  if (!user.value) return '';
+  if (user.value.firstName) return user.value.firstName[0].toUpperCase();
+  if (user.value.email) return user.value.email[0].toUpperCase();
+  return user.value.username ? user.value.username[0].toUpperCase() : '';
+}
 </script>

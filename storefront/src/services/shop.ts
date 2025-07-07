@@ -1,4 +1,4 @@
-import { api, getShopUrl } from './api'
+import api, { getShopUrl } from './api'
 
 export interface Shop {
   id: string
@@ -8,6 +8,12 @@ export interface Shop {
   description: string
 }
 
-export function fetchShop(shopSlug: string): Promise<Shop> {
-  return api.get(getShopUrl(shopSlug, '')).then(r => r.data)
+export async function fetchShop(shopSlug: string): Promise<Shop | null> {
+  try {
+    const response = await api.get(getShopUrl(shopSlug, ''))
+    return response.data
+  } catch (error) {
+    console.error('Failed to fetch shop:', error)
+    return null
+  }
 }

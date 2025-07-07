@@ -1,4 +1,4 @@
-import { api, getShopUrl } from './api'
+import api, { getShopUrl } from './api'
 
 export interface Product {
   id: string
@@ -26,8 +26,14 @@ export interface Product {
   // add other fields as needed
 }
 
-export function fetchAllProducts(shopSlug: string): Promise<Product[]> {
-  return api.get(getShopUrl(shopSlug, '/products')).then(r => r.data)
+export async function fetchAllProducts(shopSlug: string): Promise<Product[]> {
+  try {
+    const response = await api.get(getShopUrl(shopSlug, '/products'))
+    return response.data
+  } catch (error) {
+    console.error('Failed to fetch products:', error)
+    return []
+  }
 }
 
 export function fetchProductDetail(shopSlug: string, handle: string): Promise<Product> {
