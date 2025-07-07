@@ -5,8 +5,8 @@ import (
 	"errors"
 	"time"
 
-	"github.com/Endale2/DRPS/shared/models"
 	"github.com/Endale2/DRPS/config"
+	"github.com/Endale2/DRPS/shared/models"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
@@ -83,16 +83,30 @@ func DeleteShop(id string) (*mongo.DeleteResult, error) {
 	return shopCollection.DeleteOne(context.Background(), bson.M{"_id": objID})
 }
 
-
 // GetShopBySlug retrieves a shop by its slug.
 func GetShopBySlug(slug string) (*models.Shop, error) {
-    var shop models.Shop
-    err := shopCollection.FindOne(context.Background(), bson.M{"slug": slug}).Decode(&shop)
-    if err != nil {
-        if err == mongo.ErrNoDocuments {
-            return nil, nil
-        }
-        return nil, err
-    }
-    return &shop, nil
+	// First, get the raw document to see what's actually in MongoDB
+	var rawDoc bson.M
+	err := shopCollection.FindOne(context.Background(), bson.M{"slug": slug}).Decode(&rawDoc)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, err
+	}
+	
+	
+	
+	var shop models.Shop
+	err = shopCollection.FindOne(context.Background(), bson.M{"slug": slug}).Decode(&shop)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, err
+	}
+	
+
+	
+	return &shop, nil
 }

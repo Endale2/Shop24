@@ -5,6 +5,7 @@ export interface Shop {
   name: string
   slug: string
   image: string
+  banner?: string
   description: string
 }
 

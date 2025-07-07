@@ -2,6 +2,7 @@
 package controllers
 
 import (
+	
 	"net/http"
 
 	shopServices "github.com/Endale2/DRPS/shared/services"
@@ -21,6 +22,9 @@ func GetStorefront(c *gin.Context) {
 		c.JSON(http.StatusNotFound, gin.H{"error": "shop not found"})
 		return
 	}
+
+
+	
 
 	c.JSON(http.StatusOK, shop)
 }
