@@ -23,7 +23,7 @@ const routes = [
         component: CollectionDetail,
         props: true,
       },
-      { path: 'auth', component: AuthPage },
+      { path: 'account', component: AuthPage },
     ],
   },
   // Shop selection page

@@ -1,55 +1,47 @@
 <template>
-  <div v-if="product" class="space-y-6">
-    <div class="grid md:grid-cols-2 gap-6">
-      <div>
-        <img
-          v-if="currentImage"
-          :src="currentImage"
-          class="w-full h-80 object-cover rounded"
-          alt="Product image"
-        />
-        <div v-else class="w-full h-80 bg-gray-200 rounded flex items-center justify-center">
-            <span class="text-gray-500">No Image</span>
-        </div>
-
-        <div class="flex mt-2 space-x-2 overflow-x-auto">
-          <img
-            v-for="(img, idx) in galleryImages"
-            :key="idx"
-            :src="img"
-            @click="selectThumbnail(img)"
-            :class="[
-              'w-20 h-20 object-cover rounded cursor-pointer',
-              currentImage === img ? 'ring-2 ring-blue-500' : ''
-            ]"
-            alt="Thumbnail"
-          />
+  <div v-if="product" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div class="flex flex-row lg:flex-col gap-4 overflow-x-auto lg:overflow-x-visible">
+        <div
+          v-for="(img, idx) in galleryImages"
+          :key="idx"
+          @click="selectThumbnail(img)"
+          :class="[
+            'w-24 h-24 object-contain rounded-md border cursor-pointer flex-shrink-0',
+            currentImage === img ? 'border-black ring-2 ring-black' : 'border-gray-200'
+          ]"
+          :style="{ background: '#f9fafb' }"
+        >
+          <img :src="img" :alt="`Thumbnail ${idx + 1}`" class="w-full h-full object-contain" />
         </div>
       </div>
 
-      <div>
-        <h1 class="text-3xl font-bold">{{ product?.name }}</h1>
-        <p class="text-gray-700 my-2">{{ product?.description }}</p>
-
-        <!-- Discount Information -->
-        <div v-if="product.discounts && product.discounts.length > 0" class="mb-4">
-          <div class="bg-green-50 border border-green-200 rounded-lg p-3">
-            <h3 class="text-sm font-medium text-green-800 mb-2">Active Discounts:</h3>
-            <div class="space-y-2">
-              <div v-for="discount in product.discounts" :key="discount.id" class="text-sm">
-                <span class="font-medium text-green-700">{{ discount.name }}</span>
-                <span class="text-green-600 ml-2">
-                  {{ discount.type === 'percentage' ? `${discount.value}% off` : `$${discount.value} off` }}
-                </span>
-                <div v-if="discount.coupon_code" class="text-xs text-green-600 mt-1">
-                  Code: {{ discount.coupon_code }}
-                </div>
-              </div>
-            </div>
+      <div class="lg:col-span-1 flex items-start justify-center">
+        <div class="w-full">
+          <img
+            v-if="currentImage"
+            :src="currentImage"
+            class="w-full h-auto max-h-[600px] object-contain rounded-lg bg-gray-50 border border-gray-200"
+            alt="Product image"
+          />
+          <div v-else class="w-full h-96 bg-gray-200 rounded-lg flex items-center justify-center">
+            <span class="text-gray-400">No Image</span>
           </div>
         </div>
+      </div>
 
-        <p class="text-xl font-semibold mb-4">
+      <div class="lg:col-span-1 flex flex-col gap-4">
+        <h1 class="text-3xl font-bold tracking-wide uppercase text-gray-900">{{ product?.name }}</h1>
+        <p class="text-sm text-gray-500">{{ product.category }}</p>
+        <p class="text-gray-600 leading-relaxed">{{ product.description }}</p>
+        
+        <div v-if="product.discounts && product.discounts.length > 0" class="my-2">
+          <span class="inline-block px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">
+            {{ product.discounts[0].type === 'percentage' ? `${product.discounts[0].value}% OFF` : `$${product.discounts[0].value} OFF` }}
+          </span>
+        </div>
+
+        <p class="text-3xl font-bold text-gray-900">
           <template v-if="selectedVariant">
             ${{ selectedVariant.price.toFixed(2) }}
           </template>
@@ -57,39 +49,53 @@
             ${{ product.price.toFixed(2) }}
           </template>
           <template v-else-if="product.starting_price != null">
-            <span class="italic text-gray-700">from</span> ${{ product.starting_price.toFixed(2) }}
+            <span class="text-xl italic text-gray-700">from</span> ${{ product.starting_price.toFixed(2) }}
           </template>
           <template v-else>
             N/A
           </template>
         </p>
 
-        <div v-if="product.variants && product.variants.length > 0" class="space-y-2 mb-4">
-          <p class="font-semibold">Options:</p>
+        <div v-if="product.variants && product.variants.length > 0" class="space-y-3">
+          <p class="font-semibold text-sm uppercase text-gray-700">Options:</p>
           <div class="flex flex-wrap gap-2">
             <button
               v-for="v in product.variants"
               :key="v.id"
               @click="selectVariant(v)"
-              class="px-4 py-2 border rounded hover:bg-gray-100 transition-colors"
-              :class="{ 'bg-blue-500 text-white border-blue-500': selectedVariant?.id === v.id }"
+              class="px-5 py-2 border-2 rounded-lg font-medium transition-colors focus:outline-none text-xs uppercase"
+              :class="selectedVariant?.id === v.id ? 'bg-black text-white border-black' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'"
             >
               {{ v.options.map(opt => opt.value).join(' / ') }}
             </button>
           </div>
         </div>
 
+        <div class="mt-2 text-sm font-medium text-gray-900">
+          <template v-if="selectedVariant">
+            <span v-if="selectedVariant.stock === 0" class="text-red-600 font-bold">Out of stock</span>
+            <span v-else>In Stock: <span class="text-green-600">{{ selectedVariant.stock }}</span></span>
+          </template>
+          <template v-else-if="product.total_stock !== undefined">
+            <span v-if="product.total_stock === 0" class="text-red-600 font-bold">Out of stock</span>
+            <span v-else>Total Stock: <span class="text-green-600">{{ product.total_stock }}</span></span>
+          </template>
+          <template v-else-if="product.stock !== undefined">
+            <span v-if="product.stock === 0" class="text-red-600 font-bold">Out of stock</span>
+            <span v-else>In Stock: <span class="text-green-600">{{ product.stock }}</span></span>
+          </template>
+        </div>
+
         <button
-          class="w-full py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+          class="w-full py-3 mt-4 bg-black text-white rounded-md text-lg font-bold transition-transform transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
           :disabled="!canAddToCart"
         >
-          Add to cart
+          Add to Cart
         </button>
       </div>
     </div>
   </div>
-
-  <div v-else class="text-center py-12">Loading product…</div>
+  <div v-else class="text-center py-20 text-gray-500 text-xl">Loading product…</div>
 </template>
 
 <script setup lang="ts">
@@ -131,14 +137,11 @@ onMounted(async () => {
 
 const galleryImages = computed<string[]>(() => {
   if (!product.value) return [];
-
   const imgs = new Set<string>();
   if (product.value.main_image) imgs.add(product.value.main_image);
   if (Array.isArray(product.value.images)) {
-      product.value.images.forEach(img => img && imgs.add(img));
+    product.value.images.forEach(img => img && imgs.add(img));
   }
-
-  // Safely check for variants array before iterating
   if (Array.isArray(product.value.variants)) {
     for (const v of product.value.variants) {
       if (v.image) imgs.add(v.image);
@@ -149,7 +152,11 @@ const galleryImages = computed<string[]>(() => {
 
 function selectThumbnail(img: string) {
   currentImage.value = img;
-  selectedVariant.value = null; // Reset variant selection
+  // Optional: Find a variant that matches this image and select it
+  const matchingVariant = product.value?.variants.find(v => v.image === img);
+  if (matchingVariant) {
+    selectedVariant.value = matchingVariant;
+  }
 }
 
 function selectVariant(v: Variant) {
@@ -159,15 +166,13 @@ function selectVariant(v: Variant) {
 
 const canAddToCart = computed<boolean>(() => {
   if (!product.value) return false;
-
   if (selectedVariant.value) {
     return selectedVariant.value.stock > 0;
   }
-  
   if (!product.value.variants || product.value.variants.length === 0) {
-    return product.value.stock > 0;
+    // Check stock for products without variants
+    return (product.value.stock ?? product.value.total_stock ?? 0) > 0;
   }
-
   return false; // Disable if variants exist but none are selected
 })
 </script>

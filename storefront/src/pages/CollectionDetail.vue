@@ -1,28 +1,31 @@
 <template>
-  <div v-if="collection" class="space-y-6">
-    <div class="relative h-48 bg-cover bg-center rounded" :style="{ backgroundImage: `url(${collection.image})` }">
-      <div class="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-        <h1 class="text-white text-3xl font-bold">{{ collection.title }}</h1>
+  <div v-if="collection" class="space-y-10">
+    <div class="relative h-64 md:h-80 bg-cover bg-center rounded-lg border border-gray-200 overflow-hidden" :style="{ backgroundImage: collection.image ? `url(${collection.image})` : '' }">
+      <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex flex-col items-center justify-end p-8 text-center">
+        <h1 class="text-4xl md:text-5xl font-extrabold text-white tracking-tight uppercase" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">{{ collection.title }}</h1>
+        <p v-if="collection.description" class="text-white/90 text-md max-w-2xl mt-4">{{ collection.description }}</p>
       </div>
     </div>
-    <p class="text-gray-700">{{ collection.description }}</p>
-    <h2 class="text-2xl">Products ({{ collection.products ? collection.products.length : 0 }})</h2>
-    <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
-      <div v-for="p in collection.products" :key="p.id" class="border rounded p-4 hover:shadow">
-        <img :src="p.main_image" alt="" class="w-full h-40 object-cover mb-2"/>
-        <h3 class="font-semibold">{{ p.name }}</h3>
-        <p class="text-gray-700">${{ p.display_price.toFixed(2) }}</p>
-        <router-link :to="`/shops/${shopSlug}/products/${p.slug}`" class="text-blue-500">View</router-link>
+
+    <div>
+      <h2 class="text-xl font-bold text-gray-900 mb-6 uppercase tracking-wider">
+        Products ({{ collection.products ? collection.products.length : 0 }})
+      </h2>
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        <ProductCard v-for="p in collection.products" :key="p.id" :product="p" />
       </div>
     </div>
   </div>
-  <div v-else class="text-center py-12">Loading collection…</div>
+  <div v-else class="text-center py-16 text-gray-500">
+    Loading collection…
+  </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { fetchCollectionDetail, CollectionDetail } from '@/services/collections'
+import ProductCard from '@/components/ProductCard.vue'
 
 const route = useRoute()
 const shopSlug = route.params.shopSlug as string
@@ -30,10 +33,6 @@ const handle = route.params.handle as string
 const collection = ref<CollectionDetail | null>(null)
 
 onMounted(async () => {
-  // It's good practice to ensure that fetchCollectionDetail always returns an object
-  // with a 'products' array, even if empty, or handle the null/undefined case
-  // more explicitly if the service can return null for 'products'.
-  
   collection.value = await fetchCollectionDetail(shopSlug, handle)
 })
 </script>

@@ -1,8 +1,8 @@
 <template>
   <Hero :shop="shop" />
-  <section class="mt-8">
-    <h2 class="text-2xl mb-4">Featured Products</h2>
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+  <section class="mt-12 max-w-7xl mx-auto px-2">
+    <h2 class="text-3xl font-bold mb-8 text-gray-900 tracking-tight uppercase">Featured Products</h2>
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
       <ProductCard v-for="p in featured" :key="p.id" :product="p" />
     </div>
   </section>

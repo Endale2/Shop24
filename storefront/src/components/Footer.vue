@@ -1,5 +1,5 @@
 <template>
-  <footer class="text-center py-4 border-t mt-8">
+  <footer class="text-center py-8 border-t border-gray-200 bg-white text-gray-400 text-sm font-light mt-16">
     © {{ new Date().getFullYear() }} {{ shop?.name }}. All rights reserved.
   </footer>
 </template>

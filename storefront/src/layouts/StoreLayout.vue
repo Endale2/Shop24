@@ -1,9 +1,11 @@
 <template>
-  <Header :shop="shop" />
-  <main class="py-8 px-4">
-    <router-view />
-  </main>
-  <Footer :shop="shop" />
+  <div class="min-h-screen flex flex-col bg-gray-50">
+    <Header :shop="shop" />
+    <main class="flex-1 w-full max-w-7xl mx-auto py-8 px-4">
+      <router-view />
+    </main>
+    <Footer :shop="shop" />
+  </div>
 </template>
 
 <script setup lang="ts">
