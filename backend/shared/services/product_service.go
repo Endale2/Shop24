@@ -55,31 +55,28 @@ func normalizeProduct(p *models.Product) {
 	// 3) If product has real variants, calculate aggregate values
 	if hasRealVariants {
 		minPrice := p.Variants[0].Price
-		maxDisplayPrice := p.Variants[0].DisplayPrice
 		totalStock := 0
 		for _, v := range p.Variants {
 			if v.Price < minPrice {
 				minPrice = v.Price
 			}
-			if v.DisplayPrice != nil && (maxDisplayPrice == nil || *v.DisplayPrice > *maxDisplayPrice) {
-				maxDisplayPrice = v.DisplayPrice
-			}
 			totalStock += v.Stock
 		}
 		p.Price = minPrice
-		p.DisplayPrice = maxDisplayPrice
 		p.Stock = totalStock
 	}
-	// If no real variants, keep the product's original price, display_price, and stock
+	// If no real variants, keep the product's original price and stock
 
 	// 4) Determine MainImage
-	if len(p.Images) > 0 {
-		p.MainImage = p.Images[0]
-	} else {
-		for _, v := range p.Variants {
-			if v.Image != "" {
-				p.MainImage = v.Image
-				break
+	if p.MainImage == "" {
+		if len(p.Images) > 0 {
+			p.MainImage = p.Images[0]
+		} else {
+			for _, v := range p.Variants {
+				if v.Image != "" {
+					p.MainImage = v.Image
+					break
+				}
 			}
 		}
 	}
@@ -147,7 +144,6 @@ func UpdateProductService(id string, updatedData bson.M) (*mongo.UpdateResult, e
 	if rawVariants, ok := updatedData["variants"].([]interface{}); ok {
 		totalStock := 0
 		minPrice := 0.0
-		maxDisplayPrice := (*float64)(nil)
 		for idx, rv := range rawVariants {
 			if vMap, isMap := rv.(map[string]interface{}); isMap {
 				// Convert the incoming 'options' field to []Option
@@ -167,32 +163,22 @@ func UpdateProductService(id string, updatedData bson.M) (*mongo.UpdateResult, e
 						minPrice = priceF
 					}
 				}
-				if dispF, hasDisp := vMap["display_price"].(float64); hasDisp {
-					if maxDisplayPrice == nil || dispF > *maxDisplayPrice {
-						maxDisplayPrice = new(float64)
-						*maxDisplayPrice = dispF
-					}
-				}
 				if stockF, hasStock := vMap["stock"].(float64); hasStock {
 					totalStock += int(stockF)
 				}
 			}
 		}
 		updatedData["price"] = minPrice
-		updatedData["display_price"] = maxDisplayPrice
 		updatedData["stock"] = totalStock
 		// Lock these fields from being edited directly ONLY if variants are present
 		if _, exists := updatedData["price"]; exists {
 			delete(updatedData, "price")
 		}
-		if _, exists := updatedData["display_price"]; exists {
-			delete(updatedData, "display_price")
-		}
 		if _, exists := updatedData["stock"]; exists {
 			delete(updatedData, "stock")
 		}
 	}
-	// For products with NO variants, allow price, display_price, stock, and main_image to be updated directly
+	// For products with NO variants, allow price and stock to be updated directly
 	// No further action needed
 
 	return repositories.UpdateProduct(id, updatedData)
@@ -516,23 +502,16 @@ func ProductToAPIResponse(p *models.Product) map[string]interface{} {
 			realVariants = append(realVariants, v)
 		}
 
-		// Compute starting_price, highest_display_price, total_stock
+		// Compute starting_price, total_stock
 		minPrice := realVariants[0].Price
-		maxDisplayPrice := realVariants[0].DisplayPrice
 		totalStock := 0
 		for _, v := range realVariants {
 			if v.Price < minPrice {
 				minPrice = v.Price
 			}
-			if v.DisplayPrice != nil && (maxDisplayPrice == nil || *v.DisplayPrice > *maxDisplayPrice) {
-				maxDisplayPrice = v.DisplayPrice
-			}
 			totalStock += v.Stock
 		}
 		resp["starting_price"] = minPrice
-		if maxDisplayPrice != nil {
-			resp["highest_display_price"] = *maxDisplayPrice
-		}
 		resp["total_stock"] = totalStock
 		resp["variants"] = realVariants
 		return resp
@@ -540,9 +519,6 @@ func ProductToAPIResponse(p *models.Product) map[string]interface{} {
 
 	// No real variants: treat as simple product (no variants array)
 	resp["price"] = p.Price
-	if p.DisplayPrice != nil {
-		resp["display_price"] = *p.DisplayPrice
-	}
 	resp["stock"] = p.Stock
 	return resp
 }

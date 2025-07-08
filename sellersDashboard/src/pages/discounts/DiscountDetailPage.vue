@@ -8,8 +8,8 @@
       </div>
       <div class="flex flex-wrap gap-3" v-if="discount">
         <button
-          @click="openEditForm(discount)"
-          class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-150 ease-in-out"
+          @click="goToEditPage(discount)"
+          class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out"
         >
           <PencilIcon class="w-5 h-5 mr-2 -ml-1" />
           Edit Discount
@@ -263,9 +263,17 @@
               </div>
               
               <div v-if="showUsageDetails" class="space-y-2 max-h-48 overflow-y-auto">
-                <div v-for="usage in discount.usageTracking.slice(0, 5)" :key="usage.customer_id"
+                <div v-for="(usage, idx) in discount.usageTracking.slice(0, 5)" :key="usage.customer_id"
                      class="flex justify-between items-center p-2 bg-gray-50 rounded-md text-sm">
-                  <span class="font-mono text-gray-700">{{ usage.customer_id }}</span>
+                  <span class="text-gray-700">
+                    <template v-if="recentUsageProfiles[idx]">
+                      <span class="font-semibold">{{ recentUsageProfiles[idx].firstName }} {{ recentUsageProfiles[idx].lastName }}</span>
+                      <span class="text-xs text-gray-500 ml-2">{{ recentUsageProfiles[idx].email }}</span>
+                    </template>
+                    <template v-else>
+                      {{ usage.customer_id }}
+                    </template>
+                  </span>
                   <span class="text-gray-600">{{ usage.usage_count }}x</span>
                 </div>
               </div>
@@ -281,13 +289,17 @@
           Applied Items
         </h3>
         
+        <div class="flex gap-2 mb-4">
+          <button @click="showAddProductModal = true" class="px-3 py-1.5 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700">Add Product</button>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <!-- Products -->
           <div v-if="discount.appliesToProducts?.length">
             <h4 class="text-lg font-medium text-gray-900 mb-4">Products</h4>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div v-for="prod in discount.appliesToProducts" :key="prod.id"
-                   class="group border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 ease-in-out bg-white cursor-pointer"
+                   class="relative group border border-gray-200 rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow duration-200 ease-in-out bg-white cursor-pointer"
                    @click="goToProductDetail(prod.id)">
                 <div class="aspect-w-16 aspect-h-9 overflow-hidden">
                   <img :src="prod.main_image || '/placeholder-image.png'" :alt="prod.name"
@@ -297,6 +309,7 @@
                   <h5 class="text-sm font-medium text-gray-800 group-hover:text-green-700 transition-colors">{{ prod.name }}</h5>
                   <p class="text-xs text-gray-600 mt-1 line-clamp-2">{{ prod.description || 'No description available.' }}</p>
                 </div>
+                <button @click.stop="removeProductFromDiscount(prod.id)" class="absolute top-2 right-2 bg-red-600 text-white rounded-full p-1 shadow hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 z-10">×</button>
               </div>
             </div>
           </div>
@@ -326,127 +339,6 @@
             <p class="text-sm">This discount does not apply to any specific collections.</p>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- Edit Modal -->
-    <div v-if="showForm" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-y-auto p-8 relative">
-        <h2 class="text-2xl font-bold mb-6 text-gray-800 text-center">Edit Discount</h2>
-        
-        <form @submit.prevent="submitForm" class="space-y-6">
-          <!-- Basic Information -->
-          <div class="bg-gray-50 p-6 rounded-lg">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Basic Information</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label for="modal-name" class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-                <input id="modal-name" v-model="form.name" type="text" required
-                       class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out" />
-              </div>
-              <div>
-                <label for="modal-couponCode" class="block text-sm font-medium text-gray-700 mb-1">Coupon Code (optional)</label>
-                <input id="modal-couponCode" v-model="form.couponCode" type="text"
-                       class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out" />
-              </div>
-            </div>
-            <div class="mt-4">
-              <label for="modal-description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-              <textarea id="modal-description" v-model="form.description" rows="3"
-                        class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out"></textarea>
-            </div>
-          </div>
-
-          <!-- Discount Configuration -->
-          <div class="bg-gray-50 p-6 rounded-lg">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Discount Configuration</h3>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div>
-                <label for="modal-category" class="block text-sm font-medium text-gray-700 mb-1">Category *</label>
-                <select id="modal-category" v-model="form.category" required
-                        class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 bg-white transition duration-150 ease-in-out">
-                  <option value="product">Product Discount</option>
-                  <option value="order">Order Discount</option>
-                  <option value="shipping">Shipping Discount</option>
-                  <option value="buy_x_get_y">Buy X Get Y</option>
-                </select>
-              </div>
-              <div>
-                <label for="modal-type" class="block text-sm font-medium text-gray-700 mb-1">Type *</label>
-                <select id="modal-type" v-model="form.type" required
-                        class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 bg-white transition duration-150 ease-in-out">
-                  <option value="percentage">Percentage</option>
-                  <option value="fixed">Fixed Amount</option>
-                </select>
-              </div>
-              <div>
-                <label for="modal-value" class="block text-sm font-medium text-gray-700 mb-1">Value *</label>
-                <input
-                  id="modal-value"
-                  v-model.number="form.value"
-                  type="number"
-                  min="0"
-                  :step="form.type === 'percentage' ? 1 : 0.01"
-                  required
-                  class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out"
-                />
-              </div>
-            </div>
-          </div>
-
-          <!-- Validity Period -->
-          <div class="bg-gray-50 p-6 rounded-lg">
-            <h3 class="text-lg font-medium text-gray-900 mb-4">Validity Period</h3>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label for="modal-startAt" class="block text-sm font-medium text-gray-700 mb-1">Start Date & Time</label>
-                <input
-                  id="modal-startAt"
-                  v-model="form.startAt"
-                  type="datetime-local"
-                  required
-                  class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out"
-                />
-              </div>
-              <div>
-                <label for="modal-endAt" class="block text-sm font-medium text-gray-700 mb-1">End Date & Time</label>
-                <input
-                  id="modal-endAt"
-                  v-model="form.endAt"
-                  type="datetime-local"
-                  required
-                  class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out"
-                />
-              </div>
-            </div>
-            <div class="flex items-center space-x-2 pt-4">
-              <input id="modal-active" type="checkbox" v-model="form.active"
-                     class="form-checkbox h-5 w-5 text-green-600 rounded focus:ring-green-500 transition duration-150 ease-in-out" />
-              <label for="modal-active" class="text-base font-medium text-gray-800">Discount is Active</label>
-            </div>
-          </div>
-
-          <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-            <button type="button" @click="closeForm"
-                    class="px-5 py-2.5 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200 ease-in-out">
-              Cancel
-            </button>
-            <button
-              type="submit"
-              :disabled="formLoading"
-              class="bg-green-600 text-white px-5 py-2.5 rounded-lg shadow-md hover:bg-green-700 transition duration-300 ease-in-out disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              <span v-if="formLoading" class="flex items-center">
-                <SpinnerIcon class="animate-spin h-5 w-5 mr-3" />
-                Saving...
-              </span>
-              <span v-else>Update Discount</span>
-            </button>
-          </div>
-        </form>
-        <button @click="closeForm" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-200">
-          <XIcon class="h-6 w-6" />
-        </button>
       </div>
     </div>
 
@@ -603,6 +495,21 @@
         </button>
       </div>
     </div>
+
+    <!-- Add Product Modal -->
+    <div v-if="showAddProductModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6 relative">
+        <h3 class="text-xl font-bold mb-4 text-gray-800">Add Product to Discount</h3>
+        <input v-model="productSearchQuery" placeholder="Search products..." class="w-full mb-4 border-gray-300 rounded-lg px-3 py-2.5" />
+        <div class="max-h-64 overflow-y-auto">
+          <div v-for="product in filteredAvailableProducts" :key="product.id" class="flex items-center justify-between p-2 border-b last:border-b-0">
+            <span>{{ product.name }}</span>
+            <button :disabled="isProductAdded(product.id)" @click="addProductToDiscount(product)" class="px-2 py-1 bg-green-600 text-white rounded disabled:opacity-50">Add</button>
+          </div>
+        </div>
+        <button @click="showAddProductModal = false" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600"><XIcon class="h-6 w-6" /></button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -634,6 +541,7 @@ import {
   ExclamationIcon,
   ClockIcon
 } from '@heroicons/vue/outline'
+import { productService } from '@/services/product'
 
 // State
 const loading = ref(true)
@@ -691,6 +599,9 @@ const form = ref({
 const showUsageDetails = ref(false)
 const showAddCustomersModal = ref(false)
 const showAddSegmentsModal = ref(false)
+const showAddProductModal = ref(false)
+const productSearchQuery = ref('')
+const allProducts = ref([])
 
 // Data for dropdowns
 const customers = ref([])
@@ -717,6 +628,35 @@ const addCustomersForm = ref({
 const addSegmentsForm = ref({
   segmentIds: ''
 })
+
+// Add state for recent usage customer profiles
+const recentUsageProfiles = ref([])
+
+// Watch discount usageTracking and fetch customer profiles for recent usage
+watch(
+  () => discount.value?.usageTracking,
+  async (usageList) => {
+    if (!usageList || !Array.isArray(usageList) || !shopId.value) {
+      recentUsageProfiles.value = []
+      return
+    }
+    // Only fetch for the first 5 recent usages
+    const ids = usageList.slice(0, 5).map(u => u.customer_id || u.customerId)
+    // Deduplicate
+    const uniqueIds = Array.from(new Set(ids))
+    // Fetch profiles in parallel
+    recentUsageProfiles.value = await Promise.all(
+      uniqueIds.map(async id => {
+        try {
+          return await customerService.fetchById(shopId.value, id)
+        } catch (e) {
+          return { id, firstName: 'Unknown', lastName: '', email: '' }
+        }
+      })
+    )
+  },
+  { immediate: true }
+)
 
 // Computed properties
 const isActive = computed(() => {
@@ -1022,9 +962,9 @@ function closeAddSegmentsModal() {
 
 async function addCustomersToDiscount() {
   if (!discount.value || selectedCustomers.value.length === 0) return
-  
   try {
-    const customerIds = selectedCustomers.value.map(c => c.id)
+    // Deduplicate customer IDs before sending
+    const customerIds = Array.from(new Set(selectedCustomers.value.map(c => c.id)))
     await discountService.addCustomers(shopId.value, discount.value.id, customerIds)
     await loadDiscount()
     closeAddCustomersModal()
@@ -1036,9 +976,9 @@ async function addCustomersToDiscount() {
 
 async function addSegmentsToDiscount() {
   if (!discount.value || selectedSegments.value.length === 0) return
-  
   try {
-    const segmentIds = selectedSegments.value.map(s => s.id)
+    // Deduplicate segment IDs before sending
+    const segmentIds = Array.from(new Set(selectedSegments.value.map(s => s.id)))
     await discountService.addSegments(shopId.value, discount.value.id, segmentIds)
     await loadDiscount()
     closeAddSegmentsModal()
@@ -1161,6 +1101,55 @@ onMounted(() => {
 onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
+
+// Add a computed property for deduplicated eligible customer count (if you have both allowedCustomers and allowedSegments)
+const dedupedEligibleCustomerCount = computed(() => {
+  // If backend provides a deduplicated list, use it. Otherwise, deduplicate here.
+  const ids = new Set()
+  if (discount.value?.allowedCustomers) {
+    discount.value.allowedCustomers.forEach(id => ids.add(id))
+  }
+  // If you fetch customers from segments, add them here as well
+  // For now, just count direct customers
+  return ids.size
+})
+
+// Load all products/variants for the shop
+async function loadAllProducts() {
+  if (!shopId.value) return
+  allProducts.value = await productService.fetchAllByShop(shopId.value)
+}
+
+onMounted(() => {
+  loadAllProducts()
+})
+
+const filteredAvailableProducts = computed(() => {
+  const query = productSearchQuery.value.toLowerCase()
+  return allProducts.value.filter(p =>
+    (!query || p.name.toLowerCase().includes(query)) &&
+    !isProductAdded(p.id)
+  )
+})
+function isProductAdded(productId) {
+  return (discount.value?.appliesToProducts || []).some(p => p.id === productId)
+}
+async function addProductToDiscount(product) {
+  // Deduplicate and PATCH
+  const ids = Array.from(new Set([...(discount.value.appliesToProducts?.map(p => p.id) || []), product.id]))
+  await discountService.update(shopId.value, discount.value.id, { appliesToProducts: ids })
+  await loadDiscount()
+  showAddProductModal.value = false
+}
+async function removeProductFromDiscount(productId) {
+  const ids = (discount.value.appliesToProducts || []).map(p => p.id).filter(id => id !== productId)
+  await discountService.update(shopId.value, discount.value.id, { appliesToProducts: ids })
+  await loadDiscount()
+}
+
+function goToEditPage(disc) {
+  router.push({ name: 'EditDiscount', params: { discountId: disc.id } })
+}
 </script>
 
 <style scoped>

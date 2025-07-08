@@ -72,10 +72,6 @@
               <input id="price" type="number" v-model.number="productToEdit.price" step="0.01" min="0" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm" />
             </div>
             <div>
-              <label for="display_price" class="block text-sm font-medium text-gray-700 mb-1">Display Price</label>
-              <input id="display_price" type="number" v-model.number="productToEdit.display_price" step="0.01" min="0" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm" />
-            </div>
-            <div>
               <label for="stock" class="block text-sm font-medium text-gray-700 mb-1">Stock</label>
               <input id="stock" type="number" v-model.number="productToEdit.stock" min="0" class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm" />
             </div>
@@ -183,18 +179,6 @@
                 placeholder="URL for variant image (optional)"
               />
             </div>
-            <div>
-              <label :for="`variant-display-price-${vIndex}`" class="block text-sm font-medium text-gray-700 mt-3">Variant Display Price (optional)</label>
-              <input
-                :id="`variant-display-price-${vIndex}`"
-                type="number"
-                v-model.number="productToEdit.variants[vIndex].display_price"
-                step="0.01"
-                min="0"
-                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 sm:text-sm"
-                placeholder="Display price (optional)"
-              />
-            </div>
           </div>
           <button type="button" @click="addVariant" class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500">
             <PlusIcon class="h-5 w-5 mr-2" /> Add Variant
@@ -259,7 +243,6 @@ const productToEdit = ref({
   name: '',
   description: '',
   price: null,
-  display_price: null,
   stock: null,
   category: '',
   images: [],
@@ -348,7 +331,6 @@ async function fetchProductDetails() {
       category: fetchedProduct.category,
       price: (typeof fetchedProduct.price === 'number' && !isNaN(fetchedProduct.price)) ? fetchedProduct.price : 0,
       stock: (typeof fetchedProduct.stock === 'number' && !isNaN(fetchedProduct.stock)) ? fetchedProduct.stock : 0,
-      display_price: (typeof fetchedProduct.display_price === 'number' && !isNaN(fetchedProduct.display_price)) ? fetchedProduct.display_price : 0,
       description: fetchedProduct.description,
       variants: (fetchedProduct.variants || []).map(v => ({
         ...v,
@@ -391,21 +373,16 @@ async function submitChanges() {
       stock: v.stock,
       image: v.image || null,
     }));
-    // Do NOT send price/display_price/stock for variant products
+    // Do NOT send price/stock for variant products
   } else {
-    // Only include price/display_price/stock if they are not null/undefined
+    // Only include price/stock if they are not null/undefined
     if (typeof productToEdit.value.price === 'number') {
       dataToSend.price = productToEdit.value.price;
-    }
-    // Always send display_price as a number or null
-    if (typeof productToEdit.value.display_price === 'number') {
-      dataToSend.display_price = productToEdit.value.display_price;
-    } else {
-      dataToSend.display_price = null;
     }
     if (typeof productToEdit.value.stock === 'number') {
       dataToSend.stock = productToEdit.value.stock;
     }
+    // Do NOT include variants at all for simple products
     // Always send main_image as a string (even if empty)
     dataToSend.main_image = productToEdit.value.main_image || '';
   }

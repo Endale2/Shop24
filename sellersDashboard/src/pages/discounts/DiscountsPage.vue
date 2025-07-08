@@ -3,7 +3,7 @@
     <div class="flex justify-between items-center mb-8">
       <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">Discounts</h1>
       <button
-        @click="openCreateForm"
+        @click="goToAddPage"
         class="inline-flex items-center px-5 py-2.5 bg-green-600 text-white text-base font-medium rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-150 ease-in-out transform hover:scale-105"
       >
         <PlusIcon class="w-5 h-5 mr-2 -ml-1" />
@@ -71,7 +71,7 @@
         </p>
         <button
           v-if="!searchQuery && !statusFilter && !categoryFilter"
-          @click="openCreateForm"
+          @click="goToAddPage"
           class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg shadow-md hover:bg-green-700 transition duration-150 ease-in-out"
         >
           <PlusIcon class="w-4 h-4 mr-2" />
@@ -426,7 +426,7 @@ function goToDiscountDetail(discountId) {
   router.push({ name: 'DiscountDetail', params: { discountId: discountId } });
 }
 
-function openCreateForm() {
+function goToAddPage() {
   router.push('/dashboard/discounts/create')
 }
 

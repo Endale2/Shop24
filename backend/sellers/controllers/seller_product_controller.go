@@ -244,7 +244,7 @@ func UpdateProduct(c *gin.Context) {
 				return
 			}
 		}
-		// Do not require price/display_price/stock to be present for PATCH; only validate if present
+		// Do not require price/stock to be present for PATCH; only validate if present
 	}
 
 	// Validate variants if present

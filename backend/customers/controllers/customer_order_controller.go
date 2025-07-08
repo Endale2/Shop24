@@ -79,13 +79,12 @@ func DebugProduct(c *gin.Context) {
 	variants := make([]map[string]interface{}, 0, len(product.Variants))
 	for i, v := range product.Variants {
 		variant := map[string]interface{}{
-			"index":         i,
-			"variant_id":    v.VariantID.Hex(),
-			"options":       v.Options,
-			"price":         v.Price,
-			"display_price": v.DisplayPrice,
-			"stock":         v.Stock,
-			"image":         v.Image,
+			"index":      i,
+			"variant_id": v.VariantID.Hex(),
+			"options":    v.Options,
+			"price":      v.Price,
+			"stock":      v.Stock,
+			"image":      v.Image,
 		}
 		variants = append(variants, variant)
 	}
@@ -95,7 +94,6 @@ func DebugProduct(c *gin.Context) {
 		"name":           product.Name,
 		"shop_id":        product.ShopID.Hex(),
 		"product_price":  product.Price,
-		"display_price":  product.DisplayPrice,
 		"product_stock":  product.Stock,
 		"total_variants": len(product.Variants),
 		"variants":       variants,
@@ -255,8 +253,8 @@ func PlaceOrder(c *gin.Context) {
 		}
 
 		// Debug: Log product and variant information
-		fmt.Printf("Product %s: Name=%s, Price=%.2f, DisplayPrice=%v, Stock=%d\n",
-			productID.Hex(), product.Name, product.Price, product.DisplayPrice, product.Stock)
+		fmt.Printf("Product %s: Name=%s, Price=%.2f, Stock=%d\n",
+			productID.Hex(), product.Name, product.Price, product.Stock)
 		fmt.Printf("Product %s has %d variants:\n", productID.Hex(), len(product.Variants))
 		for i, v := range product.Variants {
 			fmt.Printf("  Variant %d: ID=%s, Options=%+v, Price=%.2f, Stock=%d\n", i, v.VariantID.Hex(), v.Options, v.Price, v.Stock)
@@ -305,12 +303,8 @@ func PlaceOrder(c *gin.Context) {
 				return
 			}
 
-			// Use display price if available (discounted), otherwise use regular price
-			if foundVariant.DisplayPrice != nil && *foundVariant.DisplayPrice > 0 {
-				unitPrice = *foundVariant.DisplayPrice
-			} else {
-				unitPrice = foundVariant.Price
-			}
+			// Use regular price if available, otherwise use regular price
+			unitPrice = foundVariant.Price
 
 			productName = product.Name
 			if len(foundVariant.Options) > 0 {
@@ -340,14 +334,10 @@ func PlaceOrder(c *gin.Context) {
 			orderVariantID = variantID
 		} else {
 			// Product has no real variants or no variant specified - use product base price
-			if product.DisplayPrice != nil && *product.DisplayPrice > 0 {
-				unitPrice = *product.DisplayPrice
-			} else {
-				unitPrice = product.Price
-			}
+			unitPrice = product.Price
 
-			fmt.Printf("Using product base price: %.2f (DisplayPrice: %v, Product.Price: %.2f)\n",
-				unitPrice, product.DisplayPrice, product.Price)
+			fmt.Printf("Using product base price: %.2f (Product.Price: %.2f)\n",
+				unitPrice, product.Price)
 
 			productName = product.Name
 			productImage = product.MainImage

@@ -21,7 +21,7 @@ export interface LoginPayload {
 }
 
 export async function register(data: { username: string; email: string; password: string; shopId: string; firstName?: string; lastName?: string }) {
-  return api.post('/customers/register', data)
+  return api.post('/auth/customer/register', data)
 }
 
 export async function login(email: string, password: string, shopId: string) {

@@ -28,6 +28,14 @@
           New Segment
         </button>
 
+        <button
+          @click="goToSegmentsPage"
+          class="inline-flex items-center px-4 py-2 bg-gray-100 text-blue-700 text-sm font-medium rounded-lg shadow-md hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out"
+        >
+          <FolderIcon class="w-5 h-5 mr-2 -ml-1" />
+          Manage Segments
+        </button>
+
         <div class="inline-flex rounded-full shadow-md overflow-hidden" role="group">
           <button
             @click="currentView = 'cards'"
@@ -627,6 +635,10 @@ async function unlinkCustomer(linkId) {
     console.error('Failed to unlink customer:', e)
     error.value = 'Failed to remove customer. Please try again.'
   }
+}
+
+function goToSegmentsPage() {
+  router.push({ name: 'CustomerSegments' })
 }
 </script>
 

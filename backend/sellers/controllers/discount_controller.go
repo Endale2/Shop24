@@ -132,6 +132,26 @@ func CreateDiscount(c *gin.Context) {
 	}
 	d.BuyQuantity = in.BuyQuantity
 	d.GetQuantity = in.GetQuantity
+	// Deduplicate AppliesToProducts and AppliesToVariants
+	uniqueProducts := make(map[primitive.ObjectID]struct{})
+	for _, oid := range d.AppliesToProducts {
+		uniqueProducts[oid] = struct{}{}
+	}
+	var dedupedProducts []primitive.ObjectID
+	for oid := range uniqueProducts {
+		dedupedProducts = append(dedupedProducts, oid)
+	}
+	d.AppliesToProducts = dedupedProducts
+
+	uniqueVariants := make(map[primitive.ObjectID]struct{})
+	for _, oid := range d.AppliesToVariants {
+		uniqueVariants[oid] = struct{}{}
+	}
+	var dedupedVariants []primitive.ObjectID
+	for oid := range uniqueVariants {
+		dedupedVariants = append(dedupedVariants, oid)
+	}
+	d.AppliesToVariants = dedupedVariants
 	// Call service
 	created, err := sharedSvc.CreateDiscountService(d)
 	if err != nil {
@@ -409,7 +429,15 @@ func UpdateDiscount(c *gin.Context) {
 					}
 				}
 			}
-			upd["applies_to_products"] = oids
+			var dedupedOids []primitive.ObjectID
+			seen := make(map[primitive.ObjectID]struct{})
+			for _, oid := range oids {
+				if _, ok := seen[oid]; !ok {
+					dedupedOids = append(dedupedOids, oid)
+					seen[oid] = struct{}{}
+				}
+			}
+			upd["applies_to_products"] = dedupedOids
 		case "appliesToVariants":
 			arr, _ := v.([]interface{})
 			var oids []primitive.ObjectID
@@ -420,7 +448,15 @@ func UpdateDiscount(c *gin.Context) {
 					}
 				}
 			}
-			upd["applies_to_variants"] = oids
+			var dedupedOids []primitive.ObjectID
+			seen := make(map[primitive.ObjectID]struct{})
+			for _, oid := range oids {
+				if _, ok := seen[oid]; !ok {
+					dedupedOids = append(dedupedOids, oid)
+					seen[oid] = struct{}{}
+				}
+			}
+			upd["applies_to_variants"] = dedupedOids
 		case "appliesToCollections":
 			arr, _ := v.([]interface{})
 			var oids []primitive.ObjectID

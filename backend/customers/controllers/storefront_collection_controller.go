@@ -3,8 +3,8 @@ package controllers
 import (
 	"net/http"
 
-	"github.com/Endale2/DRPS/shared/services"
 	"github.com/Endale2/DRPS/sellers/repositories"
+	"github.com/Endale2/DRPS/shared/services"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -17,7 +17,6 @@ type CollectionProductSummary struct {
 	MainImage    string             `json:"main_image"`
 	Description  string             `json:"description"`
 	Price        float64            `json:"price"`
-	DisplayPrice *float64           `json:"display_price,omitempty"`
 	VariantCount int                `json:"variant_count"`
 }
 
@@ -92,19 +91,18 @@ func GetCollection(c *gin.Context) {
 			MainImage:    p.MainImage,
 			Description:  p.Description,
 			Price:        p.Price,
-			DisplayPrice: p.DisplayPrice,
 			VariantCount: len(p.Variants),
 		})
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"id":           coll.ID,
-		"title":        coll.Title,
-		"handle":       coll.Handle,
-		"description":  coll.Description,
-		"image":        coll.Image,
-		"created_at":   coll.CreatedAt,
-		"filters":      coll.Filters,
-		"products":     products,
+		"id":          coll.ID,
+		"title":       coll.Title,
+		"handle":      coll.Handle,
+		"description": coll.Description,
+		"image":       coll.Image,
+		"created_at":  coll.CreatedAt,
+		"filters":     coll.Filters,
+		"products":    products,
 	})
 }

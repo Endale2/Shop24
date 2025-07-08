@@ -71,11 +71,9 @@
 
           <div class="mt-2 text-gray-700 text-base">
             <span v-if="product.variants && product.variants.length > 0">
-              <span class="font-semibold">Display Price:</span> {{ computedDisplayPriceDisplay }}<br />
               <span class="font-semibold">Stock:</span> {{ computedStockDisplay }}
             </span>
             <span v-else>
-              <span class="font-semibold">Display Price:</span> {{ formatPrice(product.display_price) }}<br />
               <span class="font-semibold">Stock:</span> {{ product.stock }}
             </span>
           </div>
@@ -175,7 +173,6 @@
         <div><strong>Main Image:</strong> <a :href="product.main_image" target="_blank" class="text-blue-600 underline">View</a></div>
         <div><strong>Category:</strong> {{ product.category }}</div>
         <div><strong>Price:</strong> {{ formatPrice(product.price) }}</div>
-        <div><strong>Display Price:</strong> {{ formatPrice(product.display_price) }}</div>
         <div><strong>Stock:</strong> {{ product.stock }}</div>
         <div><strong>Created By:</strong> {{ product.createdBy }}</div>
         <div><strong>Created At:</strong> {{ formatDate(product.createdAt) }}</div>
@@ -248,15 +245,6 @@ const mainImage = ref(null)
 
 const activeShop = computed(() => shopStore.activeShop)
 
-const computedPriceDisplay = computed(() => {
-  if (!product.value.variants || product.value.variants.length === 0) return formatPrice(product.value.price);
-  return formatPrice(Math.min(...product.value.variants.map(v => v.price)));
-});
-const computedDisplayPriceDisplay = computed(() => {
-  if (!product.value.variants || product.value.variants.length === 0) return formatPrice(product.value.display_price);
-  const displayPrices = product.value.variants.map(v => v.display_price).filter(p => p != null);
-  return displayPrices.length ? formatPrice(Math.max(...displayPrices)) : '';
-});
 const computedStockDisplay = computed(() => {
   if (!product.value.variants || product.value.variants.length === 0) return product.value.stock;
   return product.value.variants.reduce((sum, v) => sum + (v.stock || 0), 0);

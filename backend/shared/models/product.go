@@ -18,11 +18,9 @@ type Variant struct {
 	Options   []Option           `bson:"options"             json:"options"`
 
 	// Price is the base price; DisplayPrice can override it in the UI
-	Price        float64  `bson:"price"                json:"price"`
-	DisplayPrice *float64 `bson:"display_price,omitempty" json:"display_price,omitempty"`
-
-	Stock int    `bson:"stock"                json:"stock"`
-	Image string `bson:"image,omitempty"      json:"image,omitempty"`
+	Price float64 `bson:"price"                json:"price"`
+	Stock int     `bson:"stock"                json:"stock"`
+	Image string  `bson:"image,omitempty"      json:"image,omitempty"`
 
 	// Total could represent price * quantity, or any calculated total
 	Total *float64 `bson:"total,omitempty"      json:"total,omitempty"`
@@ -53,10 +51,9 @@ type Product struct {
 	Images    []string `bson:"images,omitempty"          json:"images,omitempty"`
 
 	// Pricing & inventory
-	Category     string   `bson:"category"                  json:"category"`
-	Price        float64  `bson:"price"                     json:"price"`
-	DisplayPrice *float64 `bson:"display_price,omitempty"   json:"display_price,omitempty"`
-	Stock        int      `bson:"stock"                     json:"stock"`
+	Category string  `bson:"category"                  json:"category"`
+	Price    float64 `bson:"price"                     json:"price"`
+	Stock    int     `bson:"stock"                     json:"stock"`
 
 	// Variants & ratings
 	Variants      []Variant `bson:"variants,omitempty"        json:"variants,omitempty"`

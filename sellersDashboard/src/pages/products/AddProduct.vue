@@ -76,21 +76,6 @@
               </div>
             </div>
             <div>
-              <label for="display_price" class="block text-sm font-medium text-gray-700 mb-1">Display Price</label>
-              <input
-                id="display_price"
-                type="number"
-                v-model.number="form.display_price"
-                step="0.01"
-                min="0"
-                :disabled="form.variants && form.variants.length > 0"
-                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm bg-gray-100"
-              />
-              <div v-if="form.variants && form.variants.length > 0" class="text-xs text-gray-500 mt-1">
-                Computed from variants: {{ computedDisplayPrice }}
-              </div>
-            </div>
-            <div>
               <label for="stock" class="block text-sm font-medium text-gray-700 mb-1">Stock</label>
               <input
                 id="stock"
@@ -320,7 +305,6 @@ const form = reactive({
   images: [],
   category: '',
   price: null,
-  display_price: null,
   stock: null,
   variants: []
 })
@@ -444,23 +428,31 @@ async function submitForm() {
       }
     }
 
-    const payload = {
+    // Build payload
+    let payload = {
       name: form.name.trim(),
       description: form.description.trim(),
-      main_image: form.main_image.trim() || undefined,
+      main_image: form.main_image.trim() || '', // Always include main_image
       images: form.images.filter((i) => i.trim()),
       category: form.category.trim(),
-      ...(form.variants.length === 0 ? {
-        price: form.price,
-        display_price: form.display_price,
-        stock: form.stock
-      } : {}),
-      variants: showVariants.value && form.variants.length > 0 ? form.variants.map((v) => ({
+    };
+    if (form.variants.length > 0) {
+      payload.variants = form.variants.map((v) => ({
         options: v.options.filter(o => o.name && o.value),
         price: v.price,
         stock: v.stock || 0,
         image: v.image || undefined
-      })) : []
+      }));
+      // Do NOT send price/stock for variant products
+    } else {
+      // Only include price/stock if they are not null/undefined
+      if (typeof form.price === 'number') {
+        payload.price = form.price;
+      }
+      if (typeof form.stock === 'number') {
+        payload.stock = form.stock;
+      }
+      // Do NOT include variants at all for simple products
     }
     // Debugging: Log the payload before sending
     console.log("Submitting payload:", payload);
@@ -478,11 +470,6 @@ async function submitForm() {
 const computedPrice = computed(() => {
   if (!form.variants || form.variants.length === 0) return form.price;
   return Math.min(...form.variants.map(v => v.price));
-});
-const computedDisplayPrice = computed(() => {
-  if (!form.variants || form.variants.length === 0) return form.display_price;
-  const displayPrices = form.variants.map(v => v.display_price).filter(p => p != null);
-  return displayPrices.length ? Math.max(...displayPrices) : '';
 });
 const computedStock = computed(() => {
   if (!form.variants || form.variants.length === 0) return form.stock;

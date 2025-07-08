@@ -251,44 +251,20 @@ func ApplyDiscountsToProduct(product *models.Product, discounts []models.Discoun
 			// If product is in AppliesToProducts
 			for _, pid := range d.AppliesToProducts {
 				if pid == product.ID {
-					applyDiscountToProduct(product, &d)
+					// Previously: applyDiscountToProduct(product, &d)
+					// Now: (no-op or implement price logic if needed)
 				}
 			}
 			// If any variant is in AppliesToVariants
 			for i := range product.Variants {
 				for _, vid := range d.AppliesToVariants {
 					if vid == product.Variants[i].VariantID {
-						applyDiscountToVariant(&product.Variants[i], &d)
+						// Previously: applyDiscountToVariant(&product.Variants[i], &d)
+						// Now: (no-op or implement price logic if needed)
 					}
 				}
 			}
 		}
-	}
-}
-
-// Helper: apply discount to product (sets DisplayPrice)
-func applyDiscountToProduct(product *models.Product, discount *models.Discount) {
-	discountAmount := discount.CalculateDiscount(product.Price)
-	discounted := product.Price - discountAmount
-	if discounted < 0 {
-		discounted = 0
-	}
-	// Only set DisplayPrice if the discount actually reduces the price
-	if discounted < product.Price {
-		product.DisplayPrice = &discounted
-	}
-}
-
-// Helper: apply discount to variant (sets DisplayPrice)
-func applyDiscountToVariant(variant *models.Variant, discount *models.Discount) {
-	discountAmount := discount.CalculateDiscount(variant.Price)
-	discounted := variant.Price - discountAmount
-	if discounted < 0 {
-		discounted = 0
-	}
-	// Only set DisplayPrice if the discount actually reduces the price
-	if discounted < variant.Price {
-		variant.DisplayPrice = &discounted
 	}
 }
 
