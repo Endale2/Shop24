@@ -35,26 +35,46 @@
         <p class="text-sm text-gray-500">{{ product.category }}</p>
         <p class="text-gray-600 leading-relaxed">{{ product.description }}</p>
         
+        <!-- Discount Badge -->
         <div v-if="product.discounts && product.discounts.length > 0" class="my-2">
-          <span class="inline-block px-2 py-1 bg-yellow-100 text-yellow-800 text-xs font-semibold rounded-full">
+          <span class="inline-block px-3 py-1 bg-yellow-100 text-yellow-800 text-sm font-semibold rounded-full">
             {{ product.discounts[0].type === 'percentage' ? `${product.discounts[0].value}% OFF` : `$${product.discounts[0].value} OFF` }}
           </span>
         </div>
 
-        <p class="text-3xl font-bold text-gray-900">
-          <template v-if="selectedVariant">
-            ${{ selectedVariant.price.toFixed(2) }}
-          </template>
-          <template v-else-if="product.price != null && (!product.variants || product.variants.length === 0)">
-            ${{ product.price.toFixed(2) }}
-          </template>
-          <template v-else-if="product.starting_price != null">
-            <span class="text-xl italic text-gray-700">from</span> ${{ product.starting_price.toFixed(2) }}
-          </template>
-          <template v-else>
-            N/A
-          </template>
-        </p>
+        <!-- Price Display -->
+        <div class="space-y-2">
+          <p class="text-3xl font-bold text-gray-900">
+            <template v-if="selectedVariant">
+              <span v-if="selectedVariant.discount_amount > 0" class="text-lg text-gray-400 line-through mr-2">
+                ${{ (selectedVariant.price * quantity).toFixed(2) }}
+              </span>
+              ${{ ((selectedVariant.price - (selectedVariant.discount_amount || 0)) * quantity).toFixed(2) }}
+            </template>
+            <template v-else-if="product.price != null && (!product.variants || product.variants.length === 0)">
+              <span v-if="product.discounts && product.discounts.length > 0" class="text-lg text-gray-400 line-through mr-2">
+                ${{ (product.price * quantity).toFixed(2) }}
+              </span>
+              ${{ ((product.price - (product.discounts[0]?.value || 0)) * quantity).toFixed(2) }}
+            </template>
+            <template v-else-if="product.starting_price != null">
+              <span class="text-xl italic text-gray-700">from</span> ${{ product.starting_price.toFixed(2) }}
+            </template>
+            <template v-else>
+              N/A
+            </template>
+          </p>
+          
+          <!-- Savings info -->
+          <div v-if="hasDiscount" class="text-sm text-green-600">
+            <span v-if="selectedVariant && selectedVariant.discount_amount > 0">
+              Save ${{ (selectedVariant.discount_amount * quantity).toFixed(2) }}
+            </span>
+            <span v-else-if="product.discounts && product.discounts.length > 0">
+              Save ${{ (product.discounts[0].value * quantity).toFixed(2) }}
+            </span>
+          </div>
+        </div>
 
         <div v-if="product.variants && product.variants.length > 0" class="space-y-3">
           <p class="font-semibold text-sm uppercase text-gray-700">Options:</p>
@@ -86,12 +106,65 @@
           </template>
         </div>
 
-        <button
-          class="w-full py-3 mt-4 bg-black text-white rounded-md text-lg font-bold transition-transform transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
-          :disabled="!canAddToCart"
-        >
-          Add to Cart
-        </button>
+        <!-- Quantity Selector -->
+        <div v-if="canAddToCart" class="space-y-3">
+          <div class="flex items-center gap-4">
+            <label class="font-semibold text-sm uppercase text-gray-700">Quantity:</label>
+            <div class="flex items-center border border-gray-300 rounded-lg">
+              <button
+                @click="decreaseQuantity"
+                :disabled="quantity <= 1"
+                class="px-3 py-2 text-gray-600 hover:text-black disabled:text-gray-300 disabled:cursor-not-allowed"
+              >
+                -
+              </button>
+              <input
+                v-model.number="quantity"
+                type="number"
+                min="1"
+                :max="maxQuantity"
+                class="w-16 text-center border-none focus:outline-none"
+                @input="validateQuantity"
+              />
+              <button
+                @click="increaseQuantity"
+                :disabled="quantity >= maxQuantity"
+                class="px-3 py-2 text-gray-600 hover:text-black disabled:text-gray-300 disabled:cursor-not-allowed"
+              >
+                +
+              </button>
+            </div>
+            <span class="text-sm text-gray-500">of {{ maxQuantity }} available</span>
+          </div>
+        </div>
+
+        <!-- Add to Cart Section -->
+        <div class="space-y-3">
+          <button
+            v-if="!authStore.user"
+            @click="goToLogin"
+            class="w-full py-3 bg-black text-white rounded-md text-lg font-bold transition-transform transform hover:scale-105"
+          >
+            Login to Add to Cart
+          </button>
+          <button
+            v-else
+            @click="addToCart"
+            :disabled="!canAddToCart || cartStore.loading"
+            class="w-full py-3 bg-black text-white rounded-md text-lg font-bold transition-transform transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+          >
+            <span v-if="cartStore.loading" class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
+            {{ cartStore.loading ? 'Adding...' : 'Add to Cart' }}
+          </button>
+          
+          <div v-if="cartStore.error" class="text-red-600 text-sm text-center">
+            {{ cartStore.error }}
+          </div>
+          
+          <div v-if="addToCartSuccess" class="text-green-600 text-sm text-center">
+            Added to cart successfully!
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -100,8 +173,10 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { fetchProductDetail } from '@/services/product'
+import { useCartStore } from '@/stores/cart'
+import { useAuthStore } from '@/stores/auth'
 import type { Product } from '@/services/product'
 
 // Define interfaces to match your data structure for better type safety
@@ -119,12 +194,18 @@ interface Variant {
 }
 
 const route = useRoute()
+const router = useRouter()
 const shopSlug = route.params.shopSlug as string
 const handle = route.params.handle as string
 
 const product = ref<Product | null>(null)
 const selectedVariant = ref<Variant | null>(null)
 const currentImage = ref<string>('')
+const quantity = ref(1)
+const addToCartSuccess = ref(false)
+
+const cartStore = useCartStore()
+const authStore = useAuthStore()
 
 onMounted(async () => {
   if (handle) {
@@ -133,6 +214,9 @@ onMounted(async () => {
       currentImage.value = product.value.main_image;
     }
   }
+  
+  // Set shop slug in cart store
+  cartStore.setShopSlug(shopSlug);
 })
 
 const galleryImages = computed<string[]>(() => {
@@ -150,18 +234,52 @@ const galleryImages = computed<string[]>(() => {
   return Array.from(imgs);
 })
 
+const maxQuantity = computed<number>(() => {
+  if (!product.value) return 1;
+  if (selectedVariant.value) {
+    return selectedVariant.value.stock;
+  }
+  if (!product.value.variants || product.value.variants.length === 0) {
+    return product.value.stock ?? product.value.total_stock ?? 1;
+  }
+  return 1;
+})
+
 function selectThumbnail(img: string) {
   currentImage.value = img;
   // Optional: Find a variant that matches this image and select it
   const matchingVariant = product.value?.variants.find(v => v.image === img);
   if (matchingVariant) {
     selectedVariant.value = matchingVariant;
+    validateQuantity();
   }
 }
 
 function selectVariant(v: Variant) {
   selectedVariant.value = v;
   currentImage.value = v.image || product.value?.main_image || '';
+  validateQuantity();
+}
+
+function validateQuantity() {
+  if (quantity.value < 1) {
+    quantity.value = 1;
+  }
+  if (quantity.value > maxQuantity.value) {
+    quantity.value = maxQuantity.value;
+  }
+}
+
+function increaseQuantity() {
+  if (quantity.value < maxQuantity.value) {
+    quantity.value++;
+  }
+}
+
+function decreaseQuantity() {
+  if (quantity.value > 1) {
+    quantity.value--;
+  }
 }
 
 const canAddToCart = computed<boolean>(() => {
@@ -175,4 +293,44 @@ const canAddToCart = computed<boolean>(() => {
   }
   return false; // Disable if variants exist but none are selected
 })
+
+const hasDiscount = computed<boolean>(() => {
+  if (!product.value) return false;
+  if (selectedVariant.value && selectedVariant.value.discount_amount > 0) {
+    return true;
+  }
+  if (product.value.discounts && product.value.discounts.length > 0) {
+    return true;
+  }
+  return false;
+})
+
+async function addToCart() {
+  if (!product.value || !canAddToCart.value) return;
+  
+  addToCartSuccess.value = false;
+  
+  try {
+    const productId = product.value.id;
+    const variantId = selectedVariant.value?.id || '';
+    
+    await cartStore.addToCart(productId, variantId, quantity.value);
+    
+    addToCartSuccess.value = true;
+    
+    // Reset success message after 3 seconds
+    setTimeout(() => {
+      addToCartSuccess.value = false;
+    }, 3000);
+    
+  } catch (error) {
+    console.error('Failed to add to cart:', error);
+    // Don't show success message if there was an error
+    addToCartSuccess.value = false;
+  }
+}
+
+function goToLogin() {
+  router.push({ name: 'Login', params: { shopSlug } });
+}
 </script>

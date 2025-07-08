@@ -2,15 +2,29 @@ import api, { getShopUrl } from './api'
 
 export interface Product {
   id: string
+  _id?: string // For backward compatibility
   name: string
   slug: string
   description: string
   main_image: string
-  display_price: number
-  price: number
-  stock: number
+  display_price?: number
+  price?: number
+  starting_price?: number
+  stock?: number
+  total_stock?: number
   category: string
   images: string[]
+  variants?: Array<{
+    id: string
+    variant_id?: string
+    options: Array<{
+      name: string
+      value: string
+    }>
+    price: number
+    stock: number
+    image?: string
+  }>
   discounts?: Array<{
     id: string
     name: string

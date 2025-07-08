@@ -21,6 +21,10 @@ export const useCartStore = defineStore('cart', {
         this.cart = data;
       } catch (e: any) {
         this.error = e.response?.data?.error || 'Failed to fetch cart';
+        // Clear cart if unauthorized (user not logged in)
+        if (e.response?.status === 401) {
+          this.cart = null;
+        }
       } finally {
         this.loading = false;
       }
@@ -90,5 +94,19 @@ export const useCartStore = defineStore('cart', {
         this.loading = false;
       }
     },
+    // Method to refresh cart when user logs in
+    async refreshCart() {
+      if (this.shopSlug) {
+        await this.fetchCart();
+      }
+    },
+    // Method to clear cart state when user logs out
+    clearCartState() {
+      this.cart = null;
+      this.error = null;
+    },
+  },
+  persist: {
+    paths: ['cart', 'shopSlug'],
   },
 }); 

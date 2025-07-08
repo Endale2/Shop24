@@ -5,7 +5,8 @@ export async function getCart(shopSlug: string) {
 }
 
 export async function addToCart(shopSlug: string, productId: string, variantId: string, quantity: number) {
-  return api.post(`/shops/${shopSlug}/cart/items`, { product_id: productId, variant_id: variantId, quantity });
+  const response = await api.post(`/shops/${shopSlug}/cart/items`, { product_id: productId, variant_id: variantId, quantity });
+  return response;
 }
 
 export async function updateCartItem(shopSlug: string, productId: string, variantId: string, quantity: number) {

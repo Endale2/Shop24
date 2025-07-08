@@ -44,9 +44,18 @@
           <router-link :to="`/shops/${shopSlug}/wishlist`" class="text-gray-600 hover:text-black transition" title="Wishlist">
             <HeartIcon class="w-6 h-6" />
           </router-link>
-          <router-link :to="`/shops/${shopSlug}/cart`" class="text-gray-600 hover:text-black transition" title="Cart">
+          
+          <!-- Cart with count badge -->
+          <router-link :to="`/shops/${shopSlug}/cart`" class="text-gray-600 hover:text-black transition relative" title="Cart">
             <ShoppingBagIcon class="w-6 h-6" />
+            <span 
+              v-if="cartItemCount > 0"
+              class="absolute -top-2 -right-2 bg-black text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium"
+            >
+              {{ cartItemCount > 99 ? '99+' : cartItemCount }}
+            </span>
           </router-link>
+          
           <template v-if="user">
             <router-link :to="`/shops/${shopSlug}/account`" class="text-gray-600 hover:text-black transition" title="Account">
               <template v-if="user">
@@ -68,7 +77,18 @@
         </div>
       </div>
 
-      <div class="md:hidden">
+      <div class="md:hidden flex items-center space-x-4">
+        <!-- Mobile cart with count -->
+        <router-link :to="`/shops/${shopSlug}/cart`" class="text-gray-600 hover:text-black transition relative" title="Cart">
+          <ShoppingBagIcon class="w-6 h-6" />
+          <span 
+            v-if="cartItemCount > 0"
+            class="absolute -top-2 -right-2 bg-black text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium"
+          >
+            {{ cartItemCount > 99 ? '99+' : cartItemCount }}
+          </span>
+        </router-link>
+        
         <button @click="isMobileSearchVisible = true" class="p-2 text-gray-600 hover:text-black focus:outline-none">
           <MagnifyingGlassIcon class="w-6 h-6" />
         </button>
@@ -95,9 +115,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import { useCartStore } from '../stores/cart';
 import {
   MagnifyingGlassIcon,
   HeartIcon,
@@ -117,7 +138,22 @@ const shopSlug = route.params.shopSlug as string;
 const isMobileSearchVisible = ref(false);
 
 const authStore = useAuthStore();
+const cartStore = useCartStore();
+
 const user = computed(() => authStore.user);
+
+const cartItemCount = computed(() => {
+  if (!cartStore.cart || !cartStore.cart.items) return 0;
+  return cartStore.cart.items.reduce((total: number, item: any) => total + item.quantity, 0);
+});
+
+onMounted(() => {
+  // Set shop slug and fetch cart if user is authenticated
+  cartStore.setShopSlug(shopSlug);
+  if (authStore.user) {
+    cartStore.fetchCart();
+  }
+});
 
 function getAvatarText() {
   if (!user.value) return '';
