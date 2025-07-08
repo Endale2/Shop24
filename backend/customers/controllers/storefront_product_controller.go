@@ -7,6 +7,7 @@ import (
 	"github.com/Endale2/DRPS/shared/models"
 	"github.com/Endale2/DRPS/shared/services"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // GetProductsByShop returns all products for a shop identified by its slug.
@@ -80,4 +81,30 @@ func GetProductDetail(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, services.ProductToAPIResponseWithDiscounts(product))
+}
+
+// GET /shops/:shopSlug/products/id/:productId
+func GetProductDetailByID(c *gin.Context) {
+	shopSlug := c.Param("shopSlug")
+	productId := c.Param("productId")
+	shop, err := services.GetShopBySlugService(shopSlug)
+	if err != nil || shop == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "shop not found"})
+		return
+	}
+	pid, err := primitive.ObjectIDFromHex(productId)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid product ID"})
+		return
+	}
+	product, err := services.GetProductByIDService(pid.Hex())
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	if product == nil || product.ShopID != shop.ID {
+		c.JSON(http.StatusNotFound, gin.H{"error": "product not found"})
+		return
+	}
+	c.JSON(http.StatusOK, product)
 }

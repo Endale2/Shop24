@@ -32,11 +32,26 @@
 
       <!-- Logged In State -->
       <div v-else>
+        <!-- Loading/Error State -->
+        <div v-if="wishlistStore.loading" class="text-center py-12">
+          <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
+          <p class="mt-4 text-gray-600">Loading your wishlist...</p>
+        </div>
+        <div v-else-if="wishlistStore.error" class="text-center py-12">
+          <svg class="w-16 h-16 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">Unable to load wishlist</h3>
+          <p class="text-gray-600 mb-4">{{ wishlistStore.error }}</p>
+          <button @click="wishlistStore.fetchWishlist" class="bg-black text-white py-2 px-4 rounded-none font-semibold uppercase tracking-wide hover:bg-gray-800 transition-colors">
+            Try Again
+          </button>
+        </div>
         <!-- Wishlist Items -->
-        <div v-if="wishlist.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div v-for="item in wishlist" :key="item.id" class="bg-white border border-gray-200 rounded-none p-4">
+        <div v-else-if="wishlistStore.products.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div v-for="item in wishlistStore.products" :key="item.id" class="bg-white border border-gray-200 rounded-none p-4">
             <div class="flex items-start space-x-4">
-              <img :src="item.image" :alt="item.name" class="w-20 h-20 object-cover rounded-lg" />
+              <img :src="item.main_image || item.image || '/placeholder-product.jpg'" :alt="item.name" class="w-20 h-20 object-cover rounded-lg" />
               <div class="flex-1 min-w-0">
                 <h3 class="text-sm font-medium text-gray-900 truncate">{{ item.name }}</h3>
                 <p class="text-sm font-semibold text-gray-900 mt-1">${{ item.price }}</p>
@@ -73,21 +88,24 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import { useWishlistStore } from '../stores/wishlist';
 
 const route = useRoute();
 const authStore = useAuthStore();
+const wishlistStore = useWishlistStore();
 
-const wishlist = ref([
-  { id: 1, name: 'Random Product 1', price: 19.99, image: 'https://via.placeholder.com/80' },
-  { id: 2, name: 'Random Product 2', price: 29.99, image: 'https://via.placeholder.com/80' },
-  { id: 3, name: 'Random Product 3', price: 39.99, image: 'https://via.placeholder.com/80' },
-]);
+onMounted(() => {
+  wishlistStore.setShopSlug(route.params.shopSlug as string);
+  if (authStore.user) {
+    wishlistStore.fetchWishlist();
+  }
+});
 
-function removeFromWishlist(id: number) {
-  wishlist.value = wishlist.value.filter(item => item.id !== id);
+function removeFromWishlist(productId: string) {
+  wishlistStore.removeProduct(productId);
 }
 </script>
 

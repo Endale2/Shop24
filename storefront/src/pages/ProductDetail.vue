@@ -31,7 +31,33 @@
       </div>
 
       <div class="lg:col-span-1 flex flex-col gap-4">
-        <h1 class="text-3xl font-bold tracking-wide uppercase text-gray-900">{{ product?.name }}</h1>
+        <div class="flex items-center justify-between">
+          <h1 class="text-3xl font-bold tracking-wide uppercase text-gray-900">{{ product?.name }}</h1>
+          <button
+            v-if="authStore.user"
+            @click="toggleWishlist"
+            class="flex items-center gap-1 px-3 py-1 border rounded-full text-xs font-medium transition-colors focus:outline-none"
+            :class="isWishlisted ? 'border-red-400 text-red-600 bg-red-50 hover:bg-red-100' : 'border-gray-300 text-gray-500 bg-white hover:bg-gray-100'"
+            style="margin-left: 1rem;"
+          >
+            <span v-if="isWishlisted">
+              <svg class="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M3.172 5.172a4 4 0 015.656 0L10 6.343l1.172-1.171a4 4 0 115.656 5.656L10 17.657l-6.828-6.829a4 4 0 010-5.656z"/></svg>
+            </span>
+            <span v-else>
+              <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+            </span>
+            <span class="hidden sm:inline">{{ isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist' }}</span>
+          </button>
+          <button
+            v-else
+            @click="goToLogin"
+            class="flex items-center gap-1 px-3 py-1 border border-gray-300 rounded-full text-xs font-medium text-gray-500 bg-white hover:bg-gray-100 transition-colors focus:outline-none"
+            style="margin-left: 1rem;"
+          >
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"/></svg>
+            <span class="hidden sm:inline">Add to Wishlist</span>
+          </button>
+        </div>
         <p class="text-sm text-gray-500">{{ product.category }}</p>
         <p class="text-gray-600 leading-relaxed">{{ product.description }}</p>
         
@@ -173,6 +199,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { fetchProductDetail } from '@/services/product'
 import { useCartStore } from '@/stores/cart'
 import { useAuthStore } from '@/stores/auth'
+import { useWishlistStore } from '@/stores/wishlist'
 import type { Product } from '@/services/product'
 
 // Define interfaces to match your data structure for better type safety
@@ -202,6 +229,7 @@ const addToCartSuccess = ref(false)
 
 const cartStore = useCartStore()
 const authStore = useAuthStore()
+const wishlistStore = useWishlistStore()
 
 onMounted(async () => {
   if (handle) {
@@ -356,6 +384,19 @@ const currentPrice = computed(() => {
   }
   return 0;
 });
+
+const isWishlisted = computed(() => {
+  return wishlistStore.productIds.includes(product.value?.id || '');
+});
+
+function toggleWishlist() {
+  if (!product.value) return;
+  if (isWishlisted.value) {
+    wishlistStore.removeProduct(product.value.id);
+  } else {
+    wishlistStore.addProduct(product.value.id);
+  }
+}
 
 async function addToCart() {
   if (!product.value || !canAddToCart.value) return;

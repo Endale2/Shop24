@@ -55,3 +55,7 @@ export function fetchProductDetail(shopSlug: string, handle: string): Promise<Pr
     .get(getShopUrl(shopSlug, `/products/${encodeURIComponent(handle)}`))
     .then(r => r.data)
 }
+
+export async function fetchProductDetailById(shopSlug: string, productId: string) {
+  return api.get(`/shops/${shopSlug}/products/id/${productId}`);
+}

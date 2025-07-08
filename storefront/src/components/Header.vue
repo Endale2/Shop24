@@ -41,8 +41,14 @@
         </nav>
 
         <div class="flex items-center space-x-5">
-          <router-link :to="`/shops/${shopSlug}/wishlist`" class="text-gray-600 hover:text-black transition" title="Wishlist">
+          <router-link :to="`/shops/${shopSlug}/wishlist`" class="text-gray-600 hover:text-black transition relative" title="Wishlist">
             <HeartIcon class="w-6 h-6" />
+            <span 
+              v-if="authStore.user && wishlistCount > 0"
+              class="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium"
+            >
+              {{ wishlistCount > 99 ? '99+' : wishlistCount }}
+            </span>
           </router-link>
           
           <!-- Cart with count badge -->
@@ -119,6 +125,7 @@ import { ref, computed, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { useCartStore } from '../stores/cart';
+import { useWishlistStore } from '../stores/wishlist';
 import {
   MagnifyingGlassIcon,
   HeartIcon,
@@ -139,6 +146,7 @@ const isMobileSearchVisible = ref(false);
 
 const authStore = useAuthStore();
 const cartStore = useCartStore();
+const wishlistStore = useWishlistStore();
 
 const user = computed(() => authStore.user);
 
@@ -147,11 +155,17 @@ const cartItemCount = computed(() => {
   return cartStore.cart.items.reduce((total: number, item: any) => total + item.quantity, 0);
 });
 
+const wishlistCount = computed(() => {
+  if (!authStore.user) return 0;
+  return wishlistStore.productIds.length;
+});
+
 onMounted(() => {
-  // Set shop slug and fetch cart if user is authenticated
   cartStore.setShopSlug(shopSlug);
+  wishlistStore.setShopSlug(shopSlug);
   if (authStore.user) {
     cartStore.fetchCart();
+    wishlistStore.fetchWishlist();
   }
 });
 

@@ -27,6 +27,7 @@ func StorefrontRoutes(r *gin.Engine) {
 		{
 			products.GET("", controllers.GetProductsByShop)
 			products.GET("/:productSlug", controllers.GetProductDetail)
+			products.GET("id/:productId", controllers.GetProductDetailByID)
 		}
 
 		// Debug endpoints (no auth required for testing)
@@ -45,6 +46,9 @@ func StorefrontRoutes(r *gin.Engine) {
 			auth.POST("/orders", controllers.PlaceOrder)
 			auth.GET("/orders", controllers.ListShopOrders)
 			auth.GET("/orders/:orderId", controllers.GetOrderDetail)
+			auth.GET("/wishlist", controllers.GetWishlist)
+			auth.POST("/wishlist", controllers.AddToWishlist)
+			auth.DELETE("/wishlist/:productId", controllers.RemoveFromWishlist)
 		}
 	}
 }
