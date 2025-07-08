@@ -13,12 +13,12 @@ import (
 
 // Input struct for binding JSON
 type DiscountInput struct {
-	Name                        string   `json:"name" binding:"required"`
-	Description                 string   `json:"description,omitempty"`
-	Category                    string   `json:"category" binding:"required"`
-	Type                        string   `json:"type,omitempty"`
-	Value                       float64  `json:"value,omitempty"`
-	CouponCode                  string   `json:"couponCode,omitempty"`
+	Name        string  `json:"name" binding:"required"`
+	Description string  `json:"description,omitempty"`
+	Category    string  `json:"category" binding:"required"`
+	Type        string  `json:"type,omitempty"`
+	Value       float64 `json:"value,omitempty"`
+
 	AppliesToProducts           []string `json:"appliesToProducts,omitempty"`
 	AppliesToVariants           []string `json:"appliesToVariants,omitempty"`
 	AppliesToCollections        []string `json:"appliesToCollections,omitempty"`
@@ -75,12 +75,12 @@ func CreateDiscount(c *gin.Context) {
 	}
 	// Build Discount model
 	d := &models.Discount{
-		Name:                        in.Name,
-		Description:                 in.Description,
-		Category:                    models.DiscountCategory(in.Category),
-		Type:                        models.DiscountType(in.Type),
-		Value:                       in.Value,
-		CouponCode:                  in.CouponCode,
+		Name:        in.Name,
+		Description: in.Description,
+		Category:    models.DiscountCategory(in.Category),
+		Type:        models.DiscountType(in.Type),
+		Value:       in.Value,
+
 		FreeShipping:                in.FreeShipping,
 		MinimumOrderSubtotal:        in.MinimumOrderSubtotal,
 		MinimumOrderForFreeShipping: in.MinimumOrderForFreeShipping,
@@ -207,13 +207,13 @@ func ListDiscounts(c *gin.Context) {
 
 		// Build response for each discount
 		resp := gin.H{
-			"id":                     d.ID.Hex(),
-			"name":                   d.Name,
-			"description":            d.Description,
-			"category":               d.Category,
-			"type":                   d.Type,
-			"value":                  d.Value,
-			"coupon_code":            d.CouponCode,
+			"id":          d.ID.Hex(),
+			"name":        d.Name,
+			"description": d.Description,
+			"category":    d.Category,
+			"type":        d.Type,
+			"value":       d.Value,
+
 			"free_shipping":          d.FreeShipping,
 			"minimum_free_shipping":  d.MinimumOrderForFreeShipping,
 			"minimum_order_subtotal": d.MinimumOrderSubtotal,
@@ -316,13 +316,13 @@ func GetDiscount(c *gin.Context) {
 
 	// Build response
 	resp := gin.H{
-		"id":                     d.ID.Hex(),
-		"name":                   d.Name,
-		"description":            d.Description,
-		"category":               d.Category,
-		"type":                   d.Type,
-		"value":                  d.Value,
-		"coupon_code":            d.CouponCode,
+		"id":          d.ID.Hex(),
+		"name":        d.Name,
+		"description": d.Description,
+		"category":    d.Category,
+		"type":        d.Type,
+		"value":       d.Value,
+
 		"free_shipping":          d.FreeShipping,
 		"minimum_free_shipping":  d.MinimumOrderForFreeShipping,
 		"minimum_order_subtotal": d.MinimumOrderSubtotal,

@@ -8,7 +8,6 @@ export interface OrderItem {
 
 export interface PlaceOrderRequest {
   items: OrderItem[]
-  coupon_code?: string
 }
 
 export interface OrderItemResponse {
@@ -51,7 +50,7 @@ export const orderService = {
   },
 
   // Helper method to create order from cart items
-  async createFromCartItems(items: OrderItem[], couponCode?: string): Promise<OrderResponse> {
+  async createFromCartItems(items: OrderItem[]): Promise<OrderResponse> {
     const orderData: PlaceOrderRequest = {
       items: items.map(item => ({
         product_id: item.product_id,
@@ -60,16 +59,12 @@ export const orderService = {
       }))
     }
     
-    if (couponCode) {
-      orderData.coupon_code = couponCode
-    }
-    
     return this.placeOrder(orderData)
   }
 }
 
-export async function placeOrder(shopSlug: string, items: Array<{ product_id: string, variant_id: string, quantity: number }>, couponCode?: string) {
-  return api.post(`/shops/${shopSlug}/orders`, { items, coupon_code: couponCode });
+export async function placeOrder(shopSlug: string, items: Array<{ product_id: string, variant_id: string, quantity: number }>) {
+  return api.post(`/shops/${shopSlug}/orders`, { items });
 }
 
 export async function getOrderDetail(shopSlug: string, orderId: string) {

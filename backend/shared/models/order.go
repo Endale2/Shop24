@@ -20,18 +20,36 @@ type OrderItem struct {
 
 // Order represents a shop order.
 type Order struct {
-	ID            primitive.ObjectID `bson:"_id,omitempty"     json:"id"`
-	OrderNumber   string             `bson:"order_number"      json:"order_number"` // Unique human-readable order number
-	ShopID        primitive.ObjectID `bson:"shop_id"           json:"shop_id"`
-	CustomerID    primitive.ObjectID `bson:"customer_id"       json:"customer_id"`
-	Items         []OrderItem        `bson:"items"             json:"items"`
-	Subtotal      float64            `bson:"subtotal"          json:"subtotal"`
-	DiscountTotal float64            `bson:"discount_total"    json:"discount_total"`
-	Total         float64            `bson:"total"             json:"total"`
-	Status        string             `bson:"status"            json:"status"` // e.g. "pending","paid","shipped"
-	CouponCode    string             `bson:"coupon_code,omitempty" json:"coupon_code,omitempty"`
-	CreatedAt     time.Time          `bson:"created_at"        json:"created_at"`
-	UpdatedAt     time.Time          `bson:"updated_at"        json:"updated_at"`
+	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
+	ShopID      primitive.ObjectID `bson:"shop_id" json:"shop_id"`
+	CustomerID  primitive.ObjectID `bson:"customer_id" json:"customer_id"`
+	OrderNumber string             `bson:"order_number" json:"order_number"`
+	Status      string             `bson:"status" json:"status"`
+
+	// Items
+	Items []OrderItem `bson:"items" json:"items"`
+
+	// Pricing
+	Subtotal      float64 `bson:"subtotal" json:"subtotal"`
+	DiscountTotal float64 `bson:"discount_total" json:"discount_total"`
+	ShippingCost  float64 `bson:"shipping_cost" json:"shipping_cost"`
+	TaxAmount     float64 `bson:"tax_amount" json:"tax_amount"`
+	Total         float64 `bson:"total" json:"total"`
+
+	// Applied discounts
+	AppliedDiscountIDs []primitive.ObjectID `bson:"applied_discount_ids,omitempty" json:"applied_discount_ids,omitempty"`
+
+	// Shipping
+	ShippingAddress map[string]interface{} `bson:"shipping_address" json:"shipping_address"`
+	BillingAddress  map[string]interface{} `bson:"billing_address" json:"billing_address"`
+
+	// Payment
+	PaymentMethod string `bson:"payment_method" json:"payment_method"`
+	PaymentStatus string `bson:"payment_status" json:"payment_status"`
+
+	// Timestamps
+	CreatedAt time.Time `bson:"created_at" json:"created_at"`
+	UpdatedAt time.Time `bson:"updated_at" json:"updated_at"`
 }
 
 // OrderWithCustomer represents an order with customer information populated

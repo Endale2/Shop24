@@ -23,8 +23,6 @@ type OrderItemRequest struct {
 // PlaceOrderRequest represents the complete request structure for placing an order
 type PlaceOrderRequest struct {
 	Items []OrderItemRequest `json:"items" binding:"required,min=1"`
-	// Optional coupon code for additional discounts
-	CouponCode string `json:"coupon_code,omitempty"`
 }
 
 // DebugProduct handles GET /shops/:shopSlug/debug/product/:productId
@@ -385,27 +383,6 @@ func PlaceOrder(c *gin.Context) {
 		orderItems = append(orderItems, orderItem)
 	}
 
-	// 6) Apply order-level discounts if coupon code provided
-	if req.CouponCode != "" {
-		discount, err := services.GetDiscountByCouponCodeService(req.CouponCode)
-		if err == nil && discount != nil {
-			// Verify discount belongs to this shop
-			if discount.ShopID == shop.ID {
-				// Check if discount is order-level
-				if discount.Category == models.DiscountCategoryOrder {
-					// Check minimum order subtotal
-					if discount.MinimumOrderSubtotal == nil || subtotal >= *discount.MinimumOrderSubtotal {
-						if discount.Type == models.DiscountTypeFixed {
-							totalDiscount = discount.Value
-						} else if discount.Type == models.DiscountTypePercentage {
-							totalDiscount = subtotal * (discount.Value / 100)
-						}
-					}
-				}
-			}
-		}
-	}
-
 	// 7) Calculate final total
 	finalTotal := subtotal - totalDiscount
 	if finalTotal < 0 {
@@ -421,7 +398,6 @@ func PlaceOrder(c *gin.Context) {
 		DiscountTotal: totalDiscount,
 		Total:         finalTotal,
 		Status:        "pending", // Default status
-		CouponCode:    req.CouponCode,
 		CreatedAt:     time.Now(),
 		UpdatedAt:     time.Now(),
 	}
@@ -431,6 +407,85 @@ func PlaceOrder(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
+	}
+
+	// Record usage for item-level discounts (from products with automatic discounts)
+	for _, itemReq := range req.Items {
+		productID, _ := primitive.ObjectIDFromHex(itemReq.ProductID)
+		var variantID primitive.ObjectID
+		if itemReq.VariantID != "" {
+			variantID, _ = primitive.ObjectIDFromHex(itemReq.VariantID)
+		}
+
+		// Get collection IDs for this product
+		collectionIDs, err := services.GetCollectionIDsForProduct(productID)
+		if err != nil {
+			collectionIDs = []primitive.ObjectID{}
+		}
+
+		// Get active discounts for this product/variant
+		discounts, err := services.GetActiveDiscountsForProductService(shop.ID, productID, variantID, collectionIDs)
+		if err == nil && len(discounts) > 0 {
+			// Find the best discount that was applied
+			var bestDiscount *models.Discount
+			bestSavings := 0.0
+
+			for i := range discounts {
+				discount := &discounts[i]
+				if discount.IsActive() {
+					// Use the improved validation function
+					if canUse, err := services.CanCustomerUseDiscount(discount, customerID, []primitive.ObjectID{}); err == nil && canUse {
+						// Calculate what the savings would be
+						product, _ := services.GetProductByIDService(productID.Hex())
+						if product != nil {
+							var price float64
+							if !variantID.IsZero() {
+								for _, v := range product.Variants {
+									if v.VariantID == variantID {
+										price = v.Price
+										break
+									}
+								}
+							} else {
+								price = product.Price
+							}
+							lineTotal := price * float64(itemReq.Quantity)
+							savings := discount.CalculateDiscount(lineTotal)
+							if savings > bestSavings {
+								bestSavings = savings
+								bestDiscount = discount
+							}
+						}
+					}
+				}
+			}
+
+			// Record usage for the best discount if one was found
+			if bestDiscount != nil {
+				// Calculate line total for usage recording
+				product, _ := services.GetProductByIDService(productID.Hex())
+				if product != nil {
+					var price float64
+					if !variantID.IsZero() {
+						for _, v := range product.Variants {
+							if v.VariantID == variantID {
+								price = v.Price
+								break
+							}
+						}
+					} else {
+						price = product.Price
+					}
+					lineTotal := price * float64(itemReq.Quantity)
+
+					// Use atomic function to safely record usage
+					err = services.RecordDiscountUsageAtomic(bestDiscount.ID.Hex(), customerID, lineTotal)
+					if err != nil {
+						fmt.Printf("Warning: Failed to record item discount usage: %v\n", err)
+					}
+				}
+			}
+		}
 	}
 
 	// 10) Reduce stock for all items

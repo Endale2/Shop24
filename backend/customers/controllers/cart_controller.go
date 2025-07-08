@@ -40,7 +40,16 @@ func GetCart(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, cart)
+
+	// Return cart with discount details
+	cartService := sharedSvc.NewCartService()
+	cartWithDetails, err := cartService.GetCartWithDiscountDetails(cart)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, cartWithDetails)
 }
 
 // AddToCart handles POST /shops/:shopSlug/cart/items
@@ -102,7 +111,15 @@ func AddToCart(c *gin.Context) {
 	}
 
 	_ = sharedSvc.SaveCartService(cart)
-	c.JSON(http.StatusOK, cart)
+
+	// Return cart with discount details
+	cartWithDetails, err := cartService.GetCartWithDiscountDetails(cart)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, cartWithDetails)
 }
 
 // UpdateCartItem handles PUT /shops/:shopSlug/cart/items
@@ -149,7 +166,15 @@ func UpdateCartItem(c *gin.Context) {
 		return
 	}
 	_ = sharedSvc.SaveCartService(cart)
-	c.JSON(http.StatusOK, cart)
+
+	// Return cart with discount details
+	cartWithDetails, err := cartService.GetCartWithDiscountDetails(cart)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, cartWithDetails)
 }
 
 // RemoveCartItem handles DELETE /shops/:shopSlug/cart/items
@@ -195,47 +220,15 @@ func RemoveCartItem(c *gin.Context) {
 		return
 	}
 	_ = sharedSvc.SaveCartService(cart)
-	c.JSON(http.StatusOK, cart)
-}
 
-// ApplyCartDiscount handles POST /shops/:shopSlug/cart/discount
-func ApplyCartDiscount(c *gin.Context) {
-	shopSlug := c.Param("shopSlug")
-	shop, err := sharedSvc.GetShopBySlugService(shopSlug)
-	if err != nil || shop == nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": "shop not found"})
-		return
-	}
-	cidVal, exists := c.Get("user_id")
-	if !exists || cidVal == nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "not authenticated"})
-		return
-	}
-	cidHex, ok := cidVal.(string)
-	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid user_id"})
-		return
-	}
-	customerID, _ := primitive.ObjectIDFromHex(cidHex)
-	cart, err := sharedSvc.GetOrCreateCartService(shop.ID, customerID)
+	// Return cart with discount details
+	cartWithDetails, err := cartService.GetCartWithDiscountDetails(cart)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	var req struct {
-		Code string `json:"code"`
-	}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	cartService := sharedSvc.NewCartService()
-	if err := cartService.ApplyDiscountCode(cart, req.Code); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-	_ = sharedSvc.SaveCartService(cart)
-	c.JSON(http.StatusOK, cart)
+
+	c.JSON(http.StatusOK, cartWithDetails)
 }
 
 // ClearCart handles POST /shops/:shopSlug/cart/clear
@@ -268,5 +261,13 @@ func ClearCart(c *gin.Context) {
 		return
 	}
 	_ = sharedSvc.SaveCartService(cart)
-	c.JSON(http.StatusOK, cart)
+
+	// Return cart with discount details
+	cartWithDetails, err := cartService.GetCartWithDiscountDetails(cart)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, cartWithDetails)
 }

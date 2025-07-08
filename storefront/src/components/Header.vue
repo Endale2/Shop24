@@ -57,7 +57,7 @@
           </router-link>
           
           <template v-if="user">
-            <router-link :to="`/shops/${shopSlug}/account`" class="text-gray-600 hover:text-black transition" title="Account">
+          <router-link :to="`/shops/${shopSlug}/account`" class="text-gray-600 hover:text-black transition" title="Account">
               <template v-if="user">
                 <img v-if="user.profilePic" :src="user.profilePic" alt="Profile" class="w-8 h-8 rounded-full object-cover" />
                 <span v-else class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-lg font-bold text-gray-700">
@@ -71,8 +71,8 @@
           </template>
           <template v-else>
             <router-link :to="`/shops/${shopSlug}/login`" class="text-gray-600 hover:text-black transition" title="Login">
-              <UserIcon class="w-6 h-6" />
-            </router-link>
+            <UserIcon class="w-6 h-6" />
+          </router-link>
           </template>
         </div>
       </div>

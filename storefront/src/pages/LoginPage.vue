@@ -19,7 +19,7 @@
               placeholder="Enter your email" 
               class="w-full p-3 border border-gray-200 rounded-none focus:ring-2 focus:ring-black focus:outline-none text-sm uppercase"
             />
-          </div>
+        </div>
           
           <div>
             <label class="block text-sm font-medium text-gray-700 uppercase tracking-wide mb-2">Password</label>
@@ -43,9 +43,9 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>
                 </svg>
-              </button>
-            </div>
+            </button>
           </div>
+        </div>
 
           <div v-if="authStore.error" class="bg-red-50 border border-red-200 rounded-none p-4">
             <div class="flex">
@@ -66,8 +66,8 @@
               <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
             {{ authStore.loading ? 'Signing In...' : 'Sign In' }}
-          </button>
-        </form>
+        </button>
+      </form>
 
         <!-- Register Link -->
         <div class="mt-8 pt-6 border-t border-gray-200 text-center">

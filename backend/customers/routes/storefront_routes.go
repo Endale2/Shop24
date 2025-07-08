@@ -41,7 +41,6 @@ func StorefrontRoutes(r *gin.Engine) {
 			auth.POST("/cart/items", controllers.AddToCart)
 			auth.PUT("/cart/items", controllers.UpdateCartItem)
 			auth.DELETE("/cart/items", controllers.RemoveCartItem)
-			auth.POST("/cart/discount", controllers.ApplyCartDiscount)
 			auth.POST("/cart/clear", controllers.ClearCart)
 			auth.POST("/orders", controllers.PlaceOrder)
 			auth.GET("/orders", controllers.ListShopOrders)

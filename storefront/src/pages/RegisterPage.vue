@@ -11,7 +11,7 @@
       <div class="bg-white border border-gray-200 rounded-none p-8">
         <form @submit.prevent="onRegister" class="space-y-6">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
+      <div>
               <label class="block text-sm font-medium text-gray-700 uppercase tracking-wide mb-2">First Name</label>
               <input 
                 v-model="firstName" 
@@ -20,8 +20,8 @@
                 placeholder="Enter your first name" 
                 class="w-full p-3 border border-gray-200 rounded-none focus:ring-2 focus:ring-black focus:outline-none text-sm uppercase"
               />
-            </div>
-            <div>
+      </div>
+      <div>
               <label class="block text-sm font-medium text-gray-700 uppercase tracking-wide mb-2">Last Name</label>
               <input 
                 v-model="lastName" 
@@ -124,7 +124,7 @@ async function onRegister() {
     router.push(`/shops/${shopSlug}`);
   }
 }
-</script>
+</script> 
 
 <style scoped>
 .register-container {

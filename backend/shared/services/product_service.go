@@ -447,7 +447,6 @@ func DiscountToAPIResponse(d *models.Discount) map[string]interface{} {
 		"category":    d.Category,
 		"type":        d.Type,
 		"value":       d.Value,
-		"coupon_code": d.CouponCode,
 		"start_at":    d.StartAt,
 		"end_at":      d.EndAt,
 		"active":      d.Active,

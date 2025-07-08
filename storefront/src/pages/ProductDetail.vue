@@ -49,13 +49,13 @@
               <span v-if="selectedVariant.discount_amount > 0" class="text-lg text-gray-400 line-through mr-2">
                 ${{ (selectedVariant.price * quantity).toFixed(2) }}
               </span>
-              ${{ ((selectedVariant.price - (selectedVariant.discount_amount || 0)) * quantity).toFixed(2) }}
+              ${{ currentPrice.toFixed(2) }}
             </template>
             <template v-else-if="product.price != null && (!product.variants || product.variants.length === 0)">
               <span v-if="product.discounts && product.discounts.length > 0" class="text-lg text-gray-400 line-through mr-2">
                 ${{ (product.price * quantity).toFixed(2) }}
               </span>
-              ${{ ((product.price - (product.discounts[0]?.value || 0)) * quantity).toFixed(2) }}
+              ${{ currentPrice.toFixed(2) }}
             </template>
             <template v-else-if="product.starting_price != null">
               <span class="text-xl italic text-gray-700">from</span> ${{ product.starting_price.toFixed(2) }}
@@ -66,13 +66,8 @@
           </p>
           
           <!-- Savings info -->
-          <div v-if="hasDiscount" class="text-sm text-green-600">
-            <span v-if="selectedVariant && selectedVariant.discount_amount > 0">
-              Save ${{ (selectedVariant.discount_amount * quantity).toFixed(2) }}
-            </span>
-            <span v-else-if="product.discounts && product.discounts.length > 0">
-              Save ${{ (product.discounts[0].value * quantity).toFixed(2) }}
-            </span>
+          <div v-if="hasDiscount && savings > 0" class="text-sm text-green-600">
+            Save ${{ savings.toFixed(2) }}
           </div>
         </div>
 
@@ -125,6 +120,7 @@
                 :max="maxQuantity"
                 class="w-16 text-center border-none focus:outline-none"
                 @input="validateQuantity"
+                @blur="validateQuantity"
               />
               <button
                 @click="increaseQuantity"
@@ -143,7 +139,7 @@
           <button
             v-if="!authStore.user"
             @click="goToLogin"
-            class="w-full py-3 bg-black text-white rounded-md text-lg font-bold transition-transform transform hover:scale-105"
+            class="w-full py-3 bg-black text-white rounded text-base font-normal transition-transform transform hover:scale-105"
           >
             Login to Add to Cart
           </button>
@@ -151,7 +147,7 @@
             v-else
             @click="addToCart"
             :disabled="!canAddToCart || cartStore.loading"
-            class="w-full py-3 bg-black text-white rounded-md text-lg font-bold transition-transform transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            class="w-full py-3 bg-black text-white rounded text-base font-normal transition-transform transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
           >
             <span v-if="cartStore.loading" class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
             {{ cartStore.loading ? 'Adding...' : 'Add to Cart' }}
@@ -304,6 +300,62 @@ const hasDiscount = computed<boolean>(() => {
   }
   return false;
 })
+
+const savings = computed(() => {
+  if (!product.value) return 0;
+  let price = 0;
+  let discount = 0;
+  let type = '';
+  if (selectedVariant.value) {
+    price = selectedVariant.value.price;
+    discount = selectedVariant.value.discount_amount || 0;
+    type = selectedVariant.value.discount_type || (product.value.discounts && product.value.discounts[0]?.type) || '';
+    if (type === 'percentage') {
+      return ((price * (discount / 100)) * quantity.value);
+    } else {
+      return (discount * quantity.value);
+    }
+  } else if (product.value.discounts && product.value.discounts.length > 0) {
+    price = product.value.price;
+    discount = product.value.discounts[0].value;
+    type = product.value.discounts[0].type;
+    if (type === 'percentage') {
+      return ((price * (discount / 100)) * quantity.value);
+    } else {
+      return (discount * quantity.value);
+    }
+  }
+  return 0;
+});
+
+const currentPrice = computed(() => {
+  if (!product.value) return 0;
+  let price = 0;
+  let discount = 0;
+  let type = '';
+  if (selectedVariant.value) {
+    price = selectedVariant.value.price;
+    discount = selectedVariant.value.discount_amount || 0;
+    type = selectedVariant.value.discount_type || (product.value.discounts && product.value.discounts[0]?.type) || '';
+    if (type === 'percentage') {
+      return (price * (1 - discount / 100)) * quantity.value;
+    } else {
+      return (price - discount) * quantity.value;
+    }
+  } else if (product.value.discounts && product.value.discounts.length > 0) {
+    price = product.value.price;
+    discount = product.value.discounts[0].value;
+    type = product.value.discounts[0].type;
+    if (type === 'percentage') {
+      return (price * (1 - discount / 100)) * quantity.value;
+    } else {
+      return (price - discount) * quantity.value;
+    }
+  } else if (product.value.price) {
+    return product.value.price * quantity.value;
+  }
+  return 0;
+});
 
 async function addToCart() {
   if (!product.value || !canAddToCart.value) return;

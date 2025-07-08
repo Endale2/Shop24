@@ -60,8 +60,6 @@ type Discount struct {
 	AppliesToProducts    []primitive.ObjectID `bson:"applies_to_products,omitempty"    json:"applies_to_products,omitempty"`
 	AppliesToVariants    []primitive.ObjectID `bson:"applies_to_variants,omitempty"    json:"applies_to_variants,omitempty"`
 
-	CouponCode string `bson:"coupon_code,omitempty" json:"coupon_code,omitempty"`
-
 	// Enhanced customer eligibility
 	EligibilityType    DiscountEligibilityType `bson:"eligibility_type" json:"eligibility_type"`
 	AllowedCustomerIDs []primitive.ObjectID    `bson:"allowed_customers,omitempty" json:"allowed_customers,omitempty"`
@@ -165,7 +163,23 @@ func (d *Discount) RecordUsage(customerID primitive.ObjectID, amount float64) {
 // IsActive checks if the discount is currently active
 func (d *Discount) IsActive() bool {
 	now := time.Now()
-	return d.Active && now.After(d.StartAt) && now.Before(d.EndAt)
+
+	// Check if discount is marked as active
+	if !d.Active {
+		return false
+	}
+
+	// Check start time (if StartAt is zero, consider it as "started")
+	if !d.StartAt.IsZero() && now.Before(d.StartAt) {
+		return false
+	}
+
+	// Check end time (if EndAt is zero, consider it as "no end")
+	if !d.EndAt.IsZero() && now.After(d.EndAt) {
+		return false
+	}
+
+	return true
 }
 
 // AppliesToProduct checks if this discount applies to a specific product

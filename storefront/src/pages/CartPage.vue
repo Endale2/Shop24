@@ -35,6 +35,29 @@
     <div v-else-if="cartStore.cart && cartStore.cart.items && cartStore.cart.items.length > 0" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <!-- Cart Items -->
       <div class="lg:col-span-2 space-y-6">
+        <!-- Discount Information Banner -->
+        <div v-if="hasItemDiscounts || hasOrderDiscounts" class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+          <div class="flex items-start">
+            <svg class="h-5 w-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+  <div>
+              <h3 class="text-sm font-medium text-blue-800 mb-1">Discount Information</h3>
+              <div class="text-sm text-blue-700 space-y-1">
+                <p v-if="hasItemDiscounts">
+                  • <strong>Automatic Item Discounts:</strong> Some items have automatic discounts applied (shown with green badges)
+                </p>
+                <p v-if="hasOrderDiscounts">
+                  • <strong>Order-Level Discounts:</strong> Coupon codes apply to your entire order subtotal
+                </p>
+                <p class="text-xs text-blue-600 mt-2">
+                  💡 <strong>Tip:</strong> Coupon codes work in addition to automatic item discounts for maximum savings!
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <div class="bg-white border border-gray-200 rounded-lg overflow-hidden">
           <div class="px-6 py-4 border-b border-gray-200">
             <h2 class="text-lg font-semibold text-gray-900">Cart Items ({{ cartStore.cart.items.length }})</h2>
@@ -56,11 +79,35 @@
                 <!-- Product Details -->
                 <div class="flex-1 min-w-0">
                   <div class="flex justify-between items-start">
-                    <div>
-                      <h3 class="text-lg font-medium text-gray-900">{{ item.product_name || 'Product' }}</h3>
+      <div>
+                      <div class="flex items-center gap-2">
+                        <h3 class="text-lg font-medium text-gray-900">{{ item.product_name || 'Product' }}</h3>
+                        <!-- Discount indicator -->
+                        <div v-if="item.discount_amount > 0" class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                          </svg>
+                          Auto Discount
+                        </div>
+                      </div>
                       <p v-if="item.variant_options && Object.keys(item.variant_options).length > 0" class="text-sm text-gray-500 mt-1">
                         {{ Object.entries(item.variant_options).map(([key, value]) => `${key}: ${value}`).join(', ') }}
                       </p>
+                      
+                      <!-- Applied Discounts for this item -->
+                      <div v-if="getItemDiscountDetails(item).length > 0" class="mt-2 space-y-1">
+                        <div v-for="discount in getItemDiscountDetails(item)" :key="discount.discount_id" class="flex items-center text-sm">
+                          <span class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800 mr-2">
+                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            {{ discount.name }}
+                          </span>
+                          <span class="text-green-600 font-medium">
+                            {{ formatDiscountValue(discount) }}
+                          </span>
+                        </div>
+                      </div>
                     </div>
                     <button 
                       @click="removeItem(item)"
@@ -127,27 +174,6 @@
         <div class="bg-white border border-gray-200 rounded-lg p-6 sticky top-8">
           <h2 class="text-lg font-semibold text-gray-900 mb-4">Order Summary</h2>
           
-          <!-- Discount Code -->
-          <div class="mb-6">
-            <label class="block text-sm font-medium text-gray-700 mb-2">Discount Code</label>
-            <div class="flex space-x-2">
-              <input
-                v-model="discountCode"
-                type="text"
-                placeholder="Enter code"
-                class="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent"
-                :disabled="cartStore.loading"
-              />
-              <button
-                @click="applyDiscount"
-                :disabled="!discountCode.trim() || cartStore.loading"
-                class="px-4 py-2 bg-black text-white rounded-md font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Apply
-              </button>
-            </div>
-          </div>
-
           <!-- Price Breakdown -->
           <div class="space-y-3 border-t border-gray-200 pt-4">
             <div class="flex justify-between text-sm">
@@ -164,7 +190,29 @@
             <!-- Order-level discounts -->
             <div v-if="hasOrderDiscounts" class="flex justify-between text-sm">
               <span class="text-gray-600">Order Discounts</span>
-              <span class="font-medium text-green-600">-${{ orderDiscountsTotal.toFixed(2) }}</span>
+              <span class="font-medium text-blue-600">-${{ orderDiscountsTotal.toFixed(2) }}</span>
+            </div>
+            
+            <!-- Order Discount Details -->
+            <div v-if="cartStore.cart?.order_discount_details && cartStore.cart.order_discount_details.length > 0" class="bg-blue-50 border border-blue-200 rounded-lg p-3 mb-3">
+              <h4 class="text-sm font-medium text-blue-800 mb-2">Order-Level Discounts Applied:</h4>
+              <div class="space-y-2">
+                <div v-for="discount in cartStore.cart.order_discount_details" :key="discount.discount_id" class="flex items-center justify-between">
+                  <div class="flex items-center">
+                    <svg class="h-4 w-4 text-blue-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span class="text-sm text-blue-700">{{ discount.name }}</span>
+                  </div>
+                  <span class="text-sm font-medium text-blue-600">-${{ discount.amount.toFixed(2) }}</span>
+                </div>
+              </div>
+              <p class="text-xs text-blue-600 mt-2">
+                <svg class="w-3 h-3 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                Applied to entire order subtotal
+              </p>
             </div>
             
             <!-- Total discounts (if both types exist) -->
@@ -224,6 +272,16 @@
       </div>
     </div>
 
+    <!-- Error Message -->
+    <div v-if="cartStore.error" class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
+      <div class="flex items-center">
+        <svg class="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+        </svg>
+        <span class="text-red-800">{{ cartStore.error }}</span>
+      </div>
+    </div>
+
     <!-- Empty Cart -->
     <div v-else class="text-center py-20">
       <div class="max-w-md mx-auto">
@@ -250,6 +308,7 @@ import { ref, onMounted, computed } from 'vue';
 import { useCartStore } from '@/stores/cart';
 import { useRouter, useRoute } from 'vue-router';
 import { placeOrder } from '@/services/order';
+import type { CartItem, ItemDiscountDetail, OrderDiscountDetail } from '@/services/cart';
 
 const cartStore = useCartStore();
 const router = useRouter();
@@ -267,27 +326,56 @@ onMounted(() => {
 // Computed properties for discount display
 const hasItemDiscounts = computed(() => {
   if (!cartStore.cart?.items) return false;
-  return cartStore.cart.items.some((item: any) => item.discount_amount > 0);
+  return cartStore.cart.items.some((item: CartItem) => item.discount_amount > 0);
 });
 
 const hasOrderDiscounts = computed(() => {
   if (!cartStore.cart?.total_discounts || !cartStore.cart?.items) return false;
-  const itemDiscountsTotal = cartStore.cart.items.reduce((total: number, item: any) => total + (item.discount_amount || 0), 0);
+  const itemDiscountsTotal = cartStore.cart.items.reduce((total: number, item: CartItem) => total + (item.discount_amount || 0), 0);
   return cartStore.cart.total_discounts > itemDiscountsTotal;
+});
+
+const hasAnyDiscounts = computed(() => {
+  // Always show coupon field - it's useful even without existing discounts
+  return true;
+});
+
+const appliedCoupons = computed(() => {
+  if (!cartStore.cart?.order_discount_details) return [];
+  return cartStore.cart.order_discount_details;
 });
 
 const itemDiscountsTotal = computed(() => {
   if (!cartStore.cart?.items) return 0;
-  return cartStore.cart.items.reduce((total: number, item: any) => total + (item.discount_amount || 0), 0);
+  return cartStore.cart.items.reduce((total: number, item: CartItem) => total + (item.discount_amount || 0), 0);
 });
 
 const orderDiscountsTotal = computed(() => {
   if (!cartStore.cart?.total_discounts || !cartStore.cart?.items) return 0;
-  const itemDiscountsTotal = cartStore.cart.items.reduce((total: number, item: any) => total + (item.discount_amount || 0), 0);
+  const itemDiscountsTotal = cartStore.cart.items.reduce((total: number, item: CartItem) => total + (item.discount_amount || 0), 0);
   return cartStore.cart.total_discounts - itemDiscountsTotal;
 });
 
+// Helper function to get discount details for a specific item
+function getItemDiscountDetails(item: CartItem): ItemDiscountDetail[] {
+  if (!cartStore.cart?.item_discount_details) return [];
+  return cartStore.cart.item_discount_details.filter((discount: ItemDiscountDetail) => 
+    discount.product_id === item.product_id && 
+    discount.variant_id === (item.variant_id || '')
+  );
+}
+
+// Helper function to format discount value for display
+function formatDiscountValue(discount: ItemDiscountDetail | OrderDiscountDetail): string {
+  if (discount.type === 'percentage') {
+    return `${discount.value}% off`;
+  } else {
+    return `$${discount.value.toFixed(2)} off`;
+  }
+}
+
 function retryFetchCart() {
+  cartStore.error = null;
   cartStore.fetchCart();
 }
 
@@ -296,47 +384,39 @@ function handleImageError(event: Event) {
   img.src = '/placeholder-product.jpg';
 }
 
-function updateItemQuantity(item: any, newQuantity: number) {
+function updateItemQuantity(item: CartItem, newQuantity: number) {
   if (newQuantity < 1) return;
+  cartStore.error = null;
   cartStore.updateCartItem(item.product_id, item.variant_id || '', newQuantity);
 }
 
-function removeItem(item: any) {
+function removeItem(item: CartItem) {
+  cartStore.error = null;
   cartStore.removeCartItem(item.product_id, item.variant_id || '');
 }
 
-function applyDiscount() {
-  if (discountCode.value.trim()) {
-    cartStore.applyDiscount(discountCode.value.trim());
-    discountCode.value = '';
-  }
-}
-
 async function checkout() {
-  if (!cartStore.cart || !cartStore.cart.items.length) return;
-  
   checkoutLoading.value = true;
-  
+  cartStore.error = null;
   try {
-    const items = cartStore.cart.items.map((item: any) => ({
-      product_id: item.product_id,
-      variant_id: item.variant_id || '',
-      quantity: item.quantity,
-    }));
+    // Place the order
+    const order = await cartStore.placeOrder();
     
-    const { data } = await placeOrder(shopSlug, items, cartStore.cart.applied_discount_ids?.[0] || '');
-    cartStore.clearCart();
+    // Clear the cart after successful order placement
+    await cartStore.clearCart();
     
-    router.push({ 
-      name: 'OrderConfirmation', 
+    // Redirect to order confirmation page
+    router.push({
+      name: 'OrderConfirmation',
       params: { 
-        shopSlug,
-        orderId: data._id 
-      } 
+        shopSlug: shopSlug,
+        orderId: order.id || order._id || order.ID
+      }
     });
-  } catch (e: any) {
-    console.error('Checkout failed:', e);
-    alert(e.response?.data?.error || 'Checkout failed. Please try again.');
+  } catch (error: any) {
+    console.error('Checkout failed:', error);
+    // Show error message, do not clear the cart
+    cartStore.error = error?.response?.data?.error || error?.message || 'Checkout failed. Please try again.';
   } finally {
     checkoutLoading.value = false;
   }
@@ -344,6 +424,7 @@ async function checkout() {
 
 function clearCart() {
   if (confirm('Are you sure you want to clear your cart?')) {
+    cartStore.error = null;
     cartStore.clearCart();
   }
 }

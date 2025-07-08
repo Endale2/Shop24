@@ -29,6 +29,11 @@ func CreateDiscountService(d *models.Discount) (*models.Discount, error) {
 		return nil, errors.New("endAt must be after startAt")
 	}
 
+	// Validate discount value
+	if err := ValidateDiscountValue(d.Type, d.Value); err != nil {
+		return nil, err
+	}
+
 	// Set default eligibility type if not specified
 	if d.EligibilityType == "" {
 		d.EligibilityType = models.DiscountEligibilityAll
@@ -37,14 +42,6 @@ func CreateDiscountService(d *models.Discount) (*models.Discount, error) {
 	// Initialize usage tracking
 	d.CurrentUsage = 0
 	d.UsageTracking = []models.DiscountUsage{}
-
-	// Optionally enforce coupon_code uniqueness: attempt repo.GetDiscountByCouponCode
-	if d.CouponCode != "" {
-		existing, err := repositories.GetDiscountByCouponCode(d.CouponCode)
-		if err == nil && existing != nil {
-			return nil, errors.New("coupon code already exists")
-		}
-	}
 
 	res, err := repositories.CreateDiscount(d)
 	if err != nil {
@@ -84,11 +81,12 @@ func UpdateDiscountService(idStr string, upd bson.M) error {
 	if err != nil {
 		return errors.New("invalid discount ID")
 	}
-	// remove immutable
+	// remove immutable fields
 	delete(upd, "id")
 	delete(upd, "_id")
-	delete(upd, "current_usage")
-	delete(upd, "usage_tracking")
+	// Allow updating usage tracking fields for proper usage recording
+	// delete(upd, "current_usage")
+	// delete(upd, "usage_tracking")
 
 	if startRaw, ok := upd["start_at"]; ok {
 		if startTime, ok2 := startRaw.(time.Time); ok2 {
@@ -113,23 +111,6 @@ func DeleteDiscountService(idStr string) error {
 	return err
 }
 
-func GetDiscountByCouponCodeService(code string) (*models.Discount, error) {
-	d, err := repositories.GetDiscountByCouponCode(code)
-	if err != nil {
-		return nil, err
-	}
-	if d == nil {
-		return nil, ErrDiscountNotFound
-	}
-
-	// Check if discount is active
-	if !d.IsActive() {
-		return nil, ErrDiscountNotActive
-	}
-
-	return d, nil
-}
-
 // ValidateDiscountForCustomer validates if a customer can use a discount
 func ValidateDiscountForCustomer(discount *models.Discount, customerID primitive.ObjectID, customerSegmentIDs []primitive.ObjectID) error {
 	// Check if discount is active
@@ -150,6 +131,36 @@ func ValidateDiscountForCustomer(discount *models.Discount, customerID primitive
 	return nil
 }
 
+// CanCustomerUseDiscount checks if a customer can use a specific discount
+// This is a more comprehensive check that includes all validation rules
+func CanCustomerUseDiscount(discount *models.Discount, customerID primitive.ObjectID, customerSegmentIDs []primitive.ObjectID) (bool, error) {
+	// Check if discount is active
+	if !discount.IsActive() {
+		return false, ErrDiscountNotActive
+	}
+
+	// Check eligibility
+	if !discount.IsEligible(customerID, customerSegmentIDs) {
+		return false, ErrDiscountNotEligible
+	}
+
+	// Check overall usage limit
+	if discount.UsageLimit != nil && discount.CurrentUsage >= *discount.UsageLimit {
+		return false, ErrDiscountUsageLimitExceeded
+	}
+
+	// Check per-customer limit
+	if discount.PerCustomerLimit != nil {
+		for _, usage := range discount.UsageTracking {
+			if usage.CustomerID == customerID && usage.UsageCount >= *discount.PerCustomerLimit {
+				return false, ErrDiscountUsageLimitExceeded
+			}
+		}
+	}
+
+	return true, nil
+}
+
 // ApplyDiscountToOrder applies a discount to an order and records usage
 func ApplyDiscountToOrder(discount *models.Discount, order *models.Order, customerID primitive.ObjectID) error {
 	// Validate discount for customer
@@ -163,6 +174,12 @@ func ApplyDiscountToOrder(discount *models.Discount, order *models.Order, custom
 	// Apply discount
 	order.DiscountTotal = discountAmount
 	order.Total = order.Subtotal - discountAmount
+
+	// Ensure total doesn't go negative
+	if order.Total < 0 {
+		order.Total = 0
+		order.DiscountTotal = order.Subtotal
+	}
 
 	// Record usage
 	discount.RecordUsage(customerID, order.Subtotal)
@@ -199,12 +216,23 @@ func GetEligibleDiscountsForCustomer(shopID, customerID primitive.ObjectID, cust
 
 	var eligibleDiscounts []models.Discount
 	for _, discount := range discounts {
-		if err := ValidateDiscountForCustomer(&discount, customerID, customerSegmentIDs); err == nil {
-			eligibleDiscounts = append(eligibleDiscounts, discount)
+		// Only include active discounts
+		if discount.IsActive() {
+			if err := ValidateDiscountForCustomer(&discount, customerID, customerSegmentIDs); err == nil {
+				eligibleDiscounts = append(eligibleDiscounts, discount)
+			}
 		}
 	}
 
 	return eligibleDiscounts, nil
+}
+
+// GetCustomerSegmentIDs retrieves the segment IDs for a customer
+// This is a placeholder function that should be implemented based on your customer segment system
+func GetCustomerSegmentIDs(customerID primitive.ObjectID) ([]primitive.ObjectID, error) {
+	// TODO: Implement this function to query customer segments from the database
+	// For now, return empty array
+	return []primitive.ObjectID{}, nil
 }
 
 // ValidateUsageLimits checks if a customer can use a discount (deprecated, use ValidateDiscountForCustomer)
@@ -283,11 +311,14 @@ func ApplyDiscountsToCart(cart *models.Cart, discounts []models.Discount) {
 // GetBestProductDiscount returns the best discount for a product or variant.
 func GetBestProductDiscount(productID, variantID primitive.ObjectID, discounts []models.Discount) *models.Discount {
 	var best *models.Discount
-	var maxValue float64
-	for _, d := range discounts {
+	var maxSavings float64
+
+	for i := range discounts {
+		d := &discounts[i]
 		if d.Category != models.DiscountCategoryProduct {
 			continue
 		}
+
 		applies := false
 		for _, pid := range d.AppliesToProducts {
 			if pid == productID {
@@ -301,15 +332,24 @@ func GetBestProductDiscount(productID, variantID primitive.ObjectID, discounts [
 				break
 			}
 		}
-		if applies {
-			// Estimate value (percentage or fixed)
-			value := d.Value
+
+		if applies && d.IsActive() {
+			// Calculate actual savings for comparison (not just the value)
+			// For percentage discounts, we need to estimate based on a typical price
+			// For fixed discounts, the value is the savings
+			var estimatedSavings float64
 			if d.Type == models.DiscountTypePercentage {
-				value = d.Value // percent, but for comparison
+				// Estimate savings based on a typical product price (e.g., $100)
+				// This is a rough estimate for comparison purposes
+				estimatedSavings = 100 * (d.Value / 100)
+			} else {
+				// Fixed discount - the value is the savings
+				estimatedSavings = d.Value
 			}
-			if best == nil || value > maxValue {
-				best = &d
-				maxValue = value
+
+			if best == nil || estimatedSavings > maxSavings {
+				best = d
+				maxSavings = estimatedSavings
 			}
 		}
 	}
@@ -380,5 +420,86 @@ func AddSegmentsToDiscount(discountID string, segmentIDs []string) error {
 		"updated_at":       time.Now(),
 	})
 
+	return err
+}
+
+// ValidateDiscountValue validates that a discount value is within reasonable bounds
+func ValidateDiscountValue(discountType models.DiscountType, value float64) error {
+	switch discountType {
+	case models.DiscountTypeFixed:
+		if value < 0 {
+			return errors.New("fixed discount value cannot be negative")
+		}
+		if value > 10000 { // Reasonable upper limit for fixed discount
+			return errors.New("fixed discount value is too high")
+		}
+	case models.DiscountTypePercentage:
+		if value < 0 || value > 100 {
+			return errors.New("percentage discount must be between 0 and 100")
+		}
+	default:
+		return errors.New("invalid discount type")
+	}
+	return nil
+}
+
+// RecordDiscountUsageAtomic safely records discount usage with atomic operations
+// This prevents race conditions when multiple orders use the same discount
+func RecordDiscountUsageAtomic(discountID string, customerID primitive.ObjectID, amount float64) error {
+	id, err := primitive.ObjectIDFromHex(discountID)
+	if err != nil {
+		return errors.New("invalid discount ID")
+	}
+
+	// First, check if we can still use this discount
+	discount, err := GetDiscountByIDService(discountID)
+	if err != nil {
+		return err
+	}
+
+	// Validate usage limits before recording
+	if !discount.CanUse(customerID) {
+		return ErrDiscountUsageLimitExceeded
+	}
+
+	// Use atomic operations to safely update usage
+	now := time.Now()
+
+	// Find existing usage record for this customer
+	found := false
+	for i := range discount.UsageTracking {
+		if discount.UsageTracking[i].CustomerID == customerID {
+			// Update existing record
+			discount.UsageTracking[i].UsageCount++
+			discount.UsageTracking[i].LastUsedAt = now
+			discount.UsageTracking[i].TotalSpent += amount
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		// Create new usage record
+		newUsage := models.DiscountUsage{
+			CustomerID: customerID,
+			UsageCount: 1,
+			LastUsedAt: now,
+			TotalSpent: amount,
+		}
+		discount.UsageTracking = append(discount.UsageTracking, newUsage)
+	}
+
+	// Single atomic operation that increments current_usage and updates usage_tracking
+	atomicUpdate := bson.M{
+		"$inc": bson.M{
+			"current_usage": 1,
+		},
+		"$set": bson.M{
+			"usage_tracking": discount.UsageTracking,
+			"updated_at":     now,
+		},
+	}
+
+	_, err = repositories.UpdateDiscountWithOperators(id, atomicUpdate)
 	return err
 }

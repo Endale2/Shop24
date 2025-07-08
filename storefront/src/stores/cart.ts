@@ -1,9 +1,11 @@
 import { defineStore } from 'pinia';
 import * as cartApi from '@/services/cart';
+import * as orderApi from '@/services/order';
+import type { CartWithDiscountDetails } from '@/services/cart';
 
 export const useCartStore = defineStore('cart', {
   state: () => ({
-    cart: null as any,
+    cart: null as CartWithDiscountDetails | null,
     loading: false,
     error: null as null | string,
     shopSlug: '', // Set this when user selects a shop
@@ -81,6 +83,19 @@ export const useCartStore = defineStore('cart', {
         this.loading = false;
       }
     },
+    async removeDiscount(discountId: string) {
+      if (!this.shopSlug) return;
+      this.loading = true;
+      this.error = null;
+      try {
+        const { data } = await cartApi.removeDiscount(this.shopSlug, discountId);
+        this.cart = data;
+      } catch (e: any) {
+        this.error = e.response?.data?.error || 'Failed to remove discount';
+      } finally {
+        this.loading = false;
+      }
+    },
     async clearCart() {
       if (!this.shopSlug) return;
       this.loading = true;
@@ -90,6 +105,32 @@ export const useCartStore = defineStore('cart', {
         this.cart = data;
       } catch (e: any) {
         this.error = e.response?.data?.error || 'Failed to clear cart';
+      } finally {
+        this.loading = false;
+      }
+    },
+    // Method to place order from cart
+    async placeOrder() {
+      if (!this.shopSlug || !this.cart?.items || this.cart.items.length === 0) {
+        throw new Error('No items in cart to place order');
+      }
+      
+      this.loading = true;
+      this.error = null;
+      try {
+        // Convert cart items to order format
+        const orderItems = this.cart.items.map(item => ({
+          product_id: item.product_id,
+          variant_id: item.variant_id || '',
+          quantity: item.quantity
+        }));
+        
+        // Call the order service to place the order
+        const response = await orderApi.placeOrder(this.shopSlug, orderItems);
+        return response.data;
+      } catch (e: any) {
+        this.error = e.response?.data?.error || 'Failed to place order';
+        throw e;
       } finally {
         this.loading = false;
       }

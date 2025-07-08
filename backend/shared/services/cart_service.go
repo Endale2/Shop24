@@ -2,7 +2,7 @@ package services
 
 import (
 	"errors"
-	
+
 	"time"
 
 	"github.com/Endale2/DRPS/shared/models"
@@ -11,6 +11,35 @@ import (
 )
 
 var ErrCartNotFound = errors.New("cart not found")
+
+// CartWithDiscountDetails represents cart data with detailed discount information
+type CartWithDiscountDetails struct {
+	*models.Cart
+	ItemDiscountDetails  []ItemDiscountDetail  `json:"item_discount_details,omitempty"`
+	OrderDiscountDetails []OrderDiscountDetail `json:"order_discount_details,omitempty"`
+}
+
+// ItemDiscountDetail contains information about discounts applied to a specific item
+type ItemDiscountDetail struct {
+	ProductID  primitive.ObjectID      `json:"product_id"`
+	VariantID  primitive.ObjectID      `json:"variant_id,omitempty"`
+	DiscountID primitive.ObjectID      `json:"discount_id"`
+	Name       string                  `json:"name"`
+	Type       models.DiscountType     `json:"type"`
+	Value      float64                 `json:"value"`
+	Category   models.DiscountCategory `json:"category"`
+	Amount     float64                 `json:"amount"`
+}
+
+// OrderDiscountDetail contains information about order-level discounts
+type OrderDiscountDetail struct {
+	DiscountID primitive.ObjectID      `json:"discount_id"`
+	Name       string                  `json:"name"`
+	Type       models.DiscountType     `json:"type"`
+	Value      float64                 `json:"value"`
+	Category   models.DiscountCategory `json:"category"`
+	Amount     float64                 `json:"amount"`
+}
 
 // CartService provides business logic for cart management.
 type CartService struct{}
@@ -72,7 +101,7 @@ func (s *CartService) AddItem(cart *models.Cart, productID, variantID primitive.
 	}
 
 	cart.LastUpdated = time.Now()
-	return s.CalculateTotals(cart)
+	return s.CalculateTotals(cart, *cart.CustomerID)
 }
 
 // UpdateItem updates the quantity of a cart item.
@@ -90,7 +119,7 @@ func (s *CartService) UpdateItem(cart *models.Cart, productID, variantID primiti
 				item.Quantity = quantity
 			}
 			cart.LastUpdated = time.Now()
-			return s.CalculateTotals(cart)
+			return s.CalculateTotals(cart, *cart.CustomerID)
 		}
 	}
 	return errors.New("item not found in cart")
@@ -103,39 +132,25 @@ func (s *CartService) RemoveItem(cart *models.Cart, productID, variantID primiti
 		if item.ProductID == productID && item.VariantID == variantID {
 			cart.Items = append(cart.Items[:i], cart.Items[i+1:]...)
 			cart.LastUpdated = time.Now()
-			return s.CalculateTotals(cart)
+			return s.CalculateTotals(cart, *cart.CustomerID)
 		}
 	}
 	return errors.New("item not found in cart")
 }
 
-// ApplyDiscountCode applies a discount code to the cart if valid.
-func (s *CartService) ApplyDiscountCode(cart *models.Cart, code string) error {
-	discount, err := GetDiscountByCouponCodeService(code)
-	if err != nil {
-		return err
-	}
-
-	// Check if discount is already applied
-	for _, appliedID := range cart.AppliedDiscountIDs {
-		if appliedID == discount.ID {
-			return errors.New("discount code already applied")
-		}
-	}
-
-	// TODO: Validate discount usage limits, customer eligibility, etc.
-	cart.AppliedDiscountIDs = append(cart.AppliedDiscountIDs, discount.ID)
-	cart.LastUpdated = time.Now()
-	return s.CalculateTotals(cart)
-}
-
 // CalculateTotals recalculates subtotal, discounts, and grand total for the cart.
-func (s *CartService) CalculateTotals(cart *models.Cart) error {
+func (s *CartService) CalculateTotals(cart *models.Cart, customerID primitive.ObjectID) error {
 	subtotal := 0.0
 	totalItemDiscounts := 0.0
-	totalOrderDiscounts := 0.0
 
-	// First pass: calculate subtotal and apply item-level discounts
+	// Get customer segments for proper discount validation
+	customerSegmentIDs, err := s.getCustomerSegmentIDs(customerID)
+	if err != nil {
+		// Log error but continue with empty segments
+		customerSegmentIDs = []primitive.ObjectID{}
+	}
+
+	// Calculate subtotal and apply item-level discounts
 	for i := range cart.Items {
 		item := &cart.Items[i]
 		// Fetch product/variant price
@@ -172,8 +187,8 @@ func (s *CartService) CalculateTotals(cart *models.Cart) error {
 		// Get active discounts for this product/variant
 		discounts, err := GetActiveDiscountsForProductService(cart.ShopID, item.ProductID, item.VariantID, collectionIDs)
 		if err == nil && len(discounts) > 0 {
-			// Apply the best discount (highest value)
-			bestDiscount := s.findBestDiscount(discounts, item.LineTotal)
+			// Apply the best discount (highest value) that the customer is eligible for
+			bestDiscount := s.findBestEligibleDiscount(discounts, item.LineTotal, customerID, customerSegmentIDs)
 			if bestDiscount != nil {
 				itemDiscountAmount = bestDiscount.CalculateDiscount(item.LineTotal)
 				item.AppliedDiscountIDs = append(item.AppliedDiscountIDs, bestDiscount.ID)
@@ -186,23 +201,9 @@ func (s *CartService) CalculateTotals(cart *models.Cart) error {
 		subtotal += item.LineTotal
 	}
 
-	// Second pass: apply order-level discounts
-	if len(cart.AppliedDiscountIDs) > 0 {
-		for _, discountID := range cart.AppliedDiscountIDs {
-			discount, err := GetDiscountByIDService(discountID.Hex())
-			if err == nil && discount != nil && discount.Category == models.DiscountCategoryOrder {
-				// Check minimum order subtotal if specified
-				if discount.MinimumOrderSubtotal == nil || subtotal >= *discount.MinimumOrderSubtotal {
-					orderDiscountAmount := discount.CalculateDiscount(subtotal - totalItemDiscounts)
-					totalOrderDiscounts += orderDiscountAmount
-				}
-			}
-		}
-	}
-
 	// Calculate final totals
 	cart.Subtotal = subtotal
-	cart.TotalDiscounts = totalItemDiscounts + totalOrderDiscounts
+	cart.TotalDiscounts = totalItemDiscounts
 	cart.GrandTotal = subtotal - cart.TotalDiscounts + cart.ShippingCost + cart.TaxAmount
 
 	return nil
@@ -220,6 +221,28 @@ func (s *CartService) findBestDiscount(discounts []models.Discount, price float6
 			if savings > bestSavings {
 				bestSavings = savings
 				bestDiscount = discount
+			}
+		}
+	}
+
+	return bestDiscount
+}
+
+// findBestEligibleDiscount finds the discount that provides the highest savings for a customer
+func (s *CartService) findBestEligibleDiscount(discounts []models.Discount, price float64, customerID primitive.ObjectID, customerSegmentIDs []primitive.ObjectID) *models.Discount {
+	var bestDiscount *models.Discount
+	bestSavings := 0.0
+
+	for i := range discounts {
+		discount := &discounts[i]
+		if discount.IsActive() {
+			// Use the improved validation function
+			if canUse, err := CanCustomerUseDiscount(discount, customerID, customerSegmentIDs); err == nil && canUse {
+				savings := discount.CalculateDiscount(price)
+				if savings > bestSavings {
+					bestSavings = savings
+					bestDiscount = discount
+				}
 			}
 		}
 	}
@@ -265,4 +288,51 @@ func GetOrCreateCartService(shopID, customerID primitive.ObjectID) (*models.Cart
 func SaveCartService(cart *models.Cart) error {
 	_, err := repositories.UpdateCart(cart)
 	return err
+}
+
+// GetCartWithDiscountDetails returns cart with detailed discount information
+func (s *CartService) GetCartWithDiscountDetails(cart *models.Cart) (*CartWithDiscountDetails, error) {
+	if cart == nil {
+		return nil, ErrCartNotFound
+	}
+
+	result := &CartWithDiscountDetails{
+		Cart: cart,
+	}
+
+	// Get customer segments for proper validation
+	customerSegmentIDs, err := s.getCustomerSegmentIDs(*cart.CustomerID)
+	if err != nil {
+		customerSegmentIDs = []primitive.ObjectID{}
+	}
+
+	// Get item-level discount details (only active discounts that customer is eligible for)
+	for _, item := range cart.Items {
+		for _, discountID := range item.AppliedDiscountIDs {
+			discount, err := GetDiscountByIDService(discountID.Hex())
+			if err == nil && discount != nil && discount.IsActive() {
+				// Use the improved validation function
+				if canUse, err := CanCustomerUseDiscount(discount, *cart.CustomerID, customerSegmentIDs); err == nil && canUse {
+					result.ItemDiscountDetails = append(result.ItemDiscountDetails, ItemDiscountDetail{
+						ProductID:  item.ProductID,
+						VariantID:  item.VariantID,
+						DiscountID: discount.ID,
+						Name:       discount.Name,
+						Type:       discount.Type,
+						Value:      discount.Value,
+						Category:   discount.Category,
+						Amount:     item.DiscountAmount,
+					})
+				}
+			}
+		}
+	}
+
+	return result, nil
+}
+
+// getCustomerSegmentIDs retrieves the segment IDs for a customer
+func (s *CartService) getCustomerSegmentIDs(customerID primitive.ObjectID) ([]primitive.ObjectID, error) {
+	// Use the shared service function
+	return GetCustomerSegmentIDs(customerID)
 }
