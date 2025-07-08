@@ -69,4 +69,8 @@ export async function placeOrder(shopSlug: string, items: Array<{ product_id: st
 
 export async function getOrderDetail(shopSlug: string, orderId: string) {
   return api.get(`/shops/${shopSlug}/orders/${orderId}`);
+}
+
+export async function getCustomerOrders(shopSlug: string) {
+  return api.get(`/shops/${shopSlug}/orders`);
 } 

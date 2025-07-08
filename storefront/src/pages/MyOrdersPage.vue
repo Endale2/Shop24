@@ -31,7 +31,7 @@
           <!-- Order Header -->
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
             <div>
-              <h3 class="text-lg font-semibold text-gray-900">Order #{{ order._id.slice(-8) }}</h3>
+              <h3 class="text-lg font-semibold text-gray-900">Order #{{ order.order_number || order._id.slice(-8) }}</h3>
               <p class="text-sm text-gray-600">{{ formatDate(order.createdAt) }}</p>
             </div>
             <div class="mt-2 sm:mt-0">
@@ -104,6 +104,7 @@
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
+import { getCustomerOrders } from '@/services/order';
 
 const route = useRoute();
 const authStore = useAuthStore();
@@ -139,34 +140,27 @@ function getStatusClass(status: string) {
 async function fetchOrders() {
   loading.value = true;
   error.value = '';
-  
   try {
-    // This would call your order service
-    // const response = await getCustomerOrders(shopSlug);
-    // orders.value = response.data;
-    
-    // For now, using mock data
-    orders.value = [
-      {
-        _id: 'order12345678',
-        status: 'delivered',
-        createdAt: '2024-01-15T10:30:00Z',
-        items: [
-          {
-            product_id: 'prod1',
-            variant_id: 'var1',
-            name: 'Sample Product 1',
-            variant_name: 'Large / Blue',
-            quantity: 2,
-            total_price: 29.98
-          }
-        ],
-        subtotal: 29.98,
-        discount_total: 5.00,
-        shipping: 5.99,
-        total: 30.97
-      }
-    ];
+    const response = await getCustomerOrders(shopSlug);
+    // Map backend fields to frontend display
+    orders.value = (response.data || []).map((order: any) => ({
+      _id: order._id || order.id,
+      order_number: order.order_number,
+      status: order.status,
+      createdAt: order.created_at || order.createdAt,
+      items: (order.items || []).map((item: any) => ({
+        product_id: item.product_id,
+        variant_id: item.variant_id,
+        name: item.name,
+        variant_name: item.variant_name || '',
+        quantity: item.quantity,
+        total_price: item.total_price
+      })),
+      subtotal: order.subtotal,
+      discount_total: order.discount_total,
+      shipping: order.shipping_cost || order.shipping,
+      total: order.total
+    }));
   } catch (err: any) {
     error.value = err.response?.data?.error || 'Failed to load orders';
   } finally {
