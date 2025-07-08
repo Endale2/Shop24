@@ -188,7 +188,7 @@
             </div>
             
             <!-- Order-level discounts -->
-            <div v-if="hasOrderDiscounts" class="flex justify-between text-sm">
+            <div v-if="cartStore.cart.order_discount_details && cartStore.cart.order_discount_details.length > 0" class="flex justify-between text-sm">
               <span class="text-gray-600">Order Discounts</span>
               <span class="font-medium text-blue-600">-${{ orderDiscountsTotal.toFixed(2) }}</span>
             </div>
@@ -215,8 +215,8 @@
               </p>
             </div>
             
-            <!-- Total discounts (if both types exist) -->
-            <div v-if="hasItemDiscounts && hasOrderDiscounts" class="flex justify-between text-sm border-t border-gray-100 pt-2">
+            <!-- Total discounts (if either type exists) -->
+            <div v-if="hasItemDiscounts || (cartStore.cart.order_discount_details && cartStore.cart.order_discount_details.length > 0)" class="flex justify-between text-sm border-t border-gray-100 pt-2">
               <span class="text-gray-600">Total Discounts</span>
               <span class="font-medium text-green-600">-${{ cartStore.cart.total_discounts?.toFixed(2) || '0.00' }}</span>
             </div>
@@ -272,16 +272,6 @@
       </div>
     </div>
 
-    <!-- Error Message -->
-    <div v-if="cartStore.error" class="mb-6 bg-red-50 border border-red-200 rounded-lg p-4">
-      <div class="flex items-center">
-        <svg class="w-5 h-5 text-red-400 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-        </svg>
-        <span class="text-red-800">{{ cartStore.error }}</span>
-      </div>
-    </div>
-
     <!-- Empty Cart -->
     <div v-else class="text-center py-20">
       <div class="max-w-md mx-auto">
@@ -315,7 +305,6 @@ const router = useRouter();
 const route = useRoute();
 const shopSlug = route.params.shopSlug as string;
 
-const discountCode = ref('');
 const checkoutLoading = ref(false);
 
 onMounted(() => {
@@ -333,16 +322,6 @@ const hasOrderDiscounts = computed(() => {
   if (!cartStore.cart?.total_discounts || !cartStore.cart?.items) return false;
   const itemDiscountsTotal = cartStore.cart.items.reduce((total: number, item: CartItem) => total + (item.discount_amount || 0), 0);
   return cartStore.cart.total_discounts > itemDiscountsTotal;
-});
-
-const hasAnyDiscounts = computed(() => {
-  // Always show coupon field - it's useful even without existing discounts
-  return true;
-});
-
-const appliedCoupons = computed(() => {
-  if (!cartStore.cart?.order_discount_details) return [];
-  return cartStore.cart.order_discount_details;
 });
 
 const itemDiscountsTotal = computed(() => {
@@ -425,7 +404,7 @@ async function checkout() {
 function clearCart() {
   if (confirm('Are you sure you want to clear your cart?')) {
     cartStore.error = null;
-    cartStore.clearCart();
+  cartStore.clearCart();
   }
 }
 </script> 
