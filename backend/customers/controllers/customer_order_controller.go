@@ -191,6 +191,8 @@ func PlaceOrder(c *gin.Context) {
 		if cidHex, ok := cidVal.(string); ok {
 			if cid, err := primitive.ObjectIDFromHex(cidHex); err == nil {
 				customerID = cid
+				// Link customer to shop if not already linked
+				_, _, _ = services.LinkIfNotLinked(shop.ID, customerID)
 			} else {
 				c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid customer ID"})
 				return

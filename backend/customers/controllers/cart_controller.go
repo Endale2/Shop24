@@ -35,6 +35,8 @@ func GetCart(c *gin.Context) {
 		return
 	}
 	customerID, _ := primitive.ObjectIDFromHex(cidHex)
+	// Link customer to shop if not already linked
+	_, _, _ = sharedSvc.LinkIfNotLinked(shop.ID, customerID)
 	cart, err := sharedSvc.GetOrCreateCartService(shop.ID, customerID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -73,6 +75,8 @@ func AddToCart(c *gin.Context) {
 		return
 	}
 	customerID, _ := primitive.ObjectIDFromHex(cidHex)
+	// Link customer to shop if not already linked
+	_, _, _ = sharedSvc.LinkIfNotLinked(shop.ID, customerID)
 	cart, err := sharedSvc.GetOrCreateCartService(shop.ID, customerID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -141,6 +145,8 @@ func UpdateCartItem(c *gin.Context) {
 		return
 	}
 	customerID, _ := primitive.ObjectIDFromHex(cidHex)
+	// Link customer to shop if not already linked
+	_, _, _ = sharedSvc.LinkIfNotLinked(shop.ID, customerID)
 	cart, err := sharedSvc.GetOrCreateCartService(shop.ID, customerID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -196,6 +202,8 @@ func RemoveCartItem(c *gin.Context) {
 		return
 	}
 	customerID, _ := primitive.ObjectIDFromHex(cidHex)
+	// Link customer to shop if not already linked
+	_, _, _ = sharedSvc.LinkIfNotLinked(shop.ID, customerID)
 	cart, err := sharedSvc.GetOrCreateCartService(shop.ID, customerID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
@@ -250,6 +258,8 @@ func ClearCart(c *gin.Context) {
 		return
 	}
 	customerID, _ := primitive.ObjectIDFromHex(cidHex)
+	// Link customer to shop if not already linked
+	_, _, _ = sharedSvc.LinkIfNotLinked(shop.ID, customerID)
 	cart, err := sharedSvc.GetOrCreateCartService(shop.ID, customerID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})

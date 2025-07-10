@@ -1,6 +1,5 @@
 <template>
   <div class="p-4 sm:p-6 max-w-7xl mx-auto font-sans">
-    <!-- Header with Actions -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 space-y-4 sm:space-y-0">
       <div>
         <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">Discount Details</h1>
@@ -31,7 +30,6 @@
       </div>
     </div>
 
-    <!-- Loading State -->
     <div v-if="loading" class="text-center py-16 text-gray-600 text-lg">
       <div class="flex flex-col items-center justify-center">
         <SpinnerIcon class="animate-spin h-10 w-10 text-green-500 mb-4" />
@@ -39,7 +37,6 @@
       </div>
     </div>
 
-    <!-- Error State -->
     <div v-else-if="!discount" class="bg-red-50 border border-red-200 text-red-700 px-6 py-10 rounded-xl text-center shadow-md">
       <div class="flex flex-col items-center">
         <ExclamationIcon class="w-12 h-12 text-red-500 mb-4" />
@@ -52,12 +49,9 @@
       </div>
     </div>
 
-    <!-- Discount Content -->
     <div v-else class="space-y-8">
-      <!-- Main Discount Info Card -->
       <div class="bg-white shadow-xl rounded-xl p-6 sm:p-8 border border-gray-200">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          <!-- Left Column - Basic Info -->
           <div class="lg:col-span-2">
             <div class="flex items-start space-x-4 mb-6">
               <div class="w-16 h-16 bg-green-100 rounded-xl flex items-center justify-center">
@@ -85,7 +79,6 @@
               </div>
             </div>
 
-            <!-- Discount Configuration -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div class="bg-gray-50 p-4 rounded-lg">
                 <h3 class="text-sm font-medium text-gray-500 mb-2">Category</h3>
@@ -105,7 +98,6 @@
                 <h3 class="text-sm font-medium text-gray-500 mb-2">Eligibility</h3>
                 <p class="text-lg font-semibold text-gray-900">{{ formatEligibility(discount.eligibilityType) }}</p>
               </div>
-              <!-- Buy X Get Y specific info -->
               <div v-if="discount.category === 'buy_x_get_y'" class="bg-pink-50 p-4 rounded-lg border border-pink-200">
                 <h3 class="text-sm font-medium text-pink-700 mb-2">Buy X Get Y</h3>
                 <div class="space-y-1">
@@ -123,7 +115,6 @@
             </div>
           </div>
 
-          <!-- Right Column - Quick Stats -->
           <div class="space-y-4">
             <div class="bg-green-50 p-4 rounded-lg border border-green-200">
               <h3 class="text-sm font-medium text-green-800 mb-2">Usage Statistics</h3>
@@ -163,9 +154,7 @@
         </div>
       </div>
 
-      <!-- Enhanced Features Grid -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- Customer Eligibility & Usage -->
         <div class="bg-white shadow-xl rounded-xl p-6 border border-gray-200">
           <h3 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
             <UsersIcon class="w-6 h-6 mr-2 text-green-600" />
@@ -173,7 +162,6 @@
           </h3>
           
           <div class="space-y-6">
-            <!-- Eligibility Settings -->
             <div>
               <h4 class="text-lg font-medium text-gray-900 mb-3">Eligibility Settings</h4>
               <div class="space-y-3">
@@ -206,7 +194,6 @@
               </div>
             </div>
 
-            <!-- Management Actions -->
             <div class="border-t border-gray-200 pt-4">
               <h4 class="text-lg font-medium text-gray-900 mb-3">Management Actions</h4>
               <div class="flex flex-wrap gap-2">
@@ -230,7 +217,6 @@
           </div>
         </div>
 
-        <!-- Usage Tracking -->
         <div class="bg-white shadow-xl rounded-xl p-6 border border-gray-200">
           <h3 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
             <ChartBarIcon class="w-6 h-6 mr-2 text-green-600" />
@@ -282,8 +268,7 @@
         </div>
       </div>
 
-      <!-- Applied Products/Collections -->
-      <div v-if="discount.appliesToProducts?.length || fetchedCollections.length" class="bg-white shadow-xl rounded-xl p-6 border border-gray-200">
+      <div v-if="discount" class="bg-white shadow-xl rounded-xl p-6 border border-gray-200">
         <h3 class="text-xl font-semibold text-gray-900 mb-6 flex items-center">
           <CubeIcon class="w-6 h-6 mr-2 text-green-600" />
           Applied Items
@@ -294,7 +279,6 @@
         </div>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <!-- Products -->
           <div v-if="discount.appliesToProducts?.length">
             <h4 class="text-lg font-medium text-gray-900 mb-4">Products</h4>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -317,7 +301,6 @@
             <p class="text-sm">This discount applies to <strong>all products</strong> in the shop.</p>
           </div>
 
-          <!-- Collections -->
           <div v-if="fetchedCollections.length">
             <h4 class="text-lg font-medium text-gray-900 mb-4">Collections</h4>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -342,7 +325,6 @@
       </div>
     </div>
 
-    <!-- Add Customers Modal -->
     <div v-if="showAddCustomersModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6 relative">
         <h3 class="text-xl font-bold mb-4 text-gray-800">Add Customers to Discount</h3>
@@ -419,7 +401,6 @@
       </div>
     </div>
 
-    <!-- Add Segments Modal -->
     <div v-if="showAddSegmentsModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6 relative">
         <h3 class="text-xl font-bold mb-4 text-gray-800">Add Segments to Discount</h3>
@@ -496,7 +477,6 @@
       </div>
     </div>
 
-    <!-- Add Product Modal -->
     <div v-if="showAddProductModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
       <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6 relative">
         <h3 class="text-xl font-bold mb-4 text-gray-800">Add Product to Discount</h3>
