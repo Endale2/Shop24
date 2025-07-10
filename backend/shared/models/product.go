@@ -22,6 +22,10 @@ type Variant struct {
 	Stock int     `bson:"stock"                json:"stock"`
 	Image string  `bson:"image,omitempty"      json:"image,omitempty"`
 
+	// Discount display fields (not stored in DB)
+	DisplayPrice      *float64 `bson:"-" json:"display_price,omitempty"`
+	AppliedDiscountID *string  `bson:"-" json:"applied_discount_id,omitempty"`
+
 	// Total could represent price * quantity, or any calculated total
 	Total *float64 `bson:"total,omitempty"      json:"total,omitempty"`
 
@@ -54,6 +58,10 @@ type Product struct {
 	Category string  `bson:"category"                  json:"category"`
 	Price    float64 `bson:"price"                     json:"price"`
 	Stock    int     `bson:"stock"                     json:"stock"`
+
+	// Discount display fields (not stored in DB)
+	DisplayPrice      *float64 `bson:"-" json:"display_price,omitempty"`
+	AppliedDiscountID *string  `bson:"-" json:"applied_discount_id,omitempty"`
 
 	// Variants & ratings
 	Variants      []Variant `bson:"variants,omitempty"        json:"variants,omitempty"`

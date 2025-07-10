@@ -144,7 +144,7 @@ func (s *CartService) CalculateTotals(cart *models.Cart, customerID primitive.Ob
 	totalItemDiscounts := 0.0
 
 	// Get customer segments for proper discount validation
-	customerSegmentIDs, err := s.getCustomerSegmentIDs(customerID)
+	customerSegmentIDs, err := s.getCustomerSegmentIDs(cart.ShopID, customerID)
 	if err != nil {
 		// Log error but continue with empty segments
 		customerSegmentIDs = []primitive.ObjectID{}
@@ -301,7 +301,7 @@ func (s *CartService) GetCartWithDiscountDetails(cart *models.Cart) (*CartWithDi
 	}
 
 	// Get customer segments for proper validation
-	customerSegmentIDs, err := s.getCustomerSegmentIDs(*cart.CustomerID)
+	customerSegmentIDs, err := s.getCustomerSegmentIDs(cart.ShopID, *cart.CustomerID)
 	if err != nil {
 		customerSegmentIDs = []primitive.ObjectID{}
 	}
@@ -332,7 +332,7 @@ func (s *CartService) GetCartWithDiscountDetails(cart *models.Cart) (*CartWithDi
 }
 
 // getCustomerSegmentIDs retrieves the segment IDs for a customer
-func (s *CartService) getCustomerSegmentIDs(customerID primitive.ObjectID) ([]primitive.ObjectID, error) {
+func (s *CartService) getCustomerSegmentIDs(shopID, customerID primitive.ObjectID) ([]primitive.ObjectID, error) {
 	// Use the shared service function
-	return GetCustomerSegmentIDs(customerID)
+	return GetCustomerSegmentIDs(shopID, customerID)
 }

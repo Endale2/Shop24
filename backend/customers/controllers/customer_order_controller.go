@@ -191,7 +191,6 @@ func PlaceOrder(c *gin.Context) {
 		if cidHex, ok := cidVal.(string); ok {
 			if cid, err := primitive.ObjectIDFromHex(cidHex); err == nil {
 				customerID = cid
-				// Link customer to shop if not already linked
 				_, _, _ = services.LinkIfNotLinked(shop.ID, customerID)
 			} else {
 				c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid customer ID"})
@@ -213,26 +212,25 @@ func PlaceOrder(c *gin.Context) {
 		return
 	}
 
-	// 4) Validate request
 	if len(req.Items) == 0 {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "order must contain at least one item"})
 		return
 	}
 
-	// 5) Build order items with product data from database
 	var orderItems []models.OrderItem
 	var subtotal float64
 	var totalDiscount float64
+	appliedDiscountIDsMap := map[primitive.ObjectID]struct{}{}
+	itemDiscountDetails := make([]map[string]interface{}, 0)
+
+	customerSegmentIDs, _ := services.GetCustomerSegmentIDs(shop.ID, customerID)
 
 	for _, itemReq := range req.Items {
-		// Parse product ID
 		productID, err := primitive.ObjectIDFromHex(itemReq.ProductID)
 		if err != nil {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid product ID: " + itemReq.ProductID})
 			return
 		}
-
-		// Parse variant ID if provided
 		var variantID primitive.ObjectID
 		if itemReq.VariantID != "" {
 			variantID, err = primitive.ObjectIDFromHex(itemReq.VariantID)
@@ -240,41 +238,21 @@ func PlaceOrder(c *gin.Context) {
 				c.JSON(http.StatusBadRequest, gin.H{"error": "invalid variant ID: " + itemReq.VariantID})
 				return
 			}
-			fmt.Printf("Requested variant ID: %s\n", variantID.Hex())
 		}
-
-		// Fetch product with discounts applied
-		product, err := services.GetProductByIDWithDiscountsService(productID.Hex(), &customerID)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch product: " + err.Error()})
+		product, err := services.GetProductByIDService(productID.Hex())
+		if err != nil || product == nil {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch product: " + itemReq.ProductID})
 			return
 		}
-		if product == nil {
-			c.JSON(http.StatusBadRequest, gin.H{"error": "product not found: " + itemReq.ProductID})
-			return
-		}
-
-		// Debug: Log product and variant information
-		fmt.Printf("Product %s: Name=%s, Price=%.2f, Stock=%d\n",
-			productID.Hex(), product.Name, product.Price, product.Stock)
-		fmt.Printf("Product %s has %d variants:\n", productID.Hex(), len(product.Variants))
-		for i, v := range product.Variants {
-			fmt.Printf("  Variant %d: ID=%s, Options=%+v, Price=%.2f, Stock=%d\n", i, v.VariantID.Hex(), v.Options, v.Price, v.Stock)
-		}
-
-		// Verify product belongs to this shop
 		if product.ShopID != shop.ID {
 			c.JSON(http.StatusBadRequest, gin.H{"error": "product does not belong to this shop"})
 			return
 		}
-
-		// Determine price and product details
 		var unitPrice float64
 		var productName string
 		var productImage string
 		var orderVariantID primitive.ObjectID
-
-		// Check if product has real variants
+		var stock int
 		hasRealVariants := false
 		for _, v := range product.Variants {
 			if len(v.Options) > 0 && (v.Options[0].Name != "" || v.Options[0].Value != "") {
@@ -282,35 +260,21 @@ func PlaceOrder(c *gin.Context) {
 				break
 			}
 		}
-
 		if hasRealVariants && !variantID.IsZero() {
-			// Product has real variants and variant was specified
 			var foundVariant *models.Variant
-			availableVariantIDs := make([]string, 0, len(product.Variants))
-
 			for i := range product.Variants {
-				availableVariantIDs = append(availableVariantIDs, product.Variants[i].VariantID.Hex())
-				// Check VariantID (this should match what's in the database)
 				if product.Variants[i].VariantID == variantID {
 					foundVariant = &product.Variants[i]
 					break
 				}
 			}
 			if foundVariant == nil {
-				c.JSON(http.StatusBadRequest, gin.H{
-					"error":              "variant not found: " + itemReq.VariantID + " for product: " + itemReq.ProductID,
-					"available_variants": availableVariantIDs,
-					"requested_variant":  variantID.Hex(),
-				})
+				c.JSON(http.StatusBadRequest, gin.H{"error": "variant not found: " + itemReq.VariantID + " for product: " + itemReq.ProductID})
 				return
 			}
-
-			// Use regular price if available, otherwise use regular price
 			unitPrice = foundVariant.Price
-
 			productName = product.Name
 			if len(foundVariant.Options) > 0 {
-				// Add variant options to product name
 				productName += " - "
 				for i, opt := range foundVariant.Options {
 					if i > 0 {
@@ -319,197 +283,138 @@ func PlaceOrder(c *gin.Context) {
 					productName += opt.Name + ": " + opt.Value
 				}
 			}
-
-			// Use variant image if available, otherwise product main image
 			if foundVariant.Image != "" {
 				productImage = foundVariant.Image
 			} else {
 				productImage = product.MainImage
 			}
-
-			// Check stock
-			if foundVariant.Stock < itemReq.Quantity {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "insufficient stock for variant: " + itemReq.VariantID})
-				return
-			}
-
+			stock = foundVariant.Stock
 			orderVariantID = variantID
 		} else {
-			// Product has no real variants or no variant specified - use product base price
 			unitPrice = product.Price
-
-			fmt.Printf("Using product base price: %.2f (Product.Price: %.2f)\n",
-				unitPrice, product.Price)
-
 			productName = product.Name
 			productImage = product.MainImage
-
-			// Check stock
-			if product.Stock < itemReq.Quantity {
-				c.JSON(http.StatusBadRequest, gin.H{"error": "insufficient stock for product: " + itemReq.ProductID})
-				return
-			}
-
-			// For products without variants, don't set a variant ID
+			stock = product.Stock
 			orderVariantID = primitive.NilObjectID
 		}
-
-		// Calculate line total
+		if stock < itemReq.Quantity {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "insufficient stock for product/variant: " + itemReq.ProductID})
+			return
+		}
 		lineTotal := unitPrice * float64(itemReq.Quantity)
 		subtotal += lineTotal
-
-		fmt.Printf("Creating order item: Product=%s, VariantID=%s, UnitPrice=%.2f, TotalPrice=%.2f\n",
-			productID.Hex(), orderVariantID.Hex(), unitPrice, lineTotal)
-
-		// Create order item
+		collectionIDs, err := services.GetCollectionIDsForProduct(productID)
+		if err != nil {
+			collectionIDs = []primitive.ObjectID{}
+		}
+		discounts, err := services.GetActiveDiscountsForProductService(shop.ID, productID, variantID, collectionIDs)
+		if err != nil {
+			discounts = []models.Discount{}
+		}
+		var bestDiscount *models.Discount
+		bestSavings := 0.0
+		for i := range discounts {
+			discount := &discounts[i]
+			if discount.IsActive() {
+				if canUse, err := services.CanCustomerUseDiscount(discount, customerID, customerSegmentIDs); err == nil && canUse {
+					savings := discount.CalculateDiscount(lineTotal)
+					if savings > bestSavings {
+						bestSavings = savings
+						bestDiscount = discount
+					}
+				}
+			}
+		}
+		itemDiscountAmount := 0.0
+		appliedDiscountIDs := []primitive.ObjectID{}
+		if bestDiscount != nil && bestSavings > 0 {
+			itemDiscountAmount = bestSavings
+			appliedDiscountIDs = append(appliedDiscountIDs, bestDiscount.ID)
+			appliedDiscountIDsMap[bestDiscount.ID] = struct{}{}
+		}
+		totalDiscount += itemDiscountAmount
+		finalLineTotal := lineTotal - itemDiscountAmount
+		if finalLineTotal < 0 {
+			finalLineTotal = 0
+		}
+		itemDiscountDetails = append(itemDiscountDetails, map[string]interface{}{
+			"product_id":           productID.Hex(),
+			"variant_id":           variantID.Hex(),
+			"unit_price":           unitPrice,
+			"quantity":             itemReq.Quantity,
+			"line_total":           lineTotal,
+			"discount":             itemDiscountAmount,
+			"final_line_total":     finalLineTotal,
+			"applied_discount_ids": appliedDiscountIDs,
+		})
 		orderItem := models.OrderItem{
 			ProductID:  productID,
-			VariantID:  orderVariantID, // Will be zero ObjectID for products without variants
+			VariantID:  orderVariantID,
 			Name:       productName,
 			Quantity:   itemReq.Quantity,
 			UnitPrice:  unitPrice,
-			TotalPrice: lineTotal,
+			TotalPrice: finalLineTotal, // Use discounted price for order item
 			Image:      productImage,
 		}
-
 		orderItems = append(orderItems, orderItem)
 	}
-
-	// 7) Calculate final total
 	finalTotal := subtotal - totalDiscount
 	if finalTotal < 0 {
 		finalTotal = 0
 	}
-
-	// 8) Create the order
-	order := &models.Order{
-		ShopID:        shop.ID,
-		CustomerID:    customerID,
-		Items:         orderItems,
-		Subtotal:      subtotal,
-		DiscountTotal: totalDiscount,
-		Total:         finalTotal,
-		Status:        "pending", // Default status
-		CreatedAt:     time.Now(),
-		UpdatedAt:     time.Now(),
+	appliedDiscountIDs := make([]primitive.ObjectID, 0, len(appliedDiscountIDsMap))
+	for id := range appliedDiscountIDsMap {
+		appliedDiscountIDs = append(appliedDiscountIDs, id)
 	}
-
-	// 9) Save the order
+	order := &models.Order{
+		ShopID:             shop.ID,
+		CustomerID:         customerID,
+		Items:              orderItems,
+		Subtotal:           subtotal,
+		DiscountTotal:      totalDiscount,
+		Total:              finalTotal,
+		Status:             "pending",
+		AppliedDiscountIDs: appliedDiscountIDs,
+		CreatedAt:          time.Now(),
+		UpdatedAt:          time.Now(),
+	}
 	created, err := services.CreateOrderService(order)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	// Record usage for item-level discounts (from products with automatic discounts)
-	for _, itemReq := range req.Items {
-		productID, _ := primitive.ObjectIDFromHex(itemReq.ProductID)
-		var variantID primitive.ObjectID
-		if itemReq.VariantID != "" {
-			variantID, _ = primitive.ObjectIDFromHex(itemReq.VariantID)
-		}
-
-		// Get collection IDs for this product
-		collectionIDs, err := services.GetCollectionIDsForProduct(productID)
-		if err != nil {
-			collectionIDs = []primitive.ObjectID{}
-		}
-
-		// Get active discounts for this product/variant
-		discounts, err := services.GetActiveDiscountsForProductService(shop.ID, productID, variantID, collectionIDs)
-		if err == nil && len(discounts) > 0 {
-			// Find the best discount that was applied
-			var bestDiscount *models.Discount
-			bestSavings := 0.0
-
-			for i := range discounts {
-				discount := &discounts[i]
-				if discount.IsActive() {
-					// Use the improved validation function
-					if canUse, err := services.CanCustomerUseDiscount(discount, customerID, []primitive.ObjectID{}); err == nil && canUse {
-						// Calculate what the savings would be
-						product, _ := services.GetProductByIDService(productID.Hex())
-						if product != nil {
-							var price float64
-							if !variantID.IsZero() {
-								for _, v := range product.Variants {
-									if v.VariantID == variantID {
-										price = v.Price
-										break
-									}
-								}
-							} else {
-								price = product.Price
-							}
-							lineTotal := price * float64(itemReq.Quantity)
-							savings := discount.CalculateDiscount(lineTotal)
-							if savings > bestSavings {
-								bestSavings = savings
-								bestDiscount = discount
-							}
-						}
-					}
-				}
-			}
-
-			// Record usage for the best discount if one was found
-			if bestDiscount != nil {
-				// Calculate line total for usage recording
-				product, _ := services.GetProductByIDService(productID.Hex())
-				if product != nil {
-					var price float64
-					if !variantID.IsZero() {
-						for _, v := range product.Variants {
-							if v.VariantID == variantID {
-								price = v.Price
-								break
-							}
-						}
-					} else {
-						price = product.Price
-					}
-					lineTotal := price * float64(itemReq.Quantity)
-
-					// Use atomic function to safely record usage
-					err = services.RecordDiscountUsageAtomic(bestDiscount.ID.Hex(), customerID, lineTotal)
-					if err != nil {
-						fmt.Printf("Warning: Failed to record item discount usage: %v\n", err)
-					}
+	for id := range appliedDiscountIDsMap {
+		for _, item := range itemDiscountDetails {
+			for _, appliedID := range item["applied_discount_ids"].([]primitive.ObjectID) {
+				if appliedID == id {
+					_ = services.RecordDiscountUsageAtomic(id.Hex(), customerID, item["line_total"].(float64))
 				}
 			}
 		}
 	}
-
-	// 10) Reduce stock for all items
 	for _, itemReq := range req.Items {
 		productID, _ := primitive.ObjectIDFromHex(itemReq.ProductID)
-
 		if itemReq.VariantID != "" {
 			variantID, _ := primitive.ObjectIDFromHex(itemReq.VariantID)
-			// Only reduce variant stock if it's a real variant (not zero ObjectID)
 			if !variantID.IsZero() {
 				err := services.ReduceVariantStock(productID, variantID, itemReq.Quantity)
 				if err != nil {
 					fmt.Printf("Warning: Failed to reduce stock for variant %s: %v\n", itemReq.VariantID, err)
 				}
 			} else {
-				// Zero ObjectID means no variant - reduce product stock
 				err := services.ReduceProductStock(productID, itemReq.Quantity)
 				if err != nil {
 					fmt.Printf("Warning: Failed to reduce stock for product %s: %v\n", itemReq.ProductID, err)
 				}
 			}
 		} else {
-			// No variant specified - reduce product stock
 			err := services.ReduceProductStock(productID, itemReq.Quantity)
 			if err != nil {
 				fmt.Printf("Warning: Failed to reduce stock for product %s: %v\n", itemReq.ProductID, err)
 			}
 		}
 	}
-
-	// 11) Return the created order
-	c.JSON(http.StatusCreated, created)
+	c.JSON(http.StatusCreated, gin.H{"id": created.ID.Hex(), "order": created, "item_discount_details": itemDiscountDetails})
 }
 
 // ListShopOrders handles GET /shops/:shopSlug/orders

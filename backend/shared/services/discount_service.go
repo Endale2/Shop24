@@ -4,6 +4,7 @@ import (
 	"errors"
 	"time"
 
+	sellerRepo "github.com/Endale2/DRPS/sellers/repositories"
 	"github.com/Endale2/DRPS/shared/models"
 	"github.com/Endale2/DRPS/shared/repositories"
 	"go.mongodb.org/mongo-driver/bson"
@@ -227,12 +228,17 @@ func GetEligibleDiscountsForCustomer(shopID, customerID primitive.ObjectID, cust
 	return eligibleDiscounts, nil
 }
 
-// GetCustomerSegmentIDs retrieves the segment IDs for a customer
-// This is a placeholder function that should be implemented based on your customer segment system
-func GetCustomerSegmentIDs(customerID primitive.ObjectID) ([]primitive.ObjectID, error) {
-	// TODO: Implement this function to query customer segments from the database
-	// For now, return empty array
-	return []primitive.ObjectID{}, nil
+// GetCustomerSegmentIDs retrieves the segment IDs for a customer in a shop
+func GetCustomerSegmentIDs(shopID, customerID primitive.ObjectID) ([]primitive.ObjectID, error) {
+	segments, err := sellerRepo.GetSegmentsByCustomer(shopID, customerID)
+	if err != nil {
+		return nil, err
+	}
+	ids := make([]primitive.ObjectID, 0, len(segments))
+	for _, seg := range segments {
+		ids = append(ids, seg.ID)
+	}
+	return ids, nil
 }
 
 // ValidateUsageLimits checks if a customer can use a discount (deprecated, use ValidateDiscountForCustomer)
@@ -245,25 +251,71 @@ func ValidateUsageLimits(discount *models.Discount, customerID primitive.ObjectI
 
 // ApplyDiscountsToProduct applies the best applicable discount to the product and its variants.
 func ApplyDiscountsToProduct(product *models.Product, discounts []models.Discount) {
-	// Apply to product price if product-level discount exists
-	for _, d := range discounts {
-		if d.Category == models.DiscountCategoryProduct {
-			// If product is in AppliesToProducts
-			for _, pid := range d.AppliesToProducts {
-				if pid == product.ID {
-					// Previously: applyDiscountToProduct(product, &d)
-					// Now: (no-op or implement price logic if needed)
+	// Helper: get best discount for a variant or product
+	getBestDiscount := func(productID, variantID primitive.ObjectID) *models.Discount {
+		var best *models.Discount
+		var maxSavings float64
+		for i := range discounts {
+			d := &discounts[i]
+			if d.Category != models.DiscountCategoryProduct || !d.IsActive() {
+				continue
+			}
+			applies := false
+			for _, vid := range d.AppliesToVariants {
+				if vid == variantID && !variantID.IsZero() {
+					applies = true
+					break
 				}
 			}
-			// If any variant is in AppliesToVariants
-			for i := range product.Variants {
-				for _, vid := range d.AppliesToVariants {
-					if vid == product.Variants[i].VariantID {
-						// Previously: applyDiscountToVariant(&product.Variants[i], &d)
-						// Now: (no-op or implement price logic if needed)
+			if !applies {
+				for _, pid := range d.AppliesToProducts {
+					if pid == productID {
+						applies = true
+						break
 					}
 				}
 			}
+			if applies {
+				var estimatedSavings float64
+				if d.Type == models.DiscountTypePercentage {
+					estimatedSavings = 100 * (d.Value / 100)
+				} else {
+					estimatedSavings = d.Value
+				}
+				if best == nil || estimatedSavings > maxSavings {
+					best = d
+					maxSavings = estimatedSavings
+				}
+			}
+		}
+		return best
+	}
+
+	if len(product.Variants) > 0 {
+		for i := range product.Variants {
+			v := &product.Variants[i]
+			best := getBestDiscount(product.ID, v.VariantID)
+			if best != nil {
+				discounted := v.Price - best.CalculateDiscount(v.Price)
+				v.DisplayPrice = &discounted
+				id := best.ID.Hex()
+				v.AppliedDiscountID = &id
+			} else {
+				v.DisplayPrice = &v.Price
+				v.AppliedDiscountID = nil
+			}
+		}
+	} else {
+		// Simple product (no variants)
+		best := getBestDiscount(product.ID, primitive.NilObjectID)
+		if best != nil {
+			discounted := product.Price - best.CalculateDiscount(product.Price)
+			product.DisplayPrice = &discounted
+			id := best.ID.Hex()
+			product.AppliedDiscountID = &id
+		} else {
+			product.DisplayPrice = &product.Price
+			product.AppliedDiscountID = nil
 		}
 	}
 }

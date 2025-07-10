@@ -389,7 +389,7 @@ async function checkout() {
       name: 'OrderConfirmation',
       params: { 
         shopSlug: shopSlug,
-        orderId: order.id || order._id || order.ID
+        orderId: order.order?.id || order.order?._id || order.order?.ID
       }
     });
   } catch (error: any) {

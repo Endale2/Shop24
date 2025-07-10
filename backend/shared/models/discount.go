@@ -97,14 +97,32 @@ func (d *Discount) IsEligible(customerID primitive.ObjectID, customerSegmentIDs 
 	case DiscountEligibilityAll:
 		return true
 	case DiscountEligibilitySpecific:
+		// If no customers are listed, allow everyone
+		if len(d.AllowedCustomerIDs) == 0 {
+			return true
+		}
+		seen := make(map[primitive.ObjectID]struct{})
 		for _, allowedID := range d.AllowedCustomerIDs {
+			if _, exists := seen[allowedID]; exists {
+				continue
+			}
+			seen[allowedID] = struct{}{}
 			if allowedID == customerID {
 				return true
 			}
 		}
 		return false
 	case DiscountEligibilitySegment:
+		// If no segments are listed, allow everyone
+		if len(d.AllowedSegmentIDs) == 0 {
+			return true
+		}
+		seen := make(map[primitive.ObjectID]struct{})
 		for _, segmentID := range d.AllowedSegmentIDs {
+			if _, exists := seen[segmentID]; exists {
+				continue
+			}
+			seen[segmentID] = struct{}{}
 			for _, customerSegmentID := range customerSegmentIDs {
 				if segmentID == customerSegmentID {
 					return true

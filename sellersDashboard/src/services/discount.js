@@ -218,6 +218,17 @@ export const discountService = {
   },
 
   /**
+   * Clear all allowed customers and segments (set to allow everyone).
+   * @param {string} shopId
+   * @param {string} discountId
+   * @returns {Promise<Object>}
+   */
+  async clearEligibility(shopId, discountId) {
+    const res = await api.post(`/seller/shops/${shopId}/discounts/${discountId}/clear-eligibility`)
+    return res.data
+  },
+
+  /**
    * Get usage statistics for a discount.
    * @param {string} shopId
    * @param {string} discountId

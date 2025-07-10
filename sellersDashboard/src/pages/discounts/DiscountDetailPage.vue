@@ -174,14 +174,25 @@
                   }" class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium">
                     {{ formatEligibility(discount.eligibilityType) }}
                   </span>
+                  <button @click="clearEligibility" class="ml-4 px-2 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-xs">Allow Everyone</button>
                 </div>
-                <div v-if="discount.eligibilityType === 'specific'" class="flex justify-between items-center">
+                <div v-if="discount.eligibilityType === 'specific'">
                   <span class="text-sm text-gray-600">Allowed Customers:</span>
-                  <span class="font-medium text-gray-900">{{ discount.allowedCustomers?.length || 0 }} customers</span>
+                  <ul class="mt-1 ml-4 list-disc text-sm text-gray-900">
+                    <li v-for="cust in dedupedAllowedCustomers" :key="cust.id">
+                      {{ cust.firstName }} {{ cust.lastName }} <span class="text-gray-500">({{ cust.email }})</span>
+                    </li>
+                    <li v-if="dedupedAllowedCustomers.length === 0" class="text-gray-500">No customers added.</li>
+                  </ul>
                 </div>
-                <div v-if="discount.eligibilityType === 'segment'" class="flex justify-between items-center">
+                <div v-if="discount.eligibilityType === 'segment'">
                   <span class="text-sm text-gray-600">Allowed Segments:</span>
-                  <span class="font-medium text-gray-900">{{ discount.allowedSegments?.length || 0 }} segments</span>
+                  <ul class="mt-1 ml-4 list-disc text-sm text-gray-900">
+                    <li v-for="seg in allowedSegmentDetails" :key="seg.id">
+                      {{ seg.name }} <span v-if="seg.description" class="text-gray-500">- {{ seg.description }}</span>
+                    </li>
+                    <li v-if="allowedSegmentDetails.length === 0" class="text-gray-500">No segments added.</li>
+                  </ul>
                 </div>
                 <div v-if="discount.minimumOrderSubtotal" class="flex justify-between items-center">
                   <span class="text-sm text-gray-600">Minimum Order:</span>
@@ -612,6 +623,45 @@ const addSegmentsForm = ref({
 // Add state for recent usage customer profiles
 const recentUsageProfiles = ref([])
 
+// Add state for allowed customer and segment details
+const allowedCustomerDetails = ref([])
+const allowedSegmentDetails = ref([])
+
+// Watch for discount changes and fetch allowed customer/segment details
+watch(
+  () => discount.value,
+  async (d) => {
+    allowedCustomerDetails.value = []
+    allowedSegmentDetails.value = []
+    if (!d || !shopId.value) return
+    // Fetch allowed customers
+    if (Array.isArray(d.allowedCustomers) && d.allowedCustomers.length > 0) {
+      allowedCustomerDetails.value = await Promise.all(
+        d.allowedCustomers.map(async id => {
+          try {
+            return await customerService.fetchById(shopId.value, id)
+          } catch (e) {
+            return { id, firstName: 'Unknown', lastName: '', email: '' }
+          }
+        })
+      )
+    }
+    // Fetch allowed segments
+    if (Array.isArray(d.allowedSegments) && d.allowedSegments.length > 0) {
+      allowedSegmentDetails.value = await Promise.all(
+        d.allowedSegments.map(async id => {
+          try {
+            return await customerSegmentService.fetchById(shopId.value, id)
+          } catch (e) {
+            return { id, name: 'Unknown', description: '' }
+          }
+        })
+      )
+    }
+  },
+  { immediate: true }
+)
+
 // Watch discount usageTracking and fetch customer profiles for recent usage
 watch(
   () => discount.value?.usageTracking,
@@ -982,6 +1032,14 @@ async function refreshUsageStats() {
   }
 }
 
+// Add a method to clear eligibility
+async function clearEligibility() {
+  if (!shopId.value || !discount.value?.id) return
+  if (!confirm('Are you sure you want to allow everyone for this discount? This will remove all specific customers and segments.')) return
+  await discountService.clearEligibility(shopId.value, discount.value.id)
+  await loadDiscount()
+}
+
 // Load data for dropdowns
 async function loadCustomers() {
   if (!shopId.value) return
@@ -1092,6 +1150,16 @@ const dedupedEligibleCustomerCount = computed(() => {
   // If you fetch customers from segments, add them here as well
   // For now, just count direct customers
   return ids.size
+})
+
+// Add a computed property for deduped allowed customers
+const dedupedAllowedCustomers = computed(() => {
+  const seen = new Set()
+  return allowedCustomerDetails.value.filter(cust => {
+    if (seen.has(cust.id)) return false
+    seen.add(cust.id)
+    return true
+  })
 })
 
 // Load all products/variants for the shop

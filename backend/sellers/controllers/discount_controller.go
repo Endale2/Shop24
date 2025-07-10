@@ -626,6 +626,30 @@ func AddSegmentsToDiscount(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "segments added to discount"})
 }
 
+// ClearAllowedCustomersAndSegments POST /seller/shops/:shopId/discounts/:id/clear-eligibility
+func ClearAllowedCustomersAndSegments(c *gin.Context) {
+	userHex, _ := c.Get("user_id")
+	sellerID, _ := primitive.ObjectIDFromHex(userHex.(string))
+	shopHex := c.Param("shopId")
+	shop, err := sharedSvc.GetShopByIDService(shopHex)
+	if err != nil || shop == nil || shop.OwnerID != sellerID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "not authorized"})
+		return
+	}
+	idHex := c.Param("id")
+	upd := bson.M{
+		"allowed_customers": []primitive.ObjectID{},
+		"allowed_segments":  []primitive.ObjectID{},
+		"eligibility_type":  models.DiscountEligibilityAll,
+		"updated_at":        time.Now(),
+	}
+	if err := sharedSvc.UpdateDiscountService(idHex, upd); err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "eligibility cleared, now allows everyone"})
+}
+
 // GetDiscountUsageStats GET /seller/shops/:shopId/discounts/:id/usage
 func GetDiscountUsageStats(c *gin.Context) {
 	userHex, _ := c.Get("user_id")
