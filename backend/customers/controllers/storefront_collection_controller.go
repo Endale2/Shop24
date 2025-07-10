@@ -77,22 +77,13 @@ func GetCollection(c *gin.Context) {
 	}
 
 	// Build richer product summaries
-	var products []CollectionProductSummary
+	var products []map[string]interface{}
 	for _, pid := range coll.ProductIDs {
-		p, _ := services.GetProductByIDService(pid.Hex())
+		p, _ := services.GetProductByIDWithDiscountsService(pid.Hex(), nil)
 		if p == nil {
 			continue
 		}
-
-		products = append(products, CollectionProductSummary{
-			ID:           p.ID,
-			Slug:         p.Slug,
-			Name:         p.Name,
-			MainImage:    p.MainImage,
-			Description:  p.Description,
-			Price:        p.Price,
-			VariantCount: len(p.Variants),
-		})
+		products = append(products, services.ProductToAPIResponseWithDiscounts(p))
 	}
 
 	c.JSON(http.StatusOK, gin.H{

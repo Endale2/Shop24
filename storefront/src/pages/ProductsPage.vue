@@ -1,5 +1,18 @@
 <template>
   <div>
+    <!-- Breadcrumb and Back Button -->
+    <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-6">
+      <button @click="$router.back()" class="text-gray-700 hover:text-black flex items-center gap-1 font-medium text-xs mr-2">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+        Back
+      </button>
+      <router-link :to="`/shops/${shopSlug}`" class="hover:underline">Home</router-link>
+      <span>/</span>
+      <span v-if="selectedCollection === null">Products</span>
+      <span v-else>{{ pageTitle }}</span>
+    </nav>
+    <!-- End Breadcrumb and Back Button -->
+
     <div v-if="collections.length > 0" class="flex space-x-2 overflow-x-auto mb-8 pb-2 border-b border-gray-200">
       <button
         class="flex-shrink-0 px-4 py-2 rounded-t border-b-2 transition-colors text-xs font-medium uppercase focus:outline-none"

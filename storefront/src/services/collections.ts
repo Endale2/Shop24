@@ -17,9 +17,17 @@ export interface CollectionDetail extends Collection {
     name: string
     main_image: string
     description: string
-    price: number
-    display_price: number
-    variant_count: number
+    price?: number
+    display_price?: number
+    variant_count?: number
+    discounts?: Array<{
+      id: string
+      name: string
+      type: string
+      value: number
+      active: boolean
+    }>
+    variants?: Array<any>
   }>
 }
 

@@ -1,4 +1,14 @@
 <template>
+  <!-- Breadcrumb and Back Button -->
+  <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-6">
+    <button @click="$router.back()" class="text-gray-700 hover:text-black flex items-center gap-1 font-medium text-xs mr-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+      Back
+    </button>
+    <router-link :to="`/shops/${cartStore.shopSlug}`" class="hover:underline">Home</router-link>
+    <span>/</span>
+    <span>Cart</span>
+  </nav>
   <div class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
     <div class="mb-8">
       <h1 class="text-3xl font-bold tracking-wide uppercase text-gray-900">Your Cart</h1>

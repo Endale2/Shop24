@@ -26,6 +26,7 @@ export const useAuthStore = defineStore('auth', {
       } catch (e: any) {
         console.debug('Login or profile fetch error:', e)
         this.error = e.response?.data?.error || 'Login failed'
+        setTimeout(() => { this.error = null }, 5000)
       } finally {
         this.loading = false
       }
@@ -43,6 +44,7 @@ export const useAuthStore = defineStore('auth', {
         await cartStore.refreshCart()
       } catch (e: any) {
         this.error = e.response?.data?.error || 'Registration failed'
+        setTimeout(() => { this.error = null }, 5000)
       } finally {
         this.loading = false
       }
@@ -81,6 +83,7 @@ export const useAuthStore = defineStore('auth', {
         console.debug('Token refresh failed:', e.response?.status, e.response?.data)
         this.error = e.response?.data?.error || 'Token refresh failed'
         this.user = null
+        setTimeout(() => { this.error = null }, 5000)
       } finally {
         this.loading = false
       }

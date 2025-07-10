@@ -1,4 +1,16 @@
 <template>
+  <!-- Breadcrumb and Back Button -->
+  <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-6">
+    <button @click="$router.back()" class="text-gray-700 hover:text-black flex items-center gap-1 font-medium text-xs mr-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+      Back
+    </button>
+    <router-link :to="`/shops/${shopSlug}`" class="hover:underline">Home</router-link>
+    <span>/</span>
+    <router-link :to="`/shops/${shopSlug}/products`" class="hover:underline">Products</router-link>
+    <span>/</span>
+    <span>{{ product?.name || 'Product Detail' }}</span>
+  </nav>
   <div v-if="product" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div class="flex flex-row lg:flex-col gap-4 overflow-x-auto lg:overflow-x-visible">
@@ -201,6 +213,7 @@ import { useCartStore } from '@/stores/cart'
 import { useAuthStore } from '@/stores/auth'
 import { useWishlistStore } from '@/stores/wishlist'
 import type { Product } from '@/services/product'
+import Header from '../components/Header.vue'
 
 // Define interfaces to match your data structure for better type safety
 interface ProductOption {
@@ -318,15 +331,35 @@ const canAddToCart = computed<boolean>(() => {
   return false; // Disable if variants exist but none are selected
 })
 
-const hasDiscount = computed<boolean>(() => {
+// --- Fix discount logic for variants ---
+const getVariantDiscount = (variant) => {
+  // If variant has its own discount fields, use them
+  if (variant && (variant.discount_amount || variant.discount_type)) {
+    return {
+      amount: variant.discount_amount,
+      type: variant.discount_type
+    }
+  }
+  // Otherwise, use product-level discount if available
+  if (product.value && product.value.discounts && product.value.discounts.length > 0) {
+    return {
+      amount: product.value.discounts[0].value,
+      type: product.value.discounts[0].type
+    }
+  }
+  return { amount: 0, type: '' }
+}
+
+const hasDiscount = computed(() => {
   if (!product.value) return false;
-  if (selectedVariant.value && selectedVariant.value.discount_amount > 0) {
-    return true;
+  if (selectedVariant.value) {
+    const d = getVariantDiscount(selectedVariant.value)
+    return d.amount > 0
   }
   if (product.value.discounts && product.value.discounts.length > 0) {
-    return true;
+    return true
   }
-  return false;
+  return false
 })
 
 const savings = computed(() => {
@@ -336,8 +369,9 @@ const savings = computed(() => {
   let type = '';
   if (selectedVariant.value) {
     price = selectedVariant.value.price;
-    discount = selectedVariant.value.discount_amount || 0;
-    type = selectedVariant.value.discount_type || (product.value.discounts && product.value.discounts[0]?.type) || '';
+    const d = getVariantDiscount(selectedVariant.value)
+    discount = d.amount || 0;
+    type = d.type || '';
     if (type === 'percentage') {
       return ((price * (discount / 100)) * quantity.value);
     } else {
@@ -363,8 +397,9 @@ const currentPrice = computed(() => {
   let type = '';
   if (selectedVariant.value) {
     price = selectedVariant.value.price;
-    discount = selectedVariant.value.discount_amount || 0;
-    type = selectedVariant.value.discount_type || (product.value.discounts && product.value.discounts[0]?.type) || '';
+    const d = getVariantDiscount(selectedVariant.value)
+    discount = d.amount || 0;
+    type = d.type || '';
     if (type === 'percentage') {
       return (price * (1 - discount / 100)) * quantity.value;
     } else {

@@ -5,6 +5,7 @@ import { createPinia } from 'pinia'
 import piniaPersist from 'pinia-plugin-persistedstate'
 import './index.css'
 import { useAuthStore } from './stores/auth'
+import { nextTick } from 'vue'
 
 const app = createApp(App)
 const pinia = createPinia()
@@ -12,8 +13,28 @@ pinia.use(piniaPersist)
 app.use(pinia)
 app.use(router)
 
-// Refresh token on app start
-const authStore = useAuthStore()
-authStore.refreshToken()
-
 app.mount('#app')
+
+nextTick(() => {
+  const authStore = useAuthStore()
+  // On app start, refresh token and validate session
+  (async () => {
+    try {
+      await authStore.refreshToken()
+      await authStore.fetchProfile()
+    } catch {
+      authStore.user = null
+    }
+
+    // Periodic background token refresh every 10 minutes (if user is logged in)
+    setInterval(async () => {
+      if (authStore.user) {
+        try {
+          await authStore.refreshToken()
+        } catch {
+          authStore.user = null
+        }
+      }
+    }, 10 * 60 * 1000)
+  })()
+})

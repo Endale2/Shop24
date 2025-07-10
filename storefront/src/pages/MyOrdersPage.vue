@@ -1,8 +1,18 @@
 <template>
+  <!-- Breadcrumb and Back Button -->
+  <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-6">
+    <button @click="$router.back()" class="text-gray-700 hover:text-black flex items-center gap-1 font-medium text-xs mr-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+      Back
+    </button>
+    <router-link :to="`/shops/${route.params.shopSlug}`" class="hover:underline">Home</router-link>
+    <span>/</span>
+    <span>My Orders</span>
+  </nav>
   <div class="orders-container">
-    <div class="max-w-6xl mx-auto">
+    <div class="max-w-6xl mx-auto px-2 sm:px-4">
       <!-- Header Section -->
-      <div class="mb-8">
+      <div class="mb-8 text-center">
         <h1 class="text-3xl font-bold text-gray-900 tracking-tight uppercase mb-2">My Orders</h1>
         <p class="text-gray-600">Track your order history and status</p>
       </div>
@@ -26,10 +36,10 @@
       </div>
 
       <!-- Orders List -->
-      <div v-else-if="orders.length > 0" class="space-y-6">
-        <div v-for="order in orders" :key="order._id" class="bg-white border border-gray-200 rounded-none p-6">
+      <div v-else-if="orders.length > 0" class="grid gap-6 md:grid-cols-2">
+        <div v-for="order in orders" :key="order._id" class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
           <!-- Order Header -->
-          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
             <div>
               <h3 class="text-lg font-semibold text-gray-900">Order #{{ order.order_number || order._id.slice(-8) }}</h3>
               <p class="text-sm text-gray-600">{{ formatDate(order.createdAt) }}</p>
@@ -42,39 +52,39 @@
           </div>
 
           <!-- Order Items -->
-          <div class="space-y-4">
-            <div v-for="item in order.items" :key="`${item.product_id}-${item.variant_id}`" class="flex items-center space-x-4">
-              <div class="flex-shrink-0 w-16 h-16 bg-gray-200 rounded-lg flex items-center justify-center">
+          <div class="divide-y divide-gray-100 mb-4">
+            <div v-for="item in order.items" :key="`${item.product_id}-${item.variant_id}`" class="flex items-center gap-3 py-3">
+              <div class="flex-shrink-0 w-14 h-14 bg-gray-100 rounded-lg flex items-center justify-center overflow-hidden">
                 <svg class="w-8 h-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 01-2-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                 </svg>
               </div>
               <div class="flex-1 min-w-0">
                 <p class="text-sm font-medium text-gray-900 truncate">{{ item.name }}</p>
-                <p v-if="item.variant_name" class="text-sm text-gray-500">{{ item.variant_name }}</p>
-                <p class="text-sm text-gray-500">Qty: {{ item.quantity }}</p>
+                <p v-if="item.variant_name" class="text-xs text-gray-500">{{ item.variant_name }}</p>
+                <p class="text-xs text-gray-500">Qty: {{ item.quantity }}</p>
               </div>
-              <div class="text-sm font-medium text-gray-900">
+              <div class="text-sm font-bold text-gray-900 text-right min-w-[60px]">
                 ${{ item.total_price }}
               </div>
             </div>
           </div>
 
           <!-- Order Summary -->
-          <div class="mt-6 pt-4 border-t border-gray-200">
-            <div class="flex justify-between text-sm">
+          <div class="mt-auto pt-4 border-t border-gray-100">
+            <div class="flex justify-between text-sm mb-1">
               <span class="text-gray-600">Subtotal:</span>
               <span class="font-medium">${{ order.subtotal }}</span>
             </div>
-            <div v-if="order.discount_total" class="flex justify-between text-sm">
+            <div v-if="order.discount_total" class="flex justify-between text-sm mb-1">
               <span class="text-gray-600">Discount:</span>
               <span class="font-medium text-green-600">-${{ order.discount_total }}</span>
             </div>
-            <div v-if="order.shipping" class="flex justify-between text-sm">
+            <div v-if="order.shipping" class="flex justify-between text-sm mb-1">
               <span class="text-gray-600">Shipping:</span>
               <span class="font-medium">${{ order.shipping }}</span>
             </div>
-            <div class="flex justify-between text-base font-semibold mt-2 pt-2 border-t border-gray-200">
+            <div class="flex justify-between text-base font-bold mt-2 pt-2 border-t border-gray-200">
               <span>Total:</span>
               <span>${{ order.total }}</span>
             </div>

@@ -1,10 +1,17 @@
 <template>
   <router-link
     :to="`/shops/${shopSlug}/products/${product.slug}`"
-    class="bg-white border border-gray-200 rounded-none p-4 group flex flex-col h-full transition-colors hover:border-black cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-200"
+    class="bg-white border border-gray-200 rounded-none p-4 group flex flex-col h-full transition-colors hover:border-black cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-200 relative"
     @mouseenter="onHover"
     @mouseleave="onLeave"
   >
+    <!-- Discount Badge at Top-Left -->
+    <span v-if="product.discounts && product.discounts.length > 0"
+      class="absolute top-2 left-2 z-10 px-3 py-1 bg-gradient-to-r from-yellow-200 to-yellow-100 text-yellow-900 text-xs font-bold rounded-full shadow-sm border border-yellow-300 flex items-center gap-1 animate-fade-in"
+      style="min-width: 60px; justify-content: center; letter-spacing: 0.03em;">
+      <svg class="w-4 h-4 mr-1 text-yellow-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 14l2-2 4 4m6-2a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+      {{ product.discounts[0].type === 'percentage' ? `${product.discounts[0].value}% OFF` : `$${product.discounts[0].value} OFF` }}
+    </span>
     <img
       :src="currentImage"
       alt=""
@@ -29,9 +36,7 @@
       </template>
     </p>
     <div class="mt-auto text-xs text-gray-900 min-h-[1.5em]">
-      <template v-if="product.discounts && product.discounts.length > 0">
-        <span class="inline-block px-2 py-0.5 bg-yellow-100 text-yellow-800 text-xs rounded">{{ product.discounts[0].type === 'percentage' ? `${product.discounts[0].value}% OFF` : `$${product.discounts[0].value} OFF` }}</span>
-      </template>
+      <!-- (Discount badge moved to top, nothing here) -->
     </div>
   </router-link>
 </template>
@@ -102,3 +107,13 @@ function stopImageCycle() {
   }
 }
 </script>
+
+<style scoped>
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fade-in 0.4s;
+}
+</style>

@@ -1,4 +1,14 @@
 <template>
+  <!-- Breadcrumb and Back Button -->
+  <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-6">
+    <button @click="$router.back()" class="text-gray-700 hover:text-black flex items-center gap-1 font-medium text-xs mr-2">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
+      Back
+    </button>
+    <router-link :to="`/shops/${route.params.shopSlug}`" class="hover:underline">Home</router-link>
+    <span>/</span>
+    <span>Wishlist</span>
+  </nav>
   <div class="wishlist-container">
     <div class="max-w-6xl mx-auto">
       <!-- Header Section -->
