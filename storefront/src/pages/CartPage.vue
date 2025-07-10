@@ -51,7 +51,7 @@
             <svg class="h-5 w-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-  <div>
+            <div>
               <h3 class="text-sm font-medium text-blue-800 mb-1">Discount Information</h3>
               <div class="text-sm text-blue-700 space-y-1">
                 <p v-if="hasItemDiscounts">
@@ -72,9 +72,8 @@
           <div class="px-6 py-4 border-b border-gray-200">
             <h2 class="text-lg font-semibold text-gray-900">Cart Items ({{ cartStore.cart.items.length }})</h2>
           </div>
-          
           <div class="divide-y divide-gray-200">
-            <div v-for="item in cartStore.cart.items" :key="`${item.product_id}-${item.variant_id || 'no-variant'}`" class="p-6">
+            <div v-for="item in cartStore.cart.items" :key="`${item.product_id}-${item.variant_id || 'no-variant'}`" class="p-6 hover:bg-gray-50 transition-colors rounded-lg">
               <div class="flex items-start space-x-4">
                 <!-- Product Image -->
                 <div class="flex-shrink-0">
@@ -285,9 +284,7 @@
     <!-- Empty Cart -->
     <div v-else class="text-center py-20">
       <div class="max-w-md mx-auto">
-        <svg class="mx-auto h-24 w-24 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13l2.5 5m6-5v6a2 2 0 01-2 2H9a2 2 0 01-2-2v-6m8 0V9a2 2 0 00-2-2H9a2 2 0 00-2 2v4.01" />
-        </svg>
+        <ShoppingCartIcon class="mx-auto h-24 w-24 text-gray-300" />
         <h3 class="mt-4 text-lg font-medium text-gray-900">Your cart is empty</h3>
         <p class="mt-2 text-gray-500">Start shopping to add items to your cart.</p>
         <div class="mt-6">
@@ -309,6 +306,7 @@ import { useCartStore } from '@/stores/cart';
 import { useRouter, useRoute } from 'vue-router';
 import { placeOrder } from '@/services/order';
 import type { CartItem, ItemDiscountDetail, OrderDiscountDetail } from '@/services/cart';
+import { ShoppingCartIcon } from '@heroicons/vue/24/outline'
 
 const cartStore = useCartStore();
 const router = useRouter();
