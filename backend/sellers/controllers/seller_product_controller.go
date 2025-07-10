@@ -32,9 +32,11 @@ type variantInput struct {
 type createProductInput struct {
 	Name        string         `json:"name" binding:"required"`
 	Description string         `json:"description" binding:"required"`
+	MainImage   string         `json:"main_image"` // <-- Added
 	Images      []string       `json:"images" binding:"required"`
 	Category    string         `json:"category" binding:"required"`
 	Price       *float64       `json:"price"`
+	Stock       *int           `json:"stock"` // <-- Added
 	Variants    []variantInput `json:"variants"`
 }
 
@@ -135,6 +137,11 @@ func CreateProduct(c *gin.Context) {
 		Category:    in.Category,
 		Price:       0,
 		CreatedBy:   sellerID,
+	}
+
+	p.MainImage = in.MainImage // <-- Set main_image
+	if in.Stock != nil {
+		p.Stock = *in.Stock // <-- Set stock if provided
 	}
 
 	if in.Price != nil {
