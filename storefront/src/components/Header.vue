@@ -1,5 +1,5 @@
 <template>
-  <header class="bg-white border-b border-gray-200 relative">
+  <header class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
     <div class="flex items-center justify-between max-w-7xl mx-auto px-4 sm:px-6 py-4">
       <router-link :to="`/shops/${shopSlug}`" class="flex items-center space-x-4">
         <img
@@ -11,8 +11,9 @@
         <span class="text-2xl font-light tracking-tight text-gray-900 uppercase">{{ shop?.name || 'Store' }}</span>
       </router-link>
 
+      <!-- Desktop Nav -->
       <div class="hidden md:flex items-center space-x-6">
-        <div class="relative w-96 max-w-lg">
+        <div class="relative w-72 max-w-lg">
           <span class="absolute inset-y-0 left-0 flex items-center pl-3">
             <MagnifyingGlassIcon class="w-5 h-5 text-gray-400" />
           </span>
@@ -26,23 +27,24 @@
         <nav class="flex items-center space-x-8 text-base font-light">
           <router-link
             :to="`/shops/${shopSlug}/products`"
-            class="text-gray-600 hover:text-black transition"
-            active-class="font-semibold text-black"
+            class="text-gray-600 hover:text-black transition flex items-center"
+            :class="{ 'font-semibold text-black': isActive('/products') }"
           >
-            Products
+            <span>Products</span>
           </router-link>
           <router-link
             :to="`/shops/${shopSlug}/collections`"
-            class="text-gray-600 hover:text-black transition"
-            active-class="font-semibold text-black"
+            class="text-gray-600 hover:text-black transition flex items-center"
+            :class="{ 'font-semibold text-black': isActive('/collections') }"
           >
-            Collections
+            <span>Collections</span>
           </router-link>
         </nav>
 
         <div class="flex items-center space-x-5">
-          <router-link :to="`/shops/${shopSlug}/wishlist`" class="text-gray-600 hover:text-black transition relative" title="Wishlist">
-            <HeartIcon class="w-6 h-6" />
+          <!-- Wishlist -->
+          <router-link :to="`/shops/${shopSlug}/wishlist`" class="relative group" title="Wishlist">
+            <component :is="isActive('/wishlist') ? HeartIconSolid : HeartIcon" class="w-6 h-6 transition-colors" :class="isActive('/wishlist') ? 'text-red-500' : 'text-gray-600 group-hover:text-red-500'" />
             <span 
               v-if="authStore.user && wishlistCount > 0"
               class="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium"
@@ -50,10 +52,9 @@
               {{ wishlistCount > 99 ? '99+' : wishlistCount }}
             </span>
           </router-link>
-          
-          <!-- Cart with count badge -->
-          <router-link :to="`/shops/${shopSlug}/cart`" class="text-gray-600 hover:text-black transition relative" title="Cart">
-            <ShoppingBagIcon class="w-6 h-6" />
+          <!-- Cart -->
+          <router-link :to="`/shops/${shopSlug}/cart`" class="relative group" title="Cart">
+            <component :is="isActive('/cart') ? ShoppingBagIconSolid : ShoppingBagIcon" class="w-6 h-6 transition-colors" :class="isActive('/cart') ? 'text-black' : 'text-gray-600 group-hover:text-black'" />
             <span 
               v-if="cartItemCount > 0"
               class="absolute -top-2 -right-2 bg-black text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium"
@@ -61,32 +62,31 @@
               {{ cartItemCount > 99 ? '99+' : cartItemCount }}
             </span>
           </router-link>
-          
-          <template v-if="user">
-          <router-link :to="`/shops/${shopSlug}/account`" class="text-gray-600 hover:text-black transition" title="Account">
-              <template v-if="user">
-                <img v-if="user.profilePic" :src="user.profilePic" alt="Profile" class="w-8 h-8 rounded-full object-cover" />
-                <span v-else class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-lg font-bold text-gray-700">
-                  {{ getAvatarText() }}
-                </span>
-              </template>
-              <template v-else>
-                <UserIcon class="w-6 h-6" />
-              </template>
-            </router-link>
-          </template>
-          <template v-else>
-            <router-link :to="`/shops/${shopSlug}/login`" class="text-gray-600 hover:text-black transition" title="Login">
-            <UserIcon class="w-6 h-6" />
+          <!-- Account/Login -->
+          <div v-if="user" class="relative group">
+            <button @click="toggleDropdown" class="focus:outline-none">
+              <img v-if="user.profilePic" :src="user.profilePic" alt="Profile" class="w-8 h-8 rounded-full object-cover border border-gray-200" />
+              <span v-else class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-lg font-bold text-gray-700">
+                {{ getAvatarText() }}
+              </span>
+            </button>
+            <div v-if="dropdownOpen" class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
+              <router-link :to="`/shops/${shopSlug}/account`" class="block px-4 py-2 text-gray-700 hover:bg-gray-50">My Account</router-link>
+              <router-link :to="`/shops/${shopSlug}/orders`" class="block px-4 py-2 text-gray-700 hover:bg-gray-50">My Orders</router-link>
+              <router-link :to="`/shops/${shopSlug}/wishlist`" class="block px-4 py-2 text-gray-700 hover:bg-gray-50">Wishlist</router-link>
+              <button @click="logout" class="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50">Logout</button>
+            </div>
+          </div>
+          <router-link v-else :to="`/shops/${shopSlug}/login`" class="group" title="Login">
+            <UserIcon class="w-6 h-6 text-gray-600 group-hover:text-black transition-colors" />
           </router-link>
-          </template>
         </div>
       </div>
 
+      <!-- Mobile Nav -->
       <div class="md:hidden flex items-center space-x-4">
-        <!-- Mobile cart with count -->
-        <router-link :to="`/shops/${shopSlug}/cart`" class="text-gray-600 hover:text-black transition relative" title="Cart">
-          <ShoppingBagIcon class="w-6 h-6" />
+        <router-link :to="`/shops/${shopSlug}/cart`" class="relative group" title="Cart">
+          <component :is="isActive('/cart') ? ShoppingBagIconSolid : ShoppingBagIcon" class="w-6 h-6 transition-colors" :class="isActive('/cart') ? 'text-black' : 'text-gray-600 group-hover:text-black'" />
           <span 
             v-if="cartItemCount > 0"
             class="absolute -top-2 -right-2 bg-black text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium"
@@ -94,13 +94,44 @@
             {{ cartItemCount > 99 ? '99+' : cartItemCount }}
           </span>
         </router-link>
-        
-        <button @click="isMobileSearchVisible = true" class="p-2 text-gray-600 hover:text-black focus:outline-none">
-          <MagnifyingGlassIcon class="w-6 h-6" />
+        <button @click="isMobileMenuOpen = !isMobileMenuOpen" class="p-2 text-gray-600 hover:text-black focus:outline-none">
+          <span v-if="user">
+            <img v-if="user.profilePic" :src="user.profilePic" alt="Profile" class="w-8 h-8 rounded-full object-cover border border-gray-200" />
+            <span v-else class="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center text-lg font-bold text-gray-700">
+              {{ getAvatarText() }}
+            </span>
+          </span>
+          <span v-else>
+            <UserIcon class="w-6 h-6" />
+          </span>
         </button>
       </div>
     </div>
 
+    <!-- Mobile Dropdown/Drawer -->
+    <transition name="fade">
+      <div v-if="isMobileMenuOpen" class="fixed inset-0 z-50 bg-black bg-opacity-30 flex justify-end">
+        <div class="w-64 bg-white h-full shadow-lg p-6 flex flex-col space-y-4">
+          <button @click="isMobileMenuOpen = false" class="self-end mb-4 text-gray-400 hover:text-black">
+            <XMarkIcon class="w-6 h-6" />
+          </button>
+          <div v-if="user" class="mb-4 flex flex-col items-center">
+            <img v-if="user.profilePic" :src="user.profilePic" alt="Profile" class="w-16 h-16 rounded-full object-cover border border-gray-200 mb-2" />
+            <span v-else class="w-16 h-16 rounded-full bg-gray-200 flex items-center justify-center text-2xl font-bold text-gray-700 mb-2">
+              {{ getAvatarText() }}
+            </span>
+            <span class="text-lg font-semibold text-gray-900">{{ user.firstName || user.username || user.email }}</span>
+          </div>
+          <router-link :to="`/shops/${shopSlug}/account`" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded">My Account</router-link>
+          <router-link :to="`/shops/${shopSlug}/orders`" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded">My Orders</router-link>
+          <router-link :to="`/shops/${shopSlug}/wishlist`" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded">Wishlist</router-link>
+          <button v-if="user" @click="logout" class="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded">Logout</button>
+          <router-link v-else :to="`/shops/${shopSlug}/login`" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded">Login</router-link>
+        </div>
+      </div>
+    </transition>
+
+    <!-- Mobile Search Overlay -->
     <div v-if="isMobileSearchVisible" class="absolute top-0 left-0 w-full h-full bg-white z-10 flex items-center px-4">
       <div class="relative w-full">
         <span class="absolute inset-y-0 left-0 flex items-center pl-3">
@@ -121,16 +152,19 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue';
-import { useRoute } from 'vue-router';
+import { ref, computed } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { useCartStore } from '../stores/cart';
 import { useWishlistStore } from '../stores/wishlist';
 import {
   MagnifyingGlassIcon,
   HeartIcon,
+  HeartIcon as HeartIconSolid,
   ShoppingBagIcon,
+  ShoppingBagIcon as ShoppingBagIconSolid,
   UserIcon,
+  UserIcon as UserIconSolid,
   XMarkIcon
 } from '@heroicons/vue/24/outline';
 
@@ -140,9 +174,11 @@ interface Props {
 defineProps<Props>();
 
 const route = useRoute();
+const router = useRouter();
 const shopSlug = route.params.shopSlug as string;
-
 const isMobileSearchVisible = ref(false);
+const isMobileMenuOpen = ref(false);
+const dropdownOpen = ref(false);
 
 const authStore = useAuthStore();
 const cartStore = useCartStore();
@@ -160,14 +196,9 @@ const wishlistCount = computed(() => {
   return wishlistStore.productIds.length;
 });
 
-onMounted(() => {
-  cartStore.setShopSlug(shopSlug);
-  wishlistStore.setShopSlug(shopSlug);
-  if (authStore.user) {
-    cartStore.fetchCart();
-    wishlistStore.fetchWishlist();
-  }
-});
+function isActive(path: string) {
+  return route.path.includes(path);
+}
 
 function getAvatarText() {
   if (!user.value) return '';
@@ -175,4 +206,31 @@ function getAvatarText() {
   if (user.value.email) return user.value.email[0].toUpperCase();
   return user.value.username ? user.value.username[0].toUpperCase() : '';
 }
+
+function toggleDropdown() {
+  dropdownOpen.value = !dropdownOpen.value;
+}
+
+async function logout() {
+  await (authStore as any).logout();
+  router.push(`/shops/${shopSlug}/login`);
+}
 </script>
+
+<style scoped>
+header {
+  transition: box-shadow 0.2s;
+}
+@media (max-width: 768px) {
+  .max-w-7xl {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+}
+.fade-enter-active, .fade-leave-active {
+  transition: opacity 0.2s;
+}
+.fade-enter-from, .fade-leave-to {
+  opacity: 0;
+}
+</style>

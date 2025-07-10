@@ -8,6 +8,7 @@ export const useAuthStore = defineStore('auth', {
     user: null as null | { username: string; email: string; _id: string; firstName?: string; lastName?: string; profilePic?: string },
     loading: false,
     error: null as null | string,
+    sessionLoading: true,
   }),
   actions: {
     async login(email: string, password: string, shopId: string) {
@@ -86,6 +87,17 @@ export const useAuthStore = defineStore('auth', {
         setTimeout(() => { this.error = null }, 5000)
       } finally {
         this.loading = false
+      }
+    },
+    async verifySession() {
+      this.sessionLoading = true
+      try {
+        await this.refreshToken()
+        await this.fetchProfile()
+      } catch {
+        this.user = null
+      } finally {
+        this.sessionLoading = false
       }
     },
   },

@@ -17,24 +17,17 @@ app.mount('#app')
 
 nextTick(() => {
   const authStore = useAuthStore()
-  // On app start, refresh token and validate session
-  (async () => {
-    try {
-      await authStore.refreshToken()
-      await authStore.fetchProfile()
-    } catch {
-      authStore.user = null
-    }
+  // On app start, verify session (refresh token and fetch profile)
+  authStore.verifySession()
 
-    // Periodic background token refresh every 10 minutes (if user is logged in)
-    setInterval(async () => {
-      if (authStore.user) {
-        try {
-          await authStore.refreshToken()
-        } catch {
-          authStore.user = null
-        }
+  // Periodic background token refresh every 10 minutes (if user is logged in)
+  setInterval(async () => {
+    if (authStore.user) {
+      try {
+        await authStore.refreshToken()
+      } catch {
+        authStore.user = null
       }
-    }, 10 * 60 * 1000)
-  })()
+    }
+  }, 10 * 60 * 1000)
 })
