@@ -17,6 +17,7 @@ var ErrCartNotFound = errors.New("cart not found")
 type CartWithDiscountDetails struct {
 	*models.Cart
 	ItemDiscountDetails []ItemDiscountDetail `json:"item_discount_details,omitempty"`
+	DiscountStatuses    []DiscountStatus     `json:"discount_statuses,omitempty"`
 }
 
 // ItemDiscountDetail contains information about discounts applied to a specific item
@@ -29,6 +30,7 @@ type ItemDiscountDetail struct {
 	Value      float64                 `json:"value"`
 	Category   models.DiscountCategory `json:"category"`
 	Amount     float64                 `json:"amount"`
+	Status     DiscountStatus          `json:"status,omitempty"`
 }
 
 // CartService provides business logic for cart management.
@@ -177,8 +179,9 @@ func (s *CartService) CalculateTotals(cart *models.Cart, customerID primitive.Ob
 		// Get active discounts for this product/variant
 		discounts, err := GetActiveDiscountsForProductService(cart.ShopID, item.ProductID, item.VariantID, collectionIDs)
 		if err == nil && len(discounts) > 0 {
-			// Apply the best discount (highest value) that the customer is eligible for
-			bestDiscount := s.findBestEligibleDiscount(discounts, item.UnitPrice, item.Quantity, customerID, customerSegmentIDs)
+			// Use the improved discount selection logic with status information
+			bestDiscount, _ := GetBestEligibleDiscountForProduct(item.ProductID, item.VariantID, customerID, customerSegmentIDs, discounts)
+
 			if bestDiscount != nil {
 				itemDiscountAmount = bestDiscount.CalculateDiscountForQuantity(item.UnitPrice, item.Quantity)
 				item.AppliedDiscountIDs = append(item.AppliedDiscountIDs, bestDiscount.ID)
@@ -320,7 +323,7 @@ func (s *CartService) GetCartWithDiscountDetails(cart *models.Cart) (*CartWithDi
 		customerSegmentIDs = []primitive.ObjectID{}
 	}
 
-	// Get item-level discount details (only active discounts that customer is eligible for)
+	// Get item-level discount details and collect all discount statuses
 	for _, item := range cart.Items {
 		for _, discountID := range item.AppliedDiscountIDs {
 			discount, err := GetDiscountByIDService(discountID.Hex())
@@ -329,6 +332,9 @@ func (s *CartService) GetCartWithDiscountDetails(cart *models.Cart) (*CartWithDi
 				if canUse, err := CanCustomerUseDiscount(discount, *cart.CustomerID, customerSegmentIDs); err == nil && canUse {
 					// Calculate the actual discount amount for this item
 					discountAmount := discount.CalculateDiscountForQuantity(item.UnitPrice, item.Quantity)
+
+					// Get detailed status for this discount
+					status := GetDiscountStatusForCustomer(discount, *cart.CustomerID)
 
 					result.ItemDiscountDetails = append(result.ItemDiscountDetails, ItemDiscountDetail{
 						ProductID:  item.ProductID,
@@ -339,7 +345,37 @@ func (s *CartService) GetCartWithDiscountDetails(cart *models.Cart) (*CartWithDi
 						Value:      discount.Value,
 						Category:   discount.Category,
 						Amount:     discountAmount,
+						Status:     status,
 					})
+
+					// Add to overall discount statuses
+					result.DiscountStatuses = append(result.DiscountStatuses, status)
+				}
+			}
+		}
+
+		// Also collect statuses for all available discounts for this item (even if not applied)
+		collectionIDs, err := GetCollectionIDsForProduct(item.ProductID)
+		if err != nil {
+			collectionIDs = []primitive.ObjectID{}
+		}
+
+		discounts, err := GetActiveDiscountsForProductService(cart.ShopID, item.ProductID, item.VariantID, collectionIDs)
+		if err == nil && len(discounts) > 0 {
+			_, allStatuses := GetBestEligibleDiscountForProduct(item.ProductID, item.VariantID, *cart.CustomerID, customerSegmentIDs, discounts)
+
+			// Add unique statuses to the result
+			for _, status := range allStatuses {
+				// Check if this status is already in the result
+				found := false
+				for _, existingStatus := range result.DiscountStatuses {
+					if existingStatus.DiscountID == status.DiscountID {
+						found = true
+						break
+					}
+				}
+				if !found {
+					result.DiscountStatuses = append(result.DiscountStatuses, status)
 				}
 			}
 		}

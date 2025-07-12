@@ -431,7 +431,7 @@ func PlaceOrder(c *gin.Context) {
 		fmt.Printf("Found %d discounts for product %s, variant %s\n", len(discounts), productID.Hex(), variantID.Hex())
 
 		// Use the improved discount selection logic
-		bestDiscount = services.GetBestEligibleDiscountForProduct(productID, variantID, customerID, customerSegmentIDs, discounts)
+		bestDiscount, _ = services.GetBestEligibleDiscountForProduct(productID, variantID, customerID, customerSegmentIDs, discounts)
 
 		if bestDiscount != nil {
 			fmt.Printf("Selected best discount: %s (Type: %s, Value: %.2f)\n",

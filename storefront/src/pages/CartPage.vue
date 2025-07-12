@@ -73,6 +73,56 @@
             </div>
           </div>
 
+          <!-- Discount Limit Information -->
+          <div v-if="hasDiscountLimits" class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex items-start">
+              <svg class="h-5 w-5 text-blue-600 mt-0.5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <div>
+                <h3 class="text-sm font-medium text-blue-800 mb-2">Discount Usage Information</h3>
+                <div class="space-y-2">
+                  <!-- Customer Limit Reached -->
+                  <div v-if="customerLimitReachedDiscounts.length > 0" class="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                    <h4 class="text-sm font-medium text-yellow-800 mb-1">You've reached your limit for:</h4>
+                    <div class="space-y-1">
+                      <div v-for="status in customerLimitReachedDiscounts" :key="status.discount_id" class="text-sm text-yellow-700">
+                        • <strong>{{ status.name }}</strong> - You've used {{ status.customer_usage }}/{{ status.customer_limit }} times
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Available Discounts with Limits -->
+                  <div v-if="availableDiscountsWithLimits.length > 0" class="bg-green-50 border border-green-200 rounded-lg p-3">
+                    <h4 class="text-sm font-medium text-green-800 mb-1">Available discounts:</h4>
+                    <div class="space-y-1">
+                      <div v-for="status in availableDiscountsWithLimits" :key="status.discount_id" class="text-sm text-green-700">
+                        • <strong>{{ status.name }}</strong> - 
+                        <span v-if="status.customer_limit">
+                          You've used {{ status.customer_usage }}/{{ status.customer_limit }} times
+                          <span v-if="status.remaining_for_customer" class="text-green-600">
+                            ({{ status.remaining_for_customer }} remaining)
+                          </span>
+                        </span>
+                        <span v-else class="text-green-600">No customer limit</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <!-- Total Limit Reached -->
+                  <div v-if="totalLimitReachedDiscounts.length > 0" class="bg-red-50 border border-red-200 rounded-lg p-3">
+                    <h4 class="text-sm font-medium text-red-800 mb-1">These discounts are no longer available:</h4>
+                    <div class="space-y-1">
+                      <div v-for="status in totalLimitReachedDiscounts" :key="status.discount_id" class="text-sm text-red-700">
+                        • <strong>{{ status.name }}</strong> - Total usage limit reached ({{ status.total_usage }}/{{ status.total_limit }})
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Cart Items List -->
           <div class="space-y-6">
             <div v-for="item in cartStore.cart.items" :key="`${item.product_id}-${item.variant_id || 'no-variant'}`" class="bg-white border border-gray-200 rounded-lg p-6">
@@ -391,6 +441,29 @@ const orderDiscountsTotal = computed(() => {
   if (!cartStore.cart?.total_discounts || !cartStore.cart?.items) return 0;
   const itemDiscountsTotal = cartStore.cart.items.reduce((total: number, item: CartItem) => total + (item.discount_amount || 0), 0);
   return cartStore.cart.total_discounts - itemDiscountsTotal;
+});
+
+// Computed properties for discount limit information - READ ONLY from backend data
+const hasDiscountLimits = computed(() => {
+  if (!cartStore.cart?.discount_statuses) return false;
+  return cartStore.cart.discount_statuses.length > 0;
+});
+
+const customerLimitReachedDiscounts = computed(() => {
+  if (!cartStore.cart?.discount_statuses) return [];
+  return cartStore.cart.discount_statuses.filter((status: any) => status.customer_limit_hit);
+});
+
+const availableDiscountsWithLimits = computed(() => {
+  if (!cartStore.cart?.discount_statuses) return [];
+  return cartStore.cart.discount_statuses.filter((status: any) => 
+    status.is_available && !status.customer_limit_hit && !status.total_limit_hit
+  );
+});
+
+const totalLimitReachedDiscounts = computed(() => {
+  if (!cartStore.cart?.discount_statuses) return [];
+  return cartStore.cart.discount_statuses.filter((status: any) => status.total_limit_hit);
 });
 
 // Helper function to get discount details for a specific item - READ ONLY

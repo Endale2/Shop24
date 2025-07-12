@@ -528,10 +528,91 @@ func ValidateDiscountForProduct(discount *models.Discount, productID, variantID 
 	return false
 }
 
+// DiscountStatus provides detailed information about discount availability
+type DiscountStatus struct {
+	DiscountID           primitive.ObjectID `json:"discount_id"`
+	Name                 string             `json:"name"`
+	IsAvailable          bool               `json:"is_available"`
+	IsDisabled           bool               `json:"is_disabled"`
+	CustomerLimitHit     bool               `json:"customer_limit_hit"`
+	TotalLimitHit        bool               `json:"total_limit_hit"`
+	CustomerUsage        int                `json:"customer_usage"`
+	CustomerLimit        *int               `json:"customer_limit"`
+	TotalUsage           int                `json:"total_usage"`
+	TotalLimit           *int               `json:"total_limit"`
+	RemainingForCustomer *int               `json:"remaining_for_customer"`
+	RemainingTotal       *int               `json:"remaining_total"`
+	Reason               string             `json:"reason,omitempty"`
+}
+
+// GetDiscountStatusForCustomer provides detailed status of a discount for a customer
+func GetDiscountStatusForCustomer(discount *models.Discount, customerID primitive.ObjectID) DiscountStatus {
+	status := DiscountStatus{
+		DiscountID:  discount.ID,
+		Name:        discount.Name,
+		IsAvailable: true,
+		IsDisabled:  false,
+		TotalUsage:  discount.CurrentUsage,
+		TotalLimit:  discount.UsageLimit,
+	}
+
+	// Check if discount is active
+	if !discount.IsActive() {
+		status.IsAvailable = false
+		status.IsDisabled = true
+		status.Reason = "Discount is not active"
+		return status
+	}
+
+	// Check total usage limit
+	if discount.UsageLimit != nil {
+		if discount.CurrentUsage >= *discount.UsageLimit {
+			status.IsAvailable = false
+			status.IsDisabled = true
+			status.TotalLimitHit = true
+			status.Reason = "Total usage limit reached"
+			return status
+		}
+		remaining := *discount.UsageLimit - discount.CurrentUsage
+		status.RemainingTotal = &remaining
+	}
+
+	// Check per-customer limit
+	if discount.PerCustomerLimit != nil {
+		status.CustomerLimit = discount.PerCustomerLimit
+
+		// Find customer usage
+		for _, usage := range discount.UsageTracking {
+			if usage.CustomerID == customerID {
+				status.CustomerUsage = usage.UsageCount
+				if usage.UsageCount >= *discount.PerCustomerLimit {
+					status.IsAvailable = false
+					status.CustomerLimitHit = true
+					status.Reason = "You have reached your usage limit for this discount"
+					return status
+				}
+				remaining := *discount.PerCustomerLimit - usage.UsageCount
+				status.RemainingForCustomer = &remaining
+				break
+			}
+		}
+
+		// If customer not found in tracking, they haven't used it yet
+		if status.CustomerUsage == 0 {
+			remaining := *discount.PerCustomerLimit
+			status.RemainingForCustomer = &remaining
+		}
+	}
+
+	return status
+}
+
 // GetBestEligibleDiscountForProduct gets the best eligible discount for a product/variant and customer
-func GetBestEligibleDiscountForProduct(productID, variantID primitive.ObjectID, customerID primitive.ObjectID, customerSegmentIDs []primitive.ObjectID, discounts []models.Discount) *models.Discount {
+// Now returns detailed status information
+func GetBestEligibleDiscountForProduct(productID, variantID primitive.ObjectID, customerID primitive.ObjectID, customerSegmentIDs []primitive.ObjectID, discounts []models.Discount) (*models.Discount, []DiscountStatus) {
 	var best *models.Discount
 	var maxSavings float64
+	var allStatuses []DiscountStatus
 
 	for i := range discounts {
 		d := &discounts[i]
@@ -541,18 +622,17 @@ func GetBestEligibleDiscountForProduct(productID, variantID primitive.ObjectID, 
 			continue
 		}
 
-		// Check if discount is active
-		if !d.IsActive() {
+		// Get detailed status for this discount
+		status := GetDiscountStatusForCustomer(d, customerID)
+		allStatuses = append(allStatuses, status)
+
+		// Only consider available discounts
+		if !status.IsAvailable {
 			continue
 		}
 
 		// Check if customer is eligible
 		if !d.IsEligible(customerID, customerSegmentIDs) {
-			continue
-		}
-
-		// Check if customer can use this discount
-		if !d.CanUse(customerID) {
 			continue
 		}
 
@@ -571,5 +651,5 @@ func GetBestEligibleDiscountForProduct(productID, variantID primitive.ObjectID, 
 		}
 	}
 
-	return best
+	return best, allStatuses
 }

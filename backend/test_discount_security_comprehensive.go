@@ -335,7 +335,7 @@ func main() {
 		}
 
 		// Get best eligible discount
-		bestDiscount := services.GetBestEligibleDiscountForProduct(productID, variantIDToUse, tc.customerID, []primitive.ObjectID{}, discounts)
+		bestDiscount, _ := services.GetBestEligibleDiscountForProduct(productID, variantIDToUse, tc.customerID, []primitive.ObjectID{}, discounts)
 
 		if bestDiscount != nil {
 			savings := bestDiscount.CalculateDiscountForQuantity(tc.unitPrice, tc.quantity)

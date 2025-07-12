@@ -1,5 +1,22 @@
 import api from './api';
 
+// TypeScript interfaces for discount status
+export interface DiscountStatus {
+  discount_id: string;
+  name: string;
+  is_available: boolean;
+  is_disabled: boolean;
+  customer_limit_hit: boolean;
+  total_limit_hit: boolean;
+  customer_usage: number;
+  customer_limit?: number;
+  total_usage: number;
+  total_limit?: number;
+  remaining_for_customer?: number;
+  remaining_total?: number;
+  reason?: string;
+}
+
 // TypeScript interfaces for cart with discount details
 export interface ItemDiscountDetail {
   product_id: string;
@@ -10,6 +27,7 @@ export interface ItemDiscountDetail {
   value: number;
   category: 'product' | 'order' | 'shipping' | 'buy_x_get_y';
   amount: number;
+  status?: DiscountStatus;
 }
 
 export interface OrderDiscountDetail {
@@ -53,6 +71,7 @@ export interface CartWithDiscountDetails {
   created_at: string;
   item_discount_details: ItemDiscountDetail[];
   order_discount_details: OrderDiscountDetail[];
+  discount_statuses: DiscountStatus[];
 }
 
 export async function getCart(shopSlug: string) {
