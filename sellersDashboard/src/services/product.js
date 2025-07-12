@@ -4,28 +4,28 @@ export const productService = {
   async fetchAllByShop(shopId) {
     const res = await api.get(`/seller/shops/${shopId}/products`)
     return res.data.map(p => ({
-      id:           p.ID ?? p.id,
-      shopId:       p.shop_id ?? p.ShopID,
-      name:         p.Name ?? p.name,
-      description:  p.Description ?? p.description,
-      images:       p.Images ?? p.images ?? [],
-      main_image:   p.main_image ?? p.MainImage ?? '',
-      category:     p.Category ?? p.category,
-      price:        Number(p.Price ?? p.price) || 0,
-      stock:        p.Stock ?? p.stock ?? 0, // <--- This line is already correct here
-      variants:     (p.Variants ?? p.variants ?? []).map(v => ({
-        id:         v.VariantID ?? v.id,
-        options:    v.Options ?? v.options ?? {},
-        price:      Number(v.Price ?? v.price) || 0,
-        stock:      v.Stock ?? v.stock ?? 0,
-        image:      v.Image ?? v.image ?? '',
-        createdAt:  v.CreatedAt ?? v.createdAt,
-        updatedAt:  v.UpdatedAt ?? v.updatedAt,
-      })),
+      id: p.id || p._id || p.ID,
+      shopId: p.shop_id || p.shopId || p.ShopID,
+      name: p.name || p.Name,
+      description: p.description || p.Description,
+      images: p.images || p.Images || [],
+      main_image: p.main_image || p.MainImage || '',
+      category: p.category || p.Category,
+      price: Number(p.price || p.Price) || 0,
+      stock: p.stock || p.Stock || 0,
       starting_price: p.starting_price,
       total_stock: p.total_stock,
-      createdAt:    p.CreatedAt ?? p.createdAt,
-      updatedAt:    p.UpdatedAt ?? p.updatedAt,
+      variants: (p.variants || p.Variants || []).map(v => ({
+        id: v.id || v.variant_id || v.VariantID,
+        options: v.options || v.Options || [],
+        price: Number(v.price || v.Price) || 0,
+        stock: v.stock || v.Stock || 0,
+        image: v.image || v.Image || '',
+        createdAt: v.createdAt || v.CreatedAt,
+        updatedAt: v.updatedAt || v.UpdatedAt,
+      })),
+      createdAt: p.createdAt || p.CreatedAt,
+      updatedAt: p.updatedAt || p.UpdatedAt,
     }))
   },
 
@@ -33,36 +33,35 @@ export const productService = {
     const res = await api.get(`/seller/shops/${shopId}/products/${productId}`)
     const p = res.data
     return {
-      id:           p.ID ?? p.id,
-      shopId:       p.shop_id ?? p.ShopID,
-      name:         p.Name ?? p.name,
-      description:  p.Description ?? p.description,
-      images:       p.Images ?? p.images ?? [],
-      main_image:   p.main_image ?? p.MainImage ?? '',
-      category:     p.Category ?? p.category,
-      price:        Number(p.Price ?? p.price) || 0,
-      stock:        p.Stock ?? p.stock ?? 0, // <--- ADD THIS LINE!
-      variants:     (p.Variants ?? p.variants ?? []).map(v => ({
-        id:         v.VariantID ?? v.id,
-        options:    v.Options ?? v.options ?? {},
-        price:      Number(v.Price ?? v.price) || 0,
-        stock:      v.Stock ?? v.stock ?? 0,
-        image:      v.Image ?? v.image ?? '',
-        createdAt:  v.CreatedAt ?? v.createdAt,
-        updatedAt:  v.UpdatedAt ?? v.updatedAt,
+      id: p.id || p._id || p.ID,
+      shopId: p.shop_id || p.shopId || p.ShopID,
+      name: p.name || p.Name,
+      description: p.description || p.Description,
+      images: p.images || p.Images || [],
+      main_image: p.main_image || p.MainImage || '',
+      category: p.category || p.Category,
+      price: Number(p.price || p.Price) || 0,
+      stock: p.stock || p.Stock || 0,
+      starting_price: p.starting_price,
+      total_stock: p.total_stock,
+      variants: (p.variants || p.Variants || []).map(v => ({
+        id: v.id || v.variant_id || v.VariantID,
+        options: v.options || v.Options || [],
+        price: Number(v.price || v.Price) || 0,
+        stock: v.stock || v.Stock || 0,
+        image: v.image || v.Image || '',
+        createdAt: v.createdAt || v.CreatedAt,
+        updatedAt: v.updatedAt || v.UpdatedAt,
       })),
-      createdAt:    p.CreatedAt ?? p.createdAt,
-      updatedAt:    p.UpdatedAt ?? p.updatedAt,
+      createdAt: p.createdAt || p.CreatedAt,
+      updatedAt: p.updatedAt || p.UpdatedAt,
     }
   },
 
   async create(shopId, data) {
     const res = await api.post(`/seller/shops/${shopId}/products`, data)
     const created = res.data
-    const id = created.id
-               ?? created._id
-               ?? created.ID
-               ?? created.InsertedID
+    const id = created.id || created._id || created.ID || created.InsertedID
     if (!id) {
       throw new Error('Failed to retrieve new product ID from response')
     }

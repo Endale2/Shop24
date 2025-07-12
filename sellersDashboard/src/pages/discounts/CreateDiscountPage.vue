@@ -8,7 +8,7 @@
             Create New Discount
           </h1>
           <p class="text-lg text-gray-600 mt-2">
-            Set up promotional offers to boost your sales
+            Set up product-level promotional offers to boost your sales
           </p>
         </div>
         <router-link
@@ -24,8 +24,9 @@
     <!-- Loading State -->
     <div v-if="loading" class="text-center py-16 text-gray-600 text-lg">
       <div class="flex flex-col items-center justify-center">
-        <div class="animate-spin h-10 w-10 text-green-500 mb-4 border-4 border-green-200 border-t-green-500 rounded-full"></div>
-        <p>Loading form data...</p>
+        <div class="animate-spin h-12 w-12 text-green-500 mb-4 border-4 border-green-200 border-t-green-500 rounded-full"></div>
+        <p class="text-lg font-medium">Loading form data...</p>
+        <p class="text-sm text-gray-500 mt-2">Please wait while we prepare the form</p>
       </div>
     </div>
 
@@ -34,74 +35,122 @@
       <form @submit.prevent="submitForm" class="p-8 space-y-8">
         <!-- Basic Information -->
         <div class="bg-gray-50 p-6 rounded-lg">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Basic Information</h3>
+          <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+            <TagIcon class="w-5 h-5 mr-2 text-green-600" />
+            Basic Information
+          </h3>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Name *</label>
-              <input id="name" v-model="form.name" type="text" required
-                     class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out" />
+              <label for="name" class="block text-sm font-medium text-gray-700 mb-1">Discount Name *</label>
+              <input 
+                id="name" 
+                v-model="form.name" 
+                type="text" 
+                required
+                placeholder="e.g., Summer Sale 20% Off"
+                class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out" 
+              />
             </div>
             <div>
-              <label for="couponCode" class="block text-sm font-medium text-gray-700 mb-1">Coupon Code (optional)</label>
-              <input id="couponCode" v-model="form.couponCode" type="text"
-                     class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out" />
+              <label for="couponCode" class="block text-sm font-medium text-gray-700 mb-1">Coupon Code (Optional)</label>
+              <input 
+                id="couponCode" 
+                v-model="form.couponCode" 
+                type="text"
+                placeholder="e.g., SUMMER20"
+                class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out" 
+              />
             </div>
           </div>
           <div class="mt-4">
             <label for="description" class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-            <textarea id="description" v-model="form.description" rows="3"
-                      class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out"></textarea>
+            <textarea 
+              id="description" 
+              v-model="form.description" 
+              rows="3"
+              placeholder="Describe what this discount offers..."
+              class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out"
+            ></textarea>
           </div>
         </div>
 
         <!-- Discount Configuration -->
         <div class="bg-gray-50 p-6 rounded-lg">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Discount Configuration</h3>
+          <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+            <CurrencyDollarIcon class="w-5 h-5 mr-2 text-green-600" />
+            Discount Configuration
+          </h3>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category *</label>
-              <select id="category" v-model="form.category" required
-                      class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 bg-white transition duration-150 ease-in-out">
-                <option value="product">Product Discount</option>
-                <option value="order">Order Discount</option>
-                <option value="shipping">Shipping Discount</option>
-                <option value="buy_x_get_y">Buy X Get Y</option>
-              </select>
-            </div>
-            <div>
-              <label for="type" class="block text-sm font-medium text-gray-700 mb-1">Type *</label>
-              <select id="type" v-model="form.type" required
-                      class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 bg-white transition duration-150 ease-in-out">
-                <option value="percentage">Percentage</option>
-                <option value="fixed">Fixed Amount</option>
-              </select>
-            </div>
-            <div>
-              <label for="value" class="block text-sm font-medium text-gray-700 mb-1">Value *</label>
-              <input
-                id="value"
-                v-model.number="form.value"
-                type="number"
-                min="0"
-                :step="form.type === 'percentage' ? 1 : 0.01"
+              <label for="type" class="block text-sm font-medium text-gray-700 mb-1">Discount Type *</label>
+              <select 
+                id="type" 
+                v-model="form.type" 
                 required
-                class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out"
-              />
+                class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 bg-white transition duration-150 ease-in-out"
+              >
+                <option value="percentage">Percentage Off</option>
+                <option value="fixed">Fixed Amount Off</option>
+              </select>
+            </div>
+            <div>
+              <label for="value" class="block text-sm font-medium text-gray-700 mb-1">Discount Value *</label>
+              <div class="relative">
+                <input
+                  id="value"
+                  v-model.number="form.value"
+                  type="number"
+                  min="0"
+                  :max="form.type === 'percentage' ? 100 : null"
+                  :step="form.type === 'percentage' ? 1 : 0.01"
+                  required
+                  :placeholder="form.type === 'percentage' ? 'e.g., 20' : 'e.g., 10.00'"
+                  class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out"
+                />
+                <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                  <span class="text-gray-500 text-sm">
+                    {{ form.type === 'percentage' ? '%' : '$' }}
+                  </span>
+                </div>
+              </div>
+            </div>
+            <div class="md:col-span-3">
+              <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="flex items-start">
+                  <InformationCircleIcon class="w-5 h-5 text-blue-600 mr-2 mt-0.5 flex-shrink-0" />
+                  <div class="text-sm text-blue-800">
+                    <p class="font-medium mb-1">Discount Preview:</p>
+                    <p v-if="form.type === 'percentage' && form.value">
+                      Customers will save {{ form.value }}% on eligible products
+                    </p>
+                    <p v-else-if="form.type === 'fixed' && form.value">
+                      Customers will save ${{ form.value?.toFixed(2) }} on eligible products
+                    </p>
+                    <p v-else class="text-blue-600">
+                      Enter a value to see the discount preview
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </div>
 
-        <!-- Category-specific Configuration -->
-        <div v-if="form.category === 'product' || form.category === 'buy_x_get_y'" class="bg-gray-50 p-6 rounded-lg">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Product Configuration</h3>
+        <!-- Product Selection -->
+        <div class="bg-gray-50 p-6 rounded-lg">
+          <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+            <CubeIcon class="w-5 h-5 mr-2 text-green-600" />
+            Product Selection
+          </h3>
           <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">Select Products</label>
+            <label class="block text-sm font-medium text-gray-700 mb-2">Select Products (Optional)</label>
             <div class="relative product-dropdown">
               <input
                 type="text"
                 v-model="productSearchQuery"
                 @input="filterProducts"
-                placeholder="Search products..."
+                @focus="showProductDropdown = true"
+                placeholder="Search products to apply this discount to..."
                 class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out"
               />
               <div v-if="filteredProducts.length > 0 && showProductDropdown" class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
@@ -130,7 +179,7 @@
                 <span
                   v-for="product in selectedProducts"
                   :key="product.id"
-                  class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800"
+                  class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-green-100 text-green-800 border border-green-200"
                 >
                   {{ product.name }}
                   <button
@@ -143,178 +192,26 @@
               </div>
             </div>
             <p class="text-xs text-gray-500 mt-2">
-              Select products to apply this discount to. Leave empty to apply to all products in this shop.
+              <InformationCircleIcon class="w-4 h-4 inline mr-1" />
+              Leave empty to apply this discount to all products in your shop
             </p>
-          </div>
-        </div>
-
-        <div v-if="form.category === 'buy_x_get_y'" class="bg-gray-50 p-6 rounded-lg">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Buy X Get Y Configuration</h3>
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Buy Products</label>
-              <div class="relative buy-product-dropdown">
-                <input
-                  type="text"
-                  v-model="buyProductSearchQuery"
-                  @input="filterBuyProducts"
-                  placeholder="Search products to buy..."
-                  class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out"
-                />
-                <div v-if="filteredBuyProducts.length > 0 && showBuyProductDropdown" class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                  <div
-                    v-for="product in filteredBuyProducts"
-                    :key="product.id"
-                    @click="toggleBuyProductSelection(product)"
-                    class="flex items-center p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
-                  >
-                    <input
-                      type="checkbox"
-                      :checked="selectedBuyProducts.some(p => p.id === product.id)"
-                      class="mr-3 h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
-                      readonly
-                    />
-                    <div class="flex-1">
-                      <div class="font-medium text-gray-900">{{ product.name }}</div>
-                      <div class="text-sm text-gray-500">${{ product.price?.toFixed(2) || '0.00' }}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div v-if="selectedBuyProducts.length > 0" class="mt-2">
-                <div class="flex flex-wrap gap-1">
-                  <span
-                    v-for="product in selectedBuyProducts"
-                    :key="product.id"
-                    class="inline-flex items-center px-2 py-1 rounded text-xs bg-blue-100 text-blue-800"
-                  >
-                    {{ product.name }}
-                    <button
-                      @click="removeBuyProduct(product)"
-                      class="ml-1 text-blue-600 hover:text-blue-800"
-                    >
-                      ×
-                    </button>
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div>
-              <label for="buyQuantity" class="block text-sm font-medium text-gray-700 mb-1">Buy Quantity</label>
-              <input
-                id="buyQuantity"
-                v-model.number="form.buyQuantity"
-                type="number"
-                min="1"
-                class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out"
-              />
-            </div>
-            <div>
-              <label class="block text-sm font-medium text-gray-700 mb-2">Get Products</label>
-              <div class="relative get-product-dropdown">
-                <input
-                  type="text"
-                  v-model="getProductSearchQuery"
-                  @input="filterGetProducts"
-                  placeholder="Search products to get..."
-                  class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out"
-                />
-                <div v-if="filteredGetProducts.length > 0 && showGetProductDropdown" class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-                  <div
-                    v-for="product in filteredGetProducts"
-                    :key="product.id"
-                    @click="toggleGetProductSelection(product)"
-                    class="flex items-center p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
-                  >
-                    <input
-                      type="checkbox"
-                      :checked="selectedGetProducts.some(p => p.id === product.id)"
-                      class="mr-3 h-4 w-4 text-purple-600 rounded focus:ring-purple-500"
-                      readonly
-                    />
-                    <div class="flex-1">
-                      <div class="font-medium text-gray-900">{{ product.name }}</div>
-                      <div class="text-sm text-gray-500">${{ product.price?.toFixed(2) || '0.00' }}</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div v-if="selectedGetProducts.length > 0" class="mt-2">
-                <div class="flex flex-wrap gap-1">
-                  <span
-                    v-for="product in selectedGetProducts"
-                    :key="product.id"
-                    class="inline-flex items-center px-2 py-1 rounded text-xs bg-purple-100 text-purple-800"
-                  >
-                    {{ product.name }}
-                    <button
-                      @click="removeGetProduct(product)"
-                      class="ml-1 text-purple-600 hover:text-purple-800"
-                    >
-                      ×
-                    </button>
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div>
-              <label for="getQuantity" class="block text-sm font-medium text-gray-700 mb-1">Get Quantity</label>
-              <input
-                id="getQuantity"
-                v-model.number="form.getQuantity"
-                type="number"
-                min="1"
-                class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out"
-              />
-            </div>
-          </div>
-        </div>
-
-        <div v-if="form.category === 'order'" class="bg-gray-50 p-6 rounded-lg">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Order Configuration</h3>
-          <div>
-            <label for="minimumOrderSubtotal" class="block text-sm font-medium text-gray-700 mb-1">Minimum Order Subtotal</label>
-            <input
-              id="minimumOrderSubtotal"
-              v-model.number="form.minimumOrderSubtotal"
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="e.g. 50.00"
-              class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out"
-            />
-          </div>
-        </div>
-
-        <div v-if="form.category === 'shipping'" class="bg-gray-50 p-6 rounded-lg">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Shipping Configuration</h3>
-          <div class="flex items-center space-x-2 mb-4">
-            <input id="freeShipping" type="checkbox" v-model="form.freeShipping"
-                   class="form-checkbox h-5 w-5 text-green-600 rounded focus:ring-green-500 transition duration-150 ease-in-out" />
-            <label for="freeShipping" class="text-base font-medium text-gray-800">Enable Free Shipping</label>
-          </div>
-          <div v-if="form.freeShipping">
-            <label for="minimumFreeShipping" class="block text-sm font-medium text-gray-700 mb-1">Minimum Order for Free Shipping</label>
-            <input
-              id="minimumFreeShipping"
-              v-model.number="form.minimumFreeShipping"
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="e.g. 100.00"
-              class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out"
-            />
           </div>
         </div>
 
         <!-- Customer Eligibility -->
         <div class="bg-gray-50 p-6 rounded-lg">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Customer Eligibility</h3>
+          <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+            <UsersIcon class="w-5 h-5 mr-2 text-green-600" />
+            Customer Eligibility
+          </h3>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label for="eligibilityType" class="block text-sm font-medium text-gray-700 mb-1">Eligibility Type</label>
-              <select id="eligibilityType" v-model="form.eligibilityType"
-                      class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 bg-white transition duration-150 ease-in-out">
+              <select 
+                id="eligibilityType" 
+                v-model="form.eligibilityType"
+                class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 bg-white transition duration-150 ease-in-out"
+              >
                 <option value="all">Everyone</option>
                 <option value="specific">Specific Customers</option>
                 <option value="segment">Customer Segments</option>
@@ -330,6 +227,7 @@
                 type="text"
                 v-model="customerSearchQuery"
                 @input="filterCustomers"
+                @focus="showCustomerDropdown = true"
                 placeholder="Search customers..."
                 class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out"
               />
@@ -359,7 +257,7 @@
                 <span
                   v-for="customer in selectedCustomers"
                   :key="customer.id"
-                  class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
+                  class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800 border border-blue-200"
                 >
                   {{ customer.firstName }} {{ customer.lastName }}
                   <button
@@ -381,6 +279,7 @@
                 type="text"
                 v-model="segmentSearchQuery"
                 @input="filterSegments"
+                @focus="showSegmentDropdown = true"
                 placeholder="Search segments..."
                 class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out"
               />
@@ -410,7 +309,7 @@
                 <span
                   v-for="segment in selectedSegments"
                   :key="segment.id"
-                  class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800"
+                  class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800 border border-purple-200"
                 >
                   {{ segment.name }}
                   <button
@@ -427,7 +326,10 @@
 
         <!-- Usage Limits -->
         <div class="bg-gray-50 p-6 rounded-lg">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Usage Limits</h3>
+          <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+            <ChartBarIcon class="w-5 h-5 mr-2 text-green-600" />
+            Usage Limits
+          </h3>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label for="usageLimit" class="block text-sm font-medium text-gray-700 mb-1">Total Usage Limit</label>
@@ -439,6 +341,7 @@
                 placeholder="No limit"
                 class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out"
               />
+              <p class="text-xs text-gray-500 mt-1">Leave empty for unlimited usage</p>
             </div>
             <div>
               <label for="perCustomerLimit" class="block text-sm font-medium text-gray-700 mb-1">Per Customer Limit</label>
@@ -450,16 +353,20 @@
                 placeholder="No limit"
                 class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out"
               />
+              <p class="text-xs text-gray-500 mt-1">Leave empty for unlimited usage per customer</p>
             </div>
           </div>
         </div>
 
         <!-- Validity Period -->
         <div class="bg-gray-50 p-6 rounded-lg">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Validity Period</h3>
+          <h3 class="text-lg font-medium text-gray-900 mb-4 flex items-center">
+            <CalendarIcon class="w-5 h-5 mr-2 text-green-600" />
+            Validity Period
+          </h3>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label for="startAt" class="block text-sm font-medium text-gray-700 mb-1">Start Date & Time</label>
+              <label for="startAt" class="block text-sm font-medium text-gray-700 mb-1">Start Date & Time *</label>
               <input
                 id="startAt"
                 v-model="form.startAt"
@@ -469,7 +376,7 @@
               />
             </div>
             <div>
-              <label for="endAt" class="block text-sm font-medium text-gray-700 mb-1">End Date & Time</label>
+              <label for="endAt" class="block text-sm font-medium text-gray-700 mb-1">End Date & Time *</label>
               <input
                 id="endAt"
                 v-model="form.endAt"
@@ -480,8 +387,12 @@
             </div>
           </div>
           <div class="flex items-center space-x-2 pt-4">
-            <input id="active" type="checkbox" v-model="form.active"
-                   class="form-checkbox h-5 w-5 text-green-600 rounded focus:ring-green-500 transition duration-150 ease-in-out" />
+            <input 
+              id="active" 
+              type="checkbox" 
+              v-model="form.active"
+              class="form-checkbox h-5 w-5 text-green-600 rounded focus:ring-green-500 transition duration-150 ease-in-out" 
+            />
             <label for="active" class="text-base font-medium text-gray-800">Discount is Active</label>
           </div>
         </div>
@@ -496,7 +407,7 @@
           </router-link>
           <button
             type="submit"
-            :disabled="formLoading"
+            :disabled="formLoading || !isFormValid"
             class="bg-green-600 text-white px-5 py-2.5 rounded-lg shadow-md hover:bg-green-700 transition duration-300 ease-in-out disabled:opacity-60 disabled:cursor-not-allowed"
           >
             <span v-if="formLoading" class="flex items-center">
@@ -521,7 +432,16 @@ import { discountService } from '@/services/discount'
 import { productService } from '@/services/product'
 import { customerService } from '@/services/customer'
 import { customerSegmentService } from '@/services/customerSegment'
-import { ArrowLeftIcon } from '@heroicons/vue/outline'
+import { 
+  ArrowLeftIcon,
+  TagIcon,
+  CurrencyDollarIcon,
+  CubeIcon,
+  UsersIcon,
+  ChartBarIcon,
+  CalendarIcon,
+  InformationCircleIcon
+} from '@heroicons/vue/outline'
 
 const router = useRouter()
 const shopStore = useShopStore()
@@ -544,32 +464,24 @@ const loadingSegments = ref(false)
 const productSearchQuery = ref('')
 const customerSearchQuery = ref('')
 const segmentSearchQuery = ref('')
-const buyProductSearchQuery = ref('')
-const getProductSearchQuery = ref('')
 
 // Dropdown visibility states
 const showProductDropdown = ref(false)
 const showCustomerDropdown = ref(false)
 const showSegmentDropdown = ref(false)
-const showBuyProductDropdown = ref(false)
-const showGetProductDropdown = ref(false)
 
 // Selected items
 const selectedProducts = ref([])
 const selectedCustomers = ref([])
 const selectedSegments = ref([])
-const selectedBuyProducts = ref([])
-const selectedGetProducts = ref([])
 
 // Form state
 const form = ref({
   name: '',
   description: '',
-  category: 'product',
   type: 'percentage',
   value: 0,
   appliesToProducts: [],
-  appliesToCollections: [],
   appliesToVariants: [],
   couponCode: '',
   startAt: '',
@@ -580,13 +492,6 @@ const form = ref({
   allowedSegments: [],
   usageLimit: null,
   perCustomerLimit: null,
-  freeShipping: false,
-  minimumOrderSubtotal: null,
-  minimumFreeShipping: null,
-  buyProductIds: [],
-  buyQuantity: null,
-  getProductIds: [],
-  getQuantity: null,
 })
 
 // Computed
@@ -618,22 +523,12 @@ const filteredSegments = computed(() => {
   ).slice(0, 10)
 })
 
-const filteredBuyProducts = computed(() => {
-  if (!buyProductSearchQuery.value) return products.value.slice(0, 10)
-  const query = buyProductSearchQuery.value.toLowerCase()
-  return products.value.filter(p => 
-    p.name.toLowerCase().includes(query) ||
-    p.description?.toLowerCase().includes(query)
-  ).slice(0, 10)
-})
-
-const filteredGetProducts = computed(() => {
-  if (!getProductSearchQuery.value) return products.value.slice(0, 10)
-  const query = getProductSearchQuery.value.toLowerCase()
-  return products.value.filter(p => 
-    p.name.toLowerCase().includes(query) ||
-    p.description?.toLowerCase().includes(query)
-  ).slice(0, 10)
+const isFormValid = computed(() => {
+  return form.value.name.trim() && 
+         form.value.value > 0 && 
+         form.value.startAt && 
+         form.value.endAt &&
+         new Date(form.value.endAt) > new Date(form.value.startAt)
 })
 
 // Methods
@@ -648,14 +543,6 @@ function filterCustomers() {
 
 function filterSegments() {
   showSegmentDropdown.value = true
-}
-
-function filterBuyProducts() {
-  showBuyProductDropdown.value = true
-}
-
-function filterGetProducts() {
-  showGetProductDropdown.value = true
 }
 
 // Selection functions
@@ -689,26 +576,6 @@ function toggleSegmentSelection(segment) {
   showSegmentDropdown.value = false
 }
 
-function toggleBuyProductSelection(product) {
-  const index = selectedBuyProducts.value.findIndex(p => p.id === product.id)
-  if (index > -1) {
-    selectedBuyProducts.value.splice(index, 1)
-  } else {
-    selectedBuyProducts.value.push(product)
-  }
-  showBuyProductDropdown.value = false
-}
-
-function toggleGetProductSelection(product) {
-  const index = selectedGetProducts.value.findIndex(p => p.id === product.id)
-  if (index > -1) {
-    selectedGetProducts.value.splice(index, 1)
-  } else {
-    selectedGetProducts.value.push(product)
-  }
-  showGetProductDropdown.value = false
-}
-
 // Remove functions
 function removeProduct(product) {
   const index = selectedProducts.value.findIndex(p => p.id === product.id)
@@ -728,20 +595,6 @@ function removeSegment(segment) {
   const index = selectedSegments.value.findIndex(s => s.id === segment.id)
   if (index > -1) {
     selectedSegments.value.splice(index, 1)
-  }
-}
-
-function removeBuyProduct(product) {
-  const index = selectedBuyProducts.value.findIndex(p => p.id === product.id)
-  if (index > -1) {
-    selectedBuyProducts.value.splice(index, 1)
-  }
-}
-
-function removeGetProduct(product) {
-  const index = selectedGetProducts.value.findIndex(p => p.id === product.id)
-  if (index > -1) {
-    selectedGetProducts.value.splice(index, 1)
   }
 }
 
@@ -815,42 +668,14 @@ async function submitForm() {
     return
   }
 
-  // Validate Buy X Get Y fields
-  if (form.value.category === 'buy_x_get_y') {
-    if (selectedBuyProducts.value.length === 0) {
-      alert('Please specify Buy Products for Buy X Get Y discount')
-      return
-    }
-    if (!form.value.buyQuantity || form.value.buyQuantity < 1) {
-      alert('Please specify a valid Buy Quantity (minimum 1)')
-      return
-    }
-    if (selectedGetProducts.value.length === 0) {
-      alert('Please specify Get Products for Buy X Get Y discount')
-      return
-    }
-    if (!form.value.getQuantity || form.value.getQuantity < 1) {
-      alert('Please specify a valid Get Quantity (minimum 1)')
-      return
-    }
-  }
-
-  // Validate order-level discounts
-  if (form.value.category === 'order' && form.value.minimumOrderSubtotal !== null && form.value.minimumOrderSubtotal <= 0) {
-    alert('Minimum order subtotal must be greater than 0')
-    return
-  }
-
   formLoading.value = true
 
   const payload = {
     name: form.value.name,
     description: form.value.description,
-    category: form.value.category,
     type: form.value.type,
     value: form.value.value,
     appliesToProducts: selectedProducts.value.map(p => p.id),
-    appliesToCollections: form.value.appliesToCollections,
     appliesToVariants: form.value.appliesToVariants,
     couponCode: form.value.couponCode || undefined,
     startAt: form.value.startAt,
@@ -861,13 +686,6 @@ async function submitForm() {
     allowedSegments: selectedSegments.value.map(s => s.id),
     usageLimit: form.value.usageLimit,
     perCustomerLimit: form.value.perCustomerLimit,
-    freeShipping: form.value.freeShipping,
-    minimumOrderSubtotal: form.value.minimumOrderSubtotal,
-    minimumFreeShipping: form.value.minimumFreeShipping,
-    buyProductIds: selectedBuyProducts.value.map(p => p.id),
-    buyQuantity: form.value.buyQuantity,
-    getProductIds: selectedGetProducts.value.map(p => p.id),
-    getQuantity: form.value.getQuantity,
   }
 
   try {
@@ -897,16 +715,6 @@ function handleClickOutside(event) {
   // Close segment dropdown
   if (!event.target.closest('.segment-dropdown')) {
     showSegmentDropdown.value = false
-  }
-  
-  // Close buy product dropdown
-  if (!event.target.closest('.buy-product-dropdown')) {
-    showBuyProductDropdown.value = false
-  }
-  
-  // Close get product dropdown
-  if (!event.target.closest('.get-product-dropdown')) {
-    showGetProductDropdown.value = false
   }
 }
 

@@ -10,8 +10,9 @@
 
     <div v-if="loading" class="flex flex-col items-center justify-center text-gray-600 py-20 bg-white rounded-2xl shadow-lg">
       <SpinnerIcon class="animate-spin h-10 w-10 text-green-500 mb-4" />
-      <p class="mt-3 text-lg font-semibold text-gray-700">Brewing up the form...</p>
+      <p class="mt-3 text-lg font-semibold text-gray-700">Preparing the form...</p>
     </div>
+
     <div
       v-else-if="error"
       class="bg-red-50 border border-red-300 text-red-700 px-6 py-4 rounded-xl shadow-md flex items-center space-x-3"
@@ -19,155 +20,200 @@
     >
       <ExclamationCircleIcon class="h-6 w-6 flex-shrink-0" />
       <div>
-        <strong class="font-semibold">Oops!</strong> <span class="ml-1">{{ error }}</span>
+        <strong class="font-semibold">Error:</strong> <span class="ml-1">{{ error }}</span>
         <p class="text-sm mt-1">Please check your input and try again.</p>
       </div>
     </div>
 
     <div v-else class="bg-white shadow-xl rounded-2xl p-6 sm:p-8 space-y-8 animate-fade-in">
-      <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-800 text-center mb-6">
-       Add a New Product
-      </h2>
+      <div class="text-center mb-8">
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-2">
+          Add New Product
+        </h2>
+        <p class="text-gray-600">Create a new product for your shop</p>
+      </div>
 
-      <form @submit.prevent="submitForm" class="space-y-6 sm:space-y-8">
-        <div class="space-y-5 border-b border-gray-200 pb-6">
-          <h3 class="text-xl font-bold text-gray-700">Basic Details</h3>
-          <div>
-            <label for="product-name" class="block text-sm font-medium text-gray-700 mb-1">
-              Product Name <span class="text-red-500">*</span>
-            </label>
-            <input
-              id="product-name"
-              v-model="form.name"
-              type="text"
-              required
-              class="mt-1 w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-green-300 focus:border-green-300 transition duration-150 shadow-sm"
-              placeholder="e.g., Cozy Comfort Blanket"
-            />
+      <form @submit.prevent="submitForm" class="space-y-8">
+        <!-- Basic Details Section -->
+        <div class="space-y-6 border-b border-gray-200 pb-8">
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+              <span class="text-green-600 font-semibold text-sm">1</span>
+            </div>
+            <h3 class="text-xl font-bold text-gray-700">Basic Details</h3>
           </div>
-
-          <div>
-            <label for="product-description" class="block text-sm font-medium text-gray-700 mb-1">
-              Description
-            </label>
-            <textarea
-              id="product-description"
-              v-model="form.description"
-              rows="4"
-              class="mt-1 w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-green-300 focus:border-green-300 transition duration-150 shadow-sm resize-y"
-              placeholder="A warm and fuzzy description of your product..."
-            ></textarea>
-          </div>
-
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
-            <div>
-              <label for="price" class="block text-sm font-medium text-gray-700 mb-1">Product Price</label>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="md:col-span-2">
+              <label for="product-name" class="block text-sm font-medium text-gray-700 mb-2">
+                Product Name <span class="text-red-500">*</span>
+              </label>
               <input
-                id="price"
-                type="number"
-                v-model.number="form.price"
-                step="0.01"
-                min="0"
-                :disabled="form.variants && form.variants.length > 0"
-                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm bg-gray-100"
+                id="product-name"
+                v-model="form.name"
+                type="text"
+                required
+                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-150 shadow-sm"
+                placeholder="e.g., Cozy Comfort Blanket"
               />
-              <div v-if="form.variants && form.variants.length > 0" class="text-xs text-gray-500 mt-1">
-                Computed from variants: {{ computedPrice }}
+            </div>
+
+            <div class="md:col-span-2">
+              <label for="product-description" class="block text-sm font-medium text-gray-700 mb-2">
+                Description
+              </label>
+              <textarea
+                id="product-description"
+                v-model="form.description"
+                rows="4"
+                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-150 shadow-sm resize-y"
+                placeholder="Describe your product in detail..."
+              ></textarea>
+            </div>
+
+            <div>
+              <label for="product-category" class="block text-sm font-medium text-gray-700 mb-2">
+                Category
+              </label>
+              <input
+                id="product-category"
+                v-model="form.category"
+                type="text"
+                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-150 shadow-sm"
+                placeholder="e.g., Home Goods"
+              />
+            </div>
+
+            <div v-if="!hasVariants">
+              <label for="price" class="block text-sm font-medium text-gray-700 mb-2">
+                Price <span class="text-red-500">*</span>
+              </label>
+              <div class="relative">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span class="text-gray-500 sm:text-sm">$</span>
+                </div>
+                <input
+                  id="price"
+                  type="number"
+                  v-model.number="form.price"
+                  step="0.01"
+                  min="0"
+                  required
+                  class="w-full pl-7 pr-3 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-150 shadow-sm"
+                  placeholder="0.00"
+                />
               </div>
             </div>
-            <div>
-              <label for="stock" class="block text-sm font-medium text-gray-700 mb-1">Stock</label>
+
+            <div v-if="!hasVariants">
+              <label for="stock" class="block text-sm font-medium text-gray-700 mb-2">
+                Stock Quantity
+              </label>
               <input
                 id="stock"
                 type="number"
                 v-model.number="form.stock"
                 min="0"
-                :disabled="form.variants && form.variants.length > 0"
-                class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm bg-gray-100"
+                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-150 shadow-sm"
+                placeholder="0"
               />
-              <div v-if="form.variants && form.variants.length > 0" class="text-xs text-gray-500 mt-1">
-                Computed from variants: {{ computedStock }}
+            </div>
+
+            <div v-if="hasVariants" class="md:col-span-2">
+              <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="flex items-center">
+                  <InformationCircleIcon class="h-5 w-5 text-blue-600 mr-2" />
+                  <span class="text-sm font-medium text-blue-800">Variant-based pricing</span>
+                </div>
+                <p class="text-sm text-blue-700 mt-1">
+                  Price and stock will be calculated from your variants below.
+                </p>
               </div>
             </div>
           </div>
-
-          <div>
-            <label for="product-category" class="block text-sm font-medium text-gray-700 mb-1">
-              Category
-            </label>
-            <input
-              id="product-category"
-              v-model="form.category"
-              type="text"
-              class="mt-1 w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-green-300 focus:border-green-300 transition duration-150 shadow-sm"
-              placeholder="e.g., Home Goods"
-            />
-          </div>
         </div>
 
-        <div class="space-y-5 border-b border-gray-200 pb-6">
-          <h3 class="text-xl font-bold text-gray-700">Product Images</h3>
-          <div>
-            <label for="main-image" class="block text-sm font-medium text-gray-700 mb-1">
-              Main Image URL
-            </label>
-            <input
-              id="main-image"
-              v-model="form.main_image"
-              type="url"
-              placeholder="https://example.com/main-product.jpg"
-              class="mt-1 w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-green-300 focus:border-green-300 transition duration-150 shadow-sm"
-            />
+        <!-- Images Section -->
+        <div class="space-y-6 border-b border-gray-200 pb-8">
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+              <span class="text-blue-600 font-semibold text-sm">2</span>
+            </div>
+            <h3 class="text-xl font-bold text-gray-700">Product Images</h3>
           </div>
-
-          <div>
-            <label class="block text-sm font-medium text-gray-700 mb-2">
-              Additional Images
-            </label>
-            <div
-              v-for="(img, idx) in form.images"
-              :key="idx"
-              class="flex items-center space-x-3 mb-3"
-            >
+          
+          <div class="space-y-4">
+            <div>
+              <label for="main-image" class="block text-sm font-medium text-gray-700 mb-2">
+                Main Image URL
+              </label>
               <input
-                v-model="form.images[idx]"
+                id="main-image"
+                v-model="form.main_image"
                 type="url"
-                placeholder="https://example.com/extra-image.jpg"
-                class="flex-1 border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-green-300 focus:border-green-300 transition duration-150 shadow-sm"
+                placeholder="https://example.com/main-product.jpg"
+                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-150 shadow-sm"
               />
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-3">
+                Additional Images
+              </label>
+              <div
+                v-for="(img, idx) in form.images"
+                :key="idx"
+                class="flex items-center space-x-3 mb-3"
+              >
+                <input
+                  v-model="form.images[idx]"
+                  type="url"
+                  placeholder="https://example.com/extra-image.jpg"
+                  class="flex-1 border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-150 shadow-sm"
+                />
+                <button
+                  type="button"
+                  @click="removeImage(idx)"
+                  class="text-red-500 hover:text-red-700 transition duration-150 p-2 rounded-full hover:bg-red-50"
+                >
+                  <MinusCircleIcon class="h-6 w-6" />
+                </button>
+              </div>
               <button
                 type="button"
-                @click="removeImage(idx)"
-                class="text-red-500 hover:text-red-700 transition duration-150 p-2 rounded-full hover:bg-red-50"
+                @click="addImage"
+                class="inline-flex items-center px-4 py-2 bg-blue-50 text-blue-600 rounded-lg font-medium hover:bg-blue-100 transition-colors duration-200 shadow-sm"
               >
-                <MinusCircleIcon class="h-6 w-6" />
+                <PlusCircleIcon class="h-5 w-5 mr-2" /> Add Another Image
               </button>
             </div>
-            <button
-              type="button"
-              @click="addImage"
-              class="inline-flex items-center px-4 py-2 bg-green-50 text-green-600 rounded-full font-medium hover:bg-green-100 transition-colors duration-200 shadow-sm"
-            >
-              <PlusCircleIcon class="h-5 w-5 mr-2" /> Add Another Image
-            </button>
           </div>
         </div>
 
-        <div class="space-y-5">
-          <h3 class="text-xl font-bold text-gray-700">Product Variants</h3>
-          <button
-            v-if="!showVariants"
-            type="button"
-            @click="showVariants = true"
-            class="inline-flex items-center px-5 py-2.5 bg-purple-600 text-white rounded-full font-bold hover:bg-purple-700 transition-colors duration-200 shadow-md mb-4"
-          >
-            <PlusIcon class="h-6 w-6 mr-2" /> Add Variant
-          </button>
-          <div v-if="showVariants">
+        <!-- Variants Section -->
+        <div class="space-y-6">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+              <div class="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
+                <span class="text-purple-600 font-semibold text-sm">3</span>
+              </div>
+              <h3 class="text-xl font-bold text-gray-700">Product Variants</h3>
+            </div>
+            <button
+              v-if="!showVariants"
+              type="button"
+              @click="showVariants = true"
+              class="inline-flex items-center px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors duration-200 shadow-sm"
+            >
+              <PlusIcon class="h-5 w-5 mr-2" /> Add Variants
+            </button>
+          </div>
+          
+          <div v-if="showVariants" class="space-y-6">
             <div
               v-for="(v, vi) in form.variants"
               :key="vi"
-              class="border border-gray-200 rounded-xl p-5 mb-6 bg-gray-50 relative shadow-sm"
+              class="border border-gray-200 rounded-xl p-6 bg-gray-50 relative shadow-sm"
             >
               <div class="flex justify-between items-center mb-4">
                 <span class="text-lg font-semibold text-gray-700">Variant {{ vi + 1 }}</span>
@@ -180,91 +226,118 @@
                 </button>
               </div>
 
-              <div class="space-y-3 mb-4">
-                <label class="block text-sm font-medium text-gray-700">Options</label>
-                <div v-for="(opt, oi) in v.options" :key="oi" class="flex items-center space-x-2 mb-2">
-                  <input
-                    v-model="form.variants[vi].options[oi].name"
-                    placeholder="Option Name (e.g., Size)"
-                    class="w-1/3 border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                  />
-                  <input
-                    v-model="form.variants[vi].options[oi].value"
-                    placeholder="Option Value (e.g., Large)"
-                    class="w-1/3 border border-gray-300 rounded-lg px-3 py-2 text-sm"
-                  />
-                  <button type="button" @click="removeVariantOption(vi, oi)" class="text-red-500 hover:text-red-700 p-1 rounded-full hover:bg-red-50">
-                    <MinusCircleIcon class="h-5 w-5" />
+              <div class="space-y-4">
+                <div>
+                  <label class="block text-sm font-medium text-gray-700 mb-3">Options</label>
+                  <div v-for="(opt, oi) in v.options" :key="oi" class="flex items-center space-x-3 mb-3">
+                    <input
+                      v-model="form.variants[vi].options[oi].name"
+                      placeholder="Option Name (e.g., Size)"
+                      class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    />
+                    <input
+                      v-model="form.variants[vi].options[oi].value"
+                      placeholder="Option Value (e.g., Large)"
+                      class="flex-1 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                    />
+                    <button 
+                      type="button" 
+                      @click="removeVariantOption(vi, oi)" 
+                      class="text-red-500 hover:text-red-700 p-2 rounded-full hover:bg-red-50"
+                    >
+                      <MinusCircleIcon class="h-5 w-5" />
+                    </button>
+                  </div>
+                  <button 
+                    type="button" 
+                    @click="addVariantOption(vi)" 
+                    class="inline-flex items-center text-sm px-3 py-1.5 bg-purple-50 text-purple-600 rounded-lg font-medium hover:bg-purple-100 transition-colors duration-200 shadow-sm"
+                  >
+                    <PlusCircleIcon class="h-4 w-4 mr-1.5" /> Add Option
                   </button>
                 </div>
-                <button type="button" @click="addVariantOption(vi)" class="inline-flex items-center text-sm px-3 py-1.5 bg-purple-50 text-purple-600 rounded-full font-medium hover:bg-purple-100 transition-colors duration-200 shadow-sm">
-                  <PlusCircleIcon class="h-4 w-4 mr-1.5" /> Add Option
-                </button>
-              </div>
 
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-5">
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">
-                    Variant Price <span class="text-red-500">*</span>
-                  </label>
-                  <div class="relative mt-1">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                      <span class="text-gray-500 sm:text-sm">$</span>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Price <span class="text-red-500">*</span>
+                    </label>
+                    <div class="relative">
+                      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <span class="text-gray-500 sm:text-sm">$</span>
+                      </div>
+                      <input
+                        v-model.number="v.price"
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        required
+                        class="w-full pl-7 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-150 shadow-sm"
+                        placeholder="0.00"
+                      />
                     </div>
+                  </div>
+                  
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Stock
+                    </label>
                     <input
-                      v-model.number="v.price"
+                      v-model.number="v.stock"
                       type="number"
                       min="0"
-                      step="0.01"
-                      required
-                      class="w-full pl-7 pr-3 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-300 focus:border-green-300 transition duration-150 shadow-sm"
-                      placeholder="0.00"
+                      class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-150 shadow-sm"
+                      placeholder="0"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Image URL
+                    </label>
+                    <input
+                      v-model="v.image"
+                      type="url"
+                      placeholder="https://example.com/variant.jpg"
+                      class="w-full border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-150 shadow-sm"
                     />
                   </div>
                 </div>
-                <div>
-                  <label class="block text-sm font-medium text-gray-700 mb-1">
-                    Variant Image URL
-                  </label>
-                  <input
-                    v-model="v.image"
-                    type="url"
-                    placeholder="https://example.com/variant-red.jpg"
-                    class="mt-1 w-full border border-gray-300 rounded-lg px-4 py-2.5 focus:ring-2 focus:ring-green-300 focus:border-green-300 transition duration-150 shadow-sm"
-                  />
-                </div>
               </div>
             </div>
+            
             <button
               type="button"
               @click="addVariant"
-              class="inline-flex items-center px-5 py-2.5 bg-green-600 text-white rounded-full font-bold hover:bg-green-700 transition-colors duration-200 shadow-md"
+              class="inline-flex items-center px-5 py-2.5 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors duration-200 shadow-sm"
             >
               <PlusIcon class="h-6 w-6 mr-2" /> Add New Variant
             </button>
           </div>
         </div>
 
-        <div v-if="variantOptionError" class="bg-red-50 border border-red-300 text-red-700 px-4 py-2 rounded mb-4">
-          <ExclamationCircleIcon class="h-5 w-5 inline-block mr-2" />
-          {{ variantOptionError }}
+        <div v-if="variantOptionError" class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded-lg">
+          <div class="flex items-center">
+            <ExclamationCircleIcon class="h-5 w-5 mr-2 flex-shrink-0" />
+            <span>{{ variantOptionError }}</span>
+          </div>
         </div>
 
         <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
           <button
             type="button"
             @click="goBack"
-            class="px-6 py-2.5 border border-gray-300 rounded-full text-gray-700 font-medium hover:bg-gray-100 transition-colors duration-200 shadow-sm"
+            class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-100 transition-colors duration-200 shadow-sm"
           >
             Cancel
           </button>
           <button
             type="submit"
             :disabled="saving || !!variantOptionError"
-            class="px-6 py-2.5 bg-green-600 text-white rounded-full font-bold hover:bg-green-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-md"
+            class="px-6 py-3 bg-green-600 text-white rounded-lg font-medium hover:bg-green-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
           >
             <SpinnerIcon v-if="saving" class="animate-spin h-5 w-5 mr-2 inline-block" />
-            {{ saving ? 'Saving Product...' : 'Save Product' }}
+            {{ saving ? 'Creating Product...' : 'Create Product' }}
           </button>
         </div>
       </form>
@@ -276,21 +349,20 @@
 import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useShopStore } from '@/store/shops'
-import { useAuthStore } from '@/store/auth'
 import { productService } from '@/services/product'
 import {
   ChevronLeftIcon,
   RefreshIcon as SpinnerIcon,
   PlusCircleIcon,
   MinusCircleIcon,
-  XIcon as XCircleIcon, // Renamed for consistent circle icon usage
+  XIcon as XCircleIcon,
   PlusIcon,
-  ExclamationCircleIcon // For error messages
+  ExclamationCircleIcon,
+  InformationCircleIcon
 } from '@heroicons/vue/outline'
 
 const router = useRouter()
 const shopStore = useShopStore()
-const authStore = useAuthStore()
 
 const loading = ref(true)
 const saving = ref(false)
@@ -309,27 +381,26 @@ const form = reactive({
   variants: []
 })
 
-// temp keys for option renaming
-const variantKeyTemp = reactive({})
-
-// Add a flag to control variant section visibility
 const showVariants = ref(false)
+
+// Computed properties
+const hasVariants = computed(() => form.variants.length > 0)
 
 function goBack() {
   router.push({ name: 'Products' })
 }
 
 onMounted(() => {
-  // Simulate loading to show spinner, remove in production if data loads instantly
   setTimeout(() => {
-    loading.value = false;
-  }, 500);
+    loading.value = false
+  }, 500)
 })
 
 // Images
 function addImage() {
   form.images.push('')
 }
+
 function removeImage(i) {
   form.images.splice(i, 1)
 }
@@ -337,53 +408,25 @@ function removeImage(i) {
 // Variants
 function addVariant() {
   if (!showVariants.value) showVariants.value = true
-  form.variants.push({ options: [{ name: '', value: '' }], price: 0, stock: 0, image: '' })
+  form.variants.push({ 
+    options: [{ name: '', value: '' }], 
+    price: 0, 
+    stock: 0, 
+    image: '' 
+  })
 }
+
 function removeVariant(i) {
   form.variants.splice(i, 1)
-  // Clean up variantKeyTemp when a variant is removed and re-index it
-  const newVariantKeyTemp = {};
-  form.variants.forEach((_, idx) => {
-    newVariantKeyTemp[idx] = variantKeyTemp[idx] || {};
-  });
-  Object.assign(variantKeyTemp, newVariantKeyTemp);
-  for (const key in variantKeyTemp) {
-    if (parseInt(key) >= form.variants.length) {
-      delete variantKeyTemp[key];
-    }
-  }
 }
 
 // Options
 function addVariantOption(vi) {
   form.variants[vi].options.push({ name: '', value: '' })
 }
+
 function removeVariantOption(vi, oi) {
   form.variants[vi].options.splice(oi, 1)
-}
-function renameOptionKey(vi, oldKey, newKey) {
-  if (!newKey || oldKey === newKey) {
-    if (variantKeyTemp[vi]) {
-      variantKeyTemp[vi][oldKey] = oldKey; // Revert temp if empty or same
-    }
-    return;
-  }
-  
-  if (form.variants[vi].options.hasOwnProperty(newKey) && newKey !== oldKey) {
-    console.warn(`Variant option "${newKey}" already exists. Please use a unique name.`);
-    if (variantKeyTemp[vi]) {
-      variantKeyTemp[vi][oldKey] = oldKey; // Revert temp key
-    }
-    return;
-  }
-
-  const val = form.variants[vi].options[oldKey]
-  delete form.variants[vi].options[oldKey]
-  form.variants[vi].options[newKey] = val
-  if (variantKeyTemp[vi]) {
-    delete variantKeyTemp[vi][oldKey]
-    variantKeyTemp[vi][newKey] = newKey // Store the new key as its own value
-  }
 }
 
 // Submit
@@ -396,68 +439,64 @@ async function submitForm() {
     // Basic validation
     if (!form.name.trim()) {
       error.value = 'Product name is required.'
-      return;
+      return
     }
-    if (form.price == null || form.price <= 0) {
+
+    if (!hasVariants.value && (!form.price || form.price <= 0)) {
       error.value = 'Product price is required and must be positive if no variants are provided.'
-      saving.value = false;
-      return;
+      return
     }
-    // Validate variant prices
-    for (const v of form.variants) {
-      if (v.price <= 0) {
-        error.value = 'All variant prices must be positive numbers.'
-        return;
-      }
-    }
-    // Validate variant options
-    if (form.variants.length > 0) {
+
+    // Validate variants if present
+    if (hasVariants.value) {
       for (const v of form.variants) {
-        if (!v.options || v.options.length === 0) {
-          variantOptionError.value = 'Each variant must have at least one option (name:value).';
-          saving.value = false;
-          return;
+        if (v.price <= 0) {
+          error.value = 'All variant prices must be positive numbers.'
+          return
         }
+        
+        if (!v.options || v.options.length === 0) {
+          variantOptionError.value = 'Each variant must have at least one option (name:value).'
+          return
+        }
+        
         for (const o of v.options) {
           if (!o.name.trim() || !o.value.trim()) {
-            variantOptionError.value = 'Variant option name and value cannot be empty.';
-            saving.value = false;
-            return;
+            variantOptionError.value = 'Variant option name and value cannot be empty.'
+            return
           }
         }
       }
     }
 
     // Build payload
-    let payload = {
+    const payload = {
       name: form.name.trim(),
       description: form.description.trim(),
-      main_image: form.main_image.trim() || '', // Always include main_image
-      images: form.images.filter((i) => i.trim()),
+      main_image: form.main_image.trim() || '',
+      images: form.images.filter(img => img.trim()),
       category: form.category.trim(),
-    };
-    if (form.variants.length > 0) {
-      payload.variants = form.variants.map((v) => ({
+    }
+
+    if (hasVariants.value) {
+      payload.variants = form.variants.map(v => ({
         options: v.options.filter(o => o.name && o.value),
         price: v.price,
         stock: v.stock || 0,
-        image: v.image || undefined
-      }));
-      // Do NOT send price/stock for variant products
+        image: v.image || ''
+      }))
     } else {
-      // Only include price/stock if they are not null/undefined
       if (typeof form.price === 'number') {
-        payload.price = form.price;
+        payload.price = form.price
       }
       if (typeof form.stock === 'number') {
-        payload.stock = form.stock;
+        payload.stock = form.stock
       }
-      // Do NOT include variants at all for simple products
     }
-    // Debugging: Log the payload before sending
-    console.log("Submitting payload:", payload);
 
-    const newProd = await productService.create(shopStore.active.id, payload)
+    console.log('Submitting payload:', payload)
+
+    const newProd = await productService.create(shopStore.activeShop.id, payload)
     router.push({ name: 'ProductDetail', params: { productId: newProd.id } })
   } catch (e) {
     console.error('Failed to create product:', e)
@@ -466,19 +505,9 @@ async function submitForm() {
     saving.value = false
   }
 }
-
-const computedPrice = computed(() => {
-  if (!form.variants || form.variants.length === 0) return form.price;
-  return Math.min(...form.variants.map(v => v.price));
-});
-const computedStock = computed(() => {
-  if (!form.variants || form.variants.length === 0) return form.stock;
-  return form.variants.reduce((sum, v) => sum + (v.stock || 0), 0);
-});
 </script>
 
 <style scoped>
-/* Base animation for elements fading in */
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -489,14 +518,8 @@ const computedStock = computed(() => {
     transform: translateY(0);
   }
 }
+
 .animate-fade-in {
   animation: fadeIn 0.4s ease-out forwards;
-}
-
-/* No pulse-price needed here as it's for details, not form */
-
-/* Specific styling for required field indicator */
-label span.text-red-500 {
-  margin-left: 0.25rem;
 }
 </style>

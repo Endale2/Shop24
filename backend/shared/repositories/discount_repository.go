@@ -75,15 +75,12 @@ func DeleteDiscount(id primitive.ObjectID) (*mongo.DeleteResult, error) {
 	return discountColl.DeleteOne(context.Background(), bson.M{"_id": id})
 }
 
-// Active queries: product-level including collections
+// Active queries: product-level only (collections removed)
 func GetActiveDiscountsForProduct(shopID, productID, variantID primitive.ObjectID, collectionIDs []primitive.ObjectID) ([]models.Discount, error) {
 	now := time.Now()
 	orClauses := []bson.M{
 		{"applies_to_products": productID},
 		{"applies_to_variants": variantID},
-	}
-	if len(collectionIDs) > 0 {
-		orClauses = append(orClauses, bson.M{"applies_to_collections": bson.M{"$in": collectionIDs}})
 	}
 
 	// Build time-based filters that handle zero times properly
@@ -129,96 +126,4 @@ func GetActiveDiscountsForProduct(shopID, productID, variantID primitive.ObjectI
 		results = append(results, d)
 	}
 	return results, nil
-}
-
-func GetActiveOrderDiscountsForShop(shopID primitive.ObjectID) ([]models.Discount, error) {
-	now := time.Now()
-
-	// Build time-based filters that handle zero times properly
-	timeFilters := []bson.M{
-		{"active": true},
-		{"category": models.DiscountCategoryOrder},
-	}
-
-	// Add start time filter (if start_at is zero, it means "started")
-	timeFilters = append(timeFilters, bson.M{
-		"$or": []bson.M{
-			{"start_at": bson.M{"$lte": now}},
-			{"start_at": time.Time{}}, // Zero time means "started"
-		},
-	})
-
-	// Add end time filter (if end_at is zero, it means "no end")
-	timeFilters = append(timeFilters, bson.M{
-		"$or": []bson.M{
-			{"end_at": bson.M{"$gte": now}},
-			{"end_at": time.Time{}}, // Zero time means "no end"
-		},
-	})
-
-	filter := bson.M{
-		"shop_id": shopID,
-		"$and":    timeFilters,
-	}
-
-	cursor, err := discountColl.Find(context.Background(), filter)
-	if err != nil {
-		return nil, err
-	}
-	defer cursor.Close(context.Background())
-	var list []models.Discount
-	for cursor.Next(context.Background()) {
-		var d models.Discount
-		if err := cursor.Decode(&d); err != nil {
-			return nil, err
-		}
-		list = append(list, d)
-	}
-	return list, nil
-}
-
-func GetActiveShippingDiscountsForShop(shopID primitive.ObjectID) ([]models.Discount, error) {
-	now := time.Now()
-
-	// Build time-based filters that handle zero times properly
-	timeFilters := []bson.M{
-		{"active": true},
-		{"category": models.DiscountCategoryShipping},
-	}
-
-	// Add start time filter (if start_at is zero, it means "started")
-	timeFilters = append(timeFilters, bson.M{
-		"$or": []bson.M{
-			{"start_at": bson.M{"$lte": now}},
-			{"start_at": time.Time{}}, // Zero time means "started"
-		},
-	})
-
-	// Add end time filter (if end_at is zero, it means "no end")
-	timeFilters = append(timeFilters, bson.M{
-		"$or": []bson.M{
-			{"end_at": bson.M{"$gte": now}},
-			{"end_at": time.Time{}}, // Zero time means "no end"
-		},
-	})
-
-	filter := bson.M{
-		"shop_id": shopID,
-		"$and":    timeFilters,
-	}
-
-	cursor, err := discountColl.Find(context.Background(), filter)
-	if err != nil {
-		return nil, err
-	}
-	defer cursor.Close(context.Background())
-	var list []models.Discount
-	for cursor.Next(context.Background()) {
-		var d models.Discount
-		if err := cursor.Decode(&d); err != nil {
-			return nil, err
-		}
-		list = append(list, d)
-	}
-	return list, nil
 }

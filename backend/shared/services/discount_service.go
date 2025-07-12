@@ -200,14 +200,6 @@ func GetActiveDiscountsForProductService(shopID, productID, variantID primitive.
 	return repositories.GetActiveDiscountsForProduct(shopID, productID, variantID, collectionIDs)
 }
 
-func GetActiveOrderDiscountsForShopService(shopID primitive.ObjectID) ([]models.Discount, error) {
-	return repositories.GetActiveOrderDiscountsForShop(shopID)
-}
-
-func GetActiveShippingDiscountsForShopService(shopID primitive.ObjectID) ([]models.Discount, error) {
-	return repositories.GetActiveShippingDiscountsForShop(shopID)
-}
-
 // GetEligibleDiscountsForCustomer returns all discounts a customer is eligible for
 func GetEligibleDiscountsForCustomer(shopID, customerID primitive.ObjectID, customerSegmentIDs []primitive.ObjectID) ([]models.Discount, error) {
 	discounts, err := repositories.ListDiscountsByShop(shopID)
@@ -320,22 +312,6 @@ func ApplyDiscountsToProduct(product *models.Product, discounts []models.Discoun
 	}
 }
 
-// ApplyDiscountsToCart applies order-level discounts to the cart.
-func ApplyDiscountsToCart(cart *models.Cart, discounts []models.Discount) {
-	totalDiscount := 0.0
-	for _, d := range discounts {
-		if d.Category == models.DiscountCategoryOrder {
-			// Check minimum order subtotal
-			if d.MinimumOrderSubtotal != nil && cart.Subtotal < *d.MinimumOrderSubtotal {
-				continue
-			}
-			totalDiscount += d.CalculateDiscount(cart.Subtotal)
-		}
-	}
-	cart.TotalDiscounts = totalDiscount
-	cart.GrandTotal = cart.Subtotal - totalDiscount + cart.ShippingCost + cart.TaxAmount
-}
-
 // GetBestProductDiscount returns the best discount for a product or variant.
 func GetBestProductDiscount(productID, variantID primitive.ObjectID, discounts []models.Discount) *models.Discount {
 	var best *models.Discount
@@ -385,85 +361,37 @@ func GetBestProductDiscount(productID, variantID primitive.ObjectID, discounts [
 }
 
 // GetDiscountUsageStats returns usage statistics for a discount
-func GetDiscountUsageStats(discountID string) (*models.Discount, error) {
+func GetDiscountUsageStats(discountID string) (map[string]interface{}, error) {
 	discount, err := GetDiscountByIDService(discountID)
 	if err != nil {
 		return nil, err
 	}
-	return discount, nil
-}
 
-// AddCustomersToDiscount adds specific customers to a discount's allowed list
-func AddCustomersToDiscount(discountID string, customerIDs []string) error {
-	discount, err := GetDiscountByIDService(discountID)
-	if err != nil {
-		return err
-	}
-
-	// Convert string IDs to ObjectIDs
-	var objectIDs []primitive.ObjectID
-	for _, idStr := range customerIDs {
-		if oid, err := primitive.ObjectIDFromHex(idStr); err == nil {
-			objectIDs = append(objectIDs, oid)
-		}
-	}
-
-	// Add to existing allowed customers
-	discount.AllowedCustomerIDs = append(discount.AllowedCustomerIDs, objectIDs...)
-	discount.EligibilityType = models.DiscountEligibilitySpecific
-
-	// Update in database
-	_, err = repositories.UpdateDiscount(discount.ID, bson.M{
-		"allowed_customers": discount.AllowedCustomerIDs,
-		"eligibility_type":  discount.EligibilityType,
-		"updated_at":        time.Now(),
-	})
-
-	return err
-}
-
-// AddSegmentsToDiscount adds customer segments to a discount's allowed list
-func AddSegmentsToDiscount(discountID string, segmentIDs []string) error {
-	discount, err := GetDiscountByIDService(discountID)
-	if err != nil {
-		return err
-	}
-
-	// Convert string IDs to ObjectIDs
-	var objectIDs []primitive.ObjectID
-	for _, idStr := range segmentIDs {
-		if oid, err := primitive.ObjectIDFromHex(idStr); err == nil {
-			objectIDs = append(objectIDs, oid)
-		}
-	}
-
-	// Add to existing allowed segments
-	discount.AllowedSegmentIDs = append(discount.AllowedSegmentIDs, objectIDs...)
-	discount.EligibilityType = models.DiscountEligibilitySegment
-
-	// Update in database
-	_, err = repositories.UpdateDiscount(discount.ID, bson.M{
-		"allowed_segments": discount.AllowedSegmentIDs,
+	stats := map[string]interface{}{
+		"total_usage":      discount.CurrentUsage,
+		"usage_limit":      discount.UsageLimit,
+		"usage_tracking":   discount.UsageTracking,
+		"is_active":        discount.IsActive(),
 		"eligibility_type": discount.EligibilityType,
-		"updated_at":       time.Now(),
-	})
+	}
 
-	return err
+	if discount.UsageLimit != nil {
+		stats["usage_percentage"] = float64(discount.CurrentUsage) / float64(*discount.UsageLimit) * 100
+	}
+
+	return stats, nil
 }
 
-// ValidateDiscountValue validates that a discount value is within reasonable bounds
+// ValidateDiscountValue validates the discount value based on type
 func ValidateDiscountValue(discountType models.DiscountType, value float64) error {
 	switch discountType {
 	case models.DiscountTypeFixed:
-		if value < 0 {
-			return errors.New("fixed discount value cannot be negative")
-		}
-		if value > 10000 { // Reasonable upper limit for fixed discount
-			return errors.New("fixed discount value is too high")
+		if value <= 0 {
+			return errors.New("fixed discount value must be positive")
 		}
 	case models.DiscountTypePercentage:
-		if value < 0 || value > 100 {
-			return errors.New("percentage discount must be between 0 and 100")
+		if value <= 0 || value > 100 {
+			return errors.New("percentage discount value must be between 0 and 100")
 		}
 	default:
 		return errors.New("invalid discount type")

@@ -19,26 +19,19 @@ type DiscountInput struct {
 	Type        string  `json:"type,omitempty"`
 	Value       float64 `json:"value,omitempty"`
 
-	AppliesToProducts           []string `json:"appliesToProducts,omitempty"`
-	AppliesToVariants           []string `json:"appliesToVariants,omitempty"`
-	AppliesToCollections        []string `json:"appliesToCollections,omitempty"`
-	FreeShipping                bool     `json:"freeShipping,omitempty"`
-	MinimumOrderSubtotal        *float64 `json:"minimumOrderSubtotal,omitempty"`
-	MinimumOrderForFreeShipping *float64 `json:"minimumOrderForFreeShipping,omitempty"`
-	StartAt                     string   `json:"startAt" binding:"required"` // RFC3339
-	EndAt                       string   `json:"endAt" binding:"required"`   // RFC3339
-	Active                      bool     `json:"active"`
+	AppliesToProducts []string `json:"appliesToProducts,omitempty"`
+	AppliesToVariants []string `json:"appliesToVariants,omitempty"`
+
+	StartAt string `json:"startAt" binding:"required"` // RFC3339
+	EndAt   string `json:"endAt" binding:"required"`   // RFC3339
+	Active  bool   `json:"active"`
+
 	// Enhanced discount functionality
 	EligibilityType  string   `json:"eligibilityType,omitempty"`
 	AllowedCustomers []string `json:"allowedCustomers,omitempty"`
 	AllowedSegments  []string `json:"allowedSegments,omitempty"`
 	UsageLimit       *int     `json:"usageLimit,omitempty"`
 	PerCustomerLimit *int     `json:"perCustomerLimit,omitempty"`
-	// Buy X Get Y fields
-	BuyProductIds []string `json:"buyProductIds,omitempty"`
-	BuyQuantity   *int     `json:"buyQuantity,omitempty"`
-	GetProductIds []string `json:"getProductIds,omitempty"`
-	GetQuantity   *int     `json:"getQuantity,omitempty"`
 }
 
 // helper to parse time
@@ -81,17 +74,14 @@ func CreateDiscount(c *gin.Context) {
 		Type:        models.DiscountType(in.Type),
 		Value:       in.Value,
 
-		FreeShipping:                in.FreeShipping,
-		MinimumOrderSubtotal:        in.MinimumOrderSubtotal,
-		MinimumOrderForFreeShipping: in.MinimumOrderForFreeShipping,
-		ShopID:                      shop.ID,
-		SellerID:                    sellerID,
-		StartAt:                     startAt,
-		EndAt:                       endAt,
-		Active:                      in.Active,
-		EligibilityType:             models.DiscountEligibilityType(in.EligibilityType),
-		UsageLimit:                  in.UsageLimit,
-		PerCustomerLimit:            in.PerCustomerLimit,
+		ShopID:           shop.ID,
+		SellerID:         sellerID,
+		StartAt:          startAt,
+		EndAt:            endAt,
+		Active:           in.Active,
+		EligibilityType:  models.DiscountEligibilityType(in.EligibilityType),
+		UsageLimit:       in.UsageLimit,
+		PerCustomerLimit: in.PerCustomerLimit,
 	}
 	// parse arrays
 	for _, pid := range in.AppliesToProducts {
@@ -104,11 +94,6 @@ func CreateDiscount(c *gin.Context) {
 			d.AppliesToVariants = append(d.AppliesToVariants, oid)
 		}
 	}
-	for _, cid := range in.AppliesToCollections {
-		if oid, err := primitive.ObjectIDFromHex(cid); err == nil {
-			d.AppliesToCollections = append(d.AppliesToCollections, oid)
-		}
-	}
 	for _, cid := range in.AllowedCustomers {
 		if oid, err := primitive.ObjectIDFromHex(cid); err == nil {
 			d.AllowedCustomerIDs = append(d.AllowedCustomerIDs, oid)
@@ -119,19 +104,7 @@ func CreateDiscount(c *gin.Context) {
 			d.AllowedSegmentIDs = append(d.AllowedSegmentIDs, oid)
 		}
 	}
-	// Parse Buy X Get Y fields
-	for _, pid := range in.BuyProductIds {
-		if oid, err := primitive.ObjectIDFromHex(pid); err == nil {
-			d.BuyProductIDs = append(d.BuyProductIDs, oid)
-		}
-	}
-	for _, pid := range in.GetProductIds {
-		if oid, err := primitive.ObjectIDFromHex(pid); err == nil {
-			d.GetProductIDs = append(d.GetProductIDs, oid)
-		}
-	}
-	d.BuyQuantity = in.BuyQuantity
-	d.GetQuantity = in.GetQuantity
+
 	// Deduplicate AppliesToProducts and AppliesToVariants
 	uniqueProducts := make(map[primitive.ObjectID]struct{})
 	for _, oid := range d.AppliesToProducts {
@@ -208,21 +181,9 @@ func ListDiscounts(c *gin.Context) {
 		for _, id := range d.AllowedSegmentIDs {
 			allowedSegments = append(allowedSegments, id.Hex())
 		}
-		var buyProductIds []string
-		for _, id := range d.BuyProductIDs {
-			buyProductIds = append(buyProductIds, id.Hex())
-		}
-		var getProductIds []string
-		for _, id := range d.GetProductIDs {
-			getProductIds = append(getProductIds, id.Hex())
-		}
 		var appliesToVariants []string
 		for _, id := range d.AppliesToVariants {
 			appliesToVariants = append(appliesToVariants, id.Hex())
-		}
-		var appliesToCollections []string
-		for _, id := range d.AppliesToCollections {
-			appliesToCollections = append(appliesToCollections, id.Hex())
 		}
 
 		// Build response for each discount
@@ -234,28 +195,20 @@ func ListDiscounts(c *gin.Context) {
 			"type":        d.Type,
 			"value":       d.Value,
 
-			"free_shipping":          d.FreeShipping,
-			"minimum_free_shipping":  d.MinimumOrderForFreeShipping,
-			"minimum_order_subtotal": d.MinimumOrderSubtotal,
-			"start_at":               d.StartAt,
-			"end_at":                 d.EndAt,
-			"active":                 d.Active,
-			"applies_to_products":    products,
-			"applies_to_variants":    appliesToVariants,
-			"applies_to_collections": appliesToCollections,
-			"usage_limit":            d.UsageLimit,
-			"per_customer_limit":     d.PerCustomerLimit,
-			"current_usage":          d.CurrentUsage,
-			"usage_tracking":         d.UsageTracking,
-			"eligibility_type":       d.EligibilityType,
-			"allowed_customers":      allowedCustomers,
-			"allowed_segments":       allowedSegments,
-			"buy_product_ids":        buyProductIds,
-			"buy_quantity":           d.BuyQuantity,
-			"get_product_ids":        getProductIds,
-			"get_quantity":           d.GetQuantity,
-			"created_at":             d.CreatedAt,
-			"updated_at":             d.UpdatedAt,
+			"start_at":            d.StartAt,
+			"end_at":              d.EndAt,
+			"active":              d.Active,
+			"applies_to_products": products,
+			"applies_to_variants": appliesToVariants,
+			"usage_limit":         d.UsageLimit,
+			"per_customer_limit":  d.PerCustomerLimit,
+			"current_usage":       d.CurrentUsage,
+			"usage_tracking":      d.UsageTracking,
+			"eligibility_type":    d.EligibilityType,
+			"allowed_customers":   allowedCustomers,
+			"allowed_segments":    allowedSegments,
+			"created_at":          d.CreatedAt,
+			"updated_at":          d.UpdatedAt,
 		}
 		response = append(response, resp)
 	}
@@ -317,21 +270,9 @@ func GetDiscount(c *gin.Context) {
 	for _, id := range d.AllowedSegmentIDs {
 		allowedSegments = append(allowedSegments, id.Hex())
 	}
-	var buyProductIds []string
-	for _, id := range d.BuyProductIDs {
-		buyProductIds = append(buyProductIds, id.Hex())
-	}
-	var getProductIds []string
-	for _, id := range d.GetProductIDs {
-		getProductIds = append(getProductIds, id.Hex())
-	}
 	var appliesToVariants []string
 	for _, id := range d.AppliesToVariants {
 		appliesToVariants = append(appliesToVariants, id.Hex())
-	}
-	var appliesToCollections []string
-	for _, id := range d.AppliesToCollections {
-		appliesToCollections = append(appliesToCollections, id.Hex())
 	}
 
 	// Build response
@@ -343,28 +284,20 @@ func GetDiscount(c *gin.Context) {
 		"type":        d.Type,
 		"value":       d.Value,
 
-		"free_shipping":          d.FreeShipping,
-		"minimum_free_shipping":  d.MinimumOrderForFreeShipping,
-		"minimum_order_subtotal": d.MinimumOrderSubtotal,
-		"start_at":               d.StartAt,
-		"end_at":                 d.EndAt,
-		"active":                 d.Active,
-		"applies_to_products":    products,
-		"applies_to_variants":    appliesToVariants,
-		"applies_to_collections": appliesToCollections,
-		"usage_limit":            d.UsageLimit,
-		"per_customer_limit":     d.PerCustomerLimit,
-		"current_usage":          d.CurrentUsage,
-		"usage_tracking":         d.UsageTracking,
-		"eligibility_type":       d.EligibilityType,
-		"allowed_customers":      allowedCustomers,
-		"allowed_segments":       allowedSegments,
-		"buy_product_ids":        buyProductIds,
-		"buy_quantity":           d.BuyQuantity,
-		"get_product_ids":        getProductIds,
-		"get_quantity":           d.GetQuantity,
-		"created_at":             d.CreatedAt,
-		"updated_at":             d.UpdatedAt,
+		"start_at":            d.StartAt,
+		"end_at":              d.EndAt,
+		"active":              d.Active,
+		"applies_to_products": products,
+		"applies_to_variants": appliesToVariants,
+		"usage_limit":         d.UsageLimit,
+		"per_customer_limit":  d.PerCustomerLimit,
+		"current_usage":       d.CurrentUsage,
+		"usage_tracking":      d.UsageTracking,
+		"eligibility_type":    d.EligibilityType,
+		"allowed_customers":   allowedCustomers,
+		"allowed_segments":    allowedSegments,
+		"created_at":          d.CreatedAt,
+		"updated_at":          d.UpdatedAt,
 	}
 
 	c.JSON(http.StatusOK, resp)
@@ -390,13 +323,11 @@ func UpdateDiscount(c *gin.Context) {
 	upd := bson.M{}
 	for k, v := range in {
 		switch k {
-		case "name", "description", "couponCode", "freeShipping", "value", "active", "category", "type", "eligibilityType":
+		case "name", "description", "couponCode", "value", "active", "category", "type", "eligibilityType":
 			// map json keys to bson keys if needed: e.g. "couponCode"->"coupon_code"
 			field := k
 			if k == "couponCode" {
 				field = "coupon_code"
-			} else if k == "freeShipping" {
-				field = "free_shipping"
 			} else if k == "eligibilityType" {
 				field = "eligibility_type"
 			}
@@ -429,15 +360,7 @@ func UpdateDiscount(c *gin.Context) {
 					}
 				}
 			}
-			var dedupedOids []primitive.ObjectID
-			seen := make(map[primitive.ObjectID]struct{})
-			for _, oid := range oids {
-				if _, ok := seen[oid]; !ok {
-					dedupedOids = append(dedupedOids, oid)
-					seen[oid] = struct{}{}
-				}
-			}
-			upd["applies_to_products"] = dedupedOids
+			upd["applies_to_products"] = oids
 		case "appliesToVariants":
 			arr, _ := v.([]interface{})
 			var oids []primitive.ObjectID
@@ -448,34 +371,7 @@ func UpdateDiscount(c *gin.Context) {
 					}
 				}
 			}
-			var dedupedOids []primitive.ObjectID
-			seen := make(map[primitive.ObjectID]struct{})
-			for _, oid := range oids {
-				if _, ok := seen[oid]; !ok {
-					dedupedOids = append(dedupedOids, oid)
-					seen[oid] = struct{}{}
-				}
-			}
-			upd["applies_to_variants"] = dedupedOids
-		case "appliesToCollections":
-			arr, _ := v.([]interface{})
-			var oids []primitive.ObjectID
-			for _, e := range arr {
-				if str, ok := e.(string); ok {
-					if oid, err := primitive.ObjectIDFromHex(str); err == nil {
-						oids = append(oids, oid)
-					}
-				}
-			}
-			upd["applies_to_collections"] = oids
-		case "minimumOrderSubtotal":
-			if num, ok := v.(float64); ok {
-				upd["minimum_order_subtotal"] = num
-			}
-		case "minimumOrderForFreeShipping":
-			if num, ok := v.(float64); ok {
-				upd["minimum_free_shipping"] = num
-			}
+			upd["applies_to_variants"] = oids
 		case "usageLimit":
 			if num, ok := v.(float64); ok {
 				limit := int(num)
@@ -508,38 +404,6 @@ func UpdateDiscount(c *gin.Context) {
 				}
 			}
 			upd["allowed_segments"] = oids
-		case "buyProductIds":
-			arr, _ := v.([]interface{})
-			var oids []primitive.ObjectID
-			for _, e := range arr {
-				if str, ok := e.(string); ok {
-					if oid, err := primitive.ObjectIDFromHex(str); err == nil {
-						oids = append(oids, oid)
-					}
-				}
-			}
-			upd["buy_product_ids"] = oids
-		case "getProductIds":
-			arr, _ := v.([]interface{})
-			var oids []primitive.ObjectID
-			for _, e := range arr {
-				if str, ok := e.(string); ok {
-					if oid, err := primitive.ObjectIDFromHex(str); err == nil {
-						oids = append(oids, oid)
-					}
-				}
-			}
-			upd["get_product_ids"] = oids
-		case "buyQuantity":
-			if num, ok := v.(float64); ok {
-				quantity := int(num)
-				upd["buy_quantity"] = &quantity
-			}
-		case "getQuantity":
-			if num, ok := v.(float64); ok {
-				quantity := int(num)
-				upd["get_quantity"] = &quantity
-			}
 		// ignore other fields (shopID, sellerID, createdAt, etc.)
 		default:
 			// skip unknown/immutable keys
@@ -562,7 +426,22 @@ func DeleteDiscount(c *gin.Context) {
 		c.JSON(http.StatusForbidden, gin.H{"error": "not authorized"})
 		return
 	}
+
 	idHex := c.Param("id")
+	d, err := sharedSvc.GetDiscountByIDService(idHex)
+	if err != nil {
+		if err == sharedSvc.ErrDiscountNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "discount not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+	if d.ShopID != shop.ID {
+		c.JSON(http.StatusNotFound, gin.H{"error": "discount not found"})
+		return
+	}
+
 	if err := sharedSvc.DeleteDiscountService(idHex); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -581,16 +460,48 @@ func AddCustomersToDiscount(c *gin.Context) {
 		return
 	}
 
-	var req struct {
+	idHex := c.Param("id")
+	d, err := sharedSvc.GetDiscountByIDService(idHex)
+	if err != nil {
+		if err == sharedSvc.ErrDiscountNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "discount not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+	if d.ShopID != shop.ID {
+		c.JSON(http.StatusNotFound, gin.H{"error": "discount not found"})
+		return
+	}
+
+	var input struct {
 		CustomerIDs []string `json:"customerIds" binding:"required"`
 	}
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	idHex := c.Param("id")
-	if err := sharedSvc.AddCustomersToDiscount(idHex, req.CustomerIDs); err != nil {
+	// Convert string IDs to ObjectIDs
+	var objectIDs []primitive.ObjectID
+	for _, idStr := range input.CustomerIDs {
+		if oid, err := primitive.ObjectIDFromHex(idStr); err == nil {
+			objectIDs = append(objectIDs, oid)
+		}
+	}
+
+	// Add to existing allowed customers
+	d.AllowedCustomerIDs = append(d.AllowedCustomerIDs, objectIDs...)
+	d.EligibilityType = models.DiscountEligibilitySpecific
+
+	// Update in database
+	err = sharedSvc.UpdateDiscountService(idHex, bson.M{
+		"allowed_customers": d.AllowedCustomerIDs,
+		"eligibility_type":  d.EligibilityType,
+	})
+
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -609,16 +520,48 @@ func AddSegmentsToDiscount(c *gin.Context) {
 		return
 	}
 
-	var req struct {
+	idHex := c.Param("id")
+	d, err := sharedSvc.GetDiscountByIDService(idHex)
+	if err != nil {
+		if err == sharedSvc.ErrDiscountNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "discount not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+	if d.ShopID != shop.ID {
+		c.JSON(http.StatusNotFound, gin.H{"error": "discount not found"})
+		return
+	}
+
+	var input struct {
 		SegmentIDs []string `json:"segmentIds" binding:"required"`
 	}
-	if err := c.ShouldBindJSON(&req); err != nil {
+	if err := c.ShouldBindJSON(&input); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	idHex := c.Param("id")
-	if err := sharedSvc.AddSegmentsToDiscount(idHex, req.SegmentIDs); err != nil {
+	// Convert string IDs to ObjectIDs
+	var objectIDs []primitive.ObjectID
+	for _, idStr := range input.SegmentIDs {
+		if oid, err := primitive.ObjectIDFromHex(idStr); err == nil {
+			objectIDs = append(objectIDs, oid)
+		}
+	}
+
+	// Add to existing allowed segments
+	d.AllowedSegmentIDs = append(d.AllowedSegmentIDs, objectIDs...)
+	d.EligibilityType = models.DiscountEligibilitySegment
+
+	// Update in database
+	err = sharedSvc.UpdateDiscountService(idHex, bson.M{
+		"allowed_segments": d.AllowedSegmentIDs,
+		"eligibility_type": d.EligibilityType,
+	})
+
+	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
@@ -662,7 +605,7 @@ func GetDiscountUsageStats(c *gin.Context) {
 	}
 
 	idHex := c.Param("id")
-	discount, err := sharedSvc.GetDiscountUsageStats(idHex)
+	d, err := sharedSvc.GetDiscountByIDService(idHex)
 	if err != nil {
 		if err == sharedSvc.ErrDiscountNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "discount not found"})
@@ -671,26 +614,18 @@ func GetDiscountUsageStats(c *gin.Context) {
 		}
 		return
 	}
-
-	if discount.ShopID != shop.ID {
+	if d.ShopID != shop.ID {
 		c.JSON(http.StatusNotFound, gin.H{"error": "discount not found"})
 		return
 	}
 
-	// Build usage statistics response
-	resp := gin.H{
-		"discount_id":             discount.ID.Hex(),
-		"name":                    discount.Name,
-		"current_usage":           discount.CurrentUsage,
-		"usage_limit":             discount.UsageLimit,
-		"per_customer_limit":      discount.PerCustomerLimit,
-		"usage_tracking":          discount.UsageTracking,
-		"eligibility_type":        discount.EligibilityType,
-		"allowed_customers_count": len(discount.AllowedCustomerIDs),
-		"allowed_segments_count":  len(discount.AllowedSegmentIDs),
+	stats, err := sharedSvc.GetDiscountUsageStats(idHex)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 
-	c.JSON(http.StatusOK, resp)
+	c.JSON(http.StatusOK, stats)
 }
 
 // ValidateDiscountForCustomer POST /seller/shops/:shopId/discounts/:id/validate
@@ -704,17 +639,8 @@ func ValidateDiscountForCustomer(c *gin.Context) {
 		return
 	}
 
-	var req struct {
-		CustomerID         string   `json:"customerId" binding:"required"`
-		CustomerSegmentIDs []string `json:"customerSegmentIds,omitempty"`
-	}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
 	idHex := c.Param("id")
-	discount, err := sharedSvc.GetDiscountByIDService(idHex)
+	d, err := sharedSvc.GetDiscountByIDService(idHex)
 	if err != nil {
 		if err == sharedSvc.ErrDiscountNotFound {
 			c.JSON(http.StatusNotFound, gin.H{"error": "discount not found"})
@@ -723,36 +649,43 @@ func ValidateDiscountForCustomer(c *gin.Context) {
 		}
 		return
 	}
-
-	if discount.ShopID != shop.ID {
+	if d.ShopID != shop.ID {
 		c.JSON(http.StatusNotFound, gin.H{"error": "discount not found"})
 		return
 	}
 
-	customerID, err := primitive.ObjectIDFromHex(req.CustomerID)
+	var input struct {
+		CustomerID string `json:"customerId" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	customerID, err := primitive.ObjectIDFromHex(input.CustomerID)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid customer ID"})
 		return
 	}
 
-	var customerSegmentIDs []primitive.ObjectID
-	for _, segmentID := range req.CustomerSegmentIDs {
-		if oid, err := primitive.ObjectIDFromHex(segmentID); err == nil {
-			customerSegmentIDs = append(customerSegmentIDs, oid)
-		}
+	// Get customer segments
+	customerSegmentIDs, err := sharedSvc.GetCustomerSegmentIDs(shop.ID, customerID)
+	if err != nil {
+		customerSegmentIDs = []primitive.ObjectID{}
 	}
 
-	err = sharedSvc.ValidateDiscountForCustomer(discount, customerID, customerSegmentIDs)
+	// Validate discount for customer
+	canUse, err := sharedSvc.CanCustomerUseDiscount(d, customerID, customerSegmentIDs)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{
-			"valid": false,
-			"error": err.Error(),
+		c.JSON(http.StatusOK, gin.H{
+			"can_use": false,
+			"error":   err.Error(),
 		})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"valid":   true,
-		"message": "discount is valid for this customer",
+		"can_use": canUse,
+		"error":   nil,
 	})
 }

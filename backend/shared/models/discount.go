@@ -10,10 +10,11 @@ import (
 type DiscountCategory string
 
 const (
-	DiscountCategoryProduct  DiscountCategory = "product"     // specific products or variants
-	DiscountCategoryOrder    DiscountCategory = "order"       // entire cart
-	DiscountCategoryShipping DiscountCategory = "shipping"    // free shipping, etc.
-	DiscountCategoryBuyXGetY DiscountCategory = "buy_x_get_y" // buy X get Y
+	DiscountCategoryProduct DiscountCategory = "product" // specific products or variants
+	// TODO: Reintroduce these categories in future versions
+	// DiscountCategoryOrder    DiscountCategory = "order"       // entire cart
+	// DiscountCategoryShipping DiscountCategory = "shipping"    // free shipping, etc.
+	// DiscountCategoryBuyXGetY DiscountCategory = "buy_x_get_y" // buy X get Y
 )
 
 // DiscountType is *how much*:
@@ -46,7 +47,7 @@ type Discount struct {
 	Name        string             `bson:"name" json:"name"`
 	Description string             `bson:"description,omitempty" json:"description,omitempty"`
 
-	// *where* it applies
+	// *where* it applies - only product-level discounts
 	Category DiscountCategory `bson:"category" json:"category"`
 	// *how much* off
 	Type  DiscountType `bson:"type,omitempty" json:"type,omitempty"`
@@ -55,10 +56,11 @@ type Discount struct {
 	ShopID   primitive.ObjectID `bson:"shop_id" json:"shop_id"`
 	SellerID primitive.ObjectID `bson:"seller_id" json:"seller_id"`
 
-	// manual targets
-	AppliesToCollections []primitive.ObjectID `bson:"applies_to_collections,omitempty" json:"applies_to_collections,omitempty"`
-	AppliesToProducts    []primitive.ObjectID `bson:"applies_to_products,omitempty"    json:"applies_to_products,omitempty"`
-	AppliesToVariants    []primitive.ObjectID `bson:"applies_to_variants,omitempty"    json:"applies_to_variants,omitempty"`
+	// Product-level targets only
+	AppliesToProducts []primitive.ObjectID `bson:"applies_to_products,omitempty"    json:"applies_to_products,omitempty"`
+	AppliesToVariants []primitive.ObjectID `bson:"applies_to_variants,omitempty"    json:"applies_to_variants,omitempty"`
+	// TODO: Reintroduce collection-level discounts in future versions
+	// AppliesToCollections []primitive.ObjectID `bson:"applies_to_collections,omitempty" json:"applies_to_collections,omitempty"`
 
 	// Enhanced customer eligibility
 	EligibilityType    DiscountEligibilityType `bson:"eligibility_type" json:"eligibility_type"`
@@ -71,17 +73,18 @@ type Discount struct {
 	CurrentUsage     int             `bson:"current_usage" json:"current_usage"`
 	UsageTracking    []DiscountUsage `bson:"usage_tracking,omitempty" json:"usage_tracking,omitempty"`
 
-	// Buy X Get Y
-	BuyProductIDs []primitive.ObjectID `bson:"buy_product_ids,omitempty"   json:"buy_product_ids,omitempty"`
-	BuyQuantity   *int                 `bson:"buy_quantity,omitempty"      json:"buy_quantity,omitempty"`
-	GetProductIDs []primitive.ObjectID `bson:"get_product_ids,omitempty"   json:"get_product_ids,omitempty"`
-	GetQuantity   *int                 `bson:"get_quantity,omitempty"      json:"get_quantity,omitempty"`
+	// TODO: Reintroduce Buy X Get Y functionality in future versions
+	// BuyProductIDs []primitive.ObjectID `bson:"buy_product_ids,omitempty"   json:"buy_product_ids,omitempty"`
+	// BuyQuantity   *int                 `bson:"buy_quantity,omitempty"      json:"buy_quantity,omitempty"`
+	// GetProductIDs []primitive.ObjectID `bson:"get_product_ids,omitempty"   json:"get_product_ids,omitempty"`
+	// GetQuantity   *int                 `bson:"get_quantity,omitempty"      json:"get_quantity,omitempty"`
 
-	// Order‐level
-	MinimumOrderSubtotal *float64 `bson:"minimum_order_subtotal,omitempty" json:"minimum_order_subtotal,omitempty"`
-	// Shipping‐level
-	FreeShipping                bool     `bson:"free_shipping,omitempty" json:"free_shipping,omitempty"`
-	MinimumOrderForFreeShipping *float64 `bson:"minimum_free_shipping,omitempty" json:"minimum_free_shipping,omitempty"`
+	// TODO: Reintroduce order-level functionality in future versions
+	// MinimumOrderSubtotal *float64 `bson:"minimum_order_subtotal,omitempty" json:"minimum_order_subtotal,omitempty"`
+
+	// TODO: Reintroduce shipping-level functionality in future versions
+	// FreeShipping                bool     `bson:"free_shipping,omitempty" json:"free_shipping,omitempty"`
+	// MinimumOrderForFreeShipping *float64 `bson:"minimum_free_shipping,omitempty" json:"minimum_free_shipping,omitempty"`
 
 	StartAt time.Time `bson:"start_at"      json:"start_at"`
 	EndAt   time.Time `bson:"end_at"        json:"end_at"`
@@ -209,14 +212,15 @@ func (d *Discount) AppliesToProduct(productID primitive.ObjectID, collectionIDs 
 		}
 	}
 
+	// TODO: Reintroduce collection application in future versions
 	// Check collection application
-	for _, discountCollectionID := range d.AppliesToCollections {
-		for _, productCollectionID := range collectionIDs {
-			if discountCollectionID == productCollectionID {
-				return true
-			}
-		}
-	}
+	// for _, discountCollectionID := range d.AppliesToCollections {
+	// 	for _, productCollectionID := range collectionIDs {
+	// 		if discountCollectionID == productCollectionID {
+	// 			return true
+	// 		}
+	// 	}
+	// }
 
 	return false
 }

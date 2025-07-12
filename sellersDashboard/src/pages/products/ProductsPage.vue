@@ -1,61 +1,69 @@
 <template>
   <div class="p-4 sm:p-6 max-w-7xl mx-auto font-sans">
-    <h2 class="text-3xl sm:text-4xl font-extrabold mb-8 text-gray-900 leading-tight">
-      Products
-    </h2>
-
-    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 space-y-4 sm:space-y-0">
-      <div class="w-full sm:w-1/2 relative">
-        <input
-          type="text"
-          v-model="searchQuery"
-          @input="debouncedSearch"
-          placeholder="Search products..."
-          class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-150 ease-in-out shadow-sm"
-        />
-        <SearchIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+      <div>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">
+          Products
+        </h2>
+        <p class="text-gray-600 mt-2">Manage your product catalog</p>
       </div>
-
-      <div class="flex space-x-4 items-center">
+      
+      <div class="flex flex-col sm:flex-row gap-3 mt-4 sm:mt-0">
         <button
           @click="goToAddProduct"
-          class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-150 ease-in-out"
+          class="inline-flex items-center px-4 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-150 ease-in-out"
         >
           <PlusIcon class="w-5 h-5 mr-2 -ml-1" />
-          Add New Product
+          Add Product
         </button>
 
-        <div class="inline-flex rounded-full shadow-md overflow-hidden" role="group">
+        <div class="inline-flex rounded-lg shadow-sm overflow-hidden" role="group">
           <button
             @click="currentView = 'list'"
             :class="viewButtonClass('list')"
-            class="px-5 py-2.5 text-sm font-medium border border-gray-300 focus:z-10 focus:ring-2 focus:ring-green-500 focus:outline-none transition-colors duration-200 ease-in-out"
+            class="px-4 py-2.5 text-sm font-medium border border-gray-300 focus:z-10 focus:ring-2 focus:ring-green-500 focus:outline-none transition-colors duration-200 ease-in-out"
           >
             <ListIcon class="w-5 h-5 inline-block mr-1" />
-            List View
+            List
           </button>
           <button
             @click="currentView = 'grid'"
             :class="viewButtonClass('grid')"
-            class="px-5 py-2.5 text-sm font-medium border border-gray-300 focus:z-10 focus:ring-2 focus:ring-green-500 focus:outline-none transition-colors duration-200 ease-in-out"
+            class="px-4 py-2.5 text-sm font-medium border border-gray-300 focus:z-10 focus:ring-2 focus:ring-green-500 focus:outline-none transition-colors duration-200 ease-in-out"
           >
             <GridIcon class="w-5 h-5 inline-block mr-1" />
-            Grid View
+            Grid
           </button>
         </div>
       </div>
     </div>
 
-    <div v-if="loading">
+    <!-- Search Bar -->
+    <div class="mb-6">
+      <div class="relative max-w-md">
+        <input
+          type="text"
+          v-model="searchQuery"
+          @input="debouncedSearch"
+          placeholder="Search products by name or category..."
+          class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-150 ease-in-out shadow-sm"
+        />
+        <SearchIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+      </div>
+    </div>
+
+    <!-- Loading State -->
+    <div v-if="loading" class="space-y-4">
       <div v-if="currentView === 'list'" class="overflow-x-auto bg-white shadow-lg rounded-xl animate-pulse">
         <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-100">
+          <thead class="bg-gray-50">
             <tr>
               <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Image</th>
               <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
               <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Category</th>
               <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Price</th>
-              <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Created</th>
+              <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Stock</th>
+              <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200">
@@ -65,6 +73,7 @@
               <td class="py-3 px-6"><div class="h-4 bg-gray-200 rounded w-1/2"></div></td>
               <td class="py-3 px-6"><div class="h-4 bg-gray-200 rounded w-1/3"></div></td>
               <td class="py-3 px-6"><div class="h-4 bg-gray-200 rounded w-1/4"></div></td>
+              <td class="py-3 px-6"><div class="h-4 bg-gray-200 rounded w-1/3"></div></td>
             </tr>
           </tbody>
         </table>
@@ -82,23 +91,32 @@
       </div>
     </div>
 
-    <div v-else-if="error" class="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-sm mb-6" role="alert">
-      <strong class="font-bold">Error:</strong>
-      <span class="block sm:inline ml-2">{{ error }}</span>
+    <!-- Error State -->
+    <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg shadow-sm mb-6" role="alert">
+      <div class="flex items-center">
+        <ExclamationCircleIcon class="h-5 w-5 mr-2 flex-shrink-0" />
+        <div>
+          <strong class="font-semibold">Error:</strong>
+          <span class="ml-1">{{ error }}</span>
+        </div>
+      </div>
       <p class="text-sm mt-2">Please ensure you have an active shop selected and try again.</p>
     </div>
 
+    <!-- Content -->
     <div v-else>
       <div v-if="paginatedProducts.length">
+        <!-- List View -->
         <div v-if="currentView === 'list'" class="overflow-x-auto bg-white shadow-lg rounded-xl">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-100">
+            <thead class="bg-gray-50">
               <tr>
                 <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Image</th>
                 <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
                 <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Category</th>
                 <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Price</th>
-                <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Created</th>
+                <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Stock</th>
+                <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
               </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
@@ -112,21 +130,20 @@
                 <td class="py-3 px-6">
                   <div class="w-12 h-12 rounded-lg overflow-hidden border border-gray-200 flex items-center justify-center bg-gray-100 shadow-sm">
                     <img
-                      v-if="prod.main_image"
-                      :src="prod.main_image"
-                      alt="thumbnail"
-                      class="w-full h-full object-cover"
-                    />
-                    <img
-                      v-else-if="prod.images?.length"
-                      :src="prod.images[0]"
+                      v-if="getProductImage(prod)"
+                      :src="getProductImage(prod)"
                       alt="thumbnail"
                       class="w-full h-full object-cover"
                     />
                     <PlaceholderIcon v-else class="w-8 h-8 text-gray-400" />
                   </div>
                 </td>
-                <td class="py-3 px-6 text-sm text-gray-800 font-medium">{{ prod.name }}</td>
+                <td class="py-3 px-6">
+                  <div class="text-sm text-gray-800 font-medium">{{ prod.name }}</div>
+                  <div v-if="prod.variants && prod.variants.length > 0" class="text-xs text-gray-500 mt-1">
+                    {{ prod.variants.length }} variant{{ prod.variants.length !== 1 ? 's' : '' }}
+                  </div>
+                </td>
                 <td class="py-3 px-6 text-sm text-gray-700">{{ prod.category || 'Uncategorized' }}</td>
                 <td class="py-3 px-6 text-sm text-green-600 font-semibold">
                   <template v-if="prod.starting_price != null">
@@ -139,12 +156,34 @@
                     N/A
                   </template>
                 </td>
-                <td class="py-3 px-6 text-sm text-gray-600">{{ formatDate(prod.createdAt) }}</td>
+                <td class="py-3 px-6 text-sm text-gray-700">
+                  <template v-if="prod.total_stock != null">
+                    {{ prod.total_stock }}
+                  </template>
+                  <template v-else-if="prod.stock != null">
+                    {{ prod.stock }}
+                  </template>
+                  <template v-else>
+                    N/A
+                  </template>
+                </td>
+                <td class="py-3 px-6">
+                  <span
+                    :class="{
+                      'px-2 py-1 text-xs font-medium rounded-full': true,
+                      'bg-green-100 text-green-800': getProductStock(prod) > 0,
+                      'bg-red-100 text-red-800': getProductStock(prod) <= 0
+                    }"
+                  >
+                    {{ getProductStock(prod) > 0 ? 'In Stock' : 'Out of Stock' }}
+                  </span>
+                </td>
               </tr>
             </tbody>
           </table>
         </div>
 
+        <!-- Grid View -->
         <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           <div
             v-for="prod in paginatedProducts"
@@ -154,24 +193,37 @@
           >
             <div class="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-400 relative overflow-hidden rounded-t-xl">
               <img
-                v-if="prod.main_image"
-                :src="prod.main_image"
-                alt="product"
-                class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-300 ease-in-out"
-              />
-              <img
-                v-else-if="prod.images?.length"
-                :src="prod.images[0]"
+                v-if="getProductImage(prod)"
+                :src="getProductImage(prod)"
                 alt="product"
                 class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-300 ease-in-out"
               />
               <PlaceholderIcon v-else class="w-16 h-16" />
+              
+              <!-- Stock Status Badge -->
+              <div class="absolute top-2 right-2">
+                <span
+                  :class="{
+                    'px-2 py-1 text-xs font-medium rounded-full': true,
+                    'bg-green-100 text-green-800': getProductStock(prod) > 0,
+                    'bg-red-100 text-red-800': getProductStock(prod) <= 0
+                  }"
+                >
+                  {{ getProductStock(prod) > 0 ? 'In Stock' : 'Out of Stock' }}
+                </span>
+              </div>
             </div>
+            
             <div class="p-5 flex-grow flex flex-col">
-              <h3 class="text-xl font-semibold text-gray-900 mb-2 truncate">{{ prod.name }}</h3>
-              <p class="text-sm text-gray-600 mb-3">{{ prod.category || 'Uncategorized' }}</p>
+              <h3 class="text-lg font-semibold text-gray-900 mb-2 truncate">{{ prod.name }}</h3>
+              <p class="text-sm text-gray-600 mb-2">{{ prod.category || 'Uncategorized' }}</p>
+              
+              <div v-if="prod.variants && prod.variants.length > 0" class="text-xs text-gray-500 mb-3">
+                {{ prod.variants.length }} variant{{ prod.variants.length !== 1 ? 's' : '' }}
+              </div>
+              
               <div class="mt-auto">
-                <p class="text-2xl font-bold text-green-700">
+                <p class="text-xl font-bold text-green-700">
                   <template v-if="prod.starting_price != null">
                     <span class="italic text-gray-700">from</span> {{ formatPrice(prod.starting_price) }}
                   </template>
@@ -182,11 +234,15 @@
                     N/A
                   </template>
                 </p>
+                <p class="text-sm text-gray-500 mt-1">
+                  Stock: {{ getProductStock(prod) }}
+                </p>
               </div>
             </div>
           </div>
         </div>
 
+        <!-- Pagination -->
         <div class="flex justify-center items-center space-x-2 mt-8">
           <button
             @click="prevPage"
@@ -206,9 +262,22 @@
         </div>
       </div>
 
+      <!-- Empty State -->
       <div v-else class="bg-green-50 border border-green-200 text-green-700 px-6 py-8 rounded-lg text-center mt-8 shadow-sm">
-        <p class="text-lg font-medium">No products found for this search.</p>
-        <p class="mt-2">Try adjusting your search query or adding a new product.</p>
+        <div class="flex flex-col items-center">
+          <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+            <PlusIcon class="w-8 h-8 text-green-600" />
+          </div>
+          <p class="text-lg font-medium">No products found</p>
+          <p class="mt-2 text-sm">Try adjusting your search query or add your first product.</p>
+          <button
+            @click="goToAddProduct"
+            class="mt-4 inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-150 ease-in-out"
+          >
+            <PlusIcon class="w-4 h-4 mr-2" />
+            Add Your First Product
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -224,27 +293,28 @@ import {
   ViewGridIcon as GridIcon,
   RefreshIcon as SpinnerIcon,
   PhotographIcon as PlaceholderIcon,
-  SearchIcon, // Added for search bar
-  PlusIcon // Added for add new product button
+  SearchIcon,
+  PlusIcon,
+  ExclamationCircleIcon
 } from '@heroicons/vue/outline'
 
 const router = useRouter()
 const shopStore = useShopStore()
 
 // Reactive state
-const allProducts = ref([]) // Holds all fetched products
-const products = ref([]) // Products filtered by search, before pagination
+const allProducts = ref([])
+const products = ref([])
 const loading = ref(false)
 const error = ref(null)
 const currentView = ref('list')
 
 // Search state
 const searchQuery = ref('')
-let searchTimeout = null; // To debounce search input
+let searchTimeout = null
 
 // Pagination state
 const currentPage = ref(1)
-const itemsPerPage = 8 // You can adjust this number
+const itemsPerPage = 8
 
 // Computed property for the active shop
 const activeShop = computed(() => shopStore.activeShop)
@@ -259,13 +329,32 @@ const paginatedProducts = computed(() => {
 
 /**
  * Dynamically applies classes to view toggle buttons based on the current view.
- * @param {string} view - The view type ('list' or 'grid').
- * @returns {string} Tailwind CSS classes.
  */
 function viewButtonClass(view) {
   return view === currentView.value
     ? 'bg-green-600 text-white hover:bg-green-700 shadow-inner'
     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+}
+
+/**
+ * Gets the appropriate image for a product
+ */
+function getProductImage(product) {
+  if (product.main_image) return product.main_image
+  if (product.images && product.images.length > 0) return product.images[0]
+  return null
+}
+
+/**
+ * Gets the total stock for a product
+ */
+function getProductStock(product) {
+  if (product.total_stock !== undefined) return product.total_stock
+  if (product.stock !== undefined) return product.stock
+  if (product.variants && product.variants.length > 0) {
+    return product.variants.reduce((sum, v) => sum + (v.stock || 0), 0)
+  }
+  return 0
 }
 
 /**
@@ -280,16 +369,15 @@ async function fetchProducts() {
   loading.value = true
   error.value = null
   try {
-    // Fetch products using the shop ID
     const fetchedData = await productService.fetchAllByShop(activeShop.value.id)
-    // Ensure mapping for new/updated backend fields
     allProducts.value = fetchedData.map(prod => ({
-      ...prod, // Keep all original product properties
-      id: prod.id || prod._id, // Standardize ID
-      images: prod.images || [], // Ensure images is always an array
+      ...prod,
+      id: prod.id || prod._id,
+      images: prod.images || [],
+      variants: prod.variants || []
     }))
-    applySearchFilter() // Apply initial search filter (empty string)
-    currentPage.value = 1 // Reset pagination on new fetch
+    applySearchFilter()
+    currentPage.value = 1
   } catch (e) {
     console.error('Failed to load products:', e)
     error.value = 'Failed to load products. Please try again.'
@@ -309,19 +397,19 @@ function applySearchFilter() {
       prod.category?.toLowerCase().includes(query)
     )
   } else {
-    products.value = [...allProducts.value] // Clone to ensure reactivity
+    products.value = [...allProducts.value]
   }
-  currentPage.value = 1; // Reset to first page after search
+  currentPage.value = 1
 }
 
 /**
  * Debounces the search input to avoid excessive API calls or filtering.
  */
 function debouncedSearch() {
-  clearTimeout(searchTimeout);
+  clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
-    applySearchFilter();
-  }, 300); // 300ms debounce time
+    applySearchFilter()
+  }, 300)
 }
 
 /**
@@ -344,7 +432,6 @@ function nextPage() {
 
 /**
  * Navigates to the product detail page.
- * @param {string} productId - The ID of the product.
  */
 function goToDetail(productId) {
   router.push({ name: 'ProductDetail', params: { productId } })
@@ -354,13 +441,11 @@ function goToDetail(productId) {
  * Navigates to the page for adding a new product.
  */
 function goToAddProduct() {
-  router.push({ name: 'AddProduct' }) // Assuming you have a route named 'AddProduct'
+  router.push({ name: 'AddProduct' })
 }
 
 /**
  * Formats a date string.
- * @param {string} dt - The date string.
- * @returns {string} Formatted date.
  */
 function formatDate(dt) {
   return dt
@@ -374,8 +459,6 @@ function formatDate(dt) {
 
 /**
  * Formats a price number.
- * @param {number} p - The price.
- * @returns {string} Formatted price.
  */
 function formatPrice(p) {
   return p != null ? `$${p.toFixed(2)}` : 'N/A'
@@ -389,7 +472,7 @@ onMounted(() => {
 // Watch for changes in activeShop to refetch products if the shop changes
 watch(activeShop, (newShop, oldShop) => {
   if (newShop?.id !== oldShop?.id) {
-    fetchProducts();
+    fetchProducts()
   }
-});
+})
 </script>

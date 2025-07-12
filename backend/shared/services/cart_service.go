@@ -15,24 +15,13 @@ var ErrCartNotFound = errors.New("cart not found")
 // CartWithDiscountDetails represents cart data with detailed discount information
 type CartWithDiscountDetails struct {
 	*models.Cart
-	ItemDiscountDetails  []ItemDiscountDetail  `json:"item_discount_details,omitempty"`
-	OrderDiscountDetails []OrderDiscountDetail `json:"order_discount_details,omitempty"`
+	ItemDiscountDetails []ItemDiscountDetail `json:"item_discount_details,omitempty"`
 }
 
 // ItemDiscountDetail contains information about discounts applied to a specific item
 type ItemDiscountDetail struct {
 	ProductID  primitive.ObjectID      `json:"product_id"`
 	VariantID  primitive.ObjectID      `json:"variant_id,omitempty"`
-	DiscountID primitive.ObjectID      `json:"discount_id"`
-	Name       string                  `json:"name"`
-	Type       models.DiscountType     `json:"type"`
-	Value      float64                 `json:"value"`
-	Category   models.DiscountCategory `json:"category"`
-	Amount     float64                 `json:"amount"`
-}
-
-// OrderDiscountDetail contains information about order-level discounts
-type OrderDiscountDetail struct {
 	DiscountID primitive.ObjectID      `json:"discount_id"`
 	Name       string                  `json:"name"`
 	Type       models.DiscountType     `json:"type"`
@@ -178,7 +167,7 @@ func (s *CartService) CalculateTotals(cart *models.Cart, customerID primitive.Ob
 		itemDiscountAmount := 0.0
 		item.AppliedDiscountIDs = []primitive.ObjectID{} // Reset applied discounts
 
-		// Get collection IDs for this product
+		// Get collection IDs for this product (for future collection support)
 		collectionIDs, err := GetCollectionIDsForProduct(item.ProductID)
 		if err != nil {
 			collectionIDs = []primitive.ObjectID{}
@@ -201,7 +190,7 @@ func (s *CartService) CalculateTotals(cart *models.Cart, customerID primitive.Ob
 		subtotal += item.LineTotal
 	}
 
-	// Calculate final totals
+	// Calculate final totals (product-level discounts only)
 	cart.Subtotal = subtotal
 	cart.TotalDiscounts = totalItemDiscounts
 	cart.GrandTotal = subtotal - cart.TotalDiscounts + cart.ShippingCost + cart.TaxAmount
