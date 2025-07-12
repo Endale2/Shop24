@@ -101,6 +101,19 @@
               <span class="font-medium text-green-600">-${{ order.discount_total.toFixed(2) }}</span>
             </div>
             
+            <!-- Discount Details -->
+            <div v-if="order.applied_discount_ids && order.applied_discount_ids.length > 0" class="bg-green-50 border border-green-200 rounded-lg p-3 mb-3">
+              <h4 class="text-sm font-medium text-green-800 mb-2">Applied Discounts:</h4>
+              <div class="space-y-1">
+                <div v-for="discountId in order.applied_discount_ids" :key="discountId" class="flex items-center text-sm">
+                  <svg class="h-4 w-4 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                  </svg>
+                  <span class="text-green-700">Discount Applied</span>
+                </div>
+              </div>
+            </div>
+            
             <div v-if="order.shipping_cost > 0" class="flex justify-between text-sm">
               <span class="text-gray-600">Shipping</span>
               <span class="font-medium">${{ order.shipping_cost.toFixed(2) }}</span>

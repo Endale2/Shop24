@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/Endale2/DRPS/config"
@@ -80,7 +81,11 @@ func GetActiveDiscountsForProduct(shopID, productID, variantID primitive.ObjectI
 	now := time.Now()
 	orClauses := []bson.M{
 		{"applies_to_products": productID},
-		{"applies_to_variants": variantID},
+	}
+
+	// Only add variant clause if variantID is not zero
+	if !variantID.IsZero() {
+		orClauses = append(orClauses, bson.M{"applies_to_variants": variantID})
 	}
 
 	// Build time-based filters that handle zero times properly
@@ -111,8 +116,15 @@ func GetActiveDiscountsForProduct(shopID, productID, variantID primitive.ObjectI
 		"$or":     orClauses,
 	}
 
+	fmt.Printf("Discount Query - ShopID: %s, ProductID: %s, VariantID: %s\n",
+		shopID.Hex(), productID.Hex(), variantID.Hex())
+	fmt.Printf("Discount Query - Filter: %+v\n", filter)
+	fmt.Printf("Discount Query - Time filters: %+v\n", timeFilters)
+	fmt.Printf("Discount Query - OR clauses: %+v\n", orClauses)
+
 	cursor, err := discountColl.Find(context.Background(), filter)
 	if err != nil {
+		fmt.Printf("Discount Query - Error: %v\n", err)
 		return nil, err
 	}
 	defer cursor.Close(context.Background())
@@ -120,10 +132,15 @@ func GetActiveDiscountsForProduct(shopID, productID, variantID primitive.ObjectI
 	for cursor.Next(context.Background()) {
 		var d models.Discount
 		if err := cursor.Decode(&d); err != nil {
+			fmt.Printf("Discount Query - Decode error: %v\n", err)
 			return nil, err
 		}
 		// Additional validation can be done in the service layer
 		results = append(results, d)
+		fmt.Printf("Discount Query - Found discount: %s (Type: %s, Value: %.2f)\n",
+			d.Name, d.Type, d.Value)
 	}
+
+	fmt.Printf("Discount Query - Total results: %d\n", len(results))
 	return results, nil
 }

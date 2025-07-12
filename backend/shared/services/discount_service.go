@@ -15,8 +15,13 @@ var ErrDiscountNotFound = errors.New("discount not found")
 var ErrDiscountNotEligible = errors.New("customer not eligible for this discount")
 var ErrDiscountUsageLimitExceeded = errors.New("discount usage limit exceeded")
 var ErrDiscountNotActive = errors.New("discount is not active")
+var ErrDiscountExpired = errors.New("discount has expired")
+var ErrDiscountNotStarted = errors.New("discount has not started yet")
+var ErrDiscountInvalidValue = errors.New("invalid discount value")
+var ErrDiscountInvalidType = errors.New("invalid discount type")
 
 func CreateDiscountService(d *models.Discount) (*models.Discount, error) {
+	// Enhanced validation
 	if d.Name == "" {
 		return nil, errors.New("discount name is required")
 	}
@@ -30,7 +35,7 @@ func CreateDiscountService(d *models.Discount) (*models.Discount, error) {
 		return nil, errors.New("endAt must be after startAt")
 	}
 
-	// Validate discount value
+	// Enhanced discount value validation
 	if err := ValidateDiscountValue(d.Type, d.Value); err != nil {
 		return nil, err
 	}
@@ -43,6 +48,8 @@ func CreateDiscountService(d *models.Discount) (*models.Discount, error) {
 	// Initialize usage tracking
 	d.CurrentUsage = 0
 	d.UsageTracking = []models.DiscountUsage{}
+	d.CreatedAt = time.Now()
+	d.UpdatedAt = time.Now()
 
 	res, err := repositories.CreateDiscount(d)
 	if err != nil {
@@ -82,13 +89,15 @@ func UpdateDiscountService(idStr string, upd bson.M) error {
 	if err != nil {
 		return errors.New("invalid discount ID")
 	}
-	// remove immutable fields
+
+	// Remove immutable fields
 	delete(upd, "id")
 	delete(upd, "_id")
-	// Allow updating usage tracking fields for proper usage recording
-	// delete(upd, "current_usage")
-	// delete(upd, "usage_tracking")
+	delete(upd, "shop_id")
+	delete(upd, "seller_id")
+	delete(upd, "created_at")
 
+	// Validate time constraints if updating time fields
 	if startRaw, ok := upd["start_at"]; ok {
 		if startTime, ok2 := startRaw.(time.Time); ok2 {
 			if endRaw, exists := upd["end_at"]; exists {
@@ -98,6 +107,21 @@ func UpdateDiscountService(idStr string, upd bson.M) error {
 			}
 		}
 	}
+
+	// Validate discount value if updating
+	if valueRaw, ok := upd["value"]; ok {
+		if value, ok2 := valueRaw.(float64); ok2 {
+			typeRaw, typeExists := upd["type"]
+			if typeExists {
+				if discountType, ok3 := typeRaw.(string); ok3 {
+					if err := ValidateDiscountValue(models.DiscountType(discountType), value); err != nil {
+						return err
+					}
+				}
+			}
+		}
+	}
+
 	upd["updated_at"] = time.Now()
 	_, err = repositories.UpdateDiscount(id, upd)
 	return err
@@ -195,70 +219,73 @@ func ApplyDiscountToOrder(discount *models.Discount, order *models.Order, custom
 	return err
 }
 
-// For product-level: need collectionIDs slice if applicable
+// GetActiveDiscountsForProductService gets all active discounts for a product/variant
 func GetActiveDiscountsForProductService(shopID, productID, variantID primitive.ObjectID, collectionIDs []primitive.ObjectID) ([]models.Discount, error) {
 	return repositories.GetActiveDiscountsForProduct(shopID, productID, variantID, collectionIDs)
 }
 
-// GetEligibleDiscountsForCustomer returns all discounts a customer is eligible for
+// GetEligibleDiscountsForCustomer gets all discounts a customer is eligible for
 func GetEligibleDiscountsForCustomer(shopID, customerID primitive.ObjectID, customerSegmentIDs []primitive.ObjectID) ([]models.Discount, error) {
+	// Get all active discounts for the shop
 	discounts, err := repositories.ListDiscountsByShop(shopID)
 	if err != nil {
 		return nil, err
 	}
 
+	// Filter to only eligible discounts
 	var eligibleDiscounts []models.Discount
 	for _, discount := range discounts {
-		// Only include active discounts
-		if discount.IsActive() {
-			if err := ValidateDiscountForCustomer(&discount, customerID, customerSegmentIDs); err == nil {
-				eligibleDiscounts = append(eligibleDiscounts, discount)
-			}
+		if discount.IsActive() && discount.IsEligible(customerID, customerSegmentIDs) && discount.CanUse(customerID) {
+			eligibleDiscounts = append(eligibleDiscounts, discount)
 		}
 	}
 
 	return eligibleDiscounts, nil
 }
 
-// GetCustomerSegmentIDs retrieves the segment IDs for a customer in a shop
+// GetCustomerSegmentIDs gets the segment IDs for a customer in a shop
 func GetCustomerSegmentIDs(shopID, customerID primitive.ObjectID) ([]primitive.ObjectID, error) {
+	// Get customer segments from the customer segment repository
 	segments, err := sellerRepo.GetSegmentsByCustomer(shopID, customerID)
 	if err != nil {
-		return nil, err
+		return []primitive.ObjectID{}, nil // Return empty array if no segments found
 	}
-	ids := make([]primitive.ObjectID, 0, len(segments))
-	for _, seg := range segments {
-		ids = append(ids, seg.ID)
+
+	var segmentIDs []primitive.ObjectID
+	for _, segment := range segments {
+		segmentIDs = append(segmentIDs, segment.ID)
 	}
-	return ids, nil
+
+	return segmentIDs, nil
 }
 
-// ValidateUsageLimits checks if a customer can use a discount (deprecated, use ValidateDiscountForCustomer)
+// ValidateUsageLimits validates if a discount can be used by a customer
 func ValidateUsageLimits(discount *models.Discount, customerID primitive.ObjectID) (bool, error) {
-	if !discount.CanUse(customerID) {
-		return false, ErrDiscountUsageLimitExceeded
-	}
-	return true, nil
+	return discount.CanUse(customerID), nil
 }
 
-// ApplyDiscountsToProduct applies the best applicable discount to the product and its variants.
+// ApplyDiscountsToProduct applies the best discount to a product
 func ApplyDiscountsToProduct(product *models.Product, discounts []models.Discount) {
 	// Helper: get best discount for a variant or product
 	getBestDiscount := func(productID, variantID primitive.ObjectID) *models.Discount {
 		var best *models.Discount
 		var maxSavings float64
+
 		for i := range discounts {
 			d := &discounts[i]
 			if d.Category != models.DiscountCategoryProduct || !d.IsActive() {
 				continue
 			}
+
 			applies := false
+			// Check variant-specific discounts first
 			for _, vid := range d.AppliesToVariants {
 				if vid == variantID && !variantID.IsZero() {
 					applies = true
 					break
 				}
 			}
+			// Then check product-level discounts
 			if !applies {
 				for _, pid := range d.AppliesToProducts {
 					if pid == productID {
@@ -267,13 +294,18 @@ func ApplyDiscountsToProduct(product *models.Product, discounts []models.Discoun
 					}
 				}
 			}
+
 			if applies {
+				// Calculate actual savings for comparison
 				var estimatedSavings float64
 				if d.Type == models.DiscountTypePercentage {
+					// For percentage discounts, estimate based on typical price
 					estimatedSavings = 100 * (d.Value / 100)
 				} else {
+					// For fixed discounts, the value is the savings
 					estimatedSavings = d.Value
 				}
+
 				if best == nil || estimatedSavings > maxSavings {
 					best = d
 					maxSavings = estimatedSavings
@@ -283,15 +315,22 @@ func ApplyDiscountsToProduct(product *models.Product, discounts []models.Discoun
 		return best
 	}
 
+	// Apply discounts to variants
 	if len(product.Variants) > 0 {
 		for i := range product.Variants {
 			v := &product.Variants[i]
 			best := getBestDiscount(product.ID, v.VariantID)
 			if best != nil {
 				discounted := v.Price - best.CalculateDiscount(v.Price)
-				v.DisplayPrice = &discounted
-				id := best.ID.Hex()
-				v.AppliedDiscountID = &id
+				// Only set display price if it's actually discounted
+				if discounted < v.Price {
+					v.DisplayPrice = &discounted
+					id := best.ID.Hex()
+					v.AppliedDiscountID = &id
+				} else {
+					v.DisplayPrice = &v.Price
+					v.AppliedDiscountID = nil
+				}
 			} else {
 				v.DisplayPrice = &v.Price
 				v.AppliedDiscountID = nil
@@ -302,9 +341,15 @@ func ApplyDiscountsToProduct(product *models.Product, discounts []models.Discoun
 		best := getBestDiscount(product.ID, primitive.NilObjectID)
 		if best != nil {
 			discounted := product.Price - best.CalculateDiscount(product.Price)
-			product.DisplayPrice = &discounted
-			id := best.ID.Hex()
-			product.AppliedDiscountID = &id
+			// Only set display price if it's actually discounted
+			if discounted < product.Price {
+				product.DisplayPrice = &discounted
+				id := best.ID.Hex()
+				product.AppliedDiscountID = &id
+			} else {
+				product.DisplayPrice = &product.Price
+				product.AppliedDiscountID = nil
+			}
 		} else {
 			product.DisplayPrice = &product.Price
 			product.AppliedDiscountID = nil
@@ -324,27 +369,28 @@ func GetBestProductDiscount(productID, variantID primitive.ObjectID, discounts [
 		}
 
 		applies := false
-		for _, pid := range d.AppliesToProducts {
-			if pid == productID {
+		// Check variant-specific discounts first
+		for _, vid := range d.AppliesToVariants {
+			if vid == variantID && !variantID.IsZero() {
 				applies = true
 				break
 			}
 		}
-		for _, vid := range d.AppliesToVariants {
-			if vid == variantID {
-				applies = true
-				break
+		// Then check product-level discounts
+		if !applies {
+			for _, pid := range d.AppliesToProducts {
+				if pid == productID {
+					applies = true
+					break
+				}
 			}
 		}
 
 		if applies && d.IsActive() {
-			// Calculate actual savings for comparison (not just the value)
-			// For percentage discounts, we need to estimate based on a typical price
-			// For fixed discounts, the value is the savings
+			// Calculate actual savings for comparison
 			var estimatedSavings float64
 			if d.Type == models.DiscountTypePercentage {
 				// Estimate savings based on a typical product price (e.g., $100)
-				// This is a rough estimate for comparison purposes
 				estimatedSavings = 100 * (d.Value / 100)
 			} else {
 				// Fixed discount - the value is the savings
@@ -387,14 +433,14 @@ func ValidateDiscountValue(discountType models.DiscountType, value float64) erro
 	switch discountType {
 	case models.DiscountTypeFixed:
 		if value <= 0 {
-			return errors.New("fixed discount value must be positive")
+			return ErrDiscountInvalidValue
 		}
 	case models.DiscountTypePercentage:
 		if value <= 0 || value > 100 {
-			return errors.New("percentage discount value must be between 0 and 100")
+			return ErrDiscountInvalidValue
 		}
 	default:
-		return errors.New("invalid discount type")
+		return ErrDiscountInvalidType
 	}
 	return nil
 }
@@ -458,4 +504,72 @@ func RecordDiscountUsageAtomic(discountID string, customerID primitive.ObjectID,
 
 	_, err = repositories.UpdateDiscountWithOperators(id, atomicUpdate)
 	return err
+}
+
+// ValidateDiscountForProduct validates if a discount applies to a specific product/variant
+func ValidateDiscountForProduct(discount *models.Discount, productID, variantID primitive.ObjectID) bool {
+	// Check if discount applies to this product/variant
+	if !variantID.IsZero() {
+		// Check variant-specific application
+		for _, vid := range discount.AppliesToVariants {
+			if vid == variantID {
+				return true
+			}
+		}
+	}
+
+	// Check product-level application
+	for _, pid := range discount.AppliesToProducts {
+		if pid == productID {
+			return true
+		}
+	}
+
+	return false
+}
+
+// GetBestEligibleDiscountForProduct gets the best eligible discount for a product/variant and customer
+func GetBestEligibleDiscountForProduct(productID, variantID primitive.ObjectID, customerID primitive.ObjectID, customerSegmentIDs []primitive.ObjectID, discounts []models.Discount) *models.Discount {
+	var best *models.Discount
+	var maxSavings float64
+
+	for i := range discounts {
+		d := &discounts[i]
+
+		// Check if discount applies to this product/variant
+		if !ValidateDiscountForProduct(d, productID, variantID) {
+			continue
+		}
+
+		// Check if discount is active
+		if !d.IsActive() {
+			continue
+		}
+
+		// Check if customer is eligible
+		if !d.IsEligible(customerID, customerSegmentIDs) {
+			continue
+		}
+
+		// Check if customer can use this discount
+		if !d.CanUse(customerID) {
+			continue
+		}
+
+		// Calculate estimated savings for comparison
+		var estimatedSavings float64
+		if d.Type == models.DiscountTypePercentage {
+			// Estimate based on typical price
+			estimatedSavings = 100 * (d.Value / 100)
+		} else {
+			estimatedSavings = d.Value
+		}
+
+		if best == nil || estimatedSavings > maxSavings {
+			best = d
+			maxSavings = estimatedSavings
+		}
+	}
+
+	return best
 }

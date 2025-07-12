@@ -109,7 +109,7 @@ export const useCartStore = defineStore('cart', {
         this.loading = false;
       }
     },
-    // Method to place order from cart
+    // Method to place order from cart - sends only minimal data to backend
     async placeOrder() {
       if (!this.shopSlug || !this.cart?.items || this.cart.items.length === 0) {
         throw new Error('No items in cart to place order');
@@ -118,14 +118,22 @@ export const useCartStore = defineStore('cart', {
       this.loading = true;
       this.error = null;
       try {
-        // Convert cart items to order format
+        // Send only minimal data to backend - NO pricing information
+        // Backend will calculate all pricing, discounts, and totals securely
         const orderItems = this.cart.items.map(item => ({
           product_id: item.product_id,
           variant_id: item.variant_id || '',
           quantity: item.quantity
+          // Note: NO pricing data sent - backend calculates everything
         }));
         
         // Call the order service to place the order
+        // Backend will:
+        // 1. Fetch product prices from database
+        // 2. Calculate all discounts server-side
+        // 3. Apply the best eligible discounts
+        // 4. Calculate final totals
+        // 5. Return the order with server-calculated pricing
         const response = await orderApi.placeOrder(this.shopSlug, orderItems);
         return response.data;
       } catch (e: any) {

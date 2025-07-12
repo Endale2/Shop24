@@ -74,4 +74,12 @@ export async function removeCartItem(shopSlug: string, productId: string, varian
 
 export async function clearCart(shopSlug: string) {
   return api.post<CartWithDiscountDetails>(`/shops/${shopSlug}/cart/clear`);
+}
+
+export async function applyDiscount(shopSlug: string, code: string) {
+  return api.post<CartWithDiscountDetails>(`/shops/${shopSlug}/cart/discounts`, { code });
+}
+
+export async function removeDiscount(shopSlug: string, discountId: string) {
+  return api.delete<CartWithDiscountDetails>(`/shops/${shopSlug}/cart/discounts/${discountId}`);
 } 

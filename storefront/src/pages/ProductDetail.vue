@@ -103,9 +103,25 @@
             </template>
           </p>
           
+          <!-- Discount badge -->
+          <div v-if="hasDiscount" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            {{ getDiscountTypeDescription() }}
+          </div>
+          
           <!-- Savings info -->
           <div v-if="hasDiscount && savings > 0" class="text-sm text-green-600">
-            Save ${{ savings.toFixed(2) }}
+            <div class="flex items-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Save ${{ savings.toFixed(2) }}</span>
+              <span class="text-xs text-gray-500">
+                ({{ getDiscountTypeDescription() }})
+              </span>
+            </div>
           </div>
         </div>
 
@@ -214,6 +230,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useWishlistStore } from '@/stores/wishlist'
 import type { Product } from '@/services/product'
 import Header from '../components/Header.vue'
+import { formatDiscountValue } from '@/utils/discount'
 
 // Define interfaces to match your data structure for better type safety
 interface ProductOption {
@@ -460,5 +477,17 @@ async function addToCart() {
 
 function goToLogin() {
   router.push({ name: 'Login', params: { shopSlug } });
+}
+
+function getDiscountTypeDescription() {
+  if (!product.value) return '';
+  if (selectedVariant.value) {
+    const d = getVariantDiscount(selectedVariant.value);
+    return formatDiscountValue({ type: d.type, value: d.amount });
+  } else if (product.value.discounts && product.value.discounts.length > 0) {
+    const d = product.value.discounts[0];
+    return formatDiscountValue({ type: d.type, value: d.value });
+  }
+  return '';
 }
 </script>

@@ -1,6 +1,7 @@
 package models
 
 import (
+	"errors"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -104,12 +105,8 @@ func (d *Discount) IsEligible(customerID primitive.ObjectID, customerSegmentIDs 
 		if len(d.AllowedCustomerIDs) == 0 {
 			return true
 		}
-		seen := make(map[primitive.ObjectID]struct{})
+		// Check if customer is in the allowed list
 		for _, allowedID := range d.AllowedCustomerIDs {
-			if _, exists := seen[allowedID]; exists {
-				continue
-			}
-			seen[allowedID] = struct{}{}
 			if allowedID == customerID {
 				return true
 			}
@@ -120,12 +117,8 @@ func (d *Discount) IsEligible(customerID primitive.ObjectID, customerSegmentIDs 
 		if len(d.AllowedSegmentIDs) == 0 {
 			return true
 		}
-		seen := make(map[primitive.ObjectID]struct{})
+		// Check if customer is in any of the allowed segments
 		for _, segmentID := range d.AllowedSegmentIDs {
-			if _, exists := seen[segmentID]; exists {
-				continue
-			}
-			seen[segmentID] = struct{}{}
 			for _, customerSegmentID := range customerSegmentIDs {
 				if segmentID == customerSegmentID {
 					return true
@@ -239,6 +232,8 @@ func (d *Discount) AppliesToVariant(variantID primitive.ObjectID) bool {
 func (d *Discount) CalculateDiscount(price float64) float64 {
 	switch d.Type {
 	case DiscountTypeFixed:
+		// For fixed amount discounts, apply the discount amount directly
+		// This represents a fixed amount off the total price
 		if d.Value > price {
 			return price
 		}
@@ -248,4 +243,111 @@ func (d *Discount) CalculateDiscount(price float64) float64 {
 	default:
 		return 0
 	}
+}
+
+// CalculateDiscountForQuantity calculates the discount amount for a given price and quantity
+// This is useful for fixed amount discounts that should be applied per unit
+func (d *Discount) CalculateDiscountForQuantity(unitPrice float64, quantity int) float64 {
+	switch d.Type {
+	case DiscountTypeFixed:
+		// For fixed amount discounts, apply per unit
+		discountPerUnit := d.Value
+		if discountPerUnit > unitPrice {
+			discountPerUnit = unitPrice
+		}
+		return discountPerUnit * float64(quantity)
+	case DiscountTypePercentage:
+		// For percentage discounts, apply to the total line price
+		totalPrice := unitPrice * float64(quantity)
+		return totalPrice * (d.Value / 100)
+	default:
+		return 0
+	}
+}
+
+// Validate checks if the discount configuration is valid
+func (d *Discount) Validate() error {
+	if d.Name == "" {
+		return errors.New("discount name is required")
+	}
+	if d.ShopID.IsZero() {
+		return errors.New("shop ID is required")
+	}
+	if d.Category == "" {
+		return errors.New("discount category is required")
+	}
+	if d.Type == "" {
+		return errors.New("discount type is required")
+	}
+	if d.Value <= 0 {
+		return errors.New("discount value must be positive")
+	}
+	if d.Type == DiscountTypePercentage && d.Value > 100 {
+		return errors.New("percentage discount cannot exceed 100%")
+	}
+	if !d.StartAt.IsZero() && !d.EndAt.IsZero() && d.EndAt.Before(d.StartAt) {
+		return errors.New("end time must be after start time")
+	}
+	return nil
+}
+
+// GetUsageCountForCustomer returns the number of times a customer has used this discount
+func (d *Discount) GetUsageCountForCustomer(customerID primitive.ObjectID) int {
+	for _, usage := range d.UsageTracking {
+		if usage.CustomerID == customerID {
+			return usage.UsageCount
+		}
+	}
+	return 0
+}
+
+// GetTotalSpentByCustomer returns the total amount spent by a customer using this discount
+func (d *Discount) GetTotalSpentByCustomer(customerID primitive.ObjectID) float64 {
+	for _, usage := range d.UsageTracking {
+		if usage.CustomerID == customerID {
+			return usage.TotalSpent
+		}
+	}
+	return 0
+}
+
+// IsExpired checks if the discount has expired
+func (d *Discount) IsExpired() bool {
+	if d.EndAt.IsZero() {
+		return false // No end date means never expires
+	}
+	return time.Now().After(d.EndAt)
+}
+
+// IsNotStarted checks if the discount hasn't started yet
+func (d *Discount) IsNotStarted() bool {
+	if d.StartAt.IsZero() {
+		return false // No start date means already started
+	}
+	return time.Now().Before(d.StartAt)
+}
+
+// GetRemainingUsage returns the remaining usage count for the discount
+func (d *Discount) GetRemainingUsage() *int {
+	if d.UsageLimit == nil {
+		return nil // No limit
+	}
+	remaining := *d.UsageLimit - d.CurrentUsage
+	if remaining < 0 {
+		remaining = 0
+	}
+	return &remaining
+}
+
+// GetRemainingUsageForCustomer returns the remaining usage count for a specific customer
+func (d *Discount) GetRemainingUsageForCustomer(customerID primitive.ObjectID) *int {
+	if d.PerCustomerLimit == nil {
+		return nil // No per-customer limit
+	}
+	used := d.GetUsageCountForCustomer(customerID)
+	remaining := *d.PerCustomerLimit - used
+	if remaining < 0 {
+		remaining = 0
+	}
+	return &remaining
 }
