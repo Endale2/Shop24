@@ -96,7 +96,7 @@ func RemoveCustomerFromSegment(segmentID primitive.ObjectID, customerID primitiv
 // GetSegmentsByCustomer returns all segments that contain a specific customer
 func GetSegmentsByCustomer(shopID primitive.ObjectID, customerID primitive.ObjectID) ([]models.CustomerSegment, error) {
 	filter := bson.M{
-		"shop_id":     shopID,
+		"shop_id":      shopID,
 		"customer_ids": customerID,
 	}
 	cursor, err := customerSegmentColl.Find(context.Background(), filter)
@@ -114,4 +114,17 @@ func GetSegmentsByCustomer(shopID primitive.ObjectID, customerID primitive.Objec
 		result = append(result, segment)
 	}
 	return result, nil
-} 
+}
+
+// GetCustomersInSegment returns all customers in a specific segment
+func GetCustomersInSegment(segmentID primitive.ObjectID) ([]primitive.ObjectID, error) {
+	var segment models.CustomerSegment
+	err := customerSegmentColl.FindOne(context.Background(), bson.M{"_id": segmentID}).Decode(&segment)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return []primitive.ObjectID{}, nil
+		}
+		return nil, err
+	}
+	return segment.CustomerIDs, nil
+}

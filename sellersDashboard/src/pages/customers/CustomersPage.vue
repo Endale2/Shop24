@@ -1,7 +1,7 @@
 <template>
-  <div class="p-4 sm:p-6 max-w-7xl mx-auto space-y-8 font-sans">
+  <div class="p-4 sm:p-6 max-w-7xl mx-auto font-sans">
     <!-- Header Section -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
       <div>
         <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">
           Customers
@@ -9,20 +9,10 @@
         <p class="text-gray-600 mt-2">Manage your customer relationships and segments</p>
       </div>
 
-      <div class="flex flex-col sm:flex-row sm:items-center space-y-4 sm:space-y-0 sm:space-x-4 w-full md:w-auto">
-        <div class="relative w-full sm:w-64">
-          <input
-            v-model="search"
-            type="text"
-            placeholder="Search by name or email..."
-            class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-150 ease-in-out shadow-sm"
-          />
-          <SearchIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-        </div>
-
+      <div class="flex flex-col sm:flex-row gap-3 mt-4 sm:mt-0">
         <button
           @click="showCreateSegmentModal = true"
-          class="inline-flex items-center px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-lg shadow-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out"
+          class="inline-flex items-center px-4 py-2.5 bg-blue-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out"
         >
           <FolderAddIcon class="w-5 h-5 mr-2 -ml-1" />
           New Segment
@@ -30,35 +20,48 @@
 
         <button
           @click="goToSegmentsPage"
-          class="inline-flex items-center px-4 py-2 bg-gray-100 text-blue-700 text-sm font-medium rounded-lg shadow-md hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out"
+          class="inline-flex items-center px-4 py-2.5 bg-gray-100 text-blue-700 text-sm font-medium rounded-lg shadow-sm hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 transition duration-150 ease-in-out"
         >
           <FolderIcon class="w-5 h-5 mr-2 -ml-1" />
           Manage Segments
         </button>
 
-        <div class="inline-flex rounded-full shadow-md overflow-hidden" role="group">
-          <button
-            @click="currentView = 'cards'"
-            :class="buttonClass('cards')"
-            class="px-5 py-2.5 text-sm font-medium border border-gray-300 focus:z-10 focus:ring-2 focus:ring-green-500 focus:outline-none transition-colors duration-200 ease-in-out"
-          >
-            <ViewGridIcon class="w-5 h-5 inline-block mr-1" />
-            Cards
-          </button>
+        <div class="inline-flex rounded-lg shadow-sm overflow-hidden" role="group">
           <button
             @click="currentView = 'list'"
-            :class="buttonClass('list')"
-            class="px-5 py-2.5 text-sm font-medium border border-gray-300 focus:z-10 focus:ring-2 focus:ring-green-500 focus:outline-none transition-colors duration-200 ease-in-out"
+            :class="viewButtonClass('list')"
+            class="px-4 py-2.5 text-sm font-medium border border-gray-300 focus:z-10 focus:ring-2 focus:ring-green-500 focus:outline-none transition-colors duration-200 ease-in-out"
           >
             <ViewListIcon class="w-5 h-5 inline-block mr-1" />
             List
+          </button>
+          <button
+            @click="currentView = 'cards'"
+            :class="viewButtonClass('cards')"
+            class="px-4 py-2.5 text-sm font-medium border border-gray-300 focus:z-10 focus:ring-2 focus:ring-green-500 focus:outline-none transition-colors duration-200 ease-in-out"
+          >
+            <ViewGridIcon class="w-5 h-5 inline-block mr-1" />
+            Cards
           </button>
         </div>
       </div>
     </div>
 
+    <!-- Search Bar -->
+    <div class="mb-6">
+      <div class="relative max-w-md">
+        <input
+          v-model="search"
+          type="text"
+          placeholder="Search by name or email..."
+          class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-150 ease-in-out shadow-sm"
+        />
+        <SearchIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+      </div>
+    </div>
+
     <!-- Statistics Dashboard -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
       <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
         <div class="flex items-center">
           <div class="p-2 bg-green-100 rounded-lg">
@@ -109,7 +112,7 @@
     </div>
 
     <!-- Segment Filter -->
-    <div v-if="segments.length > 0" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <div v-if="segments.length > 0" class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
       <h3 class="text-lg font-semibold text-gray-900 mb-4">Filter by Segment</h3>
       <div class="flex flex-wrap gap-3">
         <button
@@ -140,76 +143,172 @@
     </div>
 
     <!-- Loading State -->
-    <div v-if="loading" class="flex flex-col items-center justify-center text-gray-600 py-16">
-      <RefreshIcon class="animate-spin h-10 w-10 text-green-500 mb-3" />
-      <p class="text-lg">Loading customers...</p>
+    <div v-if="loading" class="space-y-4">
+      <div v-if="currentView === 'list'" class="overflow-x-auto bg-white shadow-lg rounded-xl animate-pulse">
+        <table class="min-w-full divide-y divide-gray-200">
+          <thead class="bg-gray-50">
+            <tr>
+              <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Customer</th>
+              <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Contact</th>
+              <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Segments</th>
+              <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Joined</th>
+              <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-gray-200">
+            <tr v-for="n in 5" :key="n" class="bg-white">
+              <td class="py-3 px-6"><div class="h-4 bg-gray-200 rounded w-3/4"></div></td>
+              <td class="py-3 px-6"><div class="h-4 bg-gray-200 rounded w-1/2"></div></td>
+              <td class="py-3 px-6"><div class="h-4 bg-gray-200 rounded w-1/3"></div></td>
+              <td class="py-3 px-6"><div class="h-4 bg-gray-200 rounded w-1/4"></div></td>
+              <td class="py-3 px-6"><div class="h-4 bg-gray-200 rounded w-1/3"></div></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-pulse">
+        <div v-for="n in 8" :key="n" class="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col">
+          <div class="p-6 flex flex-col items-center space-y-4">
+            <div class="h-20 w-20 bg-gray-200 rounded-full"></div>
+            <div class="space-y-2 w-full">
+              <div class="h-4 bg-gray-200 rounded w-3/4 mx-auto"></div>
+              <div class="h-3 bg-gray-200 rounded w-1/2 mx-auto"></div>
+              <div class="h-3 bg-gray-200 rounded w-2/3 mx-auto"></div>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Error State -->
     <div
       v-else-if="error"
-      class="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-sm"
+      class="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg shadow-sm mb-6"
       role="alert"
     >
-      <p class="font-bold">Oops! Something went wrong:</p>
-      <p class="mt-2">{{ error }}</p>
-      <p class="text-sm mt-2">Please try again or contact support if the issue persists.</p>
+      <div class="flex items-center">
+        <ExclamationCircleIcon class="h-5 w-5 mr-2 flex-shrink-0" />
+        <div>
+          <strong class="font-semibold">Error:</strong>
+          <span class="ml-1">{{ error }}</span>
+        </div>
+      </div>
+      <p class="text-sm mt-2">Please ensure you have an active shop selected and try again.</p>
     </div>
 
-    <!-- Empty State -->
-    <div
-      v-else-if="filteredCustomers.length === 0"
-      class="bg-green-50 border border-green-200 text-green-700 px-6 py-8 rounded-lg text-center mt-8 shadow-sm"
-    >
-      <p class="text-lg font-medium">
-        No customers found<span v-if="search"> matching "{{ search }}"</span><span v-if="selectedSegment"> in this segment</span>.
-      </p>
-      <p class="mt-2" v-if="!search && !selectedSegment">
-        It looks like there are no customers for your active shop yet.
-      </p>
-    </div>
-
-    <!-- List View -->
-    <div v-else-if="currentView === 'list'" class="overflow-x-auto bg-white shadow-lg rounded-xl">
-      <table class="min-w-full divide-y divide-gray-200">
-        <thead class="bg-gray-100">
-          <tr>
-            <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Customer</th>
-            <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Contact</th>
-            <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Segments</th>
-            <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Joined</th>
-            <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
-          </tr>
-        </thead>
-        <tbody class="divide-y divide-gray-200">
-          <tr
-            v-for="(cust, i) in filteredCustomers"
-            :key="cust.id"
-            class="transition duration-150 ease-in-out transform hover:scale-[1.005] hover:bg-green-50"
-            :class="{ 'bg-gray-50': i % 2 === 1 }"
-          >
-            <td class="py-3 px-6 text-sm text-gray-800 font-medium">
-              <div class="flex items-center">
-                <div
-                  class="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center text-green-700 text-sm font-semibold mr-3 cursor-pointer"
-                  @click="goToCustomerDetail(cust.id)"
-                >
-                  {{ getInitials(cust.firstName, cust.lastName) }}
-                </div>
-                <div>
-                  <div class="font-medium text-gray-900 cursor-pointer" @click="goToCustomerDetail(cust.id)">
-                    {{ cust.firstName }} {{ cust.lastName }}
+    <!-- Content -->
+    <div v-else>
+      <div v-if="filteredCustomers.length">
+        <!-- List View -->
+        <div v-if="currentView === 'list'" class="overflow-x-auto bg-white shadow-lg rounded-xl">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Customer</th>
+                <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Contact</th>
+                <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Segments</th>
+                <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Joined</th>
+                <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Actions</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              <tr
+                v-for="(cust, i) in filteredCustomers"
+                :key="cust.id"
+                class="transition duration-150 ease-in-out transform hover:scale-[1.005] hover:bg-green-50"
+                :class="{ 'bg-gray-50': i % 2 === 1 }"
+              >
+                <td class="py-3 px-6 text-sm text-gray-800 font-medium">
+                  <div class="flex items-center">
+                    <div
+                      class="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center text-green-700 text-sm font-semibold mr-3 cursor-pointer"
+                      @click="goToCustomerDetail(cust.id)"
+                    >
+                      {{ getInitials(cust.firstName, cust.lastName) }}
+                    </div>
+                    <div>
+                      <div class="font-medium text-gray-900 cursor-pointer" @click="goToCustomerDetail(cust.id)">
+                        {{ cust.firstName }} {{ cust.lastName }}
+                      </div>
+                      <div class="text-gray-500 font-mono text-xs">@{{ cust.username }}</div>
+                    </div>
                   </div>
-                  <div class="text-gray-500 font-mono text-xs">@{{ cust.username }}</div>
-                </div>
+                </td>
+                <td class="py-3 px-6 text-sm text-gray-700">
+                  <div>{{ cust.email }}</div>
+                  <div class="text-gray-500">{{ cust.phone || 'No phone' }}</div>
+                </td>
+                <td class="py-3 px-6 text-sm text-gray-700">
+                  <div class="flex flex-wrap gap-1">
+                    <span
+                      v-for="segment in getCustomerSegments(cust.id)"
+                      :key="segment.id"
+                      class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
+                      :style="{ backgroundColor: segment.color + '20', color: segment.color }"
+                    >
+                      {{ segment.name }}
+                    </span>
+                    <span v-if="getCustomerSegments(cust.id).length === 0" class="text-gray-400 text-xs">
+                      No segments
+                    </span>
+                  </div>
+                </td>
+                <td class="py-3 px-6 text-sm text-gray-600">{{ formatDate(cust.createdAt) }}</td>
+                <td class="py-3 px-6 text-sm text-gray-700">
+                  <div class="flex space-x-2">
+                    <button
+                      @click="goToCustomerDetail(cust.id)"
+                      class="text-green-600 hover:text-green-800 transition-colors"
+                      title="View Details"
+                    >
+                      <EyeIcon class="w-4 h-4" />
+                    </button>
+                    <button
+                      @click="showSegmentModal = true; selectedCustomer = cust"
+                      class="text-blue-600 hover:text-blue-800 transition-colors"
+                      title="Manage Segments"
+                    >
+                      <FolderAddIcon class="w-4 h-4" />
+                    </button>
+                    <button
+                      @click="unlinkCustomer(cust.linkId)"
+                      class="text-red-600 hover:text-red-800 transition-colors"
+                      title="Remove from Shop"
+                    >
+                      <UserRemoveIcon class="w-4 h-4" />
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Card View -->
+        <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+          <div
+            v-for="cust in filteredCustomers"
+            :key="cust.id"
+            class="bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer transform hover:scale-105 hover:shadow-xl transition duration-200 ease-in-out flex flex-col group"
+          >
+            <div class="flex flex-col items-center p-6 text-center space-y-4">
+              <div
+                class="h-20 w-20 bg-gradient-to-br from-green-400 to-teal-500 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-md cursor-pointer"
+                @click="goToCustomerDetail(cust.id)"
+              >
+                {{ getInitials(cust.firstName, cust.lastName) }}
               </div>
-            </td>
-            <td class="py-3 px-6 text-sm text-gray-700">
-              <div>{{ cust.email }}</div>
-              <div class="text-gray-500">{{ cust.phone || 'No phone' }}</div>
-            </td>
-            <td class="py-3 px-6 text-sm text-gray-700">
-              <div class="flex flex-wrap gap-1">
+              <div class="space-y-1">
+                <h3 class="text-xl font-semibold text-gray-800 cursor-pointer" @click="goToCustomerDetail(cust.id)">
+                  {{ cust.firstName }} {{ cust.lastName }}
+                </h3>
+                <p class="text-sm text-gray-600 truncate">{{ cust.email }}</p>
+                <p class="text-sm text-gray-600">{{ cust.phone || 'N/A' }}</p>
+              </div>
+              
+              <!-- Segments -->
+              <div class="flex flex-wrap gap-1 justify-center">
                 <span
                   v-for="segment in getCustomerSegments(cust.id)"
                   :key="segment.id"
@@ -218,102 +317,54 @@
                 >
                   {{ segment.name }}
                 </span>
-                <span v-if="getCustomerSegments(cust.id).length === 0" class="text-gray-400 text-xs">
-                  No segments
-                </span>
               </div>
-            </td>
-            <td class="py-3 px-6 text-sm text-gray-600">{{ formatDate(cust.createdAt) }}</td>
-            <td class="py-3 px-6 text-sm text-gray-700">
-              <div class="flex space-x-2">
-                <button
-                  @click="goToCustomerDetail(cust.id)"
-                  class="text-green-600 hover:text-green-800 transition-colors"
-                >
-                  <EyeIcon class="w-4 h-4" />
-                </button>
-                <button
-                  @click="showSegmentModal = true; selectedCustomer = cust"
-                  class="text-blue-600 hover:text-blue-800 transition-colors"
-                >
-                  <FolderAddIcon class="w-4 h-4" />
-                </button>
-                <button
-                  @click="unlinkCustomer(cust.linkId)"
-                  class="text-red-600 hover:text-red-800 transition-colors"
-                >
-                  <UserRemoveIcon class="w-4 h-4" />
-                </button>
-              </div>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+            </div>
+            
+            <div class="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
+              <span class="text-gray-700 font-mono">@{{ cust.username }}</span>
+              <span>{{ formatDate(cust.createdAt) }}</span>
+            </div>
+            
+            <!-- Action buttons -->
+            <div class="px-6 py-2 bg-gray-50 border-t border-gray-100 flex justify-center space-x-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+              <button
+                @click="goToCustomerDetail(cust.id)"
+                class="text-green-600 hover:text-green-800 transition-colors"
+                title="View Details"
+              >
+                <EyeIcon class="w-4 h-4" />
+              </button>
+              <button
+                @click="showSegmentModal = true; selectedCustomer = cust"
+                class="text-blue-600 hover:text-blue-800 transition-colors"
+                title="Manage Segments"
+              >
+                <FolderAddIcon class="w-4 h-4" />
+              </button>
+              <button
+                @click="unlinkCustomer(cust.linkId)"
+                class="text-red-600 hover:text-red-800 transition-colors"
+                title="Remove from Shop"
+              >
+                <UserRemoveIcon class="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
 
-    <!-- Card View -->
-    <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-      <div
-        v-for="cust in filteredCustomers"
-        :key="cust.id"
-        class="bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer transform hover:scale-105 hover:shadow-xl transition duration-200 ease-in-out flex flex-col group"
-      >
-        <div class="flex flex-col items-center p-6 text-center space-y-4">
-          <div
-            class="h-20 w-20 bg-gradient-to-br from-green-400 to-teal-500 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-md cursor-pointer"
-            @click="goToCustomerDetail(cust.id)"
-          >
-            {{ getInitials(cust.firstName, cust.lastName) }}
+      <!-- Empty State -->
+      <div v-else class="bg-green-50 border border-green-200 text-green-700 px-6 py-8 rounded-lg text-center mt-8 shadow-sm">
+        <div class="flex flex-col items-center">
+          <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+            <UsersIcon class="w-8 h-8 text-green-600" />
           </div>
-          <div class="space-y-1">
-            <h3 class="text-xl font-semibold text-gray-800 cursor-pointer" @click="goToCustomerDetail(cust.id)">
-              {{ cust.firstName }} {{ cust.lastName }}
-            </h3>
-            <p class="text-sm text-gray-600 truncate">{{ cust.email }}</p>
-            <p class="text-sm text-gray-600">{{ cust.phone || 'N/A' }}</p>
-          </div>
-          
-          <!-- Segments -->
-          <div class="flex flex-wrap gap-1 justify-center">
-            <span
-              v-for="segment in getCustomerSegments(cust.id)"
-              :key="segment.id"
-              class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
-              :style="{ backgroundColor: segment.color + '20', color: segment.color }"
-            >
-              {{ segment.name }}
-            </span>
-          </div>
-        </div>
-        
-        <div class="px-6 py-3 bg-gray-50 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
-          <span class="text-gray-700 font-mono">@{{ cust.username }}</span>
-          <span>{{ formatDate(cust.createdAt) }}</span>
-        </div>
-        
-        <!-- Action buttons -->
-        <div class="px-6 py-2 bg-gray-50 border-t border-gray-100 flex justify-center space-x-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-          <button
-            @click="goToCustomerDetail(cust.id)"
-            class="text-green-600 hover:text-green-800 transition-colors"
-            title="View Details"
-          >
-            <EyeIcon class="w-4 h-4" />
-          </button>
-          <button
-            @click="showSegmentModal = true; selectedCustomer = cust"
-            class="text-blue-600 hover:text-blue-800 transition-colors"
-            title="Manage Segments"
-          >
-            <FolderAddIcon class="w-4 h-4" />
-          </button>
-          <button
-            @click="unlinkCustomer(cust.linkId)"
-            class="text-red-600 hover:text-red-800 transition-colors"
-            title="Remove from Shop"
-          >
-            <UserRemoveIcon class="w-4 h-4" />
-          </button>
+          <p class="text-lg font-medium">No customers found</p>
+          <p class="mt-2 text-sm">
+            <span v-if="search">No customers matching "{{ search }}"</span>
+            <span v-else-if="selectedSegment">No customers in this segment</span>
+            <span v-else>It looks like there are no customers for your active shop yet.</span>
+          </p>
         </div>
       </div>
     </div>
@@ -449,7 +500,8 @@ import {
   UserGroupIcon,
   FolderAddIcon,
   EyeIcon,
-  UserRemoveIcon
+  UserRemoveIcon,
+  ExclamationCircleIcon
 } from '@heroicons/vue/outline'
 
 const router = useRouter()
@@ -537,7 +589,7 @@ async function refreshData() {
 }
 
 // Methods
-function buttonClass(view) {
+function viewButtonClass(view) {
   return view === currentView.value
     ? 'bg-green-600 text-white hover:bg-green-700 shadow-inner'
     : 'bg-gray-200 text-gray-700 hover:bg-gray-300'

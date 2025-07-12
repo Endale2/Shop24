@@ -181,3 +181,10 @@ func (svc *CustomerSegmentService) GetSegmentsByCustomerService(
 ) ([]models.CustomerSegment, error) {
 	return repositories.GetSegmentsByCustomer(shopID, customerID)
 }
+
+// GetCustomersInSegmentService returns all customers in a specific segment
+func (svc *CustomerSegmentService) GetCustomersInSegmentService(
+	segmentID primitive.ObjectID,
+) ([]primitive.ObjectID, error) {
+	return repositories.GetCustomersInSegment(segmentID)
+}

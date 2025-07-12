@@ -101,16 +101,31 @@ func (d *Discount) IsEligible(customerID primitive.ObjectID, customerSegmentIDs 
 	case DiscountEligibilityAll:
 		return true
 	case DiscountEligibilitySpecific:
-		// If no customers are listed, allow everyone
-		if len(d.AllowedCustomerIDs) == 0 {
-			return true
-		}
 		// Check if customer is in the allowed list
-		for _, allowedID := range d.AllowedCustomerIDs {
-			if allowedID == customerID {
-				return true
+		if len(d.AllowedCustomerIDs) > 0 {
+			for _, allowedID := range d.AllowedCustomerIDs {
+				if allowedID == customerID {
+					return true
+				}
 			}
 		}
+
+		// Also check if customer is in any of the allowed segments (for mixed eligibility)
+		if len(d.AllowedSegmentIDs) > 0 {
+			for _, segmentID := range d.AllowedSegmentIDs {
+				for _, customerSegmentID := range customerSegmentIDs {
+					if segmentID == customerSegmentID {
+						return true
+					}
+				}
+			}
+		}
+
+		// If no customers or segments are listed, allow everyone
+		if len(d.AllowedCustomerIDs) == 0 && len(d.AllowedSegmentIDs) == 0 {
+			return true
+		}
+
 		return false
 	case DiscountEligibilitySegment:
 		// If no segments are listed, allow everyone

@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/Endale2/DRPS/sellers/repositories"
 	"github.com/Endale2/DRPS/shared/models"
 	sharedSvc "github.com/Endale2/DRPS/shared/services"
 	"github.com/gin-gonic/gin"
@@ -581,16 +582,14 @@ func ClearAllowedCustomersAndSegments(c *gin.Context) {
 	}
 	idHex := c.Param("id")
 	upd := bson.M{
-		"allowed_customers": []primitive.ObjectID{},
-		"allowed_segments":  []primitive.ObjectID{},
-		"eligibility_type":  models.DiscountEligibilityAll,
-		"updated_at":        time.Now(),
+		"eligibility_type": models.DiscountEligibilityAll,
+		"updated_at":       time.Now(),
 	}
 	if err := sharedSvc.UpdateDiscountService(idHex, upd); err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"message": "eligibility cleared, now allows everyone"})
+	c.JSON(http.StatusOK, gin.H{"message": "eligibility set to allow everyone"})
 }
 
 // GetDiscountUsageStats GET /seller/shops/:shopId/discounts/:id/usage
@@ -687,5 +686,196 @@ func ValidateDiscountForCustomer(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{
 		"can_use": canUse,
 		"error":   nil,
+	})
+}
+
+// AddMixedEligibility POST /seller/shops/:shopId/discounts/:id/mixed-eligibility
+func AddMixedEligibility(c *gin.Context) {
+	userHex, _ := c.Get("user_id")
+	sellerID, _ := primitive.ObjectIDFromHex(userHex.(string))
+	shopHex := c.Param("shopId")
+	shop, err := sharedSvc.GetShopByIDService(shopHex)
+	if err != nil || shop == nil || shop.OwnerID != sellerID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "not authorized"})
+		return
+	}
+
+	idHex := c.Param("id")
+	d, err := sharedSvc.GetDiscountByIDService(idHex)
+	if err != nil {
+		if err == sharedSvc.ErrDiscountNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "discount not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+	if d.ShopID != shop.ID {
+		c.JSON(http.StatusNotFound, gin.H{"error": "discount not found"})
+		return
+	}
+
+	var input struct {
+		CustomerIDs []string `json:"customerIds,omitempty"`
+		SegmentIDs  []string `json:"segmentIds,omitempty"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Convert string IDs to ObjectIDs
+	var customerObjectIDs []primitive.ObjectID
+	for _, idStr := range input.CustomerIDs {
+		if oid, err := primitive.ObjectIDFromHex(idStr); err == nil {
+			customerObjectIDs = append(customerObjectIDs, oid)
+		}
+	}
+
+	var segmentObjectIDs []primitive.ObjectID
+	for _, idStr := range input.SegmentIDs {
+		if oid, err := primitive.ObjectIDFromHex(idStr); err == nil {
+			segmentObjectIDs = append(segmentObjectIDs, oid)
+		}
+	}
+
+	// Determine eligibility type based on what's provided
+	var eligibilityType models.DiscountEligibilityType
+	if len(customerObjectIDs) > 0 && len(segmentObjectIDs) > 0 {
+		// Mixed eligibility - both customers and segments
+		eligibilityType = models.DiscountEligibilitySpecific // We'll use specific for mixed
+	} else if len(customerObjectIDs) > 0 {
+		// Only customers
+		eligibilityType = models.DiscountEligibilitySpecific
+	} else if len(segmentObjectIDs) > 0 {
+		// Only segments
+		eligibilityType = models.DiscountEligibilitySegment
+	} else {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "must provide at least one customer or segment ID"})
+		return
+	}
+
+	// Add to existing allowed customers and segments
+	d.AllowedCustomerIDs = append(d.AllowedCustomerIDs, customerObjectIDs...)
+	d.AllowedSegmentIDs = append(d.AllowedSegmentIDs, segmentObjectIDs...)
+	d.EligibilityType = eligibilityType
+
+	// Update in database
+	err = sharedSvc.UpdateDiscountService(idHex, bson.M{
+		"allowed_customers": d.AllowedCustomerIDs,
+		"allowed_segments":  d.AllowedSegmentIDs,
+		"eligibility_type":  d.EligibilityType,
+	})
+
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "eligibility updated successfully"})
+}
+
+// GetEligibleCustomers GET /seller/shops/:shopId/discounts/:id/eligible-customers
+func GetEligibleCustomers(c *gin.Context) {
+	userHex, _ := c.Get("user_id")
+	sellerID, _ := primitive.ObjectIDFromHex(userHex.(string))
+	shopHex := c.Param("shopId")
+	shop, err := sharedSvc.GetShopByIDService(shopHex)
+	if err != nil || shop == nil || shop.OwnerID != sellerID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "not authorized"})
+		return
+	}
+
+	idHex := c.Param("id")
+	d, err := sharedSvc.GetDiscountByIDService(idHex)
+	if err != nil {
+		if err == sharedSvc.ErrDiscountNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "discount not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+	if d.ShopID != shop.ID {
+		c.JSON(http.StatusNotFound, gin.H{"error": "discount not found"})
+		return
+	}
+
+	// If eligibility is 'all', return empty array (everyone is eligible)
+	if d.EligibilityType == models.DiscountEligibilityAll {
+		c.JSON(http.StatusOK, gin.H{
+			"eligible_customers": []gin.H{},
+			"eligibility_type":   "all",
+			"message":            "Everyone is eligible for this discount",
+		})
+		return
+	}
+
+	// Get direct customers
+	var directCustomers []gin.H
+	if len(d.AllowedCustomerIDs) > 0 {
+		for _, customerID := range d.AllowedCustomerIDs {
+			customer, err := sharedSvc.GetCustomerByIDService(customerID.Hex())
+			if err == nil && customer != nil {
+				directCustomers = append(directCustomers, gin.H{
+					"id":        customer.ID.Hex(),
+					"firstName": customer.FirstName,
+					"lastName":  customer.LastName,
+					"email":     customer.Email,
+					"source":    "direct",
+				})
+			}
+		}
+	}
+
+	// Get customers from segments
+	var segmentCustomers []gin.H
+	if len(d.AllowedSegmentIDs) > 0 {
+		for _, segmentID := range d.AllowedSegmentIDs {
+			segment, err := repositories.GetCustomerSegmentByID(segmentID)
+			if err == nil && segment != nil {
+				// Get customers in this segment
+				customerIDs, err := repositories.GetCustomersInSegment(segmentID)
+				if err == nil {
+					for _, customerID := range customerIDs {
+						// Get customer details
+						customer, err := sharedSvc.GetCustomerByIDService(customerID.Hex())
+						if err == nil && customer != nil {
+							// Check if customer is already in direct customers
+							isDirect := false
+							for _, direct := range directCustomers {
+								if direct["id"] == customer.ID.Hex() {
+									isDirect = true
+									break
+								}
+							}
+
+							// Only add if not already in direct customers
+							if !isDirect {
+								segmentCustomers = append(segmentCustomers, gin.H{
+									"id":          customer.ID.Hex(),
+									"firstName":   customer.FirstName,
+									"lastName":    customer.LastName,
+									"email":       customer.Email,
+									"source":      "segment",
+									"segmentName": segment.Name,
+								})
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Combine and deduplicate customers
+	allCustomers := append(directCustomers, segmentCustomers...)
+
+	c.JSON(http.StatusOK, gin.H{
+		"eligible_customers": allCustomers,
+		"eligibility_type":   d.EligibilityType,
+		"direct_count":       len(directCustomers),
+		"segment_count":      len(segmentCustomers),
+		"total_count":        len(allCustomers),
 	})
 }

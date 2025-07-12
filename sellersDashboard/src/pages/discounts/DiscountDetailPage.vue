@@ -164,43 +164,78 @@
           <div class="space-y-6">
             <div>
               <h4 class="text-lg font-medium text-gray-900 mb-3">Eligibility Settings</h4>
-              <div class="space-y-3">
-                <div class="flex justify-between items-center">
-                  <span class="text-sm text-gray-600">Eligibility Type:</span>
+              <div class="space-y-4">
+                <!-- Eligibility Status -->
+                <div class="flex items-center justify-between p-3 rounded-lg" :class="{
+                  'bg-green-50 border border-green-200': discount.eligibilityType === 'all',
+                  'bg-blue-50 border border-blue-200': discount.eligibilityType === 'specific' || discount.eligibilityType === 'segment'
+                }">
+                  <div class="flex items-center">
+                    <UsersIcon class="w-5 h-5 mr-2" :class="{
+                      'text-green-600': discount.eligibilityType === 'all',
+                      'text-blue-600': discount.eligibilityType === 'specific' || discount.eligibilityType === 'segment'
+                    }" />
+                    <div>
+                      <span class="text-sm font-medium text-gray-900">
+                        {{ discount.eligibilityType === 'all' ? 'Everyone is eligible' : 'Specific customers are eligible' }}
+                      </span>
+                      <p class="text-xs text-gray-600 mt-1">
+                        {{ getEligibilityDescription() }}
+                      </p>
+                    </div>
+                  </div>
                   <span :class="{
                     'bg-green-100 text-green-800': discount.eligibilityType === 'all',
-                    'bg-blue-100 text-blue-800': discount.eligibilityType === 'specific',
-                    'bg-purple-100 text-purple-800': discount.eligibilityType === 'segment'
+                    'bg-blue-100 text-blue-800': discount.eligibilityType === 'specific' || discount.eligibilityType === 'segment'
                   }" class="inline-flex px-2.5 py-0.5 rounded-full text-xs font-medium">
                     {{ formatEligibility(discount.eligibilityType) }}
                   </span>
-                  <button @click="clearEligibility" class="ml-4 px-2 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-xs">Allow Everyone</button>
                 </div>
-                <div v-if="discount.eligibilityType === 'specific'">
-                  <span class="text-sm text-gray-600">Allowed Customers:</span>
-                  <ul class="mt-1 ml-4 list-disc text-sm text-gray-900">
-                    <li v-for="cust in dedupedAllowedCustomers" :key="cust.id">
-                      {{ cust.firstName }} {{ cust.lastName }} <span class="text-gray-500">({{ cust.email }})</span>
-                    </li>
-                    <li v-if="dedupedAllowedCustomers.length === 0" class="text-gray-500">No customers added.</li>
-                  </ul>
+
+                <!-- Eligible Customers List -->
+                <div v-if="discount.eligibilityType !== 'all' && eligibleCustomers.length > 0" class="space-y-3">
+                  <div class="flex items-center justify-between">
+                    <h5 class="text-sm font-medium text-gray-900">Eligible Customers ({{ eligibleCustomers.length }})</h5>
+                    <button @click="showEligibleCustomers = !showEligibleCustomers" 
+                            class="text-xs text-blue-600 hover:text-blue-800 font-medium">
+                      {{ showEligibleCustomers ? 'Hide' : 'Show' }} Details
+                    </button>
+                  </div>
+                  
+                  <div v-if="showEligibleCustomers" class="max-h-48 overflow-y-auto space-y-2">
+                    <div v-for="customer in eligibleCustomers" :key="customer.id"
+                         class="flex items-center justify-between p-2 bg-gray-50 rounded-md">
+                      <div class="flex items-center">
+                        <div class="w-2 h-2 rounded-full mr-2" :class="{
+                          'bg-blue-500': customer.source === 'direct',
+                          'bg-purple-500': customer.source === 'segment'
+                        }"></div>
+                        <div>
+                          <span class="text-sm font-medium text-gray-900">
+                            {{ customer.firstName }} {{ customer.lastName }}
+                          </span>
+                          <p class="text-xs text-gray-500">{{ customer.email }}</p>
+                        </div>
+                      </div>
+                      <div class="flex items-center">
+                        <span v-if="customer.source === 'segment'" 
+                              class="text-xs bg-purple-100 text-purple-800 px-2 py-1 rounded-full">
+                          {{ customer.segmentName }}
+                        </span>
+                        <span v-else 
+                              class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                          Direct
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <div v-if="discount.eligibilityType === 'segment'">
-                  <span class="text-sm text-gray-600">Allowed Segments:</span>
-                  <ul class="mt-1 ml-4 list-disc text-sm text-gray-900">
-                    <li v-for="seg in allowedSegmentDetails" :key="seg.id">
-                      {{ seg.name }} <span v-if="seg.description" class="text-gray-500">- {{ seg.description }}</span>
-                    </li>
-                    <li v-if="allowedSegmentDetails.length === 0" class="text-gray-500">No segments added.</li>
-                  </ul>
-                </div>
-                <div v-if="discount.minimumOrderSubtotal" class="flex justify-between items-center">
-                  <span class="text-sm text-gray-600">Minimum Order:</span>
-                  <span class="font-medium text-gray-900">${{ discount.minimumOrderSubtotal.toFixed(2) }}</span>
-                </div>
-                <div v-if="discount.freeShipping" class="flex justify-between items-center">
-                  <span class="text-sm text-gray-600">Free Shipping:</span>
-                  <span class="text-green-600 font-medium">Enabled</span>
+
+                <!-- No Eligible Customers Message -->
+                <div v-else-if="discount.eligibilityType !== 'all'" 
+                     class="text-center py-4 text-gray-500">
+                  <UsersIcon class="w-8 h-8 mx-auto mb-2 text-gray-400" />
+                  <p class="text-sm">No specific customers or segments added yet</p>
                 </div>
               </div>
             </div>
@@ -208,15 +243,15 @@
             <div class="border-t border-gray-200 pt-4">
               <h4 class="text-lg font-medium text-gray-900 mb-3">Management Actions</h4>
               <div class="flex flex-wrap gap-2">
-                <button @click="openAddCustomersModal"
-                        class="inline-flex items-center px-3 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 transition duration-150 ease-in-out">
+                <button @click="openMixedEligibilityModal"
+                        class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white text-sm font-medium rounded-md hover:bg-green-700 transition duration-150 ease-in-out">
                   <PlusIcon class="w-4 h-4 mr-1" />
-                  Add Customers
+                  Add Customers/Segments
                 </button>
-                <button @click="openAddSegmentsModal"
-                        class="inline-flex items-center px-3 py-1.5 bg-purple-600 text-white text-sm font-medium rounded-md hover:bg-purple-700 transition duration-150 ease-in-out">
-                  <PlusIcon class="w-4 h-4 mr-1" />
-                  Add Segments
+                <button @click="clearEligibility"
+                        class="inline-flex items-center px-3 py-1.5 bg-orange-600 text-white text-sm font-medium rounded-md hover:bg-orange-700 transition duration-150 ease-in-out">
+                  <UsersIcon class="w-4 h-4 mr-1" />
+                  Allow Everyone
                 </button>
                 <button @click="refreshUsageStats"
                         class="inline-flex items-center px-3 py-1.5 bg-gray-600 text-white text-sm font-medium rounded-md hover:bg-gray-700 transition duration-150 ease-in-out">
@@ -336,153 +371,141 @@
       </div>
     </div>
 
-    <div v-if="showAddCustomersModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6 relative">
-        <h3 class="text-xl font-bold mb-4 text-gray-800">Add Customers to Discount</h3>
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Search and Select Customers</label>
-          <div class="relative customer-dropdown">
-            <input
-              type="text"
-              v-model="customerSearchQuery"
-              @input="filterCustomers"
-              placeholder="Search customers by name or email..."
-              class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out"
-            />
-            <div v-if="filteredCustomers.length > 0 && showCustomerDropdown" class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-              <div
-                v-for="customer in filteredCustomers"
-                :key="customer.id"
-                @click="toggleCustomerSelection(customer)"
-                class="flex items-center p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
-              >
-                <input
-                  type="checkbox"
-                  :checked="selectedCustomers.some(c => c.id === customer.id)"
-                  class="mr-3 h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
-                  readonly
-                />
-                <div class="flex-1">
-                  <div class="font-medium text-gray-900">{{ customer.firstName }} {{ customer.lastName }}</div>
-                  <div class="text-sm text-gray-500">{{ customer.email }}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div v-if="selectedCustomers.length > 0" class="mb-4">
-          <h4 class="text-sm font-medium text-gray-700 mb-2">Selected Customers:</h4>
-          <div class="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-            <span
-              v-for="customer in selectedCustomers"
-              :key="customer.id"
-              class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
-            >
-              {{ customer.firstName }} {{ customer.lastName }}
-              <button
-                @click="removeCustomer(customer)"
-                class="ml-2 text-blue-600 hover:text-blue-800"
-              >
-                ×
-              </button>
-            </span>
-          </div>
-        </div>
-        
-        <div class="flex justify-end space-x-3 pt-4">
-          <button
-            type="button"
-            @click="closeAddCustomersModal"
-            class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200"
-          >
-            Cancel
-          </button>
-          <button
-            @click="addCustomersToDiscount"
-            :disabled="selectedCustomers.length === 0"
-            class="px-4 py-2 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            Add {{ selectedCustomers.length }} Customer{{ selectedCustomers.length !== 1 ? 's' : '' }}
-          </button>
-        </div>
-        <button @click="closeAddCustomersModal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-200">
-          <XIcon class="h-6 w-6" />
-        </button>
-      </div>
-    </div>
 
-    <div v-if="showAddSegmentsModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl p-6 relative">
-        <h3 class="text-xl font-bold mb-4 text-gray-800">Add Segments to Discount</h3>
-        <div class="mb-4">
-          <label class="block text-sm font-medium text-gray-700 mb-2">Search and Select Segments</label>
-          <div class="relative segment-dropdown">
-            <input
-              type="text"
-              v-model="segmentSearchQuery"
-              @input="filterSegments"
-              placeholder="Search segments by name..."
-              class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out"
-            />
-            <div v-if="filteredSegments.length > 0 && showSegmentDropdown" class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
-              <div
-                v-for="segment in filteredSegments"
-                :key="segment.id"
-                @click="toggleSegmentSelection(segment)"
-                class="flex items-center p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
-              >
+
+    <div v-if="showMixedEligibilityModal" class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center z-50 p-4">
+      <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl p-6 relative">
+        <h3 class="text-xl font-bold mb-4 text-gray-800">Add Eligible Customers</h3>
+        
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Customers Section -->
+          <div>
+            <h4 class="text-lg font-medium text-gray-900 mb-3">Customers</h4>
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Search and Select Customers</label>
+              <div class="relative customer-dropdown">
                 <input
-                  type="checkbox"
-                  :checked="selectedSegments.some(s => s.id === segment.id)"
-                  class="mr-3 h-4 w-4 text-purple-600 rounded focus:ring-purple-500"
-                  readonly
+                  type="text"
+                  v-model="customerSearchQuery"
+                  @input="filterCustomers"
+                  placeholder="Search customers by name or email..."
+                  class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out"
                 />
-                <div class="flex-1">
-                  <div class="font-medium text-gray-900">{{ segment.name }}</div>
-                  <div class="text-sm text-gray-500">{{ segment.description || 'No description' }}</div>
+                <div v-if="filteredCustomers.length > 0 && showCustomerDropdown" class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  <div
+                    v-for="customer in filteredCustomers"
+                    :key="customer.id"
+                    @click="toggleCustomerSelection(customer)"
+                    class="flex items-center p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
+                  >
+                    <input
+                      type="checkbox"
+                      :checked="selectedCustomers.some(c => c.id === customer.id)"
+                      class="mr-3 h-4 w-4 text-blue-600 rounded focus:ring-blue-500"
+                      readonly
+                    />
+                    <div class="flex-1">
+                      <div class="font-medium text-gray-900">{{ customer.firstName }} {{ customer.lastName }}</div>
+                      <div class="text-sm text-gray-500">{{ customer.email }}</div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
+            
+            <div v-if="selectedCustomers.length > 0" class="mb-4">
+              <h5 class="text-sm font-medium text-gray-700 mb-2">Selected Customers:</h5>
+              <div class="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                <span
+                  v-for="customer in selectedCustomers"
+                  :key="customer.id"
+                  class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800"
+                >
+                  {{ customer.firstName }} {{ customer.lastName }}
+                  <button
+                    @click="removeCustomer(customer)"
+                    class="ml-2 text-blue-600 hover:text-blue-800"
+                  >
+                    ×
+                  </button>
+                </span>
+              </div>
+            </div>
           </div>
-        </div>
-        
-        <div v-if="selectedSegments.length > 0" class="mb-4">
-          <h4 class="text-sm font-medium text-gray-700 mb-2">Selected Segments:</h4>
-          <div class="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
-            <span
-              v-for="segment in selectedSegments"
-              :key="segment.id"
-              class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800"
-            >
-              {{ segment.name }}
-              <button
-                @click="removeSegment(segment)"
-                class="ml-2 text-purple-600 hover:text-purple-800"
-              >
-                ×
-              </button>
-            </span>
+
+          <!-- Segments Section -->
+          <div>
+            <h4 class="text-lg font-medium text-gray-900 mb-3">Segments</h4>
+            <div class="mb-4">
+              <label class="block text-sm font-medium text-gray-700 mb-2">Search and Select Segments</label>
+              <div class="relative segment-dropdown">
+                <input
+                  type="text"
+                  v-model="segmentSearchQuery"
+                  @input="filterSegments"
+                  placeholder="Search segments by name..."
+                  class="w-full border-gray-300 rounded-lg shadow-sm focus:border-green-500 focus:ring-green-500 px-3 py-2.5 transition duration-150 ease-in-out"
+                />
+                <div v-if="filteredSegments.length > 0 && showSegmentDropdown" class="absolute z-10 w-full mt-1 bg-white border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+                  <div
+                    v-for="segment in filteredSegments"
+                    :key="segment.id"
+                    @click="toggleSegmentSelection(segment)"
+                    class="flex items-center p-3 hover:bg-gray-100 cursor-pointer border-b border-gray-100 last:border-b-0"
+                  >
+                    <input
+                      type="checkbox"
+                      :checked="selectedSegments.some(s => s.id === segment.id)"
+                      class="mr-3 h-4 w-4 text-purple-600 rounded focus:ring-purple-500"
+                      readonly
+                    />
+                    <div class="flex-1">
+                      <div class="font-medium text-gray-900">{{ segment.name }}</div>
+                      <div class="text-sm text-gray-500">{{ segment.description || 'No description' }}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div v-if="selectedSegments.length > 0" class="mb-4">
+              <h5 class="text-sm font-medium text-gray-700 mb-2">Selected Segments:</h5>
+              <div class="flex flex-wrap gap-2 max-h-32 overflow-y-auto">
+                <span
+                  v-for="segment in selectedSegments"
+                  :key="segment.id"
+                  class="inline-flex items-center px-3 py-1 rounded-full text-sm bg-purple-100 text-purple-800"
+                >
+                  {{ segment.name }}
+                  <button
+                    @click="removeSegment(segment)"
+                    class="ml-2 text-purple-600 hover:text-purple-800"
+                  >
+                    ×
+                  </button>
+                </span>
+              </div>
+            </div>
           </div>
         </div>
         
         <div class="flex justify-end space-x-3 pt-4">
           <button
             type="button"
-            @click="closeAddSegmentsModal"
+            @click="closeMixedEligibilityModal"
             class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors duration-200"
           >
             Cancel
           </button>
           <button
-            @click="addSegmentsToDiscount"
-            :disabled="selectedSegments.length === 0"
-            class="px-4 py-2 bg-purple-600 text-white rounded-lg shadow-md hover:bg-purple-700 transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
+            @click="addMixedEligibility"
+            :disabled="selectedCustomers.length === 0 && selectedSegments.length === 0"
+            class="px-4 py-2 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 transition duration-300 ease-in-out disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            Add {{ selectedSegments.length }} Segment{{ selectedSegments.length !== 1 ? 's' : '' }}
+            Add {{ selectedCustomers.length + selectedSegments.length }} Customer{{ (selectedCustomers.length + selectedSegments.length) !== 1 ? 's' : '' }}
           </button>
         </div>
-        <button @click="closeAddSegmentsModal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-200">
+        <button @click="closeMixedEligibilityModal" class="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors duration-200">
           <XIcon class="h-6 w-6" />
         </button>
       </div>
@@ -588,8 +611,7 @@ const form = ref({
 
 // Enhanced discount functionality state
 const showUsageDetails = ref(false)
-const showAddCustomersModal = ref(false)
-const showAddSegmentsModal = ref(false)
+const showMixedEligibilityModal = ref(false)
 const showAddProductModal = ref(false)
 const productSearchQuery = ref('')
 const allProducts = ref([])
@@ -623,40 +645,20 @@ const addSegmentsForm = ref({
 // Add state for recent usage customer profiles
 const recentUsageProfiles = ref([])
 
-// Add state for allowed customer and segment details
-const allowedCustomerDetails = ref([])
-const allowedSegmentDetails = ref([])
 
-// Watch for discount changes and fetch allowed customer/segment details
+
+// Add state for eligible customers display
+const eligibleCustomers = ref([])
+const showEligibleCustomers = ref(false)
+
+// Watch for discount changes and reload eligible customers
 watch(
   () => discount.value,
   async (d) => {
-    allowedCustomerDetails.value = []
-    allowedSegmentDetails.value = []
-    if (!d || !shopId.value) return
-    // Fetch allowed customers
-    if (Array.isArray(d.allowedCustomers) && d.allowedCustomers.length > 0) {
-      allowedCustomerDetails.value = await Promise.all(
-        d.allowedCustomers.map(async id => {
-          try {
-            return await customerService.fetchById(shopId.value, id)
-          } catch (e) {
-            return { id, firstName: 'Unknown', lastName: '', email: '' }
-          }
-        })
-      )
-    }
-    // Fetch allowed segments
-    if (Array.isArray(d.allowedSegments) && d.allowedSegments.length > 0) {
-      allowedSegmentDetails.value = await Promise.all(
-        d.allowedSegments.map(async id => {
-          try {
-            return await customerSegmentService.fetchById(shopId.value, id)
-          } catch (e) {
-            return { id, name: 'Unknown', description: '' }
-          }
-        })
-      )
+    if (d && d.eligibilityType !== 'all') {
+      await loadEligibleCustomers()
+    } else {
+      eligibleCustomers.value = []
     }
   },
   { immediate: true }
@@ -773,6 +775,27 @@ function formatEligibility(eligibility) {
   return eligibilities[eligibility] || eligibility
 }
 
+function getEligibilityDescription() {
+  if (!discount.value) return ''
+  
+  if (discount.value.eligibilityType === 'all') {
+    return 'This discount is available to all customers'
+  }
+  
+  const directCount = discount.value.allowedCustomers?.length || 0
+  const segmentCount = discount.value.allowedSegments?.length || 0
+  
+  if (directCount > 0 && segmentCount > 0) {
+    return `${directCount} direct customers + ${segmentCount} segments`
+  } else if (directCount > 0) {
+    return `${directCount} direct customer${directCount !== 1 ? 's' : ''}`
+  } else if (segmentCount > 0) {
+    return `${segmentCount} customer segment${segmentCount !== 1 ? 's' : ''}`
+  } else {
+    return 'No specific customers or segments added'
+  }
+}
+
 function getStatusClass(discount) {
   if (!discount.active) return 'bg-red-100 text-red-800'
   
@@ -823,10 +846,30 @@ async function loadDiscount() {
     }
 
     discount.value = d;
+    
+    // Load eligible customers if not "all" eligibility
+    if (d && d.eligibilityType !== 'all') {
+      await loadEligibleCustomers();
+    } else {
+      eligibleCustomers.value = [];
+    }
   } catch (e) {
     console.error('Failed to load discount:', e);
   } finally {
     loading.value = false;
+  }
+}
+
+// Load eligible customers for the discount
+async function loadEligibleCustomers() {
+  if (!shopId.value || !discount.value?.id) return
+  
+  try {
+    const data = await discountService.getEligibleCustomers(shopId.value, discount.value.id);
+    eligibleCustomers.value = data.eligible_customers || [];
+  } catch (err) {
+    console.error('Failed to load eligible customers:', err);
+    eligibleCustomers.value = [];
   }
 }
 
@@ -956,65 +999,44 @@ async function confirmDelete(disc) {
 }
 
 // Enhanced discount management functions
-function openAddCustomersModal() {
-  showAddCustomersModal.value = true
+function openMixedEligibilityModal() {
+  showMixedEligibilityModal.value = true
   selectedCustomers.value = []
+  selectedSegments.value = []
   customerSearchQuery.value = ''
+  segmentSearchQuery.value = ''
   showCustomerDropdown.value = false
+  showSegmentDropdown.value = false
   if (customers.value.length === 0) {
     loadCustomers()
   }
-}
-
-function closeAddCustomersModal() {
-  showAddCustomersModal.value = false
-  selectedCustomers.value = []
-  customerSearchQuery.value = ''
-  showCustomerDropdown.value = false
-}
-
-function openAddSegmentsModal() {
-  showAddSegmentsModal.value = true
-  selectedSegments.value = []
-  segmentSearchQuery.value = ''
-  showSegmentDropdown.value = false
   if (segments.value.length === 0) {
     loadSegments()
   }
 }
 
-function closeAddSegmentsModal() {
-  showAddSegmentsModal.value = false
+function closeMixedEligibilityModal() {
+  showMixedEligibilityModal.value = false
+  selectedCustomers.value = []
   selectedSegments.value = []
+  customerSearchQuery.value = ''
   segmentSearchQuery.value = ''
+  showCustomerDropdown.value = false
   showSegmentDropdown.value = false
 }
 
-async function addCustomersToDiscount() {
-  if (!discount.value || selectedCustomers.value.length === 0) return
+async function addMixedEligibility() {
+  if (!discount.value || (selectedCustomers.value.length === 0 && selectedSegments.value.length === 0)) return
   try {
-    // Deduplicate customer IDs before sending
+    // Deduplicate IDs before sending
     const customerIds = Array.from(new Set(selectedCustomers.value.map(c => c.id)))
-    await discountService.addCustomers(shopId.value, discount.value.id, customerIds)
-    await loadDiscount()
-    closeAddCustomersModal()
-  } catch (err) {
-    console.error('Failed to add customers:', err)
-    alert('Failed to add customers: ' + (err.response?.data?.message || err.message))
-  }
-}
-
-async function addSegmentsToDiscount() {
-  if (!discount.value || selectedSegments.value.length === 0) return
-  try {
-    // Deduplicate segment IDs before sending
     const segmentIds = Array.from(new Set(selectedSegments.value.map(s => s.id)))
-    await discountService.addSegments(shopId.value, discount.value.id, segmentIds)
+    await discountService.addMixedEligibility(shopId.value, discount.value.id, customerIds, segmentIds)
     await loadDiscount()
-    closeAddSegmentsModal()
+    closeMixedEligibilityModal()
   } catch (err) {
-    console.error('Failed to add segments:', err)
-    alert('Failed to add segments: ' + (err.response?.data?.message || err.message))
+    console.error('Failed to add mixed eligibility:', err)
+    alert('Failed to add mixed eligibility: ' + (err.response?.data?.message || err.message))
   }
 }
 
@@ -1035,7 +1057,7 @@ async function refreshUsageStats() {
 // Add a method to clear eligibility
 async function clearEligibility() {
   if (!shopId.value || !discount.value?.id) return
-  if (!confirm('Are you sure you want to allow everyone for this discount? This will remove all specific customers and segments.')) return
+  if (!confirm('Are you sure you want to allow everyone for this discount? This will make the discount available to all customers.')) return
   await discountService.clearEligibility(shopId.value, discount.value.id)
   await loadDiscount()
 }
@@ -1140,26 +1162,9 @@ onUnmounted(() => {
   document.removeEventListener('click', handleClickOutside)
 })
 
-// Add a computed property for deduplicated eligible customer count (if you have both allowedCustomers and allowedSegments)
-const dedupedEligibleCustomerCount = computed(() => {
-  // If backend provides a deduplicated list, use it. Otherwise, deduplicate here.
-  const ids = new Set()
-  if (discount.value?.allowedCustomers) {
-    discount.value.allowedCustomers.forEach(id => ids.add(id))
-  }
-  // If you fetch customers from segments, add them here as well
-  // For now, just count direct customers
-  return ids.size
-})
-
-// Add a computed property for deduped allowed customers
-const dedupedAllowedCustomers = computed(() => {
-  const seen = new Set()
-  return allowedCustomerDetails.value.filter(cust => {
-    if (seen.has(cust.id)) return false
-    seen.add(cust.id)
-    return true
-  })
+// Computed property for eligible customers count
+const eligibleCustomersCount = computed(() => {
+  return eligibleCustomers.value.length
 })
 
 // Load all products/variants for the shop

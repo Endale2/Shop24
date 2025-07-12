@@ -185,6 +185,22 @@ export const discountService = {
   },
 
   /**
+   * Add mixed customers and segments to a discount's allowed list.
+   * @param {string} shopId
+   * @param {string} discountId
+   * @param {Array<string>} customerIds
+   * @param {Array<string>} segmentIds
+   * @returns {Promise<Object>}
+   */
+  async addMixedEligibility(shopId, discountId, customerIds = [], segmentIds = []) {
+    const res = await api.post(`/seller/shops/${shopId}/discounts/${discountId}/mixed-eligibility`, {
+      customerIds: customerIds,
+      segmentIds: segmentIds
+    });
+    return res.data;
+  },
+
+  /**
    * Clear all allowed customers and segments (set to allow everyone).
    * @param {string} shopId
    * @param {string} discountId
@@ -237,5 +253,16 @@ export const discountService = {
       }
     });
     return res.data.map(this._mapDiscount);
+  },
+
+  /**
+   * Get all eligible customers for a discount.
+   * @param {string} shopId
+   * @param {string} discountId
+   * @returns {Promise<Object>}
+   */
+  async getEligibleCustomers(shopId, discountId) {
+    const res = await api.get(`/seller/shops/${shopId}/discounts/${discountId}/eligible-customers`);
+    return res.data;
   },
 };
