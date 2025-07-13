@@ -1,291 +1,203 @@
 <template>
-  <div class="p-4 sm:p-6 max-w-7xl mx-auto font-sans">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 space-y-4 sm:space-y-0">
-      <div>
-        <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">
-          Order Details
-        </h2>
-        <p v-if="order" class="text-lg text-gray-600 mt-2">
-          {{ formatOrderId(order.id, order.orderNumber) }} • {{ formatDate(order.createdAt) }}
-        </p>
-      </div>
-      
-      <div class="flex space-x-3">
-        <button
-          @click="goBack"
-          class="inline-flex items-center px-4 py-2 bg-gray-600 text-white text-sm font-medium rounded-lg shadow-md hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-150 ease-in-out"
-        >
-          <ArrowLeftIcon class="w-5 h-5 mr-2 -ml-1" />
-          Back to Orders
-        </button>
+  <div class="bg-gray-50 min-h-screen font-sans">
+    <div class="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+      <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+        <div>
+          <h1 class="text-4xl font-bold text-gray-800 tracking-tight">
+            Order Details
+          </h1>
+          <p v-if="order" class="text-md text-gray-500 mt-2">
+            <span class="font-mono">{{ formatOrderId(order.id, order.orderNumber) }}</span> &bull; {{ formatDate(order.createdAt) }}
+          </p>
+        </div>
         
-        <button
-          v-if="order"
-          @click="updateOrderStatus"
-          class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-150 ease-in-out"
-        >
-          <PencilIcon class="w-5 h-5 mr-2 -ml-1" />
-          Update Status
-        </button>
-      </div>
-    </div>
+        <div class="flex items-center space-x-3 mt-4 sm:mt-0">
+          <button
+            @click="goBack"
+            class="inline-flex items-center px-4 py-2 bg-white text-gray-700 text-sm font-medium rounded-lg border border-gray-300 shadow-sm hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-150 ease-in-out"
+          >
+            <ArrowLeftIcon class="w-5 h-5 mr-2 -ml-1 text-gray-500" />
+            Back
+          </button>
+          
+          <button
+            v-if="order"
+            @click="updateOrderStatus"
+            class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-150 ease-in-out"
+          >
+            <PencilIcon class="w-5 h-5 mr-2 -ml-1" />
+            Update Status
+          </button>
+        </div>
+      </header>
 
-    <!-- Loading State -->
-    <div v-if="loading" class="bg-white rounded-xl shadow-lg p-8 animate-pulse">
-      <div class="space-y-6">
-        <div class="h-8 bg-gray-200 rounded w-1/3"></div>
-        <div class="h-4 bg-gray-200 rounded w-1/4"></div>
-        <div class="space-y-4">
-          <div v-for="n in 3" :key="n" class="h-20 bg-gray-200 rounded"></div>
+      <div v-if="loading" class="space-y-6">
+        <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4 animate-pulse">
+            <div class="h-6 bg-gray-200 rounded w-1/3"></div>
+            <div class="h-4 bg-gray-200 rounded w-1/4"></div>
+        </div>
+        <div class="bg-white rounded-xl border border-gray-200 p-6 space-y-4 animate-pulse">
+            <div v-for="n in 3" :key="n" class="h-16 bg-gray-200 rounded"></div>
         </div>
       </div>
-    </div>
 
-    <!-- Error State -->
-    <div v-else-if="error" class="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-sm mb-6" role="alert">
-      <strong class="font-bold">Error:</strong>
-      <span class="block sm:inline ml-2">{{ error }}</span>
-      <button @click="fetchOrder" class="text-sm underline mt-2 block">Try again</button>
-    </div>
-
-    <!-- Order Details -->
-    <div v-else-if="order" class="space-y-6">
-      <!-- Order Summary Card -->
-      <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-          <h3 class="text-lg font-semibold text-gray-900">Order Summary</h3>
-        </div>
-        <div class="p-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <div>
-              <p class="text-sm font-medium text-gray-500">Order Number</p>
-              <p class="text-lg font-mono text-gray-900">{{ formatOrderId(order.id, order.orderNumber) }}</p>
-            </div>
-            <div>
-              <p class="text-sm font-medium text-gray-500">Customer ID</p>
-              <p class="text-lg font-mono text-gray-900">{{ formatCustomerId(order.customerId) }}</p>
-            </div>
-            <div>
-              <p class="text-sm font-medium text-gray-500">Status</p>
-              <span :class="getStatusClass(order.status)" class="inline-block px-3 py-1 text-sm font-medium rounded-full">
-                {{ formatStatus(order.status) }}
-              </span>
-            </div>
-            <div>
-              <p class="text-sm font-medium text-gray-500">Total</p>
-              <p class="text-2xl font-bold text-green-600">{{ formatPrice(order.total) }}</p>
-            </div>
+      <div v-else-if="error" class="bg-red-50 border-l-4 border-red-400 text-red-700 p-6 rounded-r-lg shadow-md" role="alert">
+        <div class="flex">
+          <div class="py-1"><svg class="h-6 w-6 text-red-500 mr-4" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>
+          <div>
+            <p class="font-bold">An error occurred</p>
+            <p class="text-sm">{{ error }}</p>
+            <button @click="fetchOrder" class="text-sm underline mt-2 font-medium">Please try again</button>
           </div>
         </div>
       </div>
 
-      <!-- Customer Information -->
-      <div v-if="customer" class="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-          <h3 class="text-lg font-semibold text-gray-900">Customer Information</h3>
-        </div>
-        <div class="p-6">
-          <div class="flex items-start space-x-4">
-            <div class="flex-shrink-0">
-              <img
-                :src="customer.profileImage || '/placeholder-avatar.png'"
-                :alt="`${customer.firstName} ${customer.lastName}`"
-                class="h-16 w-16 rounded-full object-cover border border-gray-200"
-                @error="$event.target.src='/placeholder-avatar.png'"
-              />
-            </div>
-            <div class="flex-1 min-w-0">
-              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <p class="text-sm font-medium text-gray-500">Name</p>
-                  <p class="text-lg font-semibold text-gray-900">
-                    {{ customer.firstName }} {{ customer.lastName }}
-                  </p>
-                </div>
-                <div>
-                  <p class="text-sm font-medium text-gray-500">Email</p>
-                  <p class="text-lg text-gray-900">{{ customer.email }}</p>
-                </div>
-                <div v-if="customer.phone">
-                  <p class="text-sm font-medium text-gray-500">Phone</p>
-                  <p class="text-lg text-gray-900">{{ customer.phone }}</p>
-                </div>
-                <div v-if="customer.address">
-                  <p class="text-sm font-medium text-gray-500">Address</p>
-                  <p class="text-lg text-gray-900">
-                    {{ customer.address }}
-                    <span v-if="customer.city">, {{ customer.city }}</span>
-                    <span v-if="customer.state">, {{ customer.state }}</span>
-                    <span v-if="customer.postalCode"> {{ customer.postalCode }}</span>
-                    <span v-if="customer.country">, {{ customer.country }}</span>
-                  </p>
-                </div>
-              </div>
-              <div class="mt-4 pt-4 border-t border-gray-200">
-                <p class="text-sm text-gray-500">
-                  Customer since {{ formatDate(customer.createdAt) }}
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Order Items -->
-      <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-          <h3 class="text-lg font-semibold text-gray-900">Order Items</h3>
-        </div>
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-              <tr>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Product</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Variant</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Quantity</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Unit Price</th>
-                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
-              </tr>
-            </thead>
-            <tbody class="bg-white divide-y divide-gray-200">
-              <tr v-for="item in order.items" :key="`${item.productId}-${item.variantId || 'no-variant'}`">
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <div class="flex items-center">
-                    <div class="flex-shrink-0 h-12 w-12">
-                      <img
-                        :src="item.image || '/placeholder-product.png'"
-                        :alt="item.name"
-                        class="h-12 w-12 rounded-lg object-cover border border-gray-200"
-                        @error="$event.target.src='/placeholder-product.png'"
-                      />
+      <main v-else-if="order" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        <div class="lg:col-span-2 space-y-8">
+            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+                <div class="p-6">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Order Items</h3>
+                    <div class="flow-root">
+                        <ul role="list" class="-my-4 divide-y divide-gray-200">
+                            <li v-for="item in order.items" :key="`${item.productId}-${item.variantId || 'no-variant'}`" class="flex items-center py-4 space-x-4">
+                                <div class="flex-shrink-0">
+                                    <img :src="item.image || '/placeholder-product.png'" :alt="item.name" class="h-16 w-16 rounded-lg object-cover border border-gray-200" @error="$event.target.src='/placeholder-product.png'" />
+                                </div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-md font-semibold text-gray-900 truncate">{{ item.name }}</p>
+                                    <p v-if="item.variantId && item.variantId !== '000000000000000000000000'" class="text-sm text-gray-500">{{ item.variantName || 'Variant' }}</p>
+                                    <p v-else class="text-sm text-gray-400 italic">No variant</p>
+                                </div>
+                                <div class="text-right">
+                                    <p class="text-md font-medium text-gray-900">{{ formatPrice(item.totalPrice) }}</p>
+                                    <p class="text-sm text-gray-500">{{ item.quantity }} x {{ formatPrice(item.unitPrice) }}</p>
+                                </div>
+                            </li>
+                        </ul>
                     </div>
-                    <div class="ml-4">
-                      <div class="text-sm font-medium text-gray-900">{{ item.name }}</div>
-                      <div class="text-sm text-gray-500">ID: {{ formatProductId(item.productId) }}</div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div v-if="customer" class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Customer</h3>
+                    <div class="flex items-start space-x-4">
+                        <img :src="customer.profileImage || '/placeholder-avatar.png'" :alt="`${customer.firstName} ${customer.lastName}`" class="h-16 w-16 rounded-full object-cover border border-gray-200" @error="$event.target.src='/placeholder-avatar.png'" />
+                        <div class="flex-1 min-w-0">
+                            <p class="text-lg font-semibold text-gray-900">{{ customer.firstName }} {{ customer.lastName }}</p>
+                            <p class="text-sm text-gray-500 truncate">{{ customer.email }}</p>
+                            <p v-if="customer.phone" class="text-sm text-gray-500">{{ customer.phone }}</p>
+                        </div>
                     </div>
-                  </div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  <span v-if="item.variantId && item.variantId !== '000000000000000000000000'" class="text-gray-700">
-                    {{ item.variantName || 'Variant' }}
-                  </span>
-                  <span v-else class="text-gray-400 italic">No variant</span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {{ item.quantity }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                  {{ formatPrice(item.unitPrice) }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                  {{ formatPrice(item.totalPrice) }}
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Order Totals -->
-      <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-          <h3 class="text-lg font-semibold text-gray-900">Order Totals</h3>
-        </div>
-        <div class="p-6">
-          <div class="space-y-3">
-            <div class="flex justify-between">
-              <span class="text-gray-600">Subtotal:</span>
-              <span class="font-medium">{{ formatPrice(order.subtotal) }}</span>
-            </div>
-            <div v-if="order.discountTotal > 0" class="flex justify-between">
-              <span class="text-gray-600">Discount:</span>
-              <span class="font-medium text-green-600">-{{ formatPrice(order.discountTotal) }}</span>
-            </div>
-            <div class="flex justify-between text-lg font-semibold border-t pt-3">
-              <span>Total:</span>
-              <span class="text-green-600">{{ formatPrice(order.total) }}</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Order Timeline -->
-      <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-          <h3 class="text-lg font-semibold text-gray-900">Order Timeline</h3>
-        </div>
-        <div class="p-6">
-          <div class="space-y-4">
-            <div class="flex items-center">
-              <div class="flex-shrink-0">
-                <div class="w-8 h-8 bg-green-500 rounded-full flex items-center justify-center">
-                  <CheckIcon class="w-5 h-5 text-white" />
+                    <div v-if="customer.address" class="mt-4 pt-4 border-t border-gray-200">
+                        <p class="text-sm font-medium text-gray-600">Shipping Address</p>
+                        <address class="text-sm text-gray-500 not-italic">
+                            {{ customer.address }}<br>
+                            <span v-if="customer.city">{{ customer.city }}, </span>
+                            <span v-if="customer.state">{{ customer.state }} </span>
+                            <span v-if="customer.postalCode">{{ customer.postalCode }}</span>
+                        </address>
+                    </div>
                 </div>
-              </div>
-              <div class="ml-4">
-                <p class="text-sm font-medium text-gray-900">Order Created</p>
-                <p class="text-sm text-gray-500">{{ formatDateTime(order.createdAt) }}</p>
-              </div>
-            </div>
-            <div v-if="order.updatedAt && order.updatedAt !== order.createdAt" class="flex items-center">
-              <div class="flex-shrink-0">
-                <div class="w-8 h-8 bg-blue-500 rounded-full flex items-center justify-center">
-                  <PencilIcon class="w-5 h-5 text-white" />
+                
+                <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Timeline</h3>
+                    <ul class="space-y-4">
+                        <li class="flex items-start">
+                            <div class="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+                                <CheckIcon class="w-5 h-5 text-green-600" />
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-gray-900">Order Created</p>
+                                <p class="text-sm text-gray-500">{{ formatDateTime(order.createdAt) }}</p>
+                            </div>
+                        </li>
+                        <li v-if="order.updatedAt && order.updatedAt !== order.createdAt" class="flex items-start">
+                            <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
+                                <PencilIcon class="w-5 h-5 text-blue-600" />
+                            </div>
+                            <div class="ml-3">
+                                <p class="text-sm font-medium text-gray-900">Last Updated</p>
+                                <p class="text-sm text-gray-500">{{ formatDateTime(order.updatedAt) }}</p>
+                            </div>
+                        </li>
+                    </ul>
                 </div>
-              </div>
-              <div class="ml-4">
-                <p class="text-sm font-medium text-gray-900">Last Updated</p>
-                <p class="text-sm text-gray-500">{{ formatDateTime(order.updatedAt) }}</p>
-              </div>
             </div>
-          </div>
         </div>
-      </div>
+        
+        <div class="lg:col-span-1 space-y-8">
+            <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Summary</h3>
+                <div class="space-y-4">
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm font-medium text-gray-500">Status</span>
+                        <span :class="getStatusClass(order.status)" class="inline-block px-3 py-1 text-sm font-semibold rounded-full">
+                            {{ formatStatus(order.status) }}
+                        </span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-sm text-gray-500">Subtotal</span>
+                        <span class="text-sm font-medium text-gray-900">{{ formatPrice(order.subtotal) }}</span>
+                    </div>
+                    <div v-if="order.discountTotal > 0" class="flex justify-between items-center">
+                        <span class="text-sm text-gray-500">Discount</span>
+                        <span class="text-sm font-medium text-green-600">-{{ formatPrice(order.discountTotal) }}</span>
+                    </div>
+                    <div class="flex justify-between items-baseline pt-4 border-t border-gray-200">
+                        <span class="text-lg font-bold text-gray-900">Total</span>
+                        <span class="text-2xl font-bold text-indigo-600">{{ formatPrice(order.total) }}</span>
+                    </div>
+                </div>
+            </div>
 
-      <!-- Additional Order Info -->
-      <div class="bg-white rounded-xl shadow-lg overflow-hidden">
-        <div class="px-6 py-4 bg-gray-50 border-b border-gray-200">
-          <h3 class="text-lg font-semibold text-gray-900">Additional Information</h3>
+            <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+                <h3 class="text-xl font-semibold text-gray-800 mb-4">Additional Info</h3>
+                <dl class="space-y-3">
+                    <div class="flex justify-between">
+                        <dt class="text-sm text-gray-500">Order #</dt>
+                        <dd class="text-sm font-mono text-gray-900">{{ formatOrderId(order.id, order.orderNumber) }}</dd>
+                    </div>
+                     <div class="flex justify-between">
+                        <dt class="text-sm text-gray-500">Customer ID</dt>
+                        <dd class="text-sm font-mono text-gray-900">{{ formatCustomerId(order.customerId) }}</dd>
+                    </div>
+                    <div v-if="order.couponCode" class="flex justify-between">
+                        <dt class="text-sm text-gray-500">Coupon</dt>
+                        <dd class="text-sm font-mono text-gray-900">{{ order.couponCode }}</dd>
+                    </div>
+                     <div class="flex justify-between">
+                        <dt class="text-sm text-gray-500">Item Count</dt>
+                        <dd class="text-sm text-gray-900">{{ order.items?.length || 0 }}</dd>
+                    </div>
+                </dl>
+            </div>
         </div>
-        <div class="p-6">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div>
-              <p class="text-sm font-medium text-gray-500">Shop ID</p>
-              <p class="text-sm text-gray-900 font-mono">{{ order.shopId || 'N/A' }}</p>
-            </div>
-            <div>
-              <p class="text-sm font-medium text-gray-500">Items Count</p>
-              <p class="text-sm text-gray-900">{{ order.items?.length || 0 }} items</p>
-            </div>
-            <div v-if="order.couponCode">
-              <p class="text-sm font-medium text-gray-500">Coupon Used</p>
-              <p class="text-sm text-gray-900 font-mono">{{ order.couponCode }}</p>
-            </div>
-            <div>
-              <p class="text-sm font-medium text-gray-500">Order Type</p>
-              <p class="text-sm text-gray-900">{{ hasVariants ? 'Products with variants' : 'Simple products' }}</p>
-            </div>
-          </div>
+      </main>
+
+      <div v-else class="text-center py-20">
+        <div class="mx-auto h-12 w-12 text-gray-400">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-full w-full" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+        </div>
+        <h3 class="mt-2 text-lg font-medium text-gray-900">Order Not Found</h3>
+        <p class="mt-1 text-sm text-gray-500">We couldn't find the order you're looking for.</p>
+        <div class="mt-6">
+            <button @click="goBack" class="text-sm font-medium text-indigo-600 hover:text-indigo-500">Go back to orders</button>
         </div>
       </div>
     </div>
 
-    <!-- Not Found State -->
-    <div v-else class="bg-yellow-50 border border-yellow-200 text-yellow-700 px-6 py-8 rounded-lg text-center mt-8 shadow-sm">
-      <p class="text-lg font-medium">Order not found.</p>
-      <p class="mt-2">The order you're looking for doesn't exist or has been removed.</p>
-      <button @click="goBack" class="mt-4 text-sm underline">Go back to orders</button>
-    </div>
-
-    <!-- Status Update Modal -->
-    <div v-if="showStatusModal" class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-      <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-        <div class="mt-3">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Update Order Status</h3>
+    <div v-if="showStatusModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 transition-opacity" @click.self="showStatusModal = false">
+      <div class="relative bg-white rounded-lg shadow-xl w-full max-w-md p-6 m-4">
+        <h3 class="text-xl font-semibold text-gray-900 mb-4">Update Order Status</h3>
+        <p class="text-sm text-gray-500 mb-4">Select a new status for this order. The customer may be notified of this change.</p>
+        <div>
           <select
             v-model="newStatus"
-            class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
+            class="w-full px-3 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
           >
             <option value="pending">Pending</option>
             <option value="paid">Paid</option>
@@ -293,21 +205,21 @@
             <option value="delivered">Delivered</option>
             <option value="cancelled">Cancelled</option>
           </select>
-          <div class="flex justify-end space-x-3 mt-6">
-            <button
-              @click="showStatusModal = false"
-              class="px-4 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition duration-150 ease-in-out"
-            >
-              Cancel
-            </button>
-            <button
-              @click="saveStatusUpdate"
-              :disabled="updatingStatus"
-              class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 ease-in-out"
-            >
-              {{ updatingStatus ? 'Updating...' : 'Update' }}
-            </button>
-          </div>
+        </div>
+        <div class="flex justify-end space-x-3 mt-6">
+          <button
+            @click="showStatusModal = false"
+            class="px-4 py-2 bg-white text-gray-700 rounded-lg border border-gray-300 hover:bg-gray-100 transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400"
+          >
+            Cancel
+          </button>
+          <button
+            @click="saveStatusUpdate"
+            :disabled="updatingStatus"
+            class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-indigo-300 disabled:cursor-not-allowed transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            {{ updatingStatus ? 'Updating...' : 'Save Update' }}
+          </button>
         </div>
       </div>
     </div>
@@ -524,4 +436,4 @@ function getStatusClass(status) {
 onMounted(() => {
   fetchOrder()
 })
-</script> 
+</script>
