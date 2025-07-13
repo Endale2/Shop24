@@ -1,114 +1,59 @@
   <template>
   <div class="p-4 sm:p-6 max-w-7xl mx-auto font-sans">
-    <h2 class="text-3xl sm:text-4xl font-extrabold mb-8 text-gray-900 leading-tight">
-      Collections
-    </h2>
-
-    <!-- Statistics Dashboard -->
-    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-      <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-green-500">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <div class="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
-              <CollectionIcon class="w-5 h-5 text-green-600" />
-            </div>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Total Collections</p>
-            <p class="text-2xl font-bold text-gray-900">{{ allCollections.length }}</p>
-          </div>
-        </div>
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+      <div>
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">
+          Collections
+        </h2>
+        <p class="text-gray-600 mt-2">Manage your collection catalog</p>
       </div>
-
-      <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-blue-500">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
-              <CubeIcon class="w-5 h-5 text-blue-600" />
-            </div>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Total Products</p>
-            <p class="text-2xl font-bold text-gray-900">{{ totalProducts }}</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-yellow-500">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <div class="w-8 h-8 bg-yellow-100 rounded-lg flex items-center justify-center">
-              <StarIcon class="w-5 h-5 text-yellow-600" />
-            </div>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Avg Products/Collection</p>
-            <p class="text-2xl font-bold text-gray-900">{{ averageProductsPerCollection }}</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="bg-white rounded-xl shadow-lg p-6 border-l-4 border-purple-500">
-        <div class="flex items-center">
-          <div class="flex-shrink-0">
-            <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
-              <ClockIcon class="w-5 h-5 text-purple-600" />
-            </div>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-600">Recently Updated</p>
-            <p class="text-2xl font-bold text-gray-900">{{ recentlyUpdatedCount }}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <div class="flex flex-col sm:flex-row justify-between items-center mb-6 space-y-4 sm:space-y-0">
-      <div class="w-full sm:w-1/2 relative">
-        <input
-          type="text"
-          v-model="searchQuery"
-          @input="debouncedSearch"
-          placeholder="Search collections..."
-          class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-150 ease-in-out shadow-sm"
-        />
-        <SearchIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-      </div>
-
-      <div class="flex space-x-4 items-center">
+      <div class="flex flex-col sm:flex-row gap-3 mt-4 sm:mt-0">
         <button
           @click="goToAddCollection"
-          class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-150 ease-in-out"
+          class="inline-flex items-center px-4 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-150 ease-in-out"
         >
           <PlusIcon class="w-5 h-5 mr-2 -ml-1" />
-          Add New Collection
+          Add Collection
         </button>
-
-        <div class="inline-flex rounded-md shadow-md overflow-hidden" role="group">
+        <div class="inline-flex rounded-lg shadow-sm overflow-hidden" role="group">
           <button
             @click="currentView = 'list'"
             :class="viewButtonClass('list')"
-            class="px-5 py-2.5 text-sm font-medium border border-gray-300 focus:z-10 focus:ring-2 focus:ring-green-500 focus:outline-none transition-colors duration-200 ease-in-out"
+            class="px-4 py-2.5 text-sm font-medium border border-gray-300 focus:z-10 focus:ring-2 focus:ring-green-500 focus:outline-none transition-colors duration-200 ease-in-out"
           >
             <ListIcon class="w-5 h-5 inline-block mr-1" />
-            List View
+            List
           </button>
           <button
             @click="currentView = 'grid'"
             :class="viewButtonClass('grid')"
-            class="px-5 py-2.5 text-sm font-medium border border-gray-300 focus:z-10 focus:ring-2 focus:ring-green-500 focus:outline-none transition-colors duration-200 ease-in-out"
+            class="px-4 py-2.5 text-sm font-medium border border-gray-300 focus:z-10 focus:ring-2 focus:ring-green-500 focus:outline-none transition-colors duration-200 ease-in-out"
           >
             <GridIcon class="w-5 h-5 inline-block mr-1" />
-            Grid View
+            Grid
           </button>
         </div>
       </div>
     </div>
+    <!-- Search Bar -->
+    <div class="mb-6">
+      <div class="relative max-w-md">
+        <input
+          type="text"
+          v-model="searchQuery"
+          @input="debouncedSearch"
+          placeholder="Search collections by name or handle..."
+          class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-150 ease-in-out shadow-sm"
+        />
+        <SearchIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+      </div>
+    </div>
 
-    <div v-if="loading">
+    <!-- Loading State -->
+    <div v-if="loading" class="space-y-4">
       <div v-if="currentView === 'list'" class="overflow-x-auto bg-white shadow-lg rounded-xl animate-pulse">
         <table class="min-w-full divide-y divide-gray-200">
-          <thead class="bg-gray-100">
+          <thead class="bg-gray-50">
             <tr>
               <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Image</th>
               <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Title</th>
@@ -128,7 +73,6 @@
           </tbody>
         </table>
       </div>
-
       <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 animate-pulse">
         <div v-for="n in itemsPerPage" :key="n" class="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col">
           <div class="w-full h-48 bg-gray-200"></div>
@@ -140,28 +84,23 @@
         </div>
       </div>
     </div>
-
-    <div v-else-if="error" class="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-sm mb-6" role="alert">
-      <div class="flex">
-        <ExclamationCircleIcon class="h-5 w-5 text-red-400 mr-2 mt-0.5" />
+    <!-- Error State -->
+    <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg shadow-sm mb-6" role="alert">
+      <div class="flex items-center">
+        <ExclamationCircleIcon class="h-5 w-5 mr-2 flex-shrink-0" />
         <div>
-          <strong class="font-bold">Error:</strong>
-          <span class="block sm:inline ml-2">{{ error }}</span>
-          <button 
-            @click="fetchCollections" 
-            class="mt-2 text-sm underline hover:no-underline"
-          >
-            Try again
-          </button>
+          <strong class="font-semibold">Error:</strong>
+          <span class="ml-1">{{ error }}</span>
         </div>
       </div>
+      <p class="text-sm mt-2">Please ensure you have an active shop selected and try again.</p>
     </div>
 
     <div v-else>
-      <div v-if="paginatedCollections.length">
+      <div v-if="Array.isArray(paginatedCollections) && paginatedCollections.length">
         <div v-if="currentView === 'list'" class="overflow-x-auto bg-white shadow-lg rounded-xl">
           <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-100">
+            <thead class="bg-gray-50">
               <tr>
                 <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Image</th>
                 <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Title</th>
@@ -175,11 +114,12 @@
               <tr
                 v-for="(col, i) in paginatedCollections"
                 :key="col.id"
-                class="transition transform hover:scale-[1.005] hover:bg-green-50"
+                @click="goToDetail(col.id)"
+                class="cursor-pointer transition duration-150 ease-in-out transform hover:scale-[1.005] hover:bg-green-50"
                 :class="{ 'bg-gray-50': i % 2 === 1 }"
               >
                 <td class="py-3 px-6">
-                  <div class="w-12 h-12 rounded-lg overflow-hidden border border-gray-200 flex items-center justify-center bg-gray-100">
+                  <div class="w-12 h-12 rounded-lg overflow-hidden border border-gray-200 flex items-center justify-center bg-gray-100 shadow-sm">
                     <img
                       v-if="col.image"
                       :src="col.image"
@@ -190,55 +130,30 @@
                   </div>
                 </td>
                 <td class="py-3 px-6">
-                  <button
-                    @click="goToDetail(col.id)"
-                    class="text-sm text-gray-800 font-medium hover:text-green-600 transition-colors text-left"
-                  >
-                    {{ col.title }}
-                  </button>
+                  <div class="text-sm text-gray-800 font-medium">{{ col.title }}</div>
                 </td>
                 <td class="py-3 px-6 text-sm text-gray-700 font-mono">{{ col.handle }}</td>
-                <td class="py-3 px-6 text-sm text-gray-700">
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {{ col.productIds.length }} products
-                  </span>
-                </td>
-                <td class="py-3 px-6 text-sm text-gray-600">{{ formatDate(col.createdAt) }}</td>
-                <td class="py-3 px-6 text-sm text-gray-600">
-                  <div class="flex space-x-2">
-                    <button
-                      @click="goToDetail(col.id)"
-                      class="text-green-600 hover:text-green-800 transition-colors"
-                      title="View Details"
-                    >
-                      <EyeIcon class="h-4 w-4" />
-                    </button>
-                    <button
-                      @click="editCollection(col.id)"
-                      class="text-blue-600 hover:text-blue-800 transition-colors"
-                      title="Edit Collection"
-                    >
-                      <PencilIcon class="h-4 w-4" />
-                    </button>
-                    <button
-                      @click="deleteCollection(col.id, col.title)"
-                      class="text-red-600 hover:text-red-800 transition-colors"
-                      title="Delete Collection"
-                    >
-                      <TrashIcon class="h-4 w-4" />
-                    </button>
-                  </div>
+                <td class="py-3 px-6 text-sm text-gray-700">{{ Array.isArray(col.products) ? col.products.length : 0 }}</td>
+                <td class="py-3 px-6 text-sm text-gray-700">{{ col.created_at ? formatDate(col.created_at) : (col.createdAt ? formatDate(col.createdAt) : 'N/A') }}</td>
+                <td class="py-3 px-6">
+                  <button
+                    @click.stop="goToDetail(col.id)"
+                    class="text-green-600 hover:text-green-800 font-medium text-xs px-2 py-1 rounded transition-colors"
+                  >
+                    View
+                  </button>
                 </td>
               </tr>
             </tbody>
           </table>
         </div>
-
+        <!-- Grid View -->
         <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           <div
             v-for="col in paginatedCollections"
             :key="col.id"
-            class="bg-white rounded-xl shadow-lg overflow-hidden flex flex-col group"
+            @click="goToDetail(col.id)"
+            class="bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer transform hover:scale-105 hover:shadow-xl transition duration-200 ease-in-out flex flex-col group"
           >
             <div class="w-full h-48 bg-gray-200 flex items-center justify-center text-gray-400 relative overflow-hidden rounded-t-xl">
               <img
@@ -247,46 +162,21 @@
                 alt="collection"
                 class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-300 ease-in-out"
               />
-              <PlaceholderIcon v-else class="w-16 h-16" />
-              <div class="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                <div class="flex space-x-1">
-                  <button
-                    @click="editCollection(col.id)"
-                    class="p-1 bg-white rounded-full shadow-md text-blue-600 hover:text-blue-800 transition-colors"
-                    title="Edit Collection"
-                  >
-                    <PencilIcon class="h-3 w-3" />
-                  </button>
-                  <button
-                    @click="deleteCollection(col.id, col.title)"
-                    class="p-1 bg-white rounded-full shadow-md text-red-600 hover:text-red-800 transition-colors"
-                    title="Delete Collection"
-                  >
-                    <TrashIcon class="h-3 w-3" />
-                  </button>
-                </div>
-              </div>
+              <PlaceholderIcon v-else class="w-12 h-12 text-gray-300" />
             </div>
             <div class="p-5 flex-grow flex flex-col">
-              <button
-                @click="goToDetail(col.id)"
-                class="text-left group-hover:text-green-600 transition-colors"
-              >
-                <h3 class="text-xl font-semibold text-gray-900 mb-2 truncate">{{ col.title }}</h3>
-              </button>
-              <p class="text-sm text-gray-600 mb-3 truncate">{{ col.description }}</p>
-              <div class="mt-auto space-y-2">
-                <p class="text-sm text-gray-700">
-                  <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                    {{ col.productIds.length }} products
-                  </span>
-                </p>
-                <p class="text-xs text-gray-500">{{ formatDate(col.createdAt) }}</p>
+              <div class="text-lg font-semibold text-gray-800 mb-1">{{ col.title }}</div>
+              <div class="text-sm text-gray-500 mb-2">{{ col.handle }}</div>
+              <div class="flex items-center text-xs text-gray-600 mt-auto">
+                <CubeIcon class="w-4 h-4 mr-1" />
+                {{ Array.isArray(col.products) ? col.products.length : 0 }} Products
+              </div>
+              <div class="text-xs text-gray-400 mt-1">
+                Created: {{ col.created_at ? formatDate(col.created_at) : (col.createdAt ? formatDate(col.createdAt) : 'N/A') }}
               </div>
             </div>
           </div>
         </div>
-
         <div class="flex justify-center items-center space-x-2 mt-8">
           <button
             @click="prevPage"
@@ -305,18 +195,28 @@
           </button>
         </div>
       </div>
-
-      <div v-else class="bg-green-50 border border-green-200 text-green-700 px-6 py-8 rounded-lg text-center mt-8 shadow-sm">
-        <CollectionIcon class="w-16 h-16 text-green-400 mx-auto mb-4" />
-        <p class="text-lg font-medium">No collections found for this search.</p>
-        <p class="mt-2">Try adjusting your search query or create your first collection.</p>
-        <button
-          @click="goToAddCollection"
-          class="mt-4 inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition duration-150 ease-in-out"
-        >
-          <PlusIcon class="w-4 h-4 mr-2" />
-          Create First Collection
-        </button>
+      <div v-else class="text-center py-16 text-gray-500">
+        <div class="flex flex-col items-center">
+          <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4">
+            <PlusIcon class="w-8 h-8 text-green-600" />
+          </div>
+          <p class="text-lg font-medium mb-2">
+            <template v-if="!Array.isArray(paginatedCollections)">
+              Unable to load collections. Please try again later.
+            </template>
+            <template v-else-if="paginatedCollections.length === 0">
+              No collections found
+            </template>
+          </p>
+          <p class="text-sm mb-4">Get started by creating your first collection.</p>
+          <button
+            @click="goToAddCollection"
+            class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-150 ease-in-out"
+          >
+            <PlusIcon class="w-4 h-4 mr-2" />
+            Add Collection
+          </button>
+        </div>
       </div>
     </div>
   </div>

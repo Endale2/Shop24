@@ -1,44 +1,45 @@
 <template>
-  <div class="p-4 sm:p-6 max-w-4xl mx-auto font-sans">
-    <div class="flex justify-between items-center mb-6">
+  <div class="p-4 sm:p-6 max-w-7xl mx-auto font-sans">
+    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
       <button
         @click="$router.back()"
-        class="inline-flex items-center text-gray-600 hover:text-green-700 transition duration-150 ease-in-out font-medium rounded-lg px-3 py-1.5"
+        class="inline-flex items-center text-gray-600 hover:text-green-700 transition duration-200 ease-in-out mb-4 sm:mb-0 group rounded-full px-3 py-1.5"
       >
-        <ArrowLeftIcon class="h-5 w-5 mr-1" />
-        <span class="text-sm">Back to Collections</span>
+        <ArrowLeftIcon class="h-5 w-5 mr-1 text-gray-500 group-hover:text-green-600 transition-colors duration-200" />
+        <span class="text-sm font-medium group-hover:text-green-700 transition-colors duration-200">Back to Collections</span>
       </button>
-
-      <div class="flex space-x-3">
+      <div class="flex flex-col sm:flex-row gap-3 mt-4 sm:mt-0">
         <button
-          @click="showEditModal = true"
-          class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out"
+          @click="goToEditPage"
+          class="inline-flex items-center px-4 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-150 ease-in-out"
         >
           <PencilIcon class="h-4 w-4 mr-2" />
           Edit Collection
         </button>
         <button
           @click="confirmDelete"
-          class="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-lg shadow-sm text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out"
+          class="inline-flex items-center px-4 py-2.5 border border-gray-300 text-sm font-medium rounded-lg shadow-sm text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out"
         >
           <TrashIcon class="h-4 w-4 mr-2" />
           Delete
         </button>
       </div>
     </div>
-
-    <div v-if="loading" class="flex flex-col items-center justify-center text-gray-600 py-16">
-      <SpinnerIcon class="animate-spin h-8 w-8 text-green-500 mb-3" />
-      <p class="text-lg">Loading collection details...</p>
+    <div v-if="loading" class="flex flex-col items-center justify-center text-gray-600 py-20 bg-white rounded-2xl shadow-lg">
+      <SpinnerIcon class="animate-spin h-10 w-10 text-green-500 mb-4" />
+      <p class="mt-3 text-lg font-semibold text-gray-700">Loading collection details...</p>
     </div>
-
-    <div v-else-if="error" class="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-sm" role="alert">
-      <strong class="font-bold">Error:</strong>
-      <span class="block sm:inline ml-2">{{ error }}</span>
+    <div v-else-if="error" class="bg-red-50 border border-red-200 text-red-700 px-6 py-4 rounded-lg shadow-sm mb-6" role="alert">
+      <div class="flex items-center">
+        <ExclamationCircleIcon class="h-5 w-5 mr-2 flex-shrink-0" />
+        <div>
+          <strong class="font-semibold">Error:</strong>
+          <span class="ml-1">{{ error }}</span>
+        </div>
+      </div>
       <p class="text-sm mt-2">Could not load collection details. Please try again.</p>
     </div>
-
-    <div v-else class="bg-white rounded-xl shadow-lg p-6 sm:p-8 space-y-8">
+    <div v-else class="bg-white rounded-2xl shadow-xl p-6 sm:p-8 space-y-8 animate-fade-in">
       <div class="flex flex-col md:flex-row md:items-start md:space-x-8">
         <div class="flex-shrink-0 mb-6 md:mb-0 w-full md:w-1/3">
           <div class="aspect-w-16 aspect-h-9 md:aspect-w-1 md:aspect-h-1 rounded-xl overflow-hidden shadow-md border border-gray-200 bg-gray-100 flex items-center justify-center">
@@ -71,26 +72,24 @@
           </div>
         </div>
       </div>
-
       <hr class="border-gray-200">
-
       <div>
-        <div class="flex justify-between items-center mb-6">
+        <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-3">
           <h2 class="text-2xl font-semibold text-gray-800">Products in this Collection ({{ collection.products.length }})</h2>
           <button
             @click="showAddProductModal = true"
-            class="inline-flex items-center px-3 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition duration-150 ease-in-out"
+            class="inline-flex items-center px-4 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-150 ease-in-out"
           >
             <PlusIcon class="h-4 w-4 mr-2" />
             Add Products
           </button>
         </div>
-        
         <div v-if="collection.products.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           <div
             v-for="prod in collection.products"
             :key="prod.id"
-            class="bg-white rounded-xl shadow-md overflow-hidden flex flex-col group relative"
+            class="bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer transform hover:scale-105 hover:shadow-xl transition duration-200 ease-in-out flex flex-col group relative"
+            @click="goToProduct(prod.id)"
           >
             <div class="w-full h-40 bg-gray-100 flex items-center justify-center relative overflow-hidden">
               <img
@@ -101,119 +100,18 @@
               />
               <PlaceholderIcon v-else class="w-16 h-16 text-gray-400" />
             </div>
-            <div class="p-4 flex-grow flex items-center justify-between">
-              <h3 class="text-lg font-medium text-gray-900 truncate flex-grow">{{ prod.name }}</h3>
-              <div class="flex space-x-2">
-                <button
-                  @click="goToProduct(prod.id)"
-                  class="p-1 text-gray-400 hover:text-green-600 transition-colors"
-                  title="View Product"
-                >
-                  <EyeIcon class="h-4 w-4" />
-                </button>
-                <button
-                  @click="removeProduct(prod.id)"
-                  class="p-1 text-gray-400 hover:text-red-600 transition-colors"
-                  title="Remove from Collection"
-                >
-                  <XIcon class="h-4 w-4" />
-                </button>
+            <div class="p-4 flex-grow flex flex-col">
+              <h3 class="text-lg font-medium text-gray-900 truncate">{{ prod.name }}</h3>
+              <div class="flex items-center text-xs text-gray-600 mt-auto">
+                <span class="font-mono">#{{ prod.sku || prod.id }}</span>
               </div>
             </div>
           </div>
         </div>
-        <div v-else class="bg-gray-50 border border-gray-200 text-gray-600 px-6 py-8 rounded-lg text-center mt-4 shadow-sm">
-          <p class="text-lg font-medium">No products are linked to this collection yet.</p>
-          <p class="mt-2">Click "Add Products" to start building your collection.</p>
+        <div v-else class="text-center py-16 text-gray-500">
+          <p class="text-lg font-semibold">No products are linked to this collection yet.</p>
+          <p class="mt-2 text-sm">Click "Add Products" to start building your collection.</p>
         </div>
-      </div>
-    </div>
-
-    <!-- Edit Collection Modal -->
-    <div v-if="showEditModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="p-6 border-b border-gray-200">
-          <h3 class="text-xl font-semibold text-gray-900">Edit Collection</h3>
-        </div>
-        
-        <form @submit.prevent="handleEditSubmit" class="p-6 space-y-6">
-          <!-- Title -->
-          <div>
-            <label for="edit-title" class="block text-sm font-medium text-gray-700 mb-2">
-              Collection Title <span class="text-red-500">*</span>
-            </label>
-            <input
-              id="edit-title"
-              v-model="editForm.title"
-              type="text"
-              required
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-150 ease-in-out"
-              :class="{ 'border-red-500': editErrors.title }"
-            />
-            <p v-if="editErrors.title" class="mt-1 text-sm text-red-600">{{ editErrors.title }}</p>
-          </div>
-
-          <!-- Handle -->
-          <div>
-            <label for="edit-handle" class="block text-sm font-medium text-gray-700 mb-2">
-              Handle <span class="text-red-500">*</span>
-            </label>
-            <input
-              id="edit-handle"
-              v-model="editForm.handle"
-              type="text"
-              required
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-150 ease-in-out"
-              :class="{ 'border-red-500': editErrors.handle }"
-            />
-            <p v-if="editErrors.handle" class="mt-1 text-sm text-red-600">{{ editErrors.handle }}</p>
-          </div>
-
-          <!-- Description -->
-          <div>
-            <label for="edit-description" class="block text-sm font-medium text-gray-700 mb-2">
-              Description
-            </label>
-            <textarea
-              id="edit-description"
-              v-model="editForm.description"
-              rows="4"
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-150 ease-in-out resize-none"
-            ></textarea>
-          </div>
-
-          <!-- Image URL -->
-          <div>
-            <label for="edit-image" class="block text-sm font-medium text-gray-700 mb-2">
-              Collection Image URL
-            </label>
-            <input
-              id="edit-image"
-              v-model="editForm.image"
-              type="url"
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-150 ease-in-out"
-            />
-          </div>
-
-          <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
-            <button
-              type="button"
-              @click="showEditModal = false"
-              class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-150 ease-in-out"
-            >
-              Cancel
-            </button>
-            <button
-              type="submit"
-              :disabled="editLoading"
-              class="px-6 py-3 bg-green-600 text-white rounded-lg hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition duration-150 ease-in-out inline-flex items-center"
-            >
-              <SpinnerIcon v-if="editLoading" class="animate-spin h-4 w-4 mr-2" />
-              <CheckIcon v-else class="h-4 w-4 mr-2" />
-              {{ editLoading ? 'Saving...' : 'Save Changes' }}
-            </button>
-          </div>
-        </form>
       </div>
     </div>
 
@@ -299,7 +197,8 @@ import {
   EyeIcon,
   XIcon,
   PlusIcon,
-  CheckIcon
+  CheckIcon,
+  ExclamationCircleIcon
 } from '@heroicons/vue/outline'
 
 const route = useRoute()
@@ -523,6 +422,13 @@ function isProductInCollection(productId) {
  */
 function goToProduct(productId) {
   router.push({ name: 'ProductDetail', params: { productId } })
+}
+
+/**
+ * Navigates to the edit collection page.
+ */
+function goToEditPage() {
+  router.push({ name: 'EditCollection', params: { collectionId: collection.value.id } })
 }
 
 /**

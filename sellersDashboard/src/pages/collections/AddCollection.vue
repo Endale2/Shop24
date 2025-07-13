@@ -1,92 +1,97 @@
 <template>
-  <div class="p-4 sm:p-6 max-w-4xl mx-auto font-sans">
-    <div class="flex justify-between items-center mb-6">
-      <button
-        @click="$router.back()"
-        class="inline-flex items-center text-gray-600 hover:text-green-700 transition duration-150 ease-in-out font-medium rounded-lg px-3 py-1.5"
-      >
-        <ArrowLeftIcon class="h-5 w-5 mr-1" />
-        <span class="text-sm">Back to Collections</span>
-      </button>
+  <div class="p-4 sm:p-6 max-w-7xl mx-auto space-y-8 font-sans">
+    <button
+      @click="$router.back()"
+      class="inline-flex items-center text-gray-600 hover:text-green-700 transition duration-200 ease-in-out mb-6 group rounded-full px-3 py-1.5 -ml-3"
+    >
+      <ArrowLeftIcon class="h-5 w-5 mr-1 text-gray-500 group-hover:text-green-600 transition-colors duration-200" />
+      <span class="text-sm font-medium group-hover:text-green-700 transition-colors duration-200">Back to Collections</span>
+    </button>
+    <div v-if="loading" class="flex flex-col items-center justify-center text-gray-600 py-20 bg-white rounded-2xl shadow-lg">
+      <SpinnerIcon class="animate-spin h-10 w-10 text-green-500 mb-4" />
+      <p class="mt-3 text-lg font-semibold text-gray-700">Preparing the form...</p>
     </div>
-
-    <div class="bg-white rounded-xl shadow-lg p-6 sm:p-8">
-      <div class="mb-8">
-        <h1 class="text-3xl font-extrabold text-gray-900 mb-2">Create New Collection</h1>
+    <div v-else class="bg-white shadow-xl rounded-2xl p-6 sm:p-8 space-y-8 animate-fade-in">
+      <div class="text-center mb-8">
+        <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-800 mb-2">
+          Add New Collection
+        </h2>
         <p class="text-gray-600">Organize your products into collections to help customers discover what they're looking for.</p>
       </div>
-
-      <form @submit.prevent="handleSubmit" class="space-y-6">
-        <!-- Title -->
-        <div>
-          <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
-            Collection Title <span class="text-red-500">*</span>
-          </label>
-          <input
-            id="title"
-            v-model="form.title"
-            type="text"
-            required
-            placeholder="e.g., Summer Collection, New Arrivals"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-150 ease-in-out"
-            :class="{ 'border-red-500': errors.title }"
-          />
-          <p v-if="errors.title" class="mt-1 text-sm text-red-600">{{ errors.title }}</p>
-        </div>
-
-        <!-- Handle -->
-        <div>
-          <label for="handle" class="block text-sm font-medium text-gray-700 mb-2">
-            Handle <span class="text-red-500">*</span>
-          </label>
-          <div class="relative">
-            <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 text-sm">
-              {{ activeShop?.slug }}/collections/
-            </span>
-            <input
-              id="handle"
-              v-model="form.handle"
-              type="text"
-              required
-              placeholder="summer-collection"
-              class="w-full pl-48 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-150 ease-in-out"
-              :class="{ 'border-red-500': errors.handle }"
-            />
+      <form @submit.prevent="handleSubmit" class="space-y-8">
+        <!-- Title Section -->
+        <div class="space-y-6 border-b border-gray-200 pb-8">
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
+              <span class="text-green-600 font-semibold text-sm">1</span>
+            </div>
+            <h3 class="text-xl font-bold text-gray-700">Basic Details</h3>
           </div>
-          <p v-if="errors.handle" class="mt-1 text-sm text-red-600">{{ errors.handle }}</p>
-          <p class="mt-1 text-sm text-gray-500">This will be used in the URL for your collection page.</p>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div class="md:col-span-2">
+              <label for="title" class="block text-sm font-medium text-gray-700 mb-2">
+                Collection Title <span class="text-red-500">*</span>
+              </label>
+              <input
+                id="title"
+                v-model="form.title"
+                type="text"
+                required
+                placeholder="e.g., Summer Collection, New Arrivals"
+                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-150 shadow-sm"
+                :class="{ 'border-red-500': errors.title }"
+              />
+              <p v-if="errors.title" class="mt-1 text-sm text-red-600">{{ errors.title }}</p>
+            </div>
+            <div class="md:col-span-2">
+              <label for="handle" class="block text-sm font-medium text-gray-700 mb-2">
+                Handle <span class="text-red-500">*</span>
+              </label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-gray-500 text-sm">
+                  {{ activeShop?.slug }}/collections/
+                </span>
+                <input
+                  id="handle"
+                  v-model="form.handle"
+                  type="text"
+                  required
+                  placeholder="summer-collection"
+                  class="w-full pl-48 pr-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-150 shadow-sm"
+                  :class="{ 'border-red-500': errors.handle }"
+                />
+              </div>
+              <p v-if="errors.handle" class="mt-1 text-sm text-red-600">{{ errors.handle }}</p>
+              <p class="mt-1 text-sm text-gray-500">This will be used in the URL for your collection page.</p>
+            </div>
+            <div class="md:col-span-2">
+              <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
+                Description
+              </label>
+              <textarea
+                id="description"
+                v-model="form.description"
+                rows="4"
+                placeholder="Describe what this collection is about..."
+                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-150 shadow-sm resize-y"
+              ></textarea>
+            </div>
+            <div class="md:col-span-2">
+              <label for="image" class="block text-sm font-medium text-gray-700 mb-2">
+                Collection Image URL
+              </label>
+              <input
+                id="image"
+                v-model="form.image"
+                type="url"
+                placeholder="https://example.com/collection-image.jpg"
+                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-150 shadow-sm"
+              />
+              <p class="mt-1 text-sm text-gray-500">Optional: Add an image to represent this collection.</p>
+            </div>
+          </div>
         </div>
-
-        <!-- Description -->
-        <div>
-          <label for="description" class="block text-sm font-medium text-gray-700 mb-2">
-            Description
-          </label>
-          <textarea
-            id="description"
-            v-model="form.description"
-            rows="4"
-            placeholder="Describe what this collection is about..."
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-150 ease-in-out resize-none"
-          ></textarea>
-        </div>
-
-        <!-- Image URL -->
-        <div>
-          <label for="image" class="block text-sm font-medium text-gray-700 mb-2">
-            Collection Image URL
-          </label>
-          <input
-            id="image"
-            v-model="form.image"
-            type="url"
-            placeholder="https://example.com/collection-image.jpg"
-            class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-150 ease-in-out"
-          />
-          <p class="mt-1 text-sm text-gray-500">Optional: Add an image to represent this collection.</p>
-        </div>
-
-        <!-- Preview -->
+        <!-- Preview Section -->
         <div v-if="form.title || form.handle || form.description || form.image" class="bg-gray-50 rounded-lg p-4">
           <h3 class="text-sm font-medium text-gray-700 mb-3">Preview</h3>
           <div class="bg-white rounded-lg p-4 border border-gray-200">
@@ -117,7 +122,6 @@
             </div>
           </div>
         </div>
-
         <!-- Submit Button -->
         <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
           <button

@@ -30,19 +30,27 @@
           <option value="cancelled">Cancelled</option>
         </select>
 
-        <div class="inline-flex rounded-full shadow-md overflow-hidden" role="group">
+        <div class="inline-flex rounded-lg shadow-sm overflow-hidden border border-gray-200 bg-gray-50" role="group">
           <button
             @click="currentView = 'list'"
-            :class="viewButtonClass('list')"
-            class="px-5 py-2.5 text-sm font-medium border border-gray-300 focus:z-10 focus:ring-2 focus:ring-green-500 focus:outline-none transition-colors duration-200 ease-in-out"
+            :class="[
+              'px-5 py-2.5 text-sm font-medium focus:z-10 focus:ring-2 focus:ring-green-500 focus:outline-none transition-colors duration-200 ease-in-out',
+              currentView === 'list'
+                ? 'bg-green-600 text-white hover:bg-green-700 shadow-inner'
+                : 'bg-gray-50 text-gray-700 hover:bg-gray-200'
+            ]"
           >
             <ListIcon class="w-5 h-5 inline-block mr-1" />
             List View
           </button>
           <button
             @click="currentView = 'grid'"
-            :class="viewButtonClass('grid')"
-            class="px-5 py-2.5 text-sm font-medium border border-gray-300 focus:z-10 focus:ring-2 focus:ring-green-500 focus:outline-none transition-colors duration-200 ease-in-out"
+            :class="[
+              'px-5 py-2.5 text-sm font-medium focus:z-10 focus:ring-2 focus:ring-green-500 focus:outline-none transition-colors duration-200 ease-in-out',
+              currentView === 'grid'
+                ? 'bg-green-600 text-white hover:bg-green-700 shadow-inner'
+                : 'bg-gray-50 text-gray-700 hover:bg-gray-200'
+            ]"
           >
             <GridIcon class="w-5 h-5 inline-block mr-1" />
             Grid View
@@ -280,9 +288,19 @@
         </div>
       </div>
 
-      <div v-else class="bg-green-50 border border-green-200 text-green-700 px-6 py-8 rounded-lg text-center mt-8 shadow-sm">
-        <p class="text-lg font-medium">No orders found.</p>
-        <p class="mt-2">Orders will appear here once customers start placing orders in your shop.</p>
+      <div v-else class="flex flex-col items-center justify-center py-16 text-center text-gray-500">
+        <svg xmlns="http://www.w3.org/2000/svg" class="mx-auto h-14 w-14 mb-4 text-green-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V7M3 7l9 6 9-6" />
+        </svg>
+        <p class="text-lg font-semibold">No orders found</p>
+        <p class="mt-2 text-sm">Orders will appear here once customers start placing orders in your shop.</p>
+        <router-link
+          v-if="activeShop && activeShop.id"
+          :to="{ name: 'Products' }"
+          class="inline-flex items-center mt-6 px-5 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition"
+        >
+          Add Products
+        </router-link>
       </div>
     </div>
   </div>

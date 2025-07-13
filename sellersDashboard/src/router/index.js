@@ -48,6 +48,7 @@ const routes = [
       { path: 'collections',          name: 'Collections',    component: () => import('@/pages/collections/CollectionsPage.vue') },
       { path: 'collections/add',      name: 'AddCollection',  component: () => import('@/pages/collections/AddCollection.vue') },
       { path: 'collections/:collectionId', name: 'CollectionDetail', component: () => import('@/pages/collections/CollectionDetailPage.vue'), props: true },
+      { path: 'collections/:collectionId/edit', name: 'EditCollection', component: () => import('@/pages/collections/EditCollectionPage.vue'), props: true },
       { path: 'customers',            name: 'Customers',      component: () => import('@/pages/customers/CustomersPage.vue') },
       { path: 'customers/:customerId',name: 'CustomerDetail', component: () => import('@/pages/customers/CustomerDetailPage.vue'), props: true },
       { path: 'customers/customer-segments',    name: 'CustomerSegments', component: () => import('@/pages/customers/CustomerSegmentsPage.vue') },

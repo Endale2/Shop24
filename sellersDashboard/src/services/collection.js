@@ -9,6 +9,7 @@ export const collectionService = {
    */
   async fetchAllByShop(shopId) {
     const res = await api.get(`/seller/shops/${shopId}/collections`)
+    if (!Array.isArray(res.data)) return [];
     return res.data.map(c => ({
       id:          c.id,
       shopId:      c.shop_id,
@@ -17,8 +18,9 @@ export const collectionService = {
       handle:      c.handle,
       image:       c.image,
       productIds:  c.product_ids ?? [],
-      createdAt:   c.created_at,
-      updatedAt:   c.updated_at,
+      products:    Array.isArray(c.products) ? c.products : [],
+      createdAt:   c.created_at || c.createdAt,
+      updatedAt:   c.updated_at || c.updatedAt,
     }))
   },
 

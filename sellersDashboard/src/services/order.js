@@ -3,6 +3,7 @@ import api from './api'
 export const orderService = {
   async fetchAllByShop(shopId) {
     const res = await api.get(`/seller/shops/${shopId}/orders`)
+    if (!Array.isArray(res.data)) return [];
     return res.data.map(o => ({
       id: o.ID ?? o.id,
       orderNumber: o.order_number ?? o.OrderNumber,
