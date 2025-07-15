@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	authModels "github.com/Endale2/DRPS/auth/models"
 	authServices "github.com/Endale2/DRPS/auth/services"
 	"github.com/Endale2/DRPS/auth/utils" // Ensure utils package has GoogleOAuthConfig and ParseToken
 	customerRepo "github.com/Endale2/DRPS/customers/repositories"
@@ -17,115 +16,13 @@ import (
 	"golang.org/x/oauth2" // Needed for oauth2.AccessTypeOffline
 )
 
-// CustomerLogin handles POST /customers/login.
-// Expects JSON: { "email", "password", "shopId" }.
-func CustomerLogin(c *gin.Context) {
-	var req struct {
-		Email    string `json:"email" binding:"required,email"`
-		Password string `json:"password" binding:"required"`
-		ShopID   string `json:"shopId" binding:"required"`
-	}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	cust, at, rt, err := authServices.CustomerLoginService(req.Email, req.Password)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
-	}
-
-	if shopOID, err := primitive.ObjectIDFromHex(req.ShopID); err == nil {
-		// ensure link exists (we ignore the return values)
-		_, _, _ = sharedServices.LinkIfNotLinked(shopOID, cust.ID)
-	}
-
-	http.SetCookie(c.Writer, &http.Cookie{
-		Name:     "access_token",
-		Value:    at,
-		Path:     "/",
-		Domain:   "localhost",
-		MaxAge:   int((5 * time.Minute).Seconds()),
-		HttpOnly: true,
-		Secure:   false, // true for HTTPS
-		SameSite: http.SameSiteLaxMode,
-	})
-	http.SetCookie(c.Writer, &http.Cookie{
-		Name:     "refresh_token",
-		Value:    rt,
-		Path:     "/",
-		Domain:   "localhost",
-		MaxAge:   int((7 * 24 * time.Hour).Seconds()),
-		HttpOnly: true,
-		Secure:   false,
-		SameSite: http.SameSiteLaxMode,
-	})
-
-	c.JSON(http.StatusOK, gin.H{"message": "Logged in", "customer": cust})
-}
-
-// CustomerRegister handles POST /customers/register.
-// Expects JSON: { "username", "email", "password", "shopId", plus any optional profile fields }.
-func CustomerRegister(c *gin.Context) {
-	var req struct {
-		Username  string `json:"username" binding:"required"`
-		Email     string `json:"email" binding:"required,email"`
-		Password  string `json:"password" binding:"required"`
-		ShopID    string `json:"shopId" binding:"required"`
-		FirstName string `json:"firstName"`
-		LastName  string `json:"lastName"`
-		Phone     string `json:"phone"`
-		Address   string `json:"address"`
-		City      string `json:"city"`
-		State     string `json:"state"`
-		Postal    string `json:"postalCode"`
-		Country   string `json:"country"`
-	}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	authCust := &authModels.AuthCustomer{
-		Username: req.Username,
-		Email:    req.Email,
-		Password: req.Password,
-	}
-	profile := &authServices.OptionalProfile{
-		FirstName:  req.FirstName,
-		LastName:   req.LastName,
-		Phone:      req.Phone,
-		Address:    req.Address,
-		City:       req.City,
-		State:      req.State,
-		PostalCode: req.Postal,
-		Country:    req.Country,
-	}
-
-	cust, err := authServices.CustomerRegisterService(authCust, profile)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	if shopOID, err := primitive.ObjectIDFromHex(req.ShopID); err == nil {
-		_, _, _ = sharedServices.LinkIfNotLinked(shopOID, cust.ID)
-	}
-
-	c.JSON(http.StatusCreated, gin.H{
-		"message":    "customer registered successfully",
-		"customerId": cust.ID.Hex(),
-	})
-}
-
 // CustomerOAuthRedirect redirects to Google's OAuth consent page for customers.
 // It accepts an optional shopId query parameter to link the customer to a shop.
 func CustomerOAuthRedirect(c *gin.Context) {
 	shopID := c.Query("shopId")
 	// Encode state as "customer_state:<shopId>" or just "customer_state:" if empty
 	state := fmt.Sprintf("customer_state:%s", shopID)
-	url := utils.GoogleOAuthConfig.AuthCodeURL(state, oauth2.AccessTypeOffline)
+	url := utils.GetGoogleOAuthConfigForCustomer().AuthCodeURL(state, oauth2.AccessTypeOffline)
 	c.Redirect(http.StatusFound, url)
 }
 
@@ -142,7 +39,7 @@ func CustomerOAuthCallback(c *gin.Context) {
 
 	// 2. Exchange the code for a token
 	code := c.Query("code")
-	tok, err := utils.GoogleOAuthConfig.Exchange(c, code)
+	tok, err := utils.GetGoogleOAuthConfigForCustomer().Exchange(c, code)
 	if err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "OAuth exchange failed for customer"})
 		return
@@ -179,6 +76,8 @@ func CustomerOAuthCallback(c *gin.Context) {
 	}
 	c.Redirect(http.StatusFound, fmt.Sprintf("%s/customer/dashboard", frontend))
 }
+
+// TODO: Add CustomerTelegramOAuth handler here
 
 // CustomerRefresh issues a new access token.
 func CustomerRefresh(c *gin.Context) {

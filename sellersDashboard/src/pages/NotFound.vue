@@ -55,7 +55,7 @@
           <h3 class="text-lg font-semibold text-gray-800 mb-4">Looking for something specific?</h3>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <router-link
-              to="/login"
+              to="/auth"
               class="flex items-center p-3 rounded-lg hover:bg-green-50 transition-colors duration-200 group"
             >
               <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-3 group-hover:bg-green-200 transition-colors duration-200">
@@ -66,21 +66,6 @@
               <div class="text-left">
                 <div class="font-medium text-gray-800 group-hover:text-green-700">Sign In</div>
                 <div class="text-sm text-gray-500">Access your account</div>
-              </div>
-            </router-link>
-            
-            <router-link
-              to="/register"
-              class="flex items-center p-3 rounded-lg hover:bg-green-50 transition-colors duration-200 group"
-            >
-              <div class="w-10 h-10 bg-amber-100 rounded-lg flex items-center justify-center mr-3 group-hover:bg-amber-200 transition-colors duration-200">
-                <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                </svg>
-              </div>
-              <div class="text-left">
-                <div class="font-medium text-gray-800 group-hover:text-amber-700">Create Account</div>
-                <div class="text-sm text-gray-500">Start your journey</div>
               </div>
             </router-link>
           </div>

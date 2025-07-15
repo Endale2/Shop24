@@ -59,7 +59,6 @@
             </template>
             <div class="flex-1">
               <span class="font-medium">{{ shop.name }}</span>
-              <p class="text-xs text-gray-500 mt-0.5">{{ shop.description || 'No description' }}</p>
             </div>
             <CheckIcon v-if="shop.id === activeShop?.id" class="h-5 w-5 text-green-500 ml-2" />
           </li>

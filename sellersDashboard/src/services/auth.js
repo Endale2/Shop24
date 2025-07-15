@@ -66,5 +66,37 @@ export const authService = {
     const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:8080'
     window.location.href =
       `${apiBase}/auth/seller/oauth/google?redirect_uri=${redirectUri}`
+  },
+
+  /**
+   * Handle Telegram OAuth login.
+   * This function is called by the Telegram widget with user data.
+   */
+  loginWithTelegram: async (telegramUser) => {
+    const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:8080'
+    
+    // Send Telegram user data to backend for authentication
+    const response = await fetch(`${apiBase}/auth/seller/oauth/telegram`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        id: telegramUser.id,
+        first_name: telegramUser.first_name,
+        last_name: telegramUser.last_name,
+        username: telegramUser.username,
+        photo_url: telegramUser.photo_url,
+        auth_date: telegramUser.auth_date,
+        hash: telegramUser.hash
+      }),
+      credentials: 'include' // Include cookies for session management
+    })
+
+    if (!response.ok) {
+      throw new Error('Telegram authentication failed')
+    }
+
+    return response.json()
   }
 }

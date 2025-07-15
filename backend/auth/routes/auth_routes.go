@@ -13,27 +13,25 @@ func AuthRoutes(r *gin.Engine) {
 		// Admin authentication routes
 		authGroup.POST("/admin/login", controllers.AdminLogin)
 		authGroup.POST("/admin/create", controllers.AdminRegister)
-		authGroup.POST("/admin/oauth",    controllers.AdminOAuth)
-        authGroup.POST("/admin/logout", controllers.AdminLogout)
+		authGroup.POST("/admin/oauth", controllers.AdminOAuth)
+		authGroup.POST("/admin/logout", controllers.AdminLogout)
 		authGroup.POST("/admin/refresh", controllers.AdminRefresh)
 		authGroup.GET("/admin/me", controllers.GetAuthAdminMe)
 
 		// Seller authentication routes
-		authGroup.POST("/seller/register", controllers.SellerRegister)
-		authGroup.POST("/seller/login", controllers.SellerLogin)
-		authGroup.GET("/seller/oauth/google",         controllers.SellerOAuthRedirect)
-        authGroup.GET("/seller/oauth/google/callback", controllers.SellerOAuthCallback)
-		authGroup.POST("/seller/refresh",  controllers.SellerRefresh)
+		authGroup.GET("/seller/oauth/google", controllers.SellerOAuthRedirect)
+		authGroup.GET("/seller/oauth/google/callback", controllers.SellerOAuthCallback)
+		authGroup.POST("/seller/oauth/telegram", controllers.SellerTelegramOAuth)
+		authGroup.POST("/seller/refresh", controllers.SellerRefresh)
 		authGroup.POST("/seller/logout", controllers.SellerLogout)
 		authGroup.GET("/seller/me", controllers.GetCurrentSeller)
-		authGroup.PATCH("/seller/update-profile", middlewares.AuthMiddleware(),  controllers.UpdateCurrentSeller)
+		authGroup.PATCH("/seller/update-profile", middlewares.AuthMiddleware(), controllers.UpdateCurrentSeller)
 
 		// Customer authentication routes
-		authGroup.POST("/customer/register", controllers.CustomerRegister)
-		authGroup.POST("/customer/login", controllers.CustomerLogin)
-		authGroup.GET("/customer/oauth/google",         controllers.CustomerOAuthRedirect)
-        authGroup.GET("/customer/oauth/google/callback", controllers.CustomerOAuthCallback)
-		authGroup.POST("/customer/refresh",  controllers.CustomerRefresh)
+		authGroup.GET("/customer/oauth/google", controllers.CustomerOAuthRedirect)
+		authGroup.GET("/customer/oauth/google/callback", controllers.CustomerOAuthCallback)
+		// TODO: Add Telegram endpoints here
+		authGroup.POST("/customer/refresh", controllers.CustomerRefresh)
 		authGroup.POST("/customer/logout", controllers.CustomerLogout)
 		authGroup.GET("/customer/me", controllers.CustomerMe)
 	}

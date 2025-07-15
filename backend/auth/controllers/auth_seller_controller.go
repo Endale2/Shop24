@@ -5,7 +5,6 @@ import (
 	"os"
 	"time"
 
-	"github.com/Endale2/DRPS/auth/models"
 	"github.com/Endale2/DRPS/auth/services"
 	"github.com/Endale2/DRPS/auth/utils"
 	sellerRepo "github.com/Endale2/DRPS/sellers/repositories"
@@ -16,112 +15,72 @@ import (
 	"golang.org/x/oauth2"
 )
 
-// SellerRegister handles seller signup (email/password + auto-login).
-func SellerRegister(c *gin.Context) {
-	var req struct {
-		Email    string `json:"email" binding:"required"`
-		Password string `json:"password" binding:"required"`
-	}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	// Create auth & profile
-	if err := services.SellerRegisterService(&models.AuthSeller{
-		Email:    req.Email,
-		Password: req.Password,
-	}); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	// Immediately log them in
-	sellerData, at, rt, err := services.SellerLoginService(&models.AuthSeller{
-		Email:    req.Email,
-		Password: req.Password,
-	})
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "registration succeeded, login failed"})
-		return
-	}
-
-	// Set cookies
-	c.SetCookie("access_token", at, int((5*time.Minute).Seconds()), "/", "", false, true)
-	c.SetCookie("refresh_token", rt, int((7*24*time.Hour).Seconds()), "/", "", false, true)
-
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Seller registered & logged in",
-		"seller":  sellerData,
-	})
-}
-
-// SellerLogin handles email/password login.
-func SellerLogin(c *gin.Context) {
-	var req struct {
-		Email    string `json:"email" binding:"required"`
-		Password string `json:"password" binding:"required"`
-	}
-	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	sellerData, at, rt, err := services.SellerLoginService(&models.AuthSeller{
-		Email:    req.Email,
-		Password: req.Password,
-	})
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.SetCookie("access_token", at, int((5*time.Minute).Seconds()), "/", "", false, true)
-	c.SetCookie("refresh_token", rt, int((7*24*time.Hour).Seconds()), "/", "", false, true)
-
-	c.JSON(http.StatusOK, gin.H{
-		"message": "Seller logged in",
-		"seller":  sellerData,
-	})
-}
-
 // SellerOAuthRedirect redirects to Google’s OAuth consent page.
 func SellerOAuthRedirect(c *gin.Context) {
-	url := utils.GoogleOAuthConfig.AuthCodeURL("state", oauth2.AccessTypeOffline)
+	url := utils.GetGoogleOAuthConfigForSeller().AuthCodeURL("state", oauth2.AccessTypeOffline)
 	c.Redirect(http.StatusFound, url)
 }
 
 // SellerOAuthCallback handles Google’s OAuth callback.
 func SellerOAuthCallback(c *gin.Context) {
-    // 1. Exchange the code for a token
-    code := c.Query("code")
-    tok, err := utils.GoogleOAuthConfig.Exchange(c, code)
-    if err != nil {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "oauth exchange failed"})
-        return
-    }
-    idToken, _ := tok.Extra("id_token").(string)
+	// 1. Exchange the code for a token
+	code := c.Query("code")
+	tok, err := utils.GetGoogleOAuthConfigForSeller().Exchange(c, code)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "oauth exchange failed"})
+		return
+	}
+	idToken, _ := tok.Extra("id_token").(string)
 
-    // 2. Create or fetch your seller, and issue app tokens
-    _, at, rt, err := services.SellerLoginOAuth("google", idToken)
-    if err != nil {
-        c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-        return
-    }
+	// 2. Create or fetch your seller, and issue app tokens
+	_, at, rt, err := services.SellerLoginOAuth("google", idToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+		return
+	}
 
-    // 3. Set HTTP‐only cookies so the browser will send them automatically
-    c.SetCookie("access_token",  at, int((5 * time.Minute).Seconds()),    "/", "", false, true)
-    c.SetCookie("refresh_token", rt, int((7 * 24 * time.Hour).Seconds()), "/", "", false, true)
+	// 3. Set HTTP‐only cookies so the browser will send them automatically
+	c.SetCookie("access_token", at, int((5 * time.Minute).Seconds()), "/", "", false, true)
+	c.SetCookie("refresh_token", rt, int((7 * 24 * time.Hour).Seconds()), "/", "", false, true)
 
-    // 4. Redirect into your SPA:
-    //    replace `http://localhost:5174/shops` with your real front-end URL
-    frontend := os.Getenv("FRONTEND_URL")
-    if frontend == "" {
-        frontend = "http://localhost:5174"
-    }
-    c.Redirect(http.StatusFound, frontend+"/shops")
+	// 4. Redirect into your SPA:
+	//    replace `http://localhost:5174/shops` with your real front-end URL
+	frontend := os.Getenv("FRONTEND_URL")
+	if frontend == "" {
+		frontend = "http://localhost:5174"
+	}
+	c.Redirect(http.StatusFound, frontend+"/shops")
 }
 
+// SellerTelegramOAuth handles Telegram OAuth login.
+func SellerTelegramOAuth(c *gin.Context) {
+	var telegramData map[string]string
+	if err := c.ShouldBindJSON(&telegramData); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid telegram data"})
+		return
+	}
+
+	// Verify Telegram login signature
+	botToken := utils.GetTelegramBotTokenForSeller()
+	payload, err := utils.VerifyTelegramLogin(telegramData, botToken)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid telegram signature"})
+		return
+	}
+
+	// Create or fetch seller profile
+	seller, at, rt, err := services.SellerLoginTelegram(payload)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Set HTTP-only cookies
+	c.SetCookie("access_token", at, int((5 * time.Minute).Seconds()), "/", "", false, true)
+	c.SetCookie("refresh_token", rt, int((7 * 24 * time.Hour).Seconds()), "/", "", false, true)
+
+	c.JSON(http.StatusOK, seller)
+}
 
 // SellerRefresh issues a new access token using the refresh_token cookie.
 func SellerRefresh(c *gin.Context) {
@@ -143,7 +102,7 @@ func SellerRefresh(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("access_token", at, int((5*time.Minute).Seconds()), "/", "", false, true)
+	c.SetCookie("access_token", at, int((5 * time.Minute).Seconds()), "/", "", false, true)
 	c.JSON(http.StatusOK, gin.H{"message": "access token refreshed"})
 }
 
@@ -178,8 +137,6 @@ func GetCurrentSeller(c *gin.Context) {
 
 	c.JSON(http.StatusOK, seller)
 }
-
-
 
 // UpdateCurrentSeller PATCH /seller/me
 func UpdateCurrentSeller(c *gin.Context) {
@@ -239,7 +196,6 @@ func UpdateCurrentSeller(c *gin.Context) {
 
 	c.JSON(http.StatusOK, updated)
 }
-
 
 // SellerLogout clears both auth cookies.
 func SellerLogout(c *gin.Context) {

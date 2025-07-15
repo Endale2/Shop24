@@ -26,7 +26,7 @@
         
         <div class="flex flex-col sm:flex-row justify-center gap-6 animate-fade-in-up animation-delay-400">
           <router-link
-            to="/register"
+            to="/auth"
             class="inline-flex items-center justify-center px-10 py-4 bg-gradient-to-r from-green-600 to-green-700 text-white text-xl font-bold rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2"
           >
             <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -139,7 +139,7 @@
               Join thousands of successful sellers who've already taken their business to the next level with Seller's Dash.
             </p>
             <router-link
-              to="/register"
+              to="/auth"
               class="inline-flex items-center px-10 py-4 bg-gradient-to-r from-green-600 to-green-700 text-white text-xl font-bold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-1 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2"
             >
               <svg class="w-6 h-6 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">

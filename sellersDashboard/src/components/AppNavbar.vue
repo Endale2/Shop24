@@ -146,16 +146,10 @@
         <!-- Auth Buttons (for unauthenticated users) -->
         <template v-else>
           <router-link 
-            to="/login" 
-            class="text-gray-700 font-medium hover:text-green-600 transition-all duration-200 px-4 py-2 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2"
-          >
-            Log In
-          </router-link>
-          <router-link 
-            to="/register"
+            to="/auth" 
             class="px-6 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:-translate-y-0.5 active:translate-y-0 active:shadow-md focus:outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2"
           >
-            Get Started
+            Sign In
           </router-link>
         </template>
       </div>
