@@ -36,14 +36,7 @@
             </span>
           </button>
 
-          <!-- Telegram Login Widget -->
-          <div id="telegram-login-widget" class="w-full flex justify-center">
-            <!-- Fallback message if widget fails to load -->
-            <div id="telegram-fallback" class="hidden text-center p-4">
-              <p class="text-sm text-gray-500 mb-2">Telegram login widget not available</p>
-              <p class="text-xs text-gray-400">Please check bot configuration</p>
-            </div>
-          </div>
+
         </div>
 
         <!-- Error Message -->
@@ -110,26 +103,7 @@ function loginWithGoogle() {
   }
 }
 
-// Telegram OAuth login
-async function loginWithTelegram(user) {
-  loading.value = true
-  error.value = null
-  
-  try {
-    // Send Telegram data to backend
-    await auth.loginWithTelegram(user)
-    await auth.fetchMe()
-    
-    // Determine redirect based on user profile completion
-    const redirect = determineRedirect()
-    router.replace(redirect)
-  } catch (err) {
-    error.value = 'Telegram login failed. Please try again.'
-    console.error('Telegram login error:', err)
-  } finally {
-    loading.value = false
-  }
-}
+
 
 // Handle OAuth callback from Google
 async function handleOAuthCallback() {
@@ -149,39 +123,6 @@ async function handleOAuthCallback() {
 }
 
 onMounted(() => {
-  // Set up Telegram login widget
-  window.onTelegramAuth = loginWithTelegram
-  
-  // Telegram bot username (without @ symbol)
-  const telegramBotUsername = 'drpsauthbot'
-  
-
-  
-  const script = document.createElement('script')
-  script.src = 'https://telegram.org/js/telegram-widget.js?7'
-  script.setAttribute('data-telegram-login', telegramBotUsername)
-  script.setAttribute('data-size', 'large')
-  script.setAttribute('data-userpic', 'false')
-  script.setAttribute('data-request-access', 'write')
-  script.setAttribute('data-onauth', 'onTelegramAuth(user)')
-  script.async = true
-  
-  // Add error handling for script loading
-  script.onerror = () => {
-    const fallback = document.getElementById('telegram-fallback')
-    if (fallback) {
-      fallback.classList.remove('hidden')
-      fallback.innerHTML = `
-        <div class="text-center p-4 border-2 border-dashed border-red-300 rounded-xl">
-          <p class="text-sm text-red-600 mb-2">❌ Telegram Widget Failed to Load</p>
-          <p class="text-xs text-red-500">Check your bot configuration</p>
-        </div>
-      `
-    }
-  }
-  
-  document.getElementById('telegram-login-widget').appendChild(script)
-  
   // If user is already authenticated, redirect appropriately
   if (auth.isAuthenticated) {
     const redirect = determineRedirect()

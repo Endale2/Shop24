@@ -39,3 +39,20 @@ export async function logout() {
 export async function refreshToken() {
   return api.post('/auth/customer/refresh')
 }
+
+/**
+ * Initiate Google OAuth login for customers
+ */
+export function loginWithGoogle(shopId?: string) {
+  // Build the redirect URL with shopId if provided
+  const currentPath = window.location.pathname
+  const returnTo = window.location.origin + currentPath + '?oauth=google'
+  const redirectUri = encodeURIComponent(returnTo)
+  
+  // Add shopId to the OAuth URL if provided
+  const shopIdParam = shopId ? `&shopId=${encodeURIComponent(shopId)}` : ''
+  
+  // Hit the customer OAuth redirect endpoint
+  const apiBase = import.meta.env.VITE_API_BASE || 'http://localhost:8080'
+  window.location.href = `${apiBase}/auth/customer/oauth/google?redirect_uri=${redirectUri}${shopIdParam}`
+}

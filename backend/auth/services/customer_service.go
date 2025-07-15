@@ -19,7 +19,8 @@ type OptionalProfile struct {
 
 // CustomerLoginOAuth handles Google (or other) OAuth login for customers.
 func CustomerLoginOAuth(provider, idToken string) (*customerModels.Customer, string, string, error) {
-	payload, err := utils.VerifyGoogleIDToken(idToken)
+	// Use the correct client ID for customers
+	payload, err := utils.VerifyGoogleIDToken(idToken, utils.GoogleCustomerClientID())
 	if err != nil {
 		return nil, "", "", err
 	}

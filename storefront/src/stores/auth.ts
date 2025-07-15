@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { login, register, getProfile, logout, refreshToken } from '@/services/auth'
+import { login, register, getProfile, logout, refreshToken, loginWithGoogle } from '@/services/auth'
 import { useCartStore } from './cart'
 import piniaPersist from 'pinia-plugin-persistedstate'
 
@@ -99,6 +99,13 @@ export const useAuthStore = defineStore('auth', {
       } finally {
         this.sessionLoading = false
       }
+    },
+    
+    /**
+     * Initiate Google OAuth login for customers
+     */
+    loginWithGoogle(shopId?: string) {
+      loginWithGoogle(shopId)
     },
   },
   persist: {

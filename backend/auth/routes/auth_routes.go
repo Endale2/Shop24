@@ -21,7 +21,7 @@ func AuthRoutes(r *gin.Engine) {
 		// Seller authentication routes
 		authGroup.GET("/seller/oauth/google", controllers.SellerOAuthRedirect)
 		authGroup.GET("/seller/oauth/google/callback", controllers.SellerOAuthCallback)
-		authGroup.POST("/seller/oauth/telegram", controllers.SellerTelegramOAuth)
+
 		authGroup.POST("/seller/refresh", controllers.SellerRefresh)
 		authGroup.POST("/seller/logout", controllers.SellerLogout)
 		authGroup.GET("/seller/me", controllers.GetCurrentSeller)

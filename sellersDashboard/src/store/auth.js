@@ -41,12 +41,7 @@ export const useAuthStore = defineStore('auth', {
       authService.loginWithGoogle()
     },
 
-    /**
-     * Handle Telegram OAuth login
-     */
-    async loginWithTelegram(telegramUser) {
-      await authService.loginWithTelegram(telegramUser)
-    }
+
   },
   persist: {
     paths: ['user']

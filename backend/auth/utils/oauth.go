@@ -2,54 +2,72 @@ package utils
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"os"
-
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/hex"
-	"sort"
 
 	"golang.org/x/oauth2"
 	"golang.org/x/oauth2/google"
 	"google.golang.org/api/idtoken"
 )
 
-var googleClientID = os.Getenv("GOOGLE_CLIENT_ID")
-var googleClientSecret = os.Getenv("GOOGLE_CLIENT_SECRET")
-var googleRedirectCustomer = os.Getenv("GOOGLE_CUSTOMER_REDIRECT_URI")
-var googleRedirectSeller = os.Getenv("GOOGLE_SELLER_REDIRECT_URI")
+// Seller Google OAuth config
+var googleSellerClientID = os.Getenv("GOOGLE_SELLER_CLIENT_ID")
+var googleSellerClientSecret = os.Getenv("GOOGLE_SELLER_CLIENT_SECRET")
+var googleSellerRedirect = os.Getenv("GOOGLE_SELLER_REDIRECT_URI")
 
-var telegramCustomerBotToken = os.Getenv("TELEGRAM_CUSTOMER_BOT_TOKEN")
-var telegramSellerBotToken = os.Getenv("TELEGRAM_SELLER_BOT_TOKEN")
+// Customer Google OAuth config
+var googleCustomerClientID = os.Getenv("GOOGLE_CUSTOMER_CLIENT_ID")
+var googleCustomerClientSecret = os.Getenv("GOOGLE_CUSTOMER_CLIENT_SECRET")
+var googleCustomerRedirect = os.Getenv("GOOGLE_CUSTOMER_REDIRECT_URI")
 
-// GetGoogleOAuthConfigForCustomer returns the Google OAuth config for customers
-func GetGoogleOAuthConfigForCustomer() *oauth2.Config {
+// GetGoogleOAuthConfigForSeller returns the Google OAuth config for sellers
+func GetGoogleOAuthConfigForSeller() *oauth2.Config {
+	clientID := os.Getenv("GOOGLE_SELLER_CLIENT_ID")
+	clientSecret := os.Getenv("GOOGLE_SELLER_CLIENT_SECRET")
+	redirect := os.Getenv("GOOGLE_SELLER_REDIRECT_URI")
+	if clientID == "" || clientSecret == "" || redirect == "" {
+		fmt.Printf("[FATAL] Seller OAuth env missing: client_id='%s', client_secret='%s', redirect_uri='%s'\n", clientID, clientSecret, redirect)
+		panic("Missing required seller OAuth environment variables")
+	}
+	fmt.Println("SELLER CLIENT ID:", clientID)
+	fmt.Println("SELLER REDIRECT URI:", redirect)
 	return &oauth2.Config{
-		ClientID:     googleClientID,
-		ClientSecret: googleClientSecret,
-		RedirectURL:  googleRedirectCustomer,
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		RedirectURL:  redirect,
 		Scopes:       []string{"openid", "email", "profile"},
 		Endpoint:     google.Endpoint,
 	}
 }
 
-// GetGoogleOAuthConfigForSeller returns the Google OAuth config for sellers
-func GetGoogleOAuthConfigForSeller() *oauth2.Config {
+// GetGoogleOAuthConfigForCustomer returns the Google OAuth config for customers
+func GetGoogleOAuthConfigForCustomer() *oauth2.Config {
+	clientID := os.Getenv("GOOGLE_CUSTOMER_CLIENT_ID")
+	clientSecret := os.Getenv("GOOGLE_CUSTOMER_CLIENT_SECRET")
+	redirect := os.Getenv("GOOGLE_CUSTOMER_REDIRECT_URI")
+	if clientID == "" || clientSecret == "" || redirect == "" {
+		fmt.Printf("[FATAL] Customer OAuth env missing: client_id='%s', client_secret='%s', redirect_uri='%s'\n", clientID, clientSecret, redirect)
+		panic("Missing required customer OAuth environment variables")
+	}
+	fmt.Println("CUSTOMER CLIENT ID:", clientID)
+	fmt.Println("CUSTOMER REDIRECT URI:", redirect)
 	return &oauth2.Config{
-		ClientID:     googleClientID,
-		ClientSecret: googleClientSecret,
-		RedirectURL:  googleRedirectSeller,
+		ClientID:     clientID,
+		ClientSecret: clientSecret,
+		RedirectURL:  redirect,
 		Scopes:       []string{"openid", "email", "profile"},
 		Endpoint:     google.Endpoint,
 	}
 }
 
 // VerifyGoogleIDToken validates the ID token and returns standard claims.
-func VerifyGoogleIDToken(token string) (*GooglePayload, error) {
+type GooglePayload struct {
+	Sub, Email, GivenName, FamilyName, Picture string
+}
+
+func VerifyGoogleIDToken(token string, clientID string) (*GooglePayload, error) {
 	ctx := context.Background()
-	payload, err := idtoken.Validate(ctx, token, googleClientID)
+	payload, err := idtoken.Validate(ctx, token, clientID)
 	if err != nil {
 		return nil, err
 	}
@@ -62,80 +80,20 @@ func VerifyGoogleIDToken(token string) (*GooglePayload, error) {
 	}, nil
 }
 
-type GooglePayload struct {
-	Sub, Email, GivenName, FamilyName, Picture string
+// Exported functions to get the correct client IDs for use in services
+func GoogleSellerClientID() string {
+	return googleSellerClientID
 }
 
-// GetTelegramBotTokenForCustomer returns the Telegram bot token for customers
-func GetTelegramBotTokenForCustomer() string {
-	return telegramCustomerBotToken
+func GoogleCustomerClientID() string {
+	return googleCustomerClientID
 }
 
-// GetTelegramBotTokenForSeller returns the Telegram bot token for sellers
-func GetTelegramBotTokenForSeller() string {
-	return telegramSellerBotToken
+// Exported functions to get the correct frontend URLs for use in controllers
+func SellerFrontendURL() string {
+	return os.Getenv("SELLER_FRONTEND_URL")
 }
 
-// TelegramPayload holds the verified Telegram user info
-// See https://core.telegram.org/widgets/login#checking-authorization
-type TelegramPayload struct {
-	ID        int64  `json:"id"`
-	FirstName string `json:"first_name"`
-	LastName  string `json:"last_name"`
-	Username  string `json:"username"`
-	PhotoURL  string `json:"photo_url"`
-	AuthDate  int64  `json:"auth_date"`
-}
-
-// VerifyTelegramLogin verifies the Telegram login signature and returns the payload if valid
-func VerifyTelegramLogin(data map[string]string, botToken string) (*TelegramPayload, error) {
-	// 1. Extract the hash
-	hash, ok := data["hash"]
-	if !ok {
-		return nil, errors.New("missing hash in Telegram data")
-	}
-	// 2. Remove hash from data
-	delete(data, "hash")
-	// 3. Sort keys and build data_check_string
-	var keys []string
-	for k := range data {
-		keys = append(keys, k)
-	}
-	sort.Strings(keys)
-	var dataCheckString string
-	for i, k := range keys {
-		if i > 0 {
-			dataCheckString += "\n"
-		}
-		dataCheckString += k + "=" + data[k]
-	}
-	// 4. Compute HMAC-SHA256 of data_check_string using SHA256(botToken)
-	h := sha256.New()
-	h.Write([]byte(botToken))
-	secret := h.Sum(nil)
-	mac := hmac.New(sha256.New, secret)
-	mac.Write([]byte(dataCheckString))
-	computedHash := hex.EncodeToString(mac.Sum(nil))
-	// 5. Compare hashes (case-insensitive)
-	if !hmac.Equal([]byte(computedHash), []byte(hash)) {
-		return nil, errors.New("invalid Telegram login signature")
-	}
-	// 6. Parse payload
-	payload := &TelegramPayload{}
-	if v, ok := data["id"]; ok {
-		// Telegram sends id as string
-		var id int64
-		fmt.Sscanf(v, "%d", &id)
-		payload.ID = id
-	}
-	payload.FirstName = data["first_name"]
-	payload.LastName = data["last_name"]
-	payload.Username = data["username"]
-	payload.PhotoURL = data["photo_url"]
-	if v, ok := data["auth_date"]; ok {
-		var ad int64
-		fmt.Sscanf(v, "%d", &ad)
-		payload.AuthDate = ad
-	}
-	return payload, nil
+func CustomerFrontendURL() string {
+	return os.Getenv("CUSTOMER_FRONTEND_URL")
 }

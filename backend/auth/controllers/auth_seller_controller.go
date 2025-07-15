@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"os"
 	"time"
@@ -18,6 +19,7 @@ import (
 // SellerOAuthRedirect redirects to Google’s OAuth consent page.
 func SellerOAuthRedirect(c *gin.Context) {
 	url := utils.GetGoogleOAuthConfigForSeller().AuthCodeURL("state", oauth2.AccessTypeOffline)
+	fmt.Println("SELLER OAUTH REDIRECT URL:", url)
 	c.Redirect(http.StatusFound, url)
 }
 
@@ -45,41 +47,12 @@ func SellerOAuthCallback(c *gin.Context) {
 
 	// 4. Redirect into your SPA:
 	//    replace `http://localhost:5174/shops` with your real front-end URL
-	frontend := os.Getenv("FRONTEND_URL")
+	frontend := os.Getenv("SELLER_FRONTEND_URL")
 	if frontend == "" {
-		frontend = "http://localhost:5174"
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "SELLER_FRONTEND_URL not set in environment"})
+		return
 	}
 	c.Redirect(http.StatusFound, frontend+"/shops")
-}
-
-// SellerTelegramOAuth handles Telegram OAuth login.
-func SellerTelegramOAuth(c *gin.Context) {
-	var telegramData map[string]string
-	if err := c.ShouldBindJSON(&telegramData); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid telegram data"})
-		return
-	}
-
-	// Verify Telegram login signature
-	botToken := utils.GetTelegramBotTokenForSeller()
-	payload, err := utils.VerifyTelegramLogin(telegramData, botToken)
-	if err != nil {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid telegram signature"})
-		return
-	}
-
-	// Create or fetch seller profile
-	seller, at, rt, err := services.SellerLoginTelegram(payload)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-		return
-	}
-
-	// Set HTTP-only cookies
-	c.SetCookie("access_token", at, int((5 * time.Minute).Seconds()), "/", "", false, true)
-	c.SetCookie("refresh_token", rt, int((7 * 24 * time.Hour).Seconds()), "/", "", false, true)
-
-	c.JSON(http.StatusOK, seller)
 }
 
 // SellerRefresh issues a new access token using the refresh_token cookie.

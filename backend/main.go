@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/url"
 	"os"
@@ -19,9 +20,21 @@ import (
 )
 
 func main() {
-	// Load environment variables from .env if present
+	// Load environment variables from .env if present (must be first!)
 	if err := godotenv.Load(); err != nil {
 		log.Println("⚠️  No .env file found, using system env")
+	}
+
+	// Print all environment variables for debugging
+	fmt.Println("--- ENVIRONMENT VARIABLES ---")
+	for _, e := range os.Environ() {
+		fmt.Println(e)
+	}
+	fmt.Println("----------------------------")
+
+	// Warn if GOOGLE_CUSTOMER_CLIENT_ID is missing
+	if os.Getenv("GOOGLE_CUSTOMER_CLIENT_ID") == "" {
+		log.Println("❌ GOOGLE_CUSTOMER_CLIENT_ID is not set! Customer OAuth will fail.")
 	}
 
 	// Check for required JWT secret
@@ -70,7 +83,6 @@ func main() {
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,
 	}
-
 
 	// Apply CORS middleware
 	r.Use(cors.New(corsConfig))

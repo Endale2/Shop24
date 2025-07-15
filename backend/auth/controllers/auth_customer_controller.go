@@ -23,6 +23,7 @@ func CustomerOAuthRedirect(c *gin.Context) {
 	// Encode state as "customer_state:<shopId>" or just "customer_state:" if empty
 	state := fmt.Sprintf("customer_state:%s", shopID)
 	url := utils.GetGoogleOAuthConfigForCustomer().AuthCodeURL(state, oauth2.AccessTypeOffline)
+	fmt.Println("CUSTOMER OAUTH REDIRECT URL:", url)
 	c.Redirect(http.StatusFound, url)
 }
 
@@ -70,9 +71,10 @@ func CustomerOAuthCallback(c *gin.Context) {
 	c.SetCookie("refresh_token", rt, int((7 * 24 * time.Hour).Seconds()), "/", "", false, true)
 
 	// 6. Redirect to your customer-specific SPA route
-	frontend := os.Getenv("FRONTEND_URL")
+	frontend := os.Getenv("CUSTOMER_FRONTEND_URL")
 	if frontend == "" {
-		frontend = "http://localhost:5174"
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "CUSTOMER_FRONTEND_URL not set in environment"})
+		return
 	}
 	c.Redirect(http.StatusFound, fmt.Sprintf("%s/customer/dashboard", frontend))
 }

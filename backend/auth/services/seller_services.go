@@ -2,7 +2,6 @@ package services
 
 import (
 	"errors"
-	"fmt"
 	"time"
 
 	"github.com/Endale2/DRPS/auth/models"
@@ -17,7 +16,8 @@ var ErrSellerNotFound = errors.New("seller not found")
 
 // SellerLoginOAuth handles Google (or other) OAuth login.
 func SellerLoginOAuth(provider, idToken string) (*sellerModels.Seller, string, string, error) {
-	payload, err := utils.VerifyGoogleIDToken(idToken)
+	// Use the correct client ID for sellers
+	payload, err := utils.VerifyGoogleIDToken(idToken, utils.GoogleSellerClientID())
 	if err != nil {
 		return nil, "", "", err
 	}
@@ -54,48 +54,5 @@ func SellerLoginOAuth(provider, idToken string) (*sellerModels.Seller, string, s
 	}
 	at, _ := utils.CreateToken(prof.ID.Hex(), 5*time.Minute)
 	rt, _ := utils.CreateToken(prof.ID.Hex(), 7*24*time.Hour)
-	return prof, at, rt, nil
-}
-
-// SellerLoginTelegram handles Telegram OAuth login for sellers.
-func SellerLoginTelegram(payload *utils.TelegramPayload) (*sellerModels.Seller, string, string, error) {
-	// Check if seller already exists by Telegram ID
-	rec, _ := authRepo.FindAuthSellerByProvider("telegram", fmt.Sprintf("%d", payload.ID))
-	if rec == nil {
-		// First-time login: create seller profile + auth record
-		now := time.Now()
-		prof := &sellerModels.Seller{
-			FirstName:    payload.FirstName,
-			LastName:     payload.LastName,
-			ProfileImage: payload.PhotoURL,
-			CreatedAt:    now,
-			UpdatedAt:    now,
-		}
-		res, err := sellerRepo.CreateSeller(prof)
-		if err != nil {
-			return nil, "", "", err
-		}
-		prof.ID = res.InsertedID.(primitive.ObjectID)
-
-		rec = &models.AuthSeller{
-			Provider:   "telegram",
-			ProviderID: fmt.Sprintf("%d", payload.ID),
-			SellerID:   prof.ID,
-		}
-		if _, err := authRepo.CreateAuthSeller(rec); err != nil {
-			return nil, "", "", err
-		}
-	}
-
-	// Retrieve the seller profile
-	prof, err := sellerRepo.GetSellerByID(rec.SellerID)
-	if err != nil || prof == nil {
-		return nil, "", "", ErrSellerNotFound
-	}
-
-	// Generate tokens
-	at, _ := utils.CreateToken(prof.ID.Hex(), 5*time.Minute)
-	rt, _ := utils.CreateToken(prof.ID.Hex(), 7*24*time.Hour)
-
 	return prof, at, rt, nil
 }
