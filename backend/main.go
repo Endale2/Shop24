@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"log"
 	"net/url"
 	"os"
@@ -25,13 +24,6 @@ func main() {
 		log.Println("⚠️  No .env file found, using system env")
 	}
 
-	// Print all environment variables for debugging
-	fmt.Println("--- ENVIRONMENT VARIABLES ---")
-	for _, e := range os.Environ() {
-		fmt.Println(e)
-	}
-	fmt.Println("----------------------------")
-
 	// Warn if GOOGLE_CUSTOMER_CLIENT_ID is missing
 	if os.Getenv("GOOGLE_CUSTOMER_CLIENT_ID") == "" {
 		log.Println("❌ GOOGLE_CUSTOMER_CLIENT_ID is not set! Customer OAuth will fail.")
@@ -44,8 +36,12 @@ func main() {
 	}
 
 	// Connect to MongoDB or other DB
-	config.ConnectDB()
+	if err := config.ConnectDB(); err != nil {
+		log.Fatalf("❌ Failed to connect to MongoDB: %v", err)
+	}
 
+	// Set Gin to release mode to suppress debug endpoint and warning logs
+	gin.SetMode(gin.ReleaseMode)
 	// Initialize Gin router
 	r := gin.Default()
 
@@ -95,6 +91,10 @@ func main() {
 
 	// Health check route
 	r.GET("/", func(c *gin.Context) {
+		if config.DB == nil {
+			c.JSON(500, gin.H{"error": "MongoDB not connected"})
+			return
+		}
 		c.JSON(200, gin.H{"message": "MongoDB connected!"})
 	})
 
