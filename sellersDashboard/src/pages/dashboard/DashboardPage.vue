@@ -274,11 +274,11 @@
                 />
                 <div class="flex-1 min-w-0">
                   <p class="font-medium text-gray-900 truncate">{{ product.name }}</p>
-                  <p class="text-sm text-gray-600">${{ formatCurrency(product.price) }}</p>
-                  <span v-if="product.stock === 0" class="inline-block mt-1 px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full font-semibold">Out of Stock</span>
+                  <p class="text-sm text-gray-600">{{ getProductPriceDisplay(product) }}</p>
+                  <span v-if="getProductStock(product) === 0" class="inline-block mt-1 px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full font-semibold">Out of Stock</span>
                 </div>
                 <div class="text-right flex flex-col items-end min-w-[70px]">
-                  <p class="text-sm text-gray-600">Stock: {{ product.stock }}</p>
+                  <p class="text-sm text-gray-600">Stock: {{ getProductStock(product) }}</p>
                   <p class="text-xs text-gray-500">{{ formatDate(product.createdAt) }}</p>
                 </div>
               </div>
@@ -403,6 +403,44 @@ function getProductImage(product) {
   if (product.main_image) return product.main_image
   if (Array.isArray(product.images) && product.images.length > 0) return product.images[0]
   return '/placeholder-product.jpg'
+}
+
+// Helper functions for product display
+function getProductStock(product) {
+  if (product.total_stock !== undefined) return product.total_stock
+  if (product.stock !== undefined) return product.stock
+  if (product.variants && product.variants.length > 0) {
+    return product.variants.reduce((sum, v) => sum + (v.stock || 0), 0)
+  }
+  return 0
+}
+
+function getProductPrice(product) {
+  if (product.starting_price != null) return product.starting_price
+  if (product.price != null) return product.price
+  if (product.variants && product.variants.length > 0) {
+    const prices = product.variants.map(v => v.price).filter(p => p > 0)
+    return prices.length > 0 ? Math.min(...prices) : 0
+  }
+  return 0
+}
+
+function getProductPriceDisplay(product) {
+  if (product.starting_price != null) {
+    return `from $${formatCurrency(product.starting_price)}`
+  }
+  if (product.price != null) {
+    return `$${formatCurrency(product.price)}`
+  }
+  if (product.variants && product.variants.length > 0) {
+    const prices = product.variants.map(v => v.price).filter(p => p > 0)
+    if (prices.length > 0) {
+      const minPrice = Math.min(...prices)
+      const maxPrice = Math.max(...prices)
+      return minPrice === maxPrice ? `$${formatCurrency(minPrice)}` : `from $${formatCurrency(minPrice)}`
+    }
+  }
+  return 'N/A'
 }
 
 // Methods
