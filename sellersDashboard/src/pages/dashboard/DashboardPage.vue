@@ -78,7 +78,7 @@
           <div class="flex items-center justify-between">
             <div>
               <p class="text-sm font-medium text-gray-600">Total Sales</p>
-              <p class="text-3xl font-bold text-gray-900">${{ formatCurrency(stats.sales) }}</p>
+              <p class="text-3xl font-bold text-gray-900">${{ formatCurrency(getPaidRevenue()) }}</p>
               <p class="text-sm text-green-600 mt-1">
                 <TrendingUpIcon class="w-4 h-4 inline mr-1" />
                 +${{ formatCurrency(stats.salesToday) }} today
@@ -247,19 +247,21 @@
               <div 
                 v-for="product in recentProducts.slice(0, 5)" 
                 :key="product.id"
-                class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200 cursor-pointer"
+                class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200 cursor-pointer group"
                 @click="goToProduct(product.id)"
               >
                 <img 
-                  :src="product.mainImage || '/placeholder-product.jpg'" 
+                  :src="getProductImage(product)" 
                   :alt="product.name"
-                  class="w-12 h-12 rounded-lg object-cover"
+                  class="w-12 h-12 min-w-[3rem] min-h-[3rem] max-w-[3rem] max-h-[3rem] rounded-lg object-cover border border-gray-200 group-hover:ring-2 group-hover:ring-green-400 transition"
+                  @error="$event.target.src='/placeholder-product.jpg'"
                 />
-                <div class="flex-1">
-                  <p class="font-medium text-gray-900">{{ product.name }}</p>
+                <div class="flex-1 min-w-0">
+                  <p class="font-medium text-gray-900 truncate">{{ product.name }}</p>
                   <p class="text-sm text-gray-600">${{ formatCurrency(product.price) }}</p>
+                  <span v-if="product.stock === 0" class="inline-block mt-1 px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full font-semibold">Out of Stock</span>
                 </div>
-                <div class="text-right">
+                <div class="text-right flex flex-col items-end min-w-[70px]">
                   <p class="text-sm text-gray-600">Stock: {{ product.stock }}</p>
                   <p class="text-xs text-gray-500">{{ formatDate(product.createdAt) }}</p>
                 </div>
@@ -362,6 +364,23 @@ const maxWeeklySales = computed(() => {
   return Math.max(...weeklySales.value.map(day => day.amount))
 })
 
+// --- Navigation helpers ---
+function goToOrder(orderId) {
+  router.push({ name: 'OrderDetail', params: { orderId } })
+}
+function goToProduct(productId) {
+  router.push({ name: 'ProductDetail', params: { productId } })
+}
+function goToAnalytics() {
+  router.push({ name: 'Analytics' })
+}
+
+function getProductImage(product) {
+  if (product.main_image) return product.main_image
+  if (Array.isArray(product.images) && product.images.length > 0) return product.images[0]
+  return '/placeholder-product.jpg'
+}
+
 // Methods
 function formatCurrency(amount) {
   return (amount || 0).toFixed(2)
@@ -427,16 +446,15 @@ function getAlertIcon(type) {
   return iconMap[type] || ExclamationIcon
 }
 
-function goToOrder(orderId) {
-  router.push({ name: 'OrderDetail', params: { orderId } })
-}
-
-function goToProduct(productId) {
-  router.push({ name: 'ProductDetail', params: { productId } })
-}
-
 function dismissAlert(alertId) {
   alerts.value = alerts.value.filter(alert => alert.id !== alertId)
+}
+
+// --- Revenue calculation: only count paid, shipped, delivered ---
+function getPaidRevenue() {
+  return recentOrders.value
+    .filter(order => ['paid', 'shipped', 'delivered'].includes((order.status || '').toLowerCase()))
+    .reduce((sum, order) => sum + (order.total || 0), 0)
 }
 
 // Generate weekly sales data
@@ -618,4 +636,11 @@ onMounted(() => {
 
 <style scoped>
 /* Custom styles if needed */
+@media (max-width: 640px) {
+  .min-w-0 { min-width: 0 !important; }
+  .min-w-[3rem] { min-width: 3rem !important; }
+  .max-w-[3rem] { max-width: 3rem !important; }
+  .min-h-[3rem] { min-height: 3rem !important; }
+  .max-h-[3rem] { max-height: 3rem !important; }
+}
 </style>
