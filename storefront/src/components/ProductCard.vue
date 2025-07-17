@@ -5,6 +5,7 @@
     @mouseenter="onHover"
     @mouseleave="onLeave"
   >
+  
     <!-- Discount Badge at Top-Left -->
     <span v-if="product.discounts && product.discounts.length > 0"
       class="absolute top-2 left-2 z-10 px-3 py-1 bg-gradient-to-r from-yellow-200 to-yellow-100 text-yellow-900 text-xs font-bold rounded-full shadow-sm border border-yellow-300 flex items-center gap-1 animate-fade-in"
