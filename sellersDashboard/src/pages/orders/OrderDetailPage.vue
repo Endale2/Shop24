@@ -23,7 +23,7 @@
           <button
             v-if="order"
             @click="updateOrderStatus"
-            class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition-all duration-150 ease-in-out"
+            class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition-all duration-150 ease-in-out"
           >
             <PencilIcon class="w-5 h-5 mr-2 -ml-1" />
             Update Status
@@ -55,76 +55,66 @@
       <main v-else-if="order" class="grid grid-cols-1 lg:grid-cols-3 gap-8">
         
         <div class="lg:col-span-2 space-y-8">
-            <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
-                <div class="p-6">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Order Items</h3>
-                    <div class="flow-root">
-                        <ul role="list" class="-my-4 divide-y divide-gray-200">
-                            <li v-for="item in order.items" :key="`${item.productId}-${item.variantId || 'no-variant'}`" class="flex items-center py-4 space-x-4">
-                                <div class="flex-shrink-0">
-                                    <img :src="item.image || '/placeholder-product.png'" :alt="item.name" class="h-16 w-16 rounded-lg object-cover border border-gray-200" @error="$event.target.src='/placeholder-product.png'" />
-                                </div>
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-md font-semibold text-gray-900 truncate">{{ item.name }}</p>
-                                    <p v-if="item.variantId && item.variantId !== '000000000000000000000000'" class="text-sm text-gray-500">{{ item.variantName || 'Variant' }}</p>
-                                    <p v-else class="text-sm text-gray-400 italic">No variant</p>
-                                </div>
-                                <div class="text-right">
-                                    <p class="text-md font-medium text-gray-900">{{ formatPrice(item.totalPrice) }}</p>
-                                    <p class="text-sm text-gray-500">{{ item.quantity }} x {{ formatPrice(item.unitPrice) }}</p>
-                                </div>
-                            </li>
-                        </ul>
+          <!-- Order Items Section -->
+          <div class="bg-white rounded-xl border border-gray-200 overflow-hidden shadow-sm">
+            <div class="p-6">
+              <h3 class="text-xl font-semibold text-gray-800 mb-4">Order Items</h3>
+              <div class="flow-root">
+                <ul role="list" class="-my-4 divide-y divide-gray-200">
+                  <li v-for="item in order.items" :key="`${item.productId}-${item.variantId || 'no-variant'}`" class="flex items-center py-4 space-x-4 group hover:bg-green-50 transition cursor-pointer rounded-lg" @click="goToProductDetail(item.productId)">
+                    <div class="flex-shrink-0">
+                      <img :src="item.image || '/placeholder-product.png'" :alt="item.name" class="h-16 w-16 rounded-lg object-cover border border-gray-200 group-hover:ring-2 group-hover:ring-green-400 transition" @error="$event.target.src='/placeholder-product.png'" />
                     </div>
-                </div>
+                    <div class="flex-1 min-w-0">
+                      <p class="text-md font-semibold text-gray-900 truncate">{{ item.name }}</p>
+                      <p v-if="item.variantId && item.variantId !== '000000000000000000000000'" class="text-sm text-gray-500">{{ item.variantName || 'Variant' }}</p>
+                      <p v-else class="text-sm text-gray-400 italic">No variant</p>
+                    </div>
+                    <div class="text-right">
+                      <p class="text-md font-medium text-gray-900">{{ formatPrice(item.totalPrice) }}</p>
+                      <p class="text-sm text-gray-500">{{ item.quantity }} x {{ formatPrice(item.unitPrice) }}</p>
+                    </div>
+                    <span class="ml-2 text-gray-400 group-hover:text-green-500 transition" title="View Product">
+                      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+                    </span>
+                  </li>
+                </ul>
+              </div>
             </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div v-if="customer" class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Customer</h3>
-                    <div class="flex items-start space-x-4">
-                        <img :src="customer.profileImage || '/placeholder-avatar.png'" :alt="`${customer.firstName} ${customer.lastName}`" class="h-16 w-16 rounded-full object-cover border border-gray-200" @error="$event.target.src='/placeholder-avatar.png'" />
-                        <div class="flex-1 min-w-0">
-                            <p class="text-lg font-semibold text-gray-900">{{ customer.firstName }} {{ customer.lastName }}</p>
-                            <p class="text-sm text-gray-500 truncate">{{ customer.email }}</p>
-                            <p v-if="customer.phone" class="text-sm text-gray-500">{{ customer.phone }}</p>
-                        </div>
-                    </div>
-                    <div v-if="customer.address" class="mt-4 pt-4 border-t border-gray-200">
-                        <p class="text-sm font-medium text-gray-600">Shipping Address</p>
-                        <address class="text-sm text-gray-500 not-italic">
-                            {{ customer.address }}<br>
-                            <span v-if="customer.city">{{ customer.city }}, </span>
-                            <span v-if="customer.state">{{ customer.state }} </span>
-                            <span v-if="customer.postalCode">{{ customer.postalCode }}</span>
-                        </address>
-                    </div>
+          </div>
+          <!-- Customer Card Section -->
+          <div v-if="customer" class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm hover:shadow-lg transition cursor-pointer group" @click="goToCustomerProfile(customer.id)">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4 flex items-center">
+              Customer
+              <span class="ml-2 text-gray-400 group-hover:text-green-500 transition" title="View Customer Profile">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" /></svg>
+              </span>
+            </h3>
+            <div class="flex items-start space-x-4">
+              <template v-if="customer.profile_image">
+                <img :src="customer.profile_image" :alt="`${customer.firstName} ${customer.lastName}`" class="h-16 w-16 rounded-full object-cover border border-gray-200 group-hover:ring-2 group-hover:ring-green-400 transition" @error="$event.target.src='/placeholder-avatar.png'" />
+              </template>
+              <template v-else>
+                <div class="h-16 w-16 rounded-full bg-gradient-to-br from-green-400 to-teal-500 flex items-center justify-center text-white text-xl font-bold border border-gray-200 group-hover:ring-2 group-hover:ring-green-400 transition">
+                  {{ getInitials(customer) }}
                 </div>
-                
-                <div class="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-                    <h3 class="text-xl font-semibold text-gray-800 mb-4">Timeline</h3>
-                    <ul class="space-y-4">
-                        <li class="flex items-start">
-                            <div class="flex-shrink-0 w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                                <CheckIcon class="w-5 h-5 text-green-600" />
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm font-medium text-gray-900">Order Created</p>
-                                <p class="text-sm text-gray-500">{{ formatDateTime(order.createdAt) }}</p>
-                            </div>
-                        </li>
-                        <li v-if="order.updatedAt && order.updatedAt !== order.createdAt" class="flex items-start">
-                            <div class="flex-shrink-0 w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                                <PencilIcon class="w-5 h-5 text-blue-600" />
-                            </div>
-                            <div class="ml-3">
-                                <p class="text-sm font-medium text-gray-900">Last Updated</p>
-                                <p class="text-sm text-gray-500">{{ formatDateTime(order.updatedAt) }}</p>
-                            </div>
-                        </li>
-                    </ul>
-                </div>
+              </template>
+              <div class="flex-1 min-w-0">
+                <p class="text-lg font-semibold text-gray-900">{{ customer.firstName }} {{ customer.lastName }}</p>
+                <p class="text-sm text-gray-500 truncate">{{ customer.email }}</p>
+                <p v-if="customer.phone" class="text-sm text-gray-500">{{ customer.phone }}</p>
+              </div>
             </div>
+            <div v-if="customer.address" class="mt-4 pt-4 border-t border-gray-200">
+              <p class="text-sm font-medium text-gray-600">Shipping Address</p>
+              <address class="text-sm text-gray-500 not-italic">
+                {{ customer.address }}<br>
+                <span v-if="customer.city">{{ customer.city }}, </span>
+                <span v-if="customer.state">{{ customer.state }} </span>
+                <span v-if="customer.postalCode">{{ customer.postalCode }}</span>
+              </address>
+            </div>
+          </div>
         </div>
         
         <div class="lg:col-span-1 space-y-8">
@@ -161,7 +151,7 @@
                     </div>
                      <div class="flex justify-between">
                         <dt class="text-sm text-gray-500">Customer ID</dt>
-                        <dd class="text-sm font-mono text-gray-900">{{ formatCustomerId(order.customerId) }}</dd>
+                        <dd class="text-sm font-mono text-gray-900">{{ customer?.id || '—' }}</dd>
                     </div>
                     <div v-if="order.couponCode" class="flex justify-between">
                         <dt class="text-sm text-gray-500">Coupon</dt>
@@ -209,14 +199,14 @@
         <div class="flex justify-end space-x-3 mt-6">
           <button
             @click="showStatusModal = false"
-            class="px-4 py-2 bg-white text-gray-700 rounded-lg border border-gray-300 hover:bg-gray-100 transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-gray-400"
+            class="px-4 py-2 bg-white text-gray-700 rounded-lg border border-gray-300 hover:bg-gray-100 transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-green-400"
           >
             Cancel
           </button>
           <button
             @click="saveStatusUpdate"
             :disabled="updatingStatus"
-            class="px-4 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 disabled:bg-indigo-300 disabled:cursor-not-allowed transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:bg-green-300 disabled:cursor-not-allowed transition-all duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
           >
             {{ updatingStatus ? 'Updating...' : 'Save Update' }}
           </button>
@@ -424,12 +414,25 @@ function formatStatus(status) {
 function getStatusClass(status) {
   const statusMap = {
     'pending': 'bg-yellow-100 text-yellow-800',
-    'paid': 'bg-blue-100 text-blue-800',
+    'paid': 'bg-green-100 text-green-800',
     'shipped': 'bg-purple-100 text-purple-800',
     'delivered': 'bg-green-100 text-green-800',
     'cancelled': 'bg-red-100 text-red-800'
   }
   return statusMap[status?.toLowerCase()] || 'bg-gray-100 text-gray-800'
+}
+
+function goToCustomerProfile(customerId) {
+  router.push({ name: 'CustomerDetail', params: { customerId } })
+}
+function goToProductDetail(productId) {
+  router.push({ name: 'ProductDetail', params: { productId } })
+}
+
+function getInitials(customer) {
+  const fi = customer.firstName?.[0]?.toUpperCase() || ''
+  const li = customer.lastName?.[0]?.toUpperCase() || ''
+  return fi + li || '?'
 }
 
 // Initial data fetch on component mount

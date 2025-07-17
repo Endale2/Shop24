@@ -89,7 +89,7 @@ export const orderService = {
         id: data.customer.ID ?? data.customer.id,
         firstName: data.customer.firstName ?? data.customer.FirstName,
         lastName: data.customer.lastName ?? data.customer.LastName,
-        profileImage: data.customer.profile_image ?? data.customer.ProfileImage,
+        profile_image: data.customer.profile_image ?? data.customer.ProfileImage,
         email: data.customer.email ?? data.customer.Email,
         phone: data.customer.phone ?? data.customer.Phone,
         address: data.customer.address ?? data.customer.Address,
