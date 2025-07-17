@@ -43,7 +43,7 @@
         <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow duration-200">
           <div class="flex items-center justify-between">
             <div>
-              <p class="text-sm font-medium text-gray-600">Total Orders</p>
+              <p class="text-sm font-medium text-gray-600">Total Orders <span class="text-xs text-gray-400" title="Only paid, shipped, or delivered orders are counted.">(paid/shipped/delivered)</span></p>
               <p class="text-3xl font-bold text-gray-900">{{ stats.orders }}</p>
               <p class="text-sm text-green-600 mt-1">
                 <TrendingUpIcon class="w-4 h-4 inline mr-1" />
@@ -52,6 +52,22 @@
             </div>
             <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
               <ShoppingBagIcon class="w-6 h-6 text-blue-600" />
+            </div>
+          </div>
+        </div>
+        <!-- Pending Orders -->
+        <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow duration-200">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm font-medium text-gray-600">Pending Orders</p>
+              <p class="text-3xl font-bold text-yellow-600">{{ pendingOrdersCount }}</p>
+              <p class="text-sm text-yellow-600 mt-1">
+                <TrendingUpIcon class="w-4 h-4 inline mr-1" />
+                Awaiting payment or fulfillment
+              </p>
+            </div>
+            <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+              <ShoppingBagIcon class="w-6 h-6 text-yellow-600" />
             </div>
           </div>
         </div>
@@ -364,6 +380,14 @@ const maxWeeklySales = computed(() => {
   return Math.max(...weeklySales.value.map(day => day.amount))
 })
 
+// Add computed for pending orders
+const pendingOrdersCount = computed(() => recentOrders.value.filter(order => (order.status || '').toLowerCase() === 'pending').length)
+
+// Helper: filter orders by status considered as 'sold'
+function filterSoldOrders(orders) {
+  return orders.filter(order => ['paid', 'shipped', 'delivered'].includes((order.status || '').toLowerCase()))
+}
+
 // --- Navigation helpers ---
 function goToOrder(orderId) {
   router.push({ name: 'OrderDetail', params: { orderId } })
@@ -452,8 +476,7 @@ function dismissAlert(alertId) {
 
 // --- Revenue calculation: only count paid, shipped, delivered ---
 function getPaidRevenue() {
-  return recentOrders.value
-    .filter(order => ['paid', 'shipped', 'delivered'].includes((order.status || '').toLowerCase()))
+  return filterSoldOrders(recentOrders.value)
     .reduce((sum, order) => sum + (order.total || 0), 0)
 }
 
@@ -468,7 +491,7 @@ function generateWeeklySales(orders) {
     date.setDate(date.getDate() - i)
     date.setHours(0, 0, 0, 0)
 
-    const dayOrders = orders.filter(order => {
+    const dayOrders = filterSoldOrders(orders).filter(order => {
       const orderDate = new Date(order.createdAt)
       orderDate.setHours(0, 0, 0, 0)
       return orderDate.getTime() === date.getTime()
@@ -583,9 +606,14 @@ async function loadDashboardData() {
     const activeDiscounts = discounts.filter(d => d.active)
 
     // Calculate stats
-    const totalSales = orders.reduce((sum, order) => sum + (order.total || 0), 0)
-    const salesToday = ordersToday.reduce((sum, order) => sum + (order.total || 0), 0)
-    const averageOrderValue = orders.length > 0 ? totalSales / orders.length : 0
+    const soldOrders = filterSoldOrders(orders)
+    const totalSales = soldOrders.reduce((sum, order) => sum + (order.total || 0), 0)
+    const salesToday = soldOrders.filter(order => {
+      const orderDate = new Date(order.createdAt)
+      orderDate.setHours(0, 0, 0, 0)
+      return orderDate.getTime() === today.getTime()
+    }).reduce((sum, order) => sum + (order.total || 0), 0)
+    const averageOrderValue = soldOrders.length > 0 ? totalSales / soldOrders.length : 0
 
     // Find top product (by stock for now, could be by sales)
     const topProduct = products.length > 0 ? products.reduce((top, current) => 
@@ -594,15 +622,15 @@ async function loadDashboardData() {
 
     stats.value = {
       products: products.length,
-      orders: orders.length,
+      orders: soldOrders.length,
       customers: customers.length,
       sales: totalSales,
       salesToday: salesToday,
-      newOrdersToday: ordersToday.length,
+      newOrdersToday: ordersToday.length, // Optionally filter by sold status if needed
       newCustomersToday: customersToday.length,
       lowStockProducts: lowStockProducts.length,
       averageOrderValue: averageOrderValue,
-      conversionRate: customers.length > 0 ? Math.round((orders.length / customers.length) * 100) : 0,
+      conversionRate: customers.length > 0 ? Math.round((soldOrders.length / customers.length) * 100) : 0,
       topProduct: topProduct,
       activeDiscounts: activeDiscounts.length
     }
