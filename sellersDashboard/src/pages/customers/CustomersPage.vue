@@ -216,22 +216,23 @@
               <tr
                 v-for="(cust, i) in filteredCustomers"
                 :key="cust.id"
-                class="transition duration-150 ease-in-out transform hover:scale-[1.005] hover:bg-green-50"
+                class="transition duration-150 ease-in-out transform hover:scale-[1.005] hover:bg-green-50 cursor-pointer group"
                 :class="{ 'bg-gray-50': i % 2 === 1 }"
+                @click="goToCustomerDetail(cust.id)"
               >
                 <td class="py-3 px-6 text-sm text-gray-800 font-medium">
                   <div class="flex items-center">
                     <div
-                      class="h-10 w-10 bg-green-100 rounded-full flex items-center justify-center text-green-700 text-sm font-semibold mr-3 cursor-pointer"
-                      @click="goToCustomerDetail(cust.id)"
+                      class="h-10 w-10 rounded-full flex items-center justify-center mr-3 overflow-hidden bg-green-100"
                     >
-                      {{ getInitials(cust.firstName, cust.lastName) }}
+                      <img v-if="cust.profile_image" :src="cust.profile_image" alt="Profile" class="h-10 w-10 object-cover rounded-full" />
+                      <span v-else class="text-green-700 text-sm font-semibold">{{ getInitials(cust.firstName, cust.lastName) }}</span>
                     </div>
                     <div>
-                      <div class="font-medium text-gray-900 cursor-pointer" @click="goToCustomerDetail(cust.id)">
+                      <div class="font-medium text-gray-900">
                         {{ cust.firstName }} {{ cust.lastName }}
                       </div>
-                      <div class="text-gray-500 font-mono text-xs">@{{ cust.username }}</div>
+                      <!-- Username removed -->
                     </div>
                   </div>
                 </td>
@@ -255,7 +256,7 @@
                   </div>
                 </td>
                 <td class="py-3 px-6 text-sm text-gray-600">{{ formatDate(cust.createdAt) }}</td>
-                <td class="py-3 px-6 text-sm text-gray-700">
+                <td class="py-3 px-6 text-sm text-gray-700" @click.stop>
                   <div class="flex space-x-2">
                     <button
                       @click="goToCustomerDetail(cust.id)"
@@ -294,10 +295,11 @@
           >
             <div class="flex flex-col items-center p-6 text-center space-y-4">
               <div
-                class="h-20 w-20 bg-gradient-to-br from-green-400 to-teal-500 rounded-full flex items-center justify-center text-white text-2xl font-bold shadow-md cursor-pointer"
+                class="h-20 w-20 rounded-full flex items-center justify-center shadow-md cursor-pointer overflow-hidden bg-gradient-to-br from-green-400 to-teal-500"
                 @click="goToCustomerDetail(cust.id)"
               >
-                {{ getInitials(cust.firstName, cust.lastName) }}
+                <img v-if="cust.profile_image" :src="cust.profile_image" alt="Profile" class="h-20 w-20 object-cover rounded-full" />
+                <span v-else class="text-white text-2xl font-bold">{{ getInitials(cust.firstName, cust.lastName) }}</span>
               </div>
               <div class="space-y-1">
                 <h3 class="text-xl font-semibold text-gray-800 cursor-pointer" @click="goToCustomerDetail(cust.id)">

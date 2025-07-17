@@ -5,6 +5,7 @@ import (
 
 	"github.com/Endale2/DRPS/sellers/models"
 	"github.com/Endale2/DRPS/sellers/services"
+	sharedmodels "github.com/Endale2/DRPS/shared/models"
 	scService "github.com/Endale2/DRPS/shared/services"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -395,4 +396,82 @@ func RemoveCustomerFromSegment(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "customer removed from segment successfully"})
+}
+
+// GET /seller/shops/:shopId/customers/:customerId/history
+func GetCustomerOrderHistory(c *gin.Context) {
+	userHex, _ := c.Get("user_id")
+	sellerID, _ := primitive.ObjectIDFromHex(userHex.(string))
+
+	shopIDhex := c.Param("shopId")
+	shop, err := scService.GetShopByIDService(shopIDhex)
+	if err != nil || shop.OwnerID != sellerID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "not your shop"})
+		return
+	}
+
+	custHex := c.Param("customerId")
+	custID, err := primitive.ObjectIDFromHex(custHex)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid customer ID"})
+		return
+	}
+
+	// Check linkage
+	linked, err := scService.IsCustomerLinked(shop.ID, custID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not verify linkage"})
+		return
+	}
+	if !linked {
+		c.JSON(http.StatusForbidden, gin.H{"error": "customer not in this shop"})
+		return
+	}
+
+	// Fetch all orders for this customer in this shop
+	orders, err := scService.ListOrdersByShopService(shopIDhex)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not fetch orders"})
+		return
+	}
+	var customerOrders []sharedmodels.Order
+	var totalSpend float64
+	var lastOrder *sharedmodels.Order
+	for i := range orders {
+		if orders[i].CustomerID == custID {
+			customerOrders = append(customerOrders, orders[i])
+			totalSpend += orders[i].Total
+			if lastOrder == nil || orders[i].CreatedAt.After(lastOrder.CreatedAt) {
+				lastOrder = &orders[i]
+			}
+		}
+	}
+	// Prepare order summaries for frontend
+	var orderSummaries []gin.H
+	for _, o := range customerOrders {
+		orderSummaries = append(orderSummaries, gin.H{
+			"id":           o.ID.Hex(),
+			"order_number": o.OrderNumber,
+			"status":       o.Status,
+			"total":        o.Total,
+			"created_at":   o.CreatedAt,
+			"items_count":  len(o.Items),
+		})
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"orders":      orderSummaries,
+		"order_count": len(customerOrders),
+		"total_spend": totalSpend,
+		"last_order": func() interface{} {
+			if lastOrder != nil {
+				return gin.H{
+					"id":           lastOrder.ID.Hex(),
+					"order_number": lastOrder.OrderNumber,
+					"total":        lastOrder.Total,
+					"created_at":   lastOrder.CreatedAt,
+				}
+			}
+			return nil
+		}(),
+	})
 }

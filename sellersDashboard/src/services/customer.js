@@ -26,7 +26,8 @@ export const customerService = {
       country:      item.customer.country,
       createdAt:    item.customer.createdAt,
       updatedAt:    item.customer.updatedAt,
-      linkId:       item.linkId ?? null // linkId is outside the customer object
+      linkId:       item.linkId ?? null, // linkId is outside the customer object
+      profile_image: item.customer.profile_image // Add profile_image
     }))
   },
 
@@ -39,24 +40,24 @@ export const customerService = {
    */
   async fetchById(shopId, customerId) {
     const res = await api.get(`/seller/shops/${shopId}/customers/${customerId}`)
-    // unwrap payload
-    const payload = res.data.customer ?? res.data
+    const c = res.data.customer
     return {
-      id:           payload.id,
-      firstName:    payload.firstName,
-      lastName:     payload.lastName,
-      username:     payload.username,
-      email:        payload.email,
-      phone:        payload.phone,
-      address:      payload.address,
-      city:         payload.city,
-      state:        payload.state,
-      postalCode:   payload.postalCode,
-      country:      payload.country,
-      createdAt:    payload.createdAt,
-      updatedAt:    payload.updatedAt,
-      linkId:       res.data.linkId ?? null,
-      segments:     res.data.segments ?? []
+      id: c.id,
+      firstName: c.firstName,
+      lastName: c.lastName,
+      username: c.username,
+      email: c.email,
+      phone: c.phone,
+      address: c.address,
+      city: c.city,
+      state: c.state,
+      postalCode: c.postalCode,
+      country: c.country,
+      createdAt: c.createdAt,
+      updatedAt: c.updatedAt,
+      linkId: res.data.linkId ?? null,
+      segments: res.data.segments ?? [],
+      profile_image: c.profile_image // Add profile_image
     }
   },
 
@@ -100,5 +101,16 @@ export const customerService = {
    */
   async delete(shopId, linkId) {
     await api.delete(`/seller/shops/${shopId}/customers/link/${linkId}`)
+  },
+
+  /**
+   * Fetch order history and stats for a customer in a shop.
+   * @param {string} shopId
+   * @param {string} customerId
+   * @returns {Promise<Object>} - { orders, order_count, total_spend, last_order }
+   */
+  async fetchHistory(shopId, customerId) {
+    const res = await api.get(`/seller/shops/${shopId}/customers/${customerId}/history`)
+    return res.data
   }
 }

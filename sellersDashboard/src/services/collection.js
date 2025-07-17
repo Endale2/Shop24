@@ -46,7 +46,11 @@ export const collectionService = {
       products:    (c.products ?? []).map(p => ({
         id:    p.id,
         name:  p.name,
-        image: p.main_image || null
+        image: p.main_image || null,
+        category: p.category || '',
+        price: p.price ?? null,
+        stock: p.stock ?? null,
+        starting_price: p.starting_price ?? null,
       })),
       createdAt:   c.created_at,
       updatedAt:   c.updated_at,

@@ -84,28 +84,50 @@
             Add Products
           </button>
         </div>
-        <div v-if="collection.products.length" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div
-            v-for="prod in collection.products"
-            :key="prod.id"
-            class="bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer transform hover:scale-105 hover:shadow-xl transition duration-200 ease-in-out flex flex-col group relative"
-            @click="goToProduct(prod.id)"
-          >
-            <div class="w-full h-40 bg-gray-100 flex items-center justify-center relative overflow-hidden">
-              <img
-                v-if="prod.image"
-                :src="prod.image"
-                alt="Product image"
-                class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-300 ease-in-out"
-              />
-              <PlaceholderIcon v-else class="w-16 h-16 text-gray-400" />
-            </div>
-            <div class="p-4 flex-grow flex flex-col">
-              <h3 class="text-lg font-medium text-gray-900 truncate">{{ prod.name }}</h3>
-              <div class="flex items-center text-xs text-gray-600 mt-auto">
-                <span class="font-mono">#{{ prod.sku || prod.id }}</span>
-              </div>
-            </div>
+        <div v-if="collection.products.length">
+          <!-- List/Table view for products -->
+          <div class="overflow-x-auto">
+            <table class="min-w-full divide-y divide-gray-200">
+              <thead class="bg-gray-50">
+                <tr>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                  <th class="px-4 py-3"></th>
+                </tr>
+              </thead>
+              <tbody class="bg-white divide-y divide-gray-100">
+                <tr v-for="prod in collection.products" :key="prod.id" class="hover:bg-green-50 cursor-pointer group" @click="goToProduct(prod.id)">
+                  <td class="px-4 py-3 w-20">
+                    <img v-if="prod.image" :src="prod.image" alt="Product image" class="w-14 h-14 object-cover rounded-md border border-gray-200" />
+                    <PlaceholderIcon v-else class="w-10 h-10 text-gray-400 mx-auto" />
+                  </td>
+                  <td class="px-4 py-3 font-medium text-gray-900">{{ prod.name }}</td>
+                  <td class="px-4 py-3 text-gray-700">{{ prod.category }}</td>
+                  <td class="px-4 py-3 text-gray-700">
+                    <template v-if="prod.starting_price !== null">
+                      <span class="text-green-600 font-semibold">from</span>
+                      <span class="font-bold"> ${{ prod.starting_price.toFixed(2) }}</span>
+                    </template>
+                    <template v-else>
+                      {{ prod.price !== null ? `$${prod.price.toFixed(2)}` : '-' }}
+                    </template>
+                  </td>
+                  <td class="px-4 py-3 text-gray-700">{{ prod.stock !== null ? prod.stock : '-' }}</td>
+                  <td class="px-4 py-3 text-right">
+                    <button
+                      @click.stop="removeProduct(prod.id)"
+                      class="inline-flex items-center justify-center bg-white border border-gray-200 rounded-full p-1.5 text-red-600 hover:text-white hover:bg-red-600 transition-colors duration-150 focus:outline-none shadow"
+                      title="Remove product from collection"
+                    >
+                      <XIcon class="h-5 w-5" />
+                    </button>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
         <div v-else class="text-center py-16 text-gray-500">

@@ -38,26 +38,20 @@
                 v-if="customer.profile_image"
                 :src="customer.profile_image"
                 alt="Customer Profile"
-                class="h-32 w-32 rounded-full object-cover border-4 border-white shadow-lg"
+                class="h-32 w-32 rounded-full object-cover border-4 border-white shadow-lg ring-2 ring-green-400"
               />
               <div
                 v-else
-                class="h-32 w-32 rounded-full bg-gradient-to-br from-green-400 to-teal-500 flex items-center justify-center text-white text-5xl font-bold border-4 border-white shadow-lg"
+                class="h-32 w-32 rounded-full bg-gradient-to-br from-green-400 to-teal-500 flex items-center justify-center text-white text-5xl font-bold border-4 border-white shadow-lg ring-2 ring-green-400"
               >
                 {{ getInitials(customer) }}
               </div>
             </div>
-
             <div class="text-center lg:text-left">
               <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight">
                 {{ customer.firstName }} {{ customer.lastName }}
               </h1>
-              <p class="text-lg text-gray-500 font-mono mt-1">
-                @{{ customer.username }}
-              </p>
               <p class="text-gray-600 mt-2">{{ customer.email }}</p>
-              
-              <!-- Customer Segments -->
               <div class="mt-4 flex flex-wrap gap-2 justify-center lg:justify-start">
                 <span
                   v-for="segment in customer.segments"
@@ -65,10 +59,7 @@
                   class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium"
                   :style="{ backgroundColor: segment.color + '20', color: segment.color }"
                 >
-                  <div
-                    class="w-2 h-2 rounded-full mr-2"
-                    :style="{ backgroundColor: segment.color }"
-                  ></div>
+                  <div class="w-2 h-2 rounded-full mr-2" :style="{ backgroundColor: segment.color }"></div>
                   {{ segment.name }}
                 </span>
                 <span v-if="customer.segments?.length === 0" class="text-gray-400 text-sm">
@@ -77,9 +68,8 @@
               </div>
             </div>
           </div>
-
           <!-- Action Buttons -->
-          <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4">
+          <div class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-4 mt-4">
             <button 
               @click="showSegmentModal = true"
               class="flex-1 w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 border border-transparent text-base font-medium rounded-lg shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition duration-150 ease-in-out transform hover:-translate-y-0.5"
@@ -101,34 +91,28 @@
           </div>
         </div>
 
-        <!-- Customer Stats -->
+        <!-- Customer Stats & Info -->
         <div class="space-y-6">
-          <div class="bg-gray-50 rounded-xl p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Customer Information</h3>
-            <div class="grid grid-cols-2 gap-4">
-              <div class="text-center">
+          <div class="bg-gray-50 rounded-xl p-6 flex flex-col gap-4">
+            <div class="flex flex-wrap gap-6 justify-between">
+              <div class="text-center flex-1 min-w-[120px]">
                 <p class="text-2xl font-bold text-gray-900">{{ customer.segments?.length || 0 }}</p>
                 <p class="text-sm text-gray-600">Segments</p>
               </div>
-              <div class="text-center">
+              <div class="text-center flex-1 min-w-[120px]">
                 <p class="text-2xl font-bold text-gray-900">{{ formatDate(customer.createdAt) }}</p>
                 <p class="text-sm text-gray-600">Joined</p>
               </div>
-              <div class="text-center">
+              <div class="text-center flex-1 min-w-[120px]">
                 <p class="text-2xl font-bold text-gray-900">{{ customer.phone || 'N/A' }}</p>
                 <p class="text-sm text-gray-600">Phone</p>
               </div>
-              <div class="text-center">
+              <div class="text-center flex-1 min-w-[120px]">
                 <p class="text-2xl font-bold text-gray-900">{{ customer.city }}, {{ customer.state }}</p>
                 <p class="text-sm text-gray-600">Location</p>
               </div>
             </div>
-          </div>
-
-          <!-- Contact Information -->
-          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 mb-4">Contact Information</h3>
-            <div class="space-y-4">
+            <div class="border-t border-gray-200 mt-4 pt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="flex items-center text-gray-700">
                 <MailIcon class="h-6 w-6 text-green-500 mr-4 flex-shrink-0" />
                 <div>
@@ -145,7 +129,7 @@
                   <span>{{ customer.phone || 'Not provided' }}</span>
                 </div>
               </div>
-              <div class="flex items-start text-gray-700">
+              <div class="flex items-start text-gray-700 col-span-2">
                 <OfficeBuildingIcon class="h-6 w-6 text-green-500 mr-4 flex-shrink-0 mt-1" />
                 <div>
                   <p class="font-medium">Address</p>
@@ -158,6 +142,60 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      <!-- Customer Order History Section -->
+      <div class="border-t border-gray-200 pt-6 mt-8">
+        <h3 class="text-xl font-semibold text-gray-900 mb-4">Order History in This Shop</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center">
+            <div class="text-2xl font-bold text-gray-900">{{ customerHistory.order_count }}</div>
+            <div class="text-sm text-gray-600">Total Orders</div>
+          </div>
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center">
+            <div class="text-2xl font-bold text-gray-900">${{ customerHistory.total_spend.toFixed(2) }}</div>
+            <div class="text-sm text-gray-600">Total Spend</div>
+          </div>
+          <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center">
+            <div class="text-2xl font-bold text-gray-900">
+              <span v-if="customerHistory.last_order">{{ formatDate(customerHistory.last_order.created_at) }}</span>
+              <span v-else>—</span>
+            </div>
+            <div class="text-sm text-gray-600">Last Order</div>
+          </div>
+        </div>
+        <div v-if="(customerHistory.orders && customerHistory.orders.length > 0)" class="overflow-x-auto">
+          <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Order #</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Total</th>
+                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Items</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-200">
+              <tr v-for="order in customerHistory.orders" :key="order.id" class="bg-white hover:bg-green-50 transition cursor-pointer" @click="goToOrderDetail(order.id)">
+                <td class="px-4 py-3 font-mono text-green-700">{{ order.order_number }}</td>
+                <td class="px-4 py-3">{{ formatDate(order.created_at) }}</td>
+                <td class="px-4 py-3">
+                  <span :class="{
+                    'text-yellow-600': order.status === 'pending',
+                    'text-green-600': order.status === 'completed' || order.status === 'paid',
+                    'text-red-600': order.status === 'cancelled',
+                    'text-gray-600': order.status !== 'pending' && order.status !== 'completed' && order.status !== 'paid' && order.status !== 'cancelled'
+                  }">{{ order.status }}</span>
+                </td>
+                <td class="px-4 py-3 font-semibold">${{ order.total.toFixed(2) }}</td>
+                <td class="px-4 py-3">{{ order.items_count }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div v-else class="text-gray-500 text-center py-8">
+          <p>No orders found for this customer in this shop.</p>
         </div>
       </div>
 
@@ -174,7 +212,7 @@
           </button>
         </div>
         
-        <div v-if="customer.segments?.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div v-if="(customer.segments && customer.segments.length > 0)" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <div
             v-for="segment in customer.segments"
             :key="segment.id"
@@ -227,7 +265,6 @@
             <p><strong>Created:</strong> {{ formatDate(customer.createdAt) }}</p>
           </div>
           <div>
-            <p><strong>Username:</strong> @{{ customer.username }}</p>
             <p><strong>Last Updated:</strong> {{ formatDate(customer.updatedAt) }}</p>
           </div>
         </div>
@@ -336,6 +373,7 @@ const availableSegments = ref([])
 const loading = ref(false)
 const error = ref(null)
 const showSegmentModal = ref(false)
+const customerHistory = ref({ orders: [], order_count: 0, total_spend: 0, last_order: null })
 
 // Computed
 const activeShop = computed(() => shopStore.activeShop)
@@ -352,19 +390,20 @@ onMounted(async () => {
 async function fetchCustomerData() {
   loading.value = true
   try {
-    const [customerResult, segmentsResult] = await Promise.all([
+    const [customerResult, segmentsResult, historyResult] = await Promise.all([
       customerService.fetchById(activeShop.value.id, route.params.customerId),
-      customerSegmentService.fetchAll(activeShop.value.id)
+      customerSegmentService.fetchAll(activeShop.value.id),
+      customerService.fetchHistory(activeShop.value.id, route.params.customerId)
     ])
-    
     if (customerResult) {
       customer.value = customerResult
-      customer.value.segments = customerResult.segments || []
+      customer.value.segments = Array.isArray(customerResult.segments) ? customerResult.segments : []
     } else {
       customer.value = {}
     }
-    
     availableSegments.value = Array.isArray(segmentsResult) ? segmentsResult : []
+    customerHistory.value = historyResult || { orders: [], order_count: 0, total_spend: 0, last_order: null }
+    customerHistory.value.orders = Array.isArray(customerHistory.value.orders) ? customerHistory.value.orders : []
   } catch (e) {
     console.error(e)
     error.value = 'Failed to load customer details. Please try again later.'
@@ -425,6 +464,10 @@ async function unlinkCustomer() {
     console.error('Failed to unlink customer:', e)
     error.value = 'Failed to remove customer. Please try again.'
   }
+}
+
+function goToOrderDetail(orderId) {
+  router.push({ name: 'OrderDetail', params: { orderId } })
 }
 </script>
 

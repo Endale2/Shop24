@@ -419,11 +419,15 @@ func RemoveProductFromCollection(c *gin.Context) {
 
 // Helper function to format collection response for frontend
 func formatCollectionResponse(coll *models.Collection, shopID primitive.ObjectID) gin.H {
-	// Build a list of product summaries (id, name, main_image)
+	// Build a list of product summaries (id, name, main_image, category, price, stock, starting_price)
 	type ProductSummary struct {
-		ID        primitive.ObjectID `json:"id"`
-		Name      string             `json:"name"`
-		MainImage string             `json:"main_image"`
+		ID            primitive.ObjectID `json:"id"`
+		Name          string             `json:"name"`
+		MainImage     string             `json:"main_image"`
+		Category      string             `json:"category"`
+		Price         float64            `json:"price"`
+		Stock         int                `json:"stock"`
+		StartingPrice *float64           `json:"starting_price,omitempty"`
 	}
 	var summaries []ProductSummary
 	for _, pid := range coll.ProductIDs {
@@ -435,10 +439,24 @@ func formatCollectionResponse(coll *models.Collection, shopID primitive.ObjectID
 		if p == nil {
 			continue
 		}
+		var startingPrice *float64
+		if len(p.Variants) > 0 {
+			min := p.Variants[0].Price
+			for _, v := range p.Variants {
+				if v.Price < min {
+					min = v.Price
+				}
+			}
+			startingPrice = &min
+		}
 		summaries = append(summaries, ProductSummary{
-			ID:        p.ID,
-			Name:      p.Name,
-			MainImage: p.MainImage,
+			ID:            p.ID,
+			Name:          p.Name,
+			MainImage:     p.MainImage,
+			Category:      p.Category,
+			Price:         p.Price,
+			Stock:         p.Stock,
+			StartingPrice: startingPrice,
 		})
 	}
 
