@@ -21,23 +21,21 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
 import Header from '../components/Header.vue'
 import Hero from '../components/Hero.vue'
 import ProductCard from '../components/ProductCard.vue'
-import { fetchShop } from '../services/shop'
+import { fetchShop, getCurrentShopSlug } from '../services/shop'
 import { fetchAllProducts } from '../services/product'
 import type { Shop } from '../services/shop'
 import type { Product } from '../services/product'
-
-const route = useRoute()
-const shopSlug = route.params.shopSlug as string
 
 const shop = ref<Shop | null>(null)
 const featured = ref<Product[]>([])
 
 onMounted(async () => {
   try {
+    const shopSlug = getCurrentShopSlug()
+    if (!shopSlug) return;
     shop.value = await fetchShop(shopSlug)
     if (shop.value) {
       const all = await fetchAllProducts(shopSlug)

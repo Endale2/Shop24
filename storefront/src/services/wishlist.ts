@@ -1,7 +1,10 @@
 import api from './api';
+import { getCurrentShopSlug } from './shop'
 
-export async function getWishlist(shopSlug: string) {
-  return api.get(`/shops/${shopSlug}/wishlist`);
+export async function getWishlist(shopSlug?: string) {
+  const slug = shopSlug || getCurrentShopSlug();
+  if (!slug) return { data: { product_ids: [] } };
+  return api.get(`/shops/${slug}/wishlist`);
 }
 
 export async function addToWishlist(shopSlug: string, productId: string) {

@@ -2,24 +2,26 @@ import { defineStore } from 'pinia';
 import * as cartApi from '@/services/cart';
 import * as orderApi from '@/services/order';
 import type { CartWithDiscountDetails } from '@/services/cart';
+import { getCurrentShopSlug } from '@/services/shop';
 
 export const useCartStore = defineStore('cart', {
   state: () => ({
     cart: null as CartWithDiscountDetails | null,
     loading: false,
     error: null as null | string,
-    shopSlug: '', // Set this when user selects a shop
+    shopSlug: getCurrentShopSlug() || '', // Default to subdomain
   }),
   actions: {
-    setShopSlug(slug: string) {
-      this.shopSlug = slug;
+    setShopSlug(slug?: string) {
+      this.shopSlug = slug || getCurrentShopSlug() || '';
     },
     async fetchCart() {
-      if (!this.shopSlug) return;
+      const slug = this.shopSlug || getCurrentShopSlug();
+      if (!slug) return;
       this.loading = true;
       this.error = null;
       try {
-        const { data } = await cartApi.getCart(this.shopSlug);
+        const { data } = await cartApi.getCart(slug);
         this.cart = data;
       } catch (e: any) {
         this.error = e.response?.data?.error || 'Failed to fetch cart';
@@ -32,11 +34,12 @@ export const useCartStore = defineStore('cart', {
       }
     },
     async addToCart(productId: string, variantId: string, quantity: number) {
-      if (!this.shopSlug) return;
+      const slug = this.shopSlug || getCurrentShopSlug();
+      if (!slug) return;
       this.loading = true;
       this.error = null;
       try {
-        const { data } = await cartApi.addToCart(this.shopSlug, productId, variantId, quantity);
+        const { data } = await cartApi.addToCart(slug, productId, variantId, quantity);
         this.cart = data;
       } catch (e: any) {
         this.error = e.response?.data?.error || 'Failed to add to cart';
@@ -45,11 +48,12 @@ export const useCartStore = defineStore('cart', {
       }
     },
     async updateCartItem(productId: string, variantId: string, quantity: number) {
-      if (!this.shopSlug) return;
+      const slug = this.shopSlug || getCurrentShopSlug();
+      if (!slug) return;
       this.loading = true;
       this.error = null;
       try {
-        const { data } = await cartApi.updateCartItem(this.shopSlug, productId, variantId, quantity);
+        const { data } = await cartApi.updateCartItem(slug, productId, variantId, quantity);
         this.cart = data;
       } catch (e: any) {
         this.error = e.response?.data?.error || 'Failed to update cart item';
@@ -58,11 +62,12 @@ export const useCartStore = defineStore('cart', {
       }
     },
     async removeCartItem(productId: string, variantId: string) {
-      if (!this.shopSlug) return;
+      const slug = this.shopSlug || getCurrentShopSlug();
+      if (!slug) return;
       this.loading = true;
       this.error = null;
       try {
-        const { data } = await cartApi.removeCartItem(this.shopSlug, productId, variantId);
+        const { data } = await cartApi.removeCartItem(slug, productId, variantId);
         this.cart = data;
       } catch (e: any) {
         this.error = e.response?.data?.error || 'Failed to remove cart item';
@@ -71,11 +76,12 @@ export const useCartStore = defineStore('cart', {
       }
     },
     async applyDiscount(code: string) {
-      if (!this.shopSlug) return;
+      const slug = this.shopSlug || getCurrentShopSlug();
+      if (!slug) return;
       this.loading = true;
       this.error = null;
       try {
-        const { data } = await cartApi.applyDiscount(this.shopSlug, code);
+        const { data } = await cartApi.applyDiscount(slug, code);
         this.cart = data;
       } catch (e: any) {
         this.error = e.response?.data?.error || 'Failed to apply discount';
@@ -84,11 +90,12 @@ export const useCartStore = defineStore('cart', {
       }
     },
     async removeDiscount(discountId: string) {
-      if (!this.shopSlug) return;
+      const slug = this.shopSlug || getCurrentShopSlug();
+      if (!slug) return;
       this.loading = true;
       this.error = null;
       try {
-        const { data } = await cartApi.removeDiscount(this.shopSlug, discountId);
+        const { data } = await cartApi.removeDiscount(slug, discountId);
         this.cart = data;
       } catch (e: any) {
         this.error = e.response?.data?.error || 'Failed to remove discount';
@@ -97,11 +104,12 @@ export const useCartStore = defineStore('cart', {
       }
     },
     async clearCart() {
-      if (!this.shopSlug) return;
+      const slug = this.shopSlug || getCurrentShopSlug();
+      if (!slug) return;
       this.loading = true;
       this.error = null;
       try {
-        const { data } = await cartApi.clearCart(this.shopSlug);
+        const { data } = await cartApi.clearCart(slug);
         this.cart = data;
       } catch (e: any) {
         this.error = e.response?.data?.error || 'Failed to clear cart';
@@ -111,7 +119,8 @@ export const useCartStore = defineStore('cart', {
     },
     // Method to place order from cart - sends only minimal data to backend
     async placeOrder() {
-      if (!this.shopSlug || !this.cart?.items || this.cart.items.length === 0) {
+      const slug = this.shopSlug || getCurrentShopSlug();
+      if (!slug || !this.cart?.items || this.cart.items.length === 0) {
         throw new Error('No items in cart to place order');
       }
       
@@ -134,7 +143,7 @@ export const useCartStore = defineStore('cart', {
         // 3. Apply the best eligible discounts
         // 4. Calculate final totals
         // 5. Return the order with server-calculated pricing
-        const response = await orderApi.placeOrder(this.shopSlug, orderItems);
+        const response = await orderApi.placeOrder(slug, orderItems);
         return response.data;
       } catch (e: any) {
         this.error = e.response?.data?.error || 'Failed to place order';
@@ -145,7 +154,8 @@ export const useCartStore = defineStore('cart', {
     },
     // Method to refresh cart when user logs in
     async refreshCart() {
-      if (this.shopSlug) {
+      const slug = this.shopSlug || getCurrentShopSlug();
+      if (slug) {
         await this.fetchCart();
       }
     },

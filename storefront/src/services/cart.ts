@@ -1,4 +1,5 @@
 import api from './api';
+import { getCurrentShopSlug } from './shop'
 
 // TypeScript interfaces for discount status
 export interface DiscountStatus {
@@ -74,8 +75,10 @@ export interface CartWithDiscountDetails {
   discount_statuses: DiscountStatus[];
 }
 
-export async function getCart(shopSlug: string) {
-  return api.get<CartWithDiscountDetails>(`/shops/${shopSlug}/cart`);
+export async function getCart(shopSlug?: string) {
+  const slug = shopSlug || getCurrentShopSlug();
+  if (!slug) return { data: null };
+  return api.get(`/shops/${slug}/cart`);
 }
 
 export async function addToCart(shopSlug: string, productId: string, variantId: string, quantity: number) {

@@ -5,7 +5,7 @@
       <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
       Back
     </button>
-    <router-link :to="`/shops/${route.params.shopSlug}`" class="hover:underline">Home</router-link>
+    <router-link to="/" class="hover:underline">Home</router-link>
     <span>/</span>
     <span>My Orders</span>
   </nav>
@@ -99,7 +99,7 @@
         <h3 class="text-lg font-semibold text-gray-900 mb-2">No orders yet</h3>
         <p class="text-gray-600 mb-6">Start shopping to see your orders here</p>
         <router-link 
-          :to="`/shops/${route.params.shopSlug}/products`" 
+          :to="'/products'" 
           class="inline-block bg-black text-white py-3 px-6 rounded-none font-semibold uppercase tracking-wide hover:bg-gray-800 transition-colors"
         >
           Browse Products

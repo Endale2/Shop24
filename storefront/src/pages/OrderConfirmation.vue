@@ -5,7 +5,7 @@
       <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
       Back
     </button>
-    <router-link :to="`/shops/${shopSlug}`" class="hover:underline">Home</router-link>
+    <router-link to="/" class="hover:underline">Home</router-link>
     <span>/</span>
     <span>Order Confirmation</span>
   </nav>
@@ -134,7 +134,7 @@
         <!-- Action Buttons -->
         <div class="flex flex-col sm:flex-row gap-4">
           <router-link
-            :to="{ path: `/shops/${shopSlug}` }"
+            :to="{ path: '/' }"
             class="flex-1 py-3 px-6 bg-black text-white rounded-md font-medium hover:bg-gray-800 text-center"
           >
             Continue Shopping
@@ -156,6 +156,7 @@ import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { getOrderDetail } from '@/services/order';
 import { useCartStore } from '@/stores/cart';
+import { getCurrentShopSlug } from '@/services/shop';
 
 const route = useRoute();
 const cartStore = useCartStore();
@@ -163,9 +164,10 @@ const order = ref<any>(null);
 const loading = ref(true);
 const error = ref('');
 
-const shopSlug = route.params.shopSlug as string;
+const shopSlug = getCurrentShopSlug();
 
 onMounted(async () => {
+  if (!shopSlug) return;
   try {
     const { data } = await getOrderDetail(shopSlug, route.params.orderId as string);
     order.value = data;

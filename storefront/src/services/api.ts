@@ -64,3 +64,19 @@ export function shopUrl(path: string) {
 export function getShopUrl(shopSlug: string, path: string) {
   return `/shops/${shopSlug}${path}`
 }
+
+// Utility to extract shop slug from subdomain
+export function getShopSlugFromSubdomain(): string | null {
+  // e.g., sophia.localhost, sophia.127.0.0.1, sophia.example.com
+  const host = window.location.hostname;
+  // Remove port if present
+  const [hostname] = host.split(':');
+  // For localhost or 127.0.0.1, treat as no subdomain
+  if (hostname === 'localhost' || hostname === '127.0.0.1') return null;
+  const parts = hostname.split('.');
+  // e.g., [sophiaboutique, localhost]
+  if (parts.length >= 2) {
+    return parts[0];
+  }
+  return null;
+}

@@ -1,4 +1,5 @@
 import api, { getShopUrl } from './api'
+import { getCurrentShopSlug } from './shop'
 
 export interface Product {
   id: string
@@ -40,9 +41,11 @@ export interface Product {
   // add other fields as needed
 }
 
-export async function fetchAllProducts(shopSlug: string): Promise<Product[]> {
+export async function fetchAllProducts(shopSlug?: string): Promise<Product[]> {
+  const slug = shopSlug || getCurrentShopSlug();
+  if (!slug) return [];
   try {
-    const response = await api.get(getShopUrl(shopSlug, '/products'))
+    const response = await api.get(getShopUrl(slug, '/products'))
     return response.data
   } catch (error) {
     console.error('Failed to fetch products:', error)
@@ -51,11 +54,15 @@ export async function fetchAllProducts(shopSlug: string): Promise<Product[]> {
 }
 
 export function fetchProductDetail(shopSlug: string, handle: string): Promise<Product> {
+  const slug = shopSlug || getCurrentShopSlug();
+  if (!slug) return Promise.reject('No shop slug');
   return api
-    .get(getShopUrl(shopSlug, `/products/${encodeURIComponent(handle)}`))
+    .get(getShopUrl(slug, `/products/${encodeURIComponent(handle)}`))
     .then(r => r.data)
 }
 
 export async function fetchProductDetailById(shopSlug: string, productId: string) {
-  return api.get(`/shops/${shopSlug}/products/id/${productId}`);
+  const slug = shopSlug || getCurrentShopSlug();
+  if (!slug) return Promise.reject('No shop slug');
+  return api.get(`/shops/${slug}/products/id/${productId}`);
 }

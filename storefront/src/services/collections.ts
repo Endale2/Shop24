@@ -1,4 +1,5 @@
 import api, { getShopUrl } from './api'
+import { getCurrentShopSlug } from './shop'
 
 export interface Collection {
   handle: string
@@ -31,15 +32,26 @@ export interface CollectionDetail extends Collection {
   }>
 }
 
-export function fetchCollections(shopSlug: string): Promise<Collection[]> {
-  return api.get(getShopUrl(shopSlug, '/collections')).then(r => r.data)
+export async function fetchCollections(shopSlug?: string): Promise<Collection[]> {
+  const slug = shopSlug || getCurrentShopSlug();
+  if (!slug) return [];
+  try {
+    const response = await api.get(`/shops/${slug}/collections`)
+    return response.data
+  } catch (error) {
+    console.error('Failed to fetch collections:', error)
+    return []
+  }
 }
 
-export function fetchCollectionDetail(
-  shopSlug: string,
-  handle: string
-): Promise<CollectionDetail> {
-  return api
-    .get(getShopUrl(shopSlug, `/collections/${encodeURIComponent(handle)}`))
-    .then(r => r.data)
+export async function fetchCollectionDetail(shopSlug: string, handle: string): Promise<CollectionDetail | null> {
+  const slug = shopSlug || getCurrentShopSlug();
+  if (!slug) return null;
+  try {
+    const response = await api.get(`/shops/${slug}/collections/${encodeURIComponent(handle)}`)
+    return response.data
+  } catch (error) {
+    console.error('Failed to fetch collection detail:', error)
+    return null
+  }
 }

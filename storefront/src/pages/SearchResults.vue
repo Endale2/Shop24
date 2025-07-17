@@ -20,7 +20,7 @@
           <router-link
             v-for="shop in shops"
             :key="shop.id"
-            :to="`/shops/${shop.slug}`"
+            :to="'/'"
             class="group block bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border"
           >
             <div class="aspect-video bg-gray-50 flex items-center justify-center">

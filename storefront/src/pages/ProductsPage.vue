@@ -6,7 +6,7 @@
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
         Back
       </button>
-      <router-link :to="`/shops/${shopSlug}`" class="hover:underline">Home</router-link>
+      <router-link to="/" class="hover:underline">Home</router-link>
       <span>/</span>
       <span v-if="selectedCollection === null">Products</span>
       <span v-else>{{ pageTitle }}</span>
@@ -51,15 +51,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import { useRoute } from 'vue-router';
 import ProductCard from '@/components/ProductCard.vue';
 import { fetchAllProducts } from '@/services/product';
 import { fetchCollections, fetchCollectionDetail } from '@/services/collections';
+import { getCurrentShopSlug } from '@/services/shop';
 import type { Product } from '@/services/product';
 import type { Collection } from '@/services/collections';
-
-const route = useRoute();
-const shopSlug = route.params.shopSlug as string;
 
 const products = ref<Product[]>([]);
 const collections = ref<Collection[]>([]);
@@ -69,6 +66,8 @@ const isLoading = ref(true);
 
 onMounted(async () => {
   try {
+    const shopSlug = getCurrentShopSlug();
+    if (!shopSlug) return;
     // Fetch products and collections concurrently for better performance
     const [fetchedProducts, fetchedCollections] = await Promise.all([
       fetchAllProducts(shopSlug),

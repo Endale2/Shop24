@@ -18,58 +18,28 @@ import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router'
 
 const routes = [
   {
-    path: '/shops/:shopSlug',
+    path: '/',
     component: StoreLayout,
-    props: true,
     children: [
-      { path: '', component: HomePage },
-      { path: 'products', component: ProductsPage },
-      { path: 'products/:handle', component: ProductDetail, props: true },
-      { path: 'collections', component: CollectionsPage },
-      {
-        path: 'collections/:handle',
-        component: CollectionDetail,
-        props: true,
-      },
-      { 
-        path: 'account', 
-        name: 'Account', 
-        component: AccountPage,
-        beforeEnter: (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
-          const authStore = useAuthStore()
-          if (!authStore.user) {
-            next(`/shops/${to.params.shopSlug}/login`)
-          } else {
-            next()
-          }
-        }
-      },
-      { 
-        path: 'orders', 
-        name: 'MyOrders', 
-        component: MyOrdersPage,
-        beforeEnter: (to: RouteLocationNormalized, from: RouteLocationNormalized, next: NavigationGuardNext) => {
-          const authStore = useAuthStore()
-          if (!authStore.user) {
-            next(`/shops/${to.params.shopSlug}/login`)
-          } else {
-            next()
-          }
-        }
-      },
+      { path: '', name: 'Home', component: HomePage },
+      { path: 'products', name: 'Products', component: ProductsPage },
+      { path: 'products/:handle', name: 'ProductDetail', component: ProductDetail },
+      { path: 'collections', name: 'Collections', component: CollectionsPage },
+      { path: 'collections/:handle', name: 'CollectionDetail', component: CollectionDetail },
+      { path: 'account', name: 'Account', component: AccountPage },
       { path: 'login', name: 'Login', component: LoginPage },
       { path: 'register', name: 'Register', component: RegisterPage },
       { path: 'cart', name: 'Cart', component: CartPage },
       { path: 'order-confirmation/:orderId', name: 'OrderConfirmation', component: OrderConfirmation },
       { path: 'wishlist', name: 'Wishlist', component: WishlistPage },
+      { path: 'orders', name: 'MyOrders', component: MyOrdersPage },
     ],
   },
-  // Shop selection page
+  // Shop selection page (for root domain only)
   {
-    path: '/',
+    path: '/select-shop',
     component: ShopSelection
   },
- 
 ]
 
 export const router = createRouter({

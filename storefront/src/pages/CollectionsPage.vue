@@ -5,7 +5,7 @@
         <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
         Back
       </button>
-      <router-link :to="`/shops/${shopSlug}`" class="hover:underline">Home</router-link>
+      <router-link to="/" class="hover:underline">Home</router-link>
       <span>&gt;</span>
       <span class="text-gray-900 font-medium">Collections</span>
     </nav>
@@ -15,7 +15,7 @@
         <router-link
           v-for="c in collections"
           :key="c.id"
-          :to="`/shops/${shopSlug}/collections/${c.handle}`"
+          :to="`/collections/${c.handle}`"
           class="bg-white border border-gray-200 rounded-none overflow-hidden group transition-colors hover:border-black cursor-pointer focus:outline-none focus:ring-2 focus:ring-black flex flex-col h-full"
         >
           <img :src="c.image" class="w-full h-56 object-contain bg-gray-50" alt="" />
@@ -30,13 +30,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { useRouter } from 'vue-router'
 import { fetchCollections } from '../services/collections'
 import type { Collection } from '../services/collections'
+import { getCurrentShopSlug } from '../services/shop';
 
-const route = useRoute()
 const router = useRouter()
-const shopSlug = route.params.shopSlug as string
 
 const collections = ref<Collection[]>([])
 
@@ -45,6 +44,8 @@ function goBack() {
 }
 
 onMounted(async () => {
+  const shopSlug = getCurrentShopSlug();
+  if (!shopSlug) return;
   collections.value = await fetchCollections(shopSlug)
 })
 </script>

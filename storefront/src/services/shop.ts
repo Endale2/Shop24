@@ -1,4 +1,5 @@
 import api, { getShopUrl } from './api'
+import { getShopSlugFromSubdomain } from './api'
 
 export interface Shop {
   id: string
@@ -9,9 +10,15 @@ export interface Shop {
   description: string
 }
 
-export async function fetchShop(shopSlug: string): Promise<Shop | null> {
+export function getCurrentShopSlug(): string | null {
+  return getShopSlugFromSubdomain();
+}
+
+export async function fetchShop(shopSlug?: string): Promise<Shop | null> {
+  const slug = shopSlug || getShopSlugFromSubdomain();
+  if (!slug) return null;
   try {
-    const response = await api.get(getShopUrl(shopSlug, ''))
+    const response = await api.get(getShopUrl(slug, ''))
     return response.data
   } catch (error) {
     console.error('Failed to fetch shop:', error)

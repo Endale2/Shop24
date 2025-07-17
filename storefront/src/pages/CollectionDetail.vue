@@ -5,9 +5,9 @@
       <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
       Back
     </button>
-    <router-link :to="`/shops/${shopSlug}`" class="hover:underline">Home</router-link>
+    <router-link to="/" class="hover:underline">Home</router-link>
     <span>/</span>
-    <router-link :to="`/shops/${shopSlug}/collections`" class="hover:underline">Collections</router-link>
+    <router-link to="/collections" class="hover:underline">Collections</router-link>
     <span>/</span>
     <span>{{ collection?.title || '' }}</span>
   </nav>
@@ -43,14 +43,16 @@
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
 import { fetchCollectionDetail, CollectionDetail } from '@/services/collections'
+import { getCurrentShopSlug } from '@/services/shop'
 import ProductCard from '@/components/ProductCard.vue'
 
 const route = useRoute()
-const shopSlug = route.params.shopSlug as string
 const handle = route.params.handle as string
 const collection = ref<CollectionDetail | null>(null)
 
 onMounted(async () => {
+  const shopSlug = getCurrentShopSlug();
+  if (!shopSlug) return;
   collection.value = await fetchCollectionDetail(shopSlug, handle)
 })
 </script>

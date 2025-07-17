@@ -1,7 +1,7 @@
 <template>
   <header class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
     <div class="flex items-center justify-between max-w-7xl mx-auto px-4 sm:px-6 py-4">
-      <router-link :to="`/shops/${shopSlug}`" class="flex items-center space-x-4">
+      <router-link to="/" class="flex items-center space-x-4">
         <img
           v-if="shop?.image"
           :src="shop.image"
@@ -26,14 +26,14 @@
 
         <nav class="flex items-center space-x-8 text-base font-light">
           <router-link
-            :to="`/shops/${shopSlug}/products`"
+            to="/products"
             class="text-gray-600 hover:text-black transition flex items-center"
             :class="{ 'font-semibold text-black': isActive('/products') }"
           >
             <span>Products</span>
           </router-link>
           <router-link
-            :to="`/shops/${shopSlug}/collections`"
+            to="/collections"
             class="text-gray-600 hover:text-black transition flex items-center"
             :class="{ 'font-semibold text-black': isActive('/collections') }"
           >
@@ -43,7 +43,7 @@
 
         <div class="flex items-center space-x-5">
           <!-- Wishlist -->
-          <router-link :to="`/shops/${shopSlug}/wishlist`" class="relative group" title="Wishlist">
+          <router-link to="/wishlist" class="relative group" title="Wishlist">
             <component :is="isActive('/wishlist') ? HeartIconSolid : HeartIcon" class="w-6 h-6 transition-colors" :class="isActive('/wishlist') ? 'text-red-500' : 'text-gray-600 group-hover:text-red-500'" />
             <span 
               v-if="authStore.user && wishlistCount > 0"
@@ -53,7 +53,7 @@
             </span>
           </router-link>
           <!-- Cart -->
-          <router-link :to="`/shops/${shopSlug}/cart`" class="relative group" title="Cart">
+          <router-link to="/cart" class="relative group" title="Cart">
             <component :is="isActive('/cart') ? ShoppingBagIconSolid : ShoppingBagIcon" class="w-6 h-6 transition-colors" :class="isActive('/cart') ? 'text-black' : 'text-gray-600 group-hover:text-black'" />
             <span 
               v-if="cartItemCount > 0"
@@ -71,13 +71,13 @@
               </span>
             </button>
             <div v-if="dropdownOpen" class="absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-lg shadow-lg z-50">
-              <router-link :to="`/shops/${shopSlug}/account`" class="block px-4 py-2 text-gray-700 hover:bg-gray-50">My Account</router-link>
-              <router-link :to="`/shops/${shopSlug}/orders`" class="block px-4 py-2 text-gray-700 hover:bg-gray-50">My Orders</router-link>
-              <router-link :to="`/shops/${shopSlug}/wishlist`" class="block px-4 py-2 text-gray-700 hover:bg-gray-50">Wishlist</router-link>
+              <router-link to="/account" class="block px-4 py-2 text-gray-700 hover:bg-gray-50">My Account</router-link>
+              <router-link to="/orders" class="block px-4 py-2 text-gray-700 hover:bg-gray-50">My Orders</router-link>
+              <router-link to="/wishlist" class="block px-4 py-2 text-gray-700 hover:bg-gray-50">Wishlist</router-link>
               <button @click="logout" class="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50">Logout</button>
             </div>
           </div>
-          <router-link v-else :to="`/shops/${shopSlug}/login`" class="group" title="Login">
+          <router-link v-else to="/login" class="group" title="Login">
             <UserIcon class="w-6 h-6 text-gray-600 group-hover:text-black transition-colors" />
           </router-link>
         </div>
@@ -85,7 +85,7 @@
 
       <!-- Mobile Nav -->
       <div class="md:hidden flex items-center space-x-4">
-        <router-link :to="`/shops/${shopSlug}/cart`" class="relative group" title="Cart">
+        <router-link to="/cart" class="relative group" title="Cart">
           <component :is="isActive('/cart') ? ShoppingBagIconSolid : ShoppingBagIcon" class="w-6 h-6 transition-colors" :class="isActive('/cart') ? 'text-black' : 'text-gray-600 group-hover:text-black'" />
           <span 
             v-if="cartItemCount > 0"
@@ -122,11 +122,11 @@
             </span>
             <span class="text-lg font-semibold text-gray-900">{{ user.firstName || user.username || user.email }}</span>
           </div>
-          <router-link :to="`/shops/${shopSlug}/account`" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded">My Account</router-link>
-          <router-link :to="`/shops/${shopSlug}/orders`" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded">My Orders</router-link>
-          <router-link :to="`/shops/${shopSlug}/wishlist`" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded">Wishlist</router-link>
+          <router-link to="/account" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded">My Account</router-link>
+          <router-link to="/orders" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded">My Orders</router-link>
+          <router-link to="/wishlist" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded">Wishlist</router-link>
           <button v-if="user" @click="logout" class="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded">Logout</button>
-          <router-link v-else :to="`/shops/${shopSlug}/login`" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded">Login</router-link>
+          <router-link v-else to="/login" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded">Login</router-link>
         </div>
       </div>
     </transition>
@@ -153,10 +153,11 @@
 
 <script setup lang="ts">
 import { ref, computed } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { useCartStore } from '../stores/cart';
 import { useWishlistStore } from '../stores/wishlist';
+import { getCurrentShopSlug } from '../services/shop';
 import {
   MagnifyingGlassIcon,
   HeartIcon,
@@ -173,9 +174,8 @@ interface Props {
 }
 defineProps<Props>();
 
-const route = useRoute();
 const router = useRouter();
-const shopSlug = route.params.shopSlug as string;
+const shopSlug = getCurrentShopSlug();
 const isMobileSearchVisible = ref(false);
 const isMobileMenuOpen = ref(false);
 const dropdownOpen = ref(false);
@@ -197,7 +197,7 @@ const wishlistCount = computed(() => {
 });
 
 function isActive(path: string) {
-  return route.path.includes(path);
+  return router.currentRoute.value.path.includes(path);
 }
 
 function getAvatarText() {

@@ -92,7 +92,7 @@
         <div class="mt-8 pt-6 border-t border-gray-200 text-center">
           <p class="text-gray-600 text-sm mb-4">Already have an account?</p>
           <router-link 
-            :to="`/shops/${route.params.shopSlug}/login`" 
+            :to="'/login'" 
             class="inline-block bg-white text-black border border-black py-3 px-6 rounded-none font-semibold uppercase tracking-wide hover:bg-gray-50 transition-colors"
           >
             Sign In
@@ -121,7 +121,7 @@ async function onRegister() {
   const shopSlug = route.params.shopSlug as string;
   await authStore.register(username.value, email.value, password.value, shopSlug, firstName.value, lastName.value);
   if (authStore.user) {
-    router.push(`/shops/${shopSlug}`);
+    router.push('/login');
   }
 }
 </script> 

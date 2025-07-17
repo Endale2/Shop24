@@ -17,7 +17,7 @@
       
       <div class="space-y-4">
         <router-link
-          to="/shops/sophiaboutique"
+          to="/"
           class="block w-full p-4 border border-gray-200 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors"
         >
           <h2 class="font-semibold text-lg">Sophia Boutique</h2>

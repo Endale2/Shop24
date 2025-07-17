@@ -383,7 +383,7 @@
           <p class="mt-2 text-gray-500">Start shopping to add items to your cart.</p>
           <div class="mt-6">
             <router-link
-              :to="{ path: `/shops/${shopSlug}` }"
+              :to="{ path: '/' }"
               class="inline-flex items-center px-4 py-2 bg-black text-white rounded-md font-medium hover:bg-gray-800"
             >
               Continue Shopping
@@ -398,20 +398,20 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useCartStore } from '@/stores/cart';
-import { useRouter, useRoute } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { placeOrder } from '@/services/order';
 import type { CartItem, ItemDiscountDetail, OrderDiscountDetail } from '@/services/cart';
 import { ShoppingCartIcon } from '@heroicons/vue/24/outline';
 import { formatDiscountValue, getDiscountDescription } from '@/utils/discount';
+import { getCurrentShopSlug } from '@/services/shop';
 
 const cartStore = useCartStore();
 const router = useRouter();
-const route = useRoute();
-const shopSlug = route.params.shopSlug as string;
-
 const checkoutLoading = ref(false);
 
 onMounted(() => {
+  const shopSlug = getCurrentShopSlug();
+  if (!shopSlug) return;
   cartStore.setShopSlug(shopSlug);
   cartStore.fetchCart();
 });
@@ -550,7 +550,7 @@ async function checkout() {
     router.push({
       name: 'OrderConfirmation',
       params: { 
-        shopSlug: shopSlug,
+        shopSlug: cartStore.shopSlug,
         orderId: order.order?.id || order.order?._id || order.order?.ID
       }
     });

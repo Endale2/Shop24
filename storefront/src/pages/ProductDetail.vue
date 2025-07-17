@@ -5,9 +5,9 @@
       <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
       Back
     </button>
-    <router-link :to="`/shops/${shopSlug}`" class="hover:underline">Home</router-link>
+    <router-link to="/" class="hover:underline">Home</router-link>
     <span>/</span>
-    <router-link :to="`/shops/${shopSlug}/products`" class="hover:underline">Products</router-link>
+    <router-link to="/products" class="hover:underline">Products</router-link>
     <span>/</span>
     <span>{{ product?.name || 'Product Detail' }}</span>
   </nav>
@@ -231,6 +231,7 @@ import { useWishlistStore } from '@/stores/wishlist'
 import type { Product } from '@/services/product'
 import Header from '../components/Header.vue'
 import { formatDiscountValue } from '@/utils/discount'
+import { getCurrentShopSlug } from '@/services/shop';
 
 // Define interfaces to match your data structure for better type safety
 interface ProductOption {
@@ -248,9 +249,7 @@ interface Variant {
 
 const route = useRoute()
 const router = useRouter()
-const shopSlug = route.params.shopSlug as string
 const handle = route.params.handle as string
-
 const product = ref<Product | null>(null)
 const selectedVariant = ref<Variant | null>(null)
 const currentImage = ref<string>('')
@@ -262,13 +261,12 @@ const authStore = useAuthStore()
 const wishlistStore = useWishlistStore()
 
 onMounted(async () => {
-  if (handle) {
-    product.value = await fetchProductDetail(shopSlug, handle);
-    if (product.value) {
-      currentImage.value = product.value.main_image;
-    }
+  const shopSlug = getCurrentShopSlug();
+  if (!shopSlug || !handle) return;
+  product.value = await fetchProductDetail(shopSlug, handle);
+  if (product.value) {
+    currentImage.value = product.value.main_image;
   }
-  
   // Set shop slug in cart store
   cartStore.setShopSlug(shopSlug);
 })
@@ -476,7 +474,7 @@ async function addToCart() {
 }
 
 function goToLogin() {
-  router.push({ name: 'Login', params: { shopSlug } });
+  router.push({ name: 'Login', params: { shopSlug: getCurrentShopSlug() } });
 }
 
 function getDiscountTypeDescription() {

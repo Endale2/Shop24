@@ -4,7 +4,7 @@
       <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
       Back
     </button>
-    <router-link :to="`/shops/${route.params.shopSlug}`" class="hover:underline">Home</router-link>
+    <router-link to="/" class="hover:underline">Home</router-link>
     <span>/</span>
     <span class="text-gray-900 font-medium">Account</span>
   </nav>
@@ -78,7 +78,7 @@
             <h3 class="text-lg font-semibold text-gray-900 mb-4 uppercase">Quick Actions</h3>
             <div class="space-y-3">
               <router-link 
-                :to="`/shops/${route.params.shopSlug}/orders`" 
+                :to="'/orders'" 
                 class="flex items-center p-3 text-gray-700 hover:bg-gray-50 transition-colors rounded-lg"
               >
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -87,7 +87,7 @@
                 My Orders
               </router-link>
               <router-link 
-                :to="`/shops/${route.params.shopSlug}/wishlist`" 
+                :to="'/wishlist'" 
                 class="flex items-center p-3 text-gray-700 hover:bg-gray-50 transition-colors rounded-lg"
               >
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -135,7 +135,7 @@
         <h2 class="text-2xl font-bold text-gray-900 mb-4">You are not logged in</h2>
         <p class="text-gray-600 mb-6">Please log in to access your account</p>
         <router-link 
-          :to="`/shops/${route.params.shopSlug}/login`" 
+          :to="'/login'" 
           class="inline-block bg-black text-white py-3 px-6 rounded-none font-semibold uppercase tracking-wide hover:bg-gray-800 transition-colors"
         >
           Login
@@ -148,19 +148,20 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue';
 import { useAuthStore } from '../stores/auth';
-import { useRouter, useRoute } from 'vue-router';
+import { useRouter } from 'vue-router';
+import { getCurrentShopSlug } from '../services/shop';
 
 const authStore = useAuthStore();
 const router = useRouter();
-const route = useRoute();
 const user = computed(() => authStore.user);
+const shopSlug = getCurrentShopSlug();
 
 watch(
   () => [authStore.sessionLoading, authStore.user],
   ([loading, user]) => {
-    if (!loading && !user) {
+    if (!loading && !user && shopSlug) {
       // Redirect to login if not authenticated after session check
-      router.replace(`/shops/${route.params.shopSlug}/login`)
+      router.replace(`/login`)
     }
   },
   { immediate: true }
@@ -177,8 +178,7 @@ function formatDate(dateString: string) {
 
 async function onLogout() {
   await authStore.logout();
-  const shopSlug = route.params.shopSlug as string;
-  router.push(`/shops/${shopSlug}/login`);
+  if (shopSlug) router.push(`/login`);
 }
 </script>
 
