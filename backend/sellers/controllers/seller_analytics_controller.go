@@ -35,6 +35,18 @@ func getShopAndVerifySeller(c *gin.Context) (*models.Shop, primitive.ObjectID, b
 	return shop, shopID, true
 }
 
+// Helper: filter orders by status considered as 'sold'
+func filterSoldOrders(orders []models.Order) []models.Order {
+	var filtered []models.Order
+	for _, o := range orders {
+		status := o.Status
+		if status == "paid" || status == "shipped" || status == "delivered" {
+			filtered = append(filtered, o)
+		}
+	}
+	return filtered
+}
+
 // GET /seller/shops/:shopId/analytics/summary
 func GetShopAnalyticsSummary(c *gin.Context) {
 	_, shopID, ok := getShopAndVerifySeller(c)
@@ -42,19 +54,27 @@ func GetShopAnalyticsSummary(c *gin.Context) {
 		return
 	}
 	orders, _ := services.ListOrdersByShopService(shopID.Hex())
+	orders = filterSoldOrders(orders)
 	customers, _ := repositories.GetShopCustomerLinks(shopID)
 	products, _ := services.GetProductsByShopIDService(shopID)
 
 	totalRevenue := 0.0
+	totalOrders := len(orders)
+	customerOrderCount := make(map[primitive.ObjectID]int)
 	for _, o := range orders {
 		totalRevenue += o.Total
+		customerOrderCount[o.CustomerID]++
 	}
-	totalOrders := len(orders)
+	totalCustomers := len(customers)
 	newCustomers := 0
+	returningCustomers := 0
 	cutoff := time.Now().AddDate(0, 0, -30)
 	for _, cst := range customers {
 		if cst.CreatedAt.After(cutoff) {
 			newCustomers++
+		}
+		if customerOrderCount[cst.CustomerID] > 1 {
+			returningCustomers++
 		}
 	}
 	avgOrderValue := 0.0
@@ -63,11 +83,13 @@ func GetShopAnalyticsSummary(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"total_revenue":   totalRevenue,
-		"total_orders":    totalOrders,
-		"new_customers":   newCustomers,
-		"avg_order_value": avgOrderValue,
-		"total_products":  len(products),
+		"total_revenue":       totalRevenue,
+		"total_orders":        totalOrders,
+		"new_customers":       newCustomers,
+		"avg_order_value":     avgOrderValue,
+		"total_products":      len(products),
+		"total_customers":     totalCustomers,
+		"returning_customers": returningCustomers,
 	})
 }
 
@@ -84,6 +106,7 @@ func GetShopRevenueOverTime(c *gin.Context) {
 		}
 	}
 	orders, _ := services.ListOrdersByShopService(shopID.Hex())
+	orders = filterSoldOrders(orders)
 
 	// Build daily revenue
 	revenueMap := make(map[string]float64)
@@ -122,6 +145,7 @@ func GetShopOrdersOverTime(c *gin.Context) {
 		}
 	}
 	orders, _ := services.ListOrdersByShopService(shopID.Hex())
+	orders = filterSoldOrders(orders)
 	orderMap := make(map[string]int)
 	now := time.Now()
 	for i := 0; i < days; i++ {
@@ -151,6 +175,7 @@ func GetShopTopProducts(c *gin.Context) {
 		return
 	}
 	orders, _ := services.ListOrdersByShopService(shopID.Hex())
+	orders = filterSoldOrders(orders)
 	products, _ := services.GetProductsByShopIDService(shopID)
 	productSales := map[primitive.ObjectID]int{}
 	productRevenue := map[primitive.ObjectID]float64{}
@@ -194,6 +219,7 @@ func GetShopTopCustomers(c *gin.Context) {
 		return
 	}
 	orders, _ := services.ListOrdersByShopService(shopID.Hex())
+	orders = filterSoldOrders(orders)
 	customerOrders := map[primitive.ObjectID]int{}
 	for _, o := range orders {
 		customerOrders[o.CustomerID]++
@@ -271,4 +297,129 @@ func GetShopDiscountPerformance(c *gin.Context) {
 	}
 	sort.Slice(stats, func(i, j int) bool { return stats[i].TotalAmount > stats[j].TotalAmount })
 	c.JSON(http.StatusOK, stats)
+}
+
+// GET /seller/shops/:shopId/analytics/customers-over-time?days=30
+func GetShopCustomersOverTime(c *gin.Context) {
+	_, shopID, ok := getShopAndVerifySeller(c)
+	if !ok {
+		return
+	}
+	days := 30
+	if d := c.Query("days"); d != "" {
+		if n, err := strconv.Atoi(d); err == nil {
+			days = n
+		}
+	}
+	customers, _ := repositories.GetShopCustomerLinks(shopID)
+	growthMap := make(map[string]int)
+	now := time.Now()
+	for i := 0; i < days; i++ {
+		date := now.AddDate(0, 0, -i).Format("2006-01-02")
+		growthMap[date] = 0
+	}
+	for _, cst := range customers {
+		date := cst.CreatedAt.Format("2006-01-02")
+		if _, ok := growthMap[date]; ok {
+			growthMap[date]++
+		}
+	}
+	var labels []string
+	var values []int
+	for i := days - 1; i >= 0; i-- {
+		date := now.AddDate(0, 0, -i).Format("2006-01-02")
+		labels = append(labels, date)
+		values = append(values, growthMap[date])
+	}
+	c.JSON(http.StatusOK, gin.H{"labels": labels, "values": values})
+}
+
+// GET /seller/shops/:shopId/analytics/category-sales?days=30
+func GetShopCategorySales(c *gin.Context) {
+	_, shopID, ok := getShopAndVerifySeller(c)
+	if !ok {
+		return
+	}
+	days := 30
+	if d := c.Query("days"); d != "" {
+		if n, err := strconv.Atoi(d); err == nil {
+			days = n
+		}
+	}
+	orders, _ := services.ListOrdersByShopService(shopID.Hex())
+	orders = filterSoldOrders(orders)
+	products, _ := services.GetProductsByShopIDService(shopID)
+	productCategory := make(map[primitive.ObjectID]string)
+	for _, p := range products {
+		productCategory[p.ID] = p.Category
+	}
+	categoryRevenue := make(map[string]float64)
+	now := time.Now()
+	cutoff := now.AddDate(0, 0, -days)
+	for _, o := range orders {
+		if o.CreatedAt.Before(cutoff) {
+			continue
+		}
+		for _, item := range o.Items {
+			cat := productCategory[item.ProductID]
+			if cat == "" {
+				cat = "Uncategorized"
+			}
+			categoryRevenue[cat] += item.TotalPrice
+		}
+	}
+	// Sort categories by revenue
+	type catPair struct {
+		Category string
+		Revenue  float64
+	}
+	var pairs []catPair
+	for cat, rev := range categoryRevenue {
+		pairs = append(pairs, catPair{cat, rev})
+	}
+	sort.Slice(pairs, func(i, j int) bool { return pairs[i].Revenue > pairs[j].Revenue })
+	if len(pairs) > 6 {
+		pairs = pairs[:6]
+	}
+	var labels []string
+	var values []float64
+	for _, p := range pairs {
+		labels = append(labels, p.Category)
+		values = append(values, p.Revenue)
+	}
+	c.JSON(http.StatusOK, gin.H{"labels": labels, "values": values})
+}
+
+// GET /seller/shops/:shopId/analytics/recent-orders?limit=10
+func GetShopRecentOrders(c *gin.Context) {
+	_, shopID, ok := getShopAndVerifySeller(c)
+	if !ok {
+		return
+	}
+	limit := 10
+	if l := c.Query("limit"); l != "" {
+		if n, err := strconv.Atoi(l); err == nil {
+			limit = n
+		}
+	}
+	orders, _ := services.ListOrdersByShopService(shopID.Hex())
+	orders = filterSoldOrders(orders)
+	sort.Slice(orders, func(i, j int) bool {
+		return orders[i].CreatedAt.After(orders[j].CreatedAt)
+	})
+	if len(orders) > limit {
+		orders = orders[:limit]
+	}
+	var result []gin.H
+	for _, o := range orders {
+		result = append(result, gin.H{
+			"id":           o.ID.Hex(),
+			"order_number": o.OrderNumber,
+			"customer_id":  o.CustomerID.Hex(),
+			"total":        o.Total,
+			"status":       o.Status,
+			"created_at":   o.CreatedAt,
+		})
+	}
+	c.JSON(http.StatusOK, result)
 }

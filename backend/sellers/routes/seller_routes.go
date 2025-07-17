@@ -105,6 +105,21 @@ func SellerRoute(r *gin.Engine) {
 			orders.DELETE("/:orderId", controllers.DeleteOrder)
 		}
 
+		// ─────  Analytics endpoints ─────
+		analyticsGroup := shopGroup.Group("/analytics")
+		{
+			analyticsGroup.GET("/summary", controllers.GetShopAnalyticsSummary)
+			analyticsGroup.GET("/revenue-over-time", controllers.GetShopRevenueOverTime)
+			analyticsGroup.GET("/orders-over-time", controllers.GetShopOrdersOverTime)
+			analyticsGroup.GET("/top-products", controllers.GetShopTopProducts)
+			analyticsGroup.GET("/top-customers", controllers.GetShopTopCustomers)
+			analyticsGroup.GET("/inventory-status", controllers.GetShopInventoryStatus)
+			analyticsGroup.GET("/discount-performance", controllers.GetShopDiscountPerformance)
+			analyticsGroup.GET("/customers-over-time", controllers.GetShopCustomersOverTime)
+			analyticsGroup.GET("/category-sales", controllers.GetShopCategorySales)
+			analyticsGroup.GET("/recent-orders", controllers.GetShopRecentOrders)
+		}
+
 	}
 
 }

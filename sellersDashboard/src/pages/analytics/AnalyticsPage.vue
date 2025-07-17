@@ -76,7 +76,7 @@
           </div>
           <div class="h-80">
             <Line
-              v-if="revenueChartData"
+              v-if="revenueChartData && Array.isArray(revenueChartData.labels) && revenueChartData.labels.length"
               :data="revenueChartData"
               :options="lineChartOptions"
             />
@@ -109,7 +109,7 @@
           <h2 class="text-xl font-semibold text-gray-900 mb-6">Orders Over Time</h2>
           <div class="h-64">
             <Line
-              v-if="ordersChartData"
+              v-if="ordersChartData && Array.isArray(ordersChartData.labels) && ordersChartData.labels.length"
               :data="ordersChartData"
               :options="lineChartOptions"
             />
@@ -140,22 +140,24 @@
         <!-- Top Selling Products -->
         <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-md border border-gray-200">
           <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-semibold text-gray-900">Top Selling Products</h2>
+            <h2 class="text-xl font-semibold text-gray-900 flex items-center">Top Selling Products
+              <span class="ml-2 text-xs text-gray-400" title="Only paid, shipped, or delivered orders are counted as sold.">(sold = paid/shipped/delivered)</span>
+            </h2>
             <router-link 
-              to="/products" 
+              to="/dashboard/products" 
               class="text-sm text-green-600 hover:text-green-700 font-medium"
             >
               View all products
             </router-link>
           </div>
-          <div v-if="topProducts.length === 0" class="text-center py-8 text-gray-500">
+          <div v-if="Array.isArray(topProductsList) && topProductsList.length === 0" class="text-center py-8 text-gray-500">
             <CubeIcon class="w-12 h-12 mx-auto mb-4 text-gray-300" />
             <p>No products yet</p>
             <p class="text-sm">Add products to see analytics</p>
           </div>
           <div v-else class="space-y-4">
             <div
-              v-for="(product, index) in topProducts"
+              v-for="(product, index) in (Array.isArray(topProductsList) ? topProductsList : [])"
               :key="product.id"
               class="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200 cursor-pointer"
               @click="goToProduct(product.id)"
@@ -163,10 +165,14 @@
               <div class="flex-shrink-0">
                 <div class="w-12 h-12 bg-gray-200 rounded-lg overflow-hidden">
                   <img 
-                    :src="product.mainImage || '/placeholder-product.jpg'" 
+                    v-if="product.mainImage"
+                    :src="product.mainImage"
                     :alt="product.name"
                     class="w-full h-full object-cover"
                   />
+                  <div v-else class="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">
+                    <span class="text-xs">No Image</span>
+                  </div>
                 </div>
               </div>
               <div class="flex-1 min-w-0">
@@ -210,13 +216,13 @@
               </thead>
               <tbody class="divide-y divide-gray-200">
                 <tr
-                  v-for="order in recentOrders"
+                  v-for="order in (Array.isArray(recentOrders) ? recentOrders : [])"
                   :key="order.id"
                   class="hover:bg-gray-50 cursor-pointer transition-colors duration-200"
                   @click="goToOrder(order.id)"
                 >
-                  <td class="p-3 font-mono text-gray-500">#{{ order.orderNumber }}</td>
-                  <td class="p-3 text-gray-800">{{ order.customerName }}</td>
+                  <td class="p-3 font-mono text-gray-500">#{{ order.order_number }}</td>
+                  <td class="p-3 text-gray-800">{{ order.customer_id }}</td>
                   <td class="p-3 font-semibold text-gray-900">${{ formatCurrency(order.total) }}</td>
                   <td class="p-3">
                     <span
@@ -226,11 +232,11 @@
                       {{ formatStatus(order.status) }}
                     </span>
                   </td>
-                  <td class="p-3 text-gray-600">{{ formatDate(order.createdAt) }}</td>
+                  <td class="p-3 text-gray-600">{{ formatDate(order.created_at) }}</td>
                 </tr>
               </tbody>
             </table>
-            <div v-if="recentOrders.length === 0" class="text-center py-8 text-gray-500">
+            <div v-if="Array.isArray(recentOrders) && recentOrders.length === 0" class="text-center py-8 text-gray-500">
               <ShoppingBagIcon class="w-12 h-12 mx-auto mb-4 text-gray-300" />
               <p>No orders yet</p>
               <p class="text-sm">Orders will appear here once customers start shopping</p>
@@ -241,55 +247,25 @@
 
       <!-- Performance Metrics -->
       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Conversion Funnel -->
-        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-          <h2 class="text-xl font-semibold text-gray-900 mb-6">Conversion Funnel</h2>
-          <div class="space-y-4">
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-600">Total Visitors</span>
-              <span class="font-semibold text-gray-900">{{ conversionFunnel.visitors }}</span>
-            </div>
-            <div class="w-full bg-gray-200 rounded-full h-2">
-              <div class="bg-blue-600 h-2 rounded-full" :style="{ width: `${conversionFunnel.visitorRate}%` }"></div>
-            </div>
-            
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-600">Add to Cart</span>
-              <span class="font-semibold text-gray-900">{{ conversionFunnel.addToCart }}</span>
-            </div>
-            <div class="w-full bg-gray-200 rounded-full h-2">
-              <div class="bg-green-600 h-2 rounded-full" :style="{ width: `${conversionFunnel.addToCartRate}%` }"></div>
-            </div>
-            
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-600">Purchases</span>
-              <span class="font-semibold text-gray-900">{{ conversionFunnel.purchases }}</span>
-            </div>
-            <div class="w-full bg-gray-200 rounded-full h-2">
-              <div class="bg-purple-600 h-2 rounded-full" :style="{ width: `${conversionFunnel.purchaseRate}%` }"></div>
-            </div>
-          </div>
-        </div>
-
         <!-- Customer Insights -->
         <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
           <h2 class="text-xl font-semibold text-gray-900 mb-6">Customer Insights</h2>
           <div class="space-y-4">
             <div class="flex items-center justify-between">
               <span class="text-sm text-gray-600">New Customers</span>
-              <span class="font-semibold text-green-600">+{{ customerInsights.newCustomers }}</span>
+              <span class="font-semibold text-green-600">+{{ customerInsights?.newCustomers ?? 0 }}</span>
             </div>
             <div class="flex items-center justify-between">
               <span class="text-sm text-gray-600">Returning Customers</span>
-              <span class="font-semibold text-blue-600">{{ customerInsights.returningCustomers }}</span>
+              <span class="font-semibold text-blue-600">{{ customerInsights?.returningCustomers ?? 0 }}</span>
             </div>
             <div class="flex items-center justify-between">
               <span class="text-sm text-gray-600">Avg Order Value</span>
-              <span class="font-semibold text-gray-900">${{ formatCurrency(customerInsights.avgOrderValue) }}</span>
+              <span class="font-semibold text-gray-900">${{ formatCurrency(customerInsights?.avgOrderValue ?? 0) }}</span>
             </div>
             <div class="flex items-center justify-between">
               <span class="text-sm text-gray-600">Customer Lifetime Value</span>
-              <span class="font-semibold text-purple-600">${{ formatCurrency(customerInsights.lifetimeValue) }}</span>
+              <span class="font-semibold text-purple-600">${{ formatCurrency(customerInsights?.lifetimeValue ?? 0) }}</span>
             </div>
           </div>
         </div>
@@ -300,19 +276,19 @@
           <div class="space-y-4">
             <div class="flex items-center justify-between">
               <span class="text-sm text-gray-600">Total Products</span>
-              <span class="font-semibold text-gray-900">{{ inventoryStatus.totalProducts }}</span>
+              <span class="font-semibold text-gray-900">{{ inventory.total_products }}</span>
             </div>
             <div class="flex items-center justify-between">
               <span class="text-sm text-gray-600">In Stock</span>
-              <span class="font-semibold text-green-600">{{ inventoryStatus.inStock }}</span>
+              <span class="font-semibold text-green-600">{{ inventory.in_stock }}</span>
             </div>
             <div class="flex items-center justify-between">
               <span class="text-sm text-gray-600">Low Stock</span>
-              <span class="font-semibold text-yellow-600">{{ inventoryStatus.lowStock }}</span>
+              <span class="font-semibold text-yellow-600">{{ inventory.low_stock }}</span>
             </div>
             <div class="flex items-center justify-between">
               <span class="text-sm text-gray-600">Out of Stock</span>
-              <span class="font-semibold text-red-600">{{ inventoryStatus.outOfStock }}</span>
+              <span class="font-semibold text-red-600">{{ inventory.out_of_stock }}</span>
             </div>
           </div>
         </div>
@@ -325,10 +301,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useShopStore } from '@/store/shops'
-import { orderService } from '@/services/order'
-import { productService } from '@/services/product'
-import { customerService } from '@/services/customer'
-import { discountService } from '@/services/discount'
+import { analyticsService } from '@/services/analytics'
 import { format } from 'date-fns'
 import {
   Chart as ChartJS,
@@ -362,12 +335,17 @@ const shopId = computed(() => activeShop.value?.id)
 // State
 const loading = ref(true)
 const selectedPeriod = ref('last_30_days')
-const orders = ref([])
-const products = ref([])
-const customers = ref([])
-const discounts = ref([])
+const summary = ref(null)
+const revenueOverTime = ref({ labels: [], values: [] })
+const ordersOverTime = ref({ labels: [], values: [] })
+const topProducts = ref([])
+const inventoryStatus = ref(null)
 
-// Period options
+// Add new state for categorySales, customersOverTime, and recentOrders
+const categorySales = ref({ labels: [], values: [] })
+const customersOverTime = ref({ labels: [], values: [] })
+const recentOrders = ref([])
+
 const periods = [
   { id: 'last_7_days', label: '7 Days' },
   { id: 'last_30_days', label: '30 Days' },
@@ -375,7 +353,6 @@ const periods = [
   { id: 'last_12_months', label: '12 Months' },
 ]
 
-// Chart options
 const lineChartOptions = {
   responsive: true,
   maintainAspectRatio: false,
@@ -415,16 +392,14 @@ const doughnutChartOptions = {
   }
 }
 
-// Computed properties
 const analyticsStats = computed(() => {
-  const periodData = getPeriodData()
-  const previousPeriodData = getPreviousPeriodData()
-  
+  if (!summary.value) return []
+  // For change %, you may want to fetch previous period summary as well (not implemented here)
   return [
     {
       title: 'Total Revenue',
-      value: `$${formatCurrency(periodData.totalRevenue)}`,
-      change: calculatePercentageChange(periodData.totalRevenue, previousPeriodData.totalRevenue),
+      value: `$${formatCurrency(summary.value.total_revenue)}`,
+      change: 0, // Placeholder
       icon: CurrencyDollarIcon,
       iconBg: 'bg-green-100',
       iconColor: 'text-green-600',
@@ -432,8 +407,8 @@ const analyticsStats = computed(() => {
     },
     {
       title: 'Total Orders',
-      value: periodData.totalOrders.toLocaleString(),
-      change: calculatePercentageChange(periodData.totalOrders, previousPeriodData.totalOrders),
+      value: summary.value.total_orders?.toLocaleString() ?? '0',
+      change: 0,
       icon: ShoppingBagIcon,
       iconBg: 'bg-blue-100',
       iconColor: 'text-blue-600',
@@ -441,8 +416,8 @@ const analyticsStats = computed(() => {
     },
     {
       title: 'New Customers',
-      value: periodData.newCustomers.toLocaleString(),
-      change: calculatePercentageChange(periodData.newCustomers, previousPeriodData.newCustomers),
+      value: summary.value.new_customers?.toLocaleString() ?? '0',
+      change: 0,
       icon: UsersIcon,
       iconBg: 'bg-indigo-100',
       iconColor: 'text-indigo-600',
@@ -450,8 +425,8 @@ const analyticsStats = computed(() => {
     },
     {
       title: 'Avg Order Value',
-      value: `$${formatCurrency(periodData.avgOrderValue)}`,
-      change: calculatePercentageChange(periodData.avgOrderValue, previousPeriodData.avgOrderValue),
+      value: `$${formatCurrency(summary.value.avg_order_value)}`,
+      change: 0,
       icon: ChartBarIcon,
       iconBg: 'bg-amber-100',
       iconColor: 'text-amber-600',
@@ -461,14 +436,12 @@ const analyticsStats = computed(() => {
 })
 
 const revenueChartData = computed(() => {
-  const data = getChartData('revenue')
-  if (!data.labels.length) return null
-  
+  if (!Array.isArray(revenueOverTime.value?.labels) || revenueOverTime.value.labels.length === 0) return null
   return {
-    labels: data.labels,
+    labels: revenueOverTime.value.labels.map(date => format(new Date(date), 'MMM d')),
     datasets: [{
       label: 'Revenue',
-      data: data.values,
+      data: Array.isArray(revenueOverTime.value.values) ? revenueOverTime.value.values : [],
       borderColor: 'rgb(16, 185, 129)',
       backgroundColor: 'rgba(16, 185, 129, 0.1)',
       tension: 0.3,
@@ -478,14 +451,12 @@ const revenueChartData = computed(() => {
 })
 
 const ordersChartData = computed(() => {
-  const data = getChartData('orders')
-  if (!data.labels.length) return null
-  
+  if (!Array.isArray(ordersOverTime.value?.labels) || ordersOverTime.value.labels.length === 0) return null
   return {
-    labels: data.labels,
+    labels: ordersOverTime.value.labels.map(date => format(new Date(date), 'MMM d')),
     datasets: [{
       label: 'Orders',
-      data: data.values,
+      data: Array.isArray(ordersOverTime.value.values) ? ordersOverTime.value.values : [],
       borderColor: 'rgb(59, 130, 246)',
       backgroundColor: 'rgba(59, 130, 246, 0.1)',
       tension: 0.3,
@@ -494,15 +465,54 @@ const ordersChartData = computed(() => {
   }
 })
 
-const customersChartData = computed(() => {
-  const data = getChartData('customers')
-  if (!data.labels.length) return null
-  
+const topProductsList = computed(() => Array.isArray(topProducts.value) ? topProducts.value : [])
+
+const inventory = computed(() => inventoryStatus.value && typeof inventoryStatus.value === 'object' ? inventoryStatus.value : {
+  total_products: 0,
+  in_stock: 0,
+  low_stock: 0,
+  out_of_stock: 0
+})
+
+// Defensive computed for customerInsights
+const customerInsights = computed(() => {
+  if (!summary.value) {
+    return {
+      newCustomers: 0,
+      returningCustomers: 0,
+      avgOrderValue: 0,
+      lifetimeValue: 0
+    }
+  }
+  // If you have real backend data for these, use it. Otherwise, fallback to summary values or 0.
   return {
-    labels: data.labels,
+    newCustomers: summary.value.new_customers ?? 0,
+    returningCustomers: (summary.value.total_customers ?? 0) - (summary.value.new_customers ?? 0),
+    avgOrderValue: summary.value.avg_order_value ?? 0,
+    lifetimeValue: (summary.value.avg_order_value ?? 0) * 2.5 // or use backend value if available
+  }
+})
+
+// Update chart computed for category sales
+const categoryChartData = computed(() => {
+  if (!Array.isArray(categorySales.value?.labels) || categorySales.value.labels.length === 0) return null
+  return {
+    labels: categorySales.value.labels,
+    datasets: [{
+      data: Array.isArray(categorySales.value.values) ? categorySales.value.values : [],
+      backgroundColor: ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#06B6D4']
+    }]
+  }
+})
+
+// Update chart computed for customer growth
+const customersChartData = computed(() => {
+  if (!Array.isArray(customersOverTime.value?.labels) || customersOverTime.value.labels.length === 0) return null
+  return {
+    labels: customersOverTime.value.labels.map(date => format(new Date(date), 'MMM d')),
     datasets: [{
       label: 'Customers',
-      data: data.values,
+      data: Array.isArray(customersOverTime.value.values) ? customersOverTime.value.values : [],
       borderColor: 'rgb(139, 92, 246)',
       backgroundColor: 'rgba(139, 92, 246, 0.1)',
       tension: 0.3,
@@ -511,83 +521,6 @@ const customersChartData = computed(() => {
   }
 })
 
-const categoryChartData = computed(() => {
-  const categoryData = getCategoryData()
-  if (!categoryData.labels.length) return null
-  
-  return {
-    labels: categoryData.labels,
-    datasets: [{
-      data: categoryData.values,
-      backgroundColor: ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444', '#06B6D4']
-    }]
-  }
-})
-
-const topProducts = computed(() => {
-  return products.value
-    .map(product => ({
-      ...product,
-      totalRevenue: calculateProductRevenue(product.id),
-      totalSold: calculateProductSold(product.id)
-    }))
-    .sort((a, b) => b.totalRevenue - a.totalRevenue)
-    .slice(0, 5)
-})
-
-const recentOrders = computed(() => {
-  return orders.value
-    .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    .slice(0, 10)
-    .map(order => ({
-      ...order,
-      customerName: getCustomerName(order.customerId)
-    }))
-})
-
-const conversionFunnel = computed(() => {
-  const totalVisitors = customers.value.length * 3 // Estimate
-  const addToCart = Math.floor(totalVisitors * 0.15) // 15% add to cart rate
-  const purchases = orders.value.length
-  
-  return {
-    visitors: totalVisitors.toLocaleString(),
-    addToCart: addToCart.toLocaleString(),
-    purchases: purchases.toLocaleString(),
-    visitorRate: 100,
-    addToCartRate: (addToCart / totalVisitors * 100).toFixed(1),
-    purchaseRate: (purchases / totalVisitors * 100).toFixed(1)
-  }
-})
-
-const customerInsights = computed(() => {
-  const periodData = getPeriodData()
-  const avgOrderValue = periodData.totalOrders > 0 ? periodData.totalRevenue / periodData.totalOrders : 0
-  const lifetimeValue = avgOrderValue * 2.5 // Estimate
-  
-  return {
-    newCustomers: periodData.newCustomers,
-    returningCustomers: customers.value.length - periodData.newCustomers,
-    avgOrderValue: avgOrderValue,
-    lifetimeValue: lifetimeValue
-  }
-})
-
-const inventoryStatus = computed(() => {
-  const totalProducts = products.value.length
-  const inStock = products.value.filter(p => (p.stock || 0) > 10).length
-  const lowStock = products.value.filter(p => (p.stock || 0) <= 10 && (p.stock || 0) > 0).length
-  const outOfStock = products.value.filter(p => (p.stock || 0) === 0).length
-  
-  return {
-    totalProducts,
-    inStock,
-    lowStock,
-    outOfStock
-  }
-})
-
-// Methods
 function formatCurrency(amount) {
   return (amount || 0).toFixed(2)
 }
@@ -631,61 +564,6 @@ function getPeriodLabel(period) {
     'last_12_months': 'Last 12 Months'
   }
   return labels[period] || period
-}
-
-function getPeriodData() {
-  const now = new Date()
-  const days = getDaysForPeriod(selectedPeriod.value)
-  const startDate = new Date(now.getTime() - (days * 24 * 60 * 60 * 1000))
-  
-  const periodOrders = orders.value.filter(order => 
-    new Date(order.createdAt) >= startDate
-  )
-  
-  const periodCustomers = customers.value.filter(customer => 
-    new Date(customer.createdAt) >= startDate
-  )
-  
-  const totalRevenue = periodOrders.reduce((sum, order) => sum + (order.total || 0), 0)
-  const totalOrders = periodOrders.length
-  const newCustomers = periodCustomers.length
-  const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
-  
-  return {
-    totalRevenue,
-    totalOrders,
-    newCustomers,
-    avgOrderValue
-  }
-}
-
-function getPreviousPeriodData() {
-  const now = new Date()
-  const days = getDaysForPeriod(selectedPeriod.value)
-  const currentStartDate = new Date(now.getTime() - (days * 24 * 60 * 60 * 1000))
-  const previousStartDate = new Date(currentStartDate.getTime() - (days * 24 * 60 * 60 * 1000))
-  
-  const periodOrders = orders.value.filter(order => {
-    const orderDate = new Date(order.createdAt)
-    return orderDate >= previousStartDate && orderDate < currentStartDate
-  })
-  
-  const periodCustomers = customers.value.filter(customer => {
-    const customerDate = new Date(customer.createdAt)
-    return customerDate >= previousStartDate && customerDate < currentStartDate
-  })
-  
-  const totalRevenue = periodOrders.reduce((sum, order) => sum + (order.total || 0), 0)
-  const totalOrders = periodOrders.length
-  const newCustomers = periodCustomers.length
-  const avgOrderValue = totalOrders > 0 ? totalRevenue / totalOrders : 0
-  
-  return {
-    totalRevenue,
-    totalOrders,
-    newCustomers,
-    avgOrderValue
-  }
 }
 
 function getDaysForPeriod(period) {
@@ -786,6 +664,7 @@ function getCustomerName(customerId) {
 
 function changePeriod(period) {
   selectedPeriod.value = period
+  loadAnalyticsData()
 }
 
 function goToOrder(orderId) {
@@ -799,27 +678,31 @@ function goToProduct(productId) {
 // Load analytics data
 async function loadAnalyticsData() {
   if (!shopId.value) {
-    console.warn('No active shop selected')
     loading.value = false
     return
   }
-
+  loading.value = true
   try {
-    // Load data in parallel
-    const [ordersData, productsData, customersData, discountsData] = await Promise.all([
-      orderService.fetchAllByShop(shopId.value),
-      productService.fetchAllByShop(shopId.value),
-      customerService.fetchAll(shopId.value),
-      discountService.fetchAllByShop(shopId.value)
+    const [summaryData, revenueData, ordersData, topProductsData, inventoryData, categorySalesData, customersOverTimeData, recentOrdersData] = await Promise.all([
+      analyticsService.fetchSummary(shopId.value),
+      analyticsService.fetchRevenueOverTime(shopId.value, getDaysForPeriod(selectedPeriod.value)),
+      analyticsService.fetchOrdersOverTime(shopId.value, getDaysForPeriod(selectedPeriod.value)),
+      analyticsService.fetchTopProducts(shopId.value),
+      analyticsService.fetchInventoryStatus(shopId.value),
+      analyticsService.fetchCategorySales(shopId.value, getDaysForPeriod(selectedPeriod.value)),
+      analyticsService.fetchCustomersOverTime(shopId.value, getDaysForPeriod(selectedPeriod.value)),
+      analyticsService.fetchRecentOrders(shopId.value, 10)
     ])
-
-    orders.value = ordersData
-    products.value = productsData
-    customers.value = customersData
-    discounts.value = discountsData
-
-  } catch (error) {
-    console.error('Failed to load analytics data:', error)
+    summary.value = summaryData
+    revenueOverTime.value = revenueData
+    ordersOverTime.value = ordersData
+    topProducts.value = topProductsData
+    inventoryStatus.value = inventoryData
+    categorySales.value = categorySalesData
+    customersOverTime.value = customersOverTimeData
+    recentOrders.value = recentOrdersData
+  } catch (e) {
+    console.error('Failed to load analytics data:', e)
   } finally {
     loading.value = false
   }

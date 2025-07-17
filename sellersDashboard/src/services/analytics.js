@@ -29,4 +29,16 @@ export const analyticsService = {
     const res = await api.get(`/seller/shops/${shopId}/analytics/discount-performance`)
     return res.data
   },
+  async fetchCustomersOverTime(shopId, days = 30) {
+    const res = await api.get(`/seller/shops/${shopId}/analytics/customers-over-time`, { params: { days } })
+    return res.data
+  },
+  async fetchCategorySales(shopId, days = 30) {
+    const res = await api.get(`/seller/shops/${shopId}/analytics/category-sales`, { params: { days } })
+    return res.data
+  },
+  async fetchRecentOrders(shopId, limit = 10) {
+    const res = await api.get(`/seller/shops/${shopId}/analytics/recent-orders`, { params: { limit } })
+    return res.data
+  },
 } 
