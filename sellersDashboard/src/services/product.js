@@ -26,6 +26,8 @@ export const productService = {
       })),
       createdAt: p.createdAt || p.CreatedAt,
       updatedAt: p.updatedAt || p.UpdatedAt,
+      meta_title: p.meta_title || '',
+      meta_description: p.meta_description || '',
     }))
   },
 
@@ -55,6 +57,8 @@ export const productService = {
       })),
       createdAt: p.createdAt || p.CreatedAt,
       updatedAt: p.updatedAt || p.UpdatedAt,
+      meta_title: p.meta_title || '',
+      meta_description: p.meta_description || '',
     }
   },
 

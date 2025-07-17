@@ -190,6 +190,29 @@
           </div>
         </div>
 
+        <!-- Add after Images Section, before Variants Section -->
+        <div class="space-y-6 border-b border-gray-200 pb-8">
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+              <span class="text-yellow-600 font-semibold text-sm">SEO</span>
+            </div>
+            <h3 class="text-xl font-bold text-gray-700">Advanced Fields (SEO)</h3>
+            <button type="button" @click="showAdvanced = !showAdvanced" class="ml-4 px-3 py-1.5 rounded bg-gray-100 text-gray-700 text-sm font-medium hover:bg-yellow-50">
+              {{ showAdvanced ? 'Hide' : 'Show' }}
+            </button>
+          </div>
+          <div v-if="showAdvanced" class="space-y-4 mt-4">
+            <div>
+              <label for="meta-title" class="block text-sm font-medium text-gray-700 mb-2">Meta Title</label>
+              <input id="meta-title" v-model="form.meta_title" type="text" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition duration-150 shadow-sm" placeholder="SEO meta title (optional)" />
+            </div>
+            <div>
+              <label for="meta-description" class="block text-sm font-medium text-gray-700 mb-2">Meta Description</label>
+              <textarea id="meta-description" v-model="form.meta_description" rows="2" class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition duration-150 shadow-sm resize-y" placeholder="SEO meta description (optional)"></textarea>
+            </div>
+          </div>
+        </div>
+
         <!-- Variants Section -->
         <div class="space-y-6">
           <div class="flex items-center justify-between">
@@ -378,13 +401,20 @@ const form = reactive({
   category: '',
   price: null,
   stock: null,
-  variants: []
+  variants: [],
+  meta_title: '',
+  meta_description: ''
 })
 
 const showVariants = ref(false)
+const showAdvanced = ref(false)
 
 // Computed properties
 const hasVariants = computed(() => form.variants.length > 0)
+
+// SEO fields
+form.meta_title = ''
+form.meta_description = ''
 
 function goBack() {
   router.push({ name: 'Products' })
@@ -476,6 +506,8 @@ async function submitForm() {
       main_image: form.main_image.trim() || '',
       images: form.images.filter(img => img.trim()),
       category: form.category.trim(),
+      meta_title: form.meta_title,
+      meta_description: form.meta_description,
     }
 
     if (hasVariants.value) {

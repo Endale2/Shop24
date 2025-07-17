@@ -481,6 +481,9 @@ func ProductToAPIResponse(p *models.Product) map[string]interface{} {
 		"createdBy":   p.CreatedBy.Hex(),
 		"createdAt":   p.CreatedAt,
 		"updatedAt":   p.UpdatedAt,
+		// Add SEO fields
+		"meta_title":       p.MetaTitle,
+		"meta_description": p.MetaDescription,
 	}
 
 	// Check if product has real variants (not just empty ones)

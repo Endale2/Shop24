@@ -38,6 +38,9 @@ type createProductInput struct {
 	Price       *float64       `json:"price"`
 	Stock       *int           `json:"stock"` // <-- Added
 	Variants    []variantInput `json:"variants"`
+	// SEO fields
+	MetaTitle       string `json:"meta_title"`
+	MetaDescription string `json:"meta_description"`
 }
 
 // slugify converts a name to a URL-friendly slug and ensures uniqueness within the shop.
@@ -137,6 +140,9 @@ func CreateProduct(c *gin.Context) {
 		Category:    in.Category,
 		Price:       0,
 		CreatedBy:   sellerID,
+		// SEO fields
+		MetaTitle:       in.MetaTitle,
+		MetaDescription: in.MetaDescription,
 	}
 
 	p.MainImage = in.MainImage // <-- Set main_image
@@ -275,6 +281,14 @@ func UpdateProduct(c *gin.Context) {
 				}
 			}
 		}
+	}
+
+	// In UpdateProduct, allow updating SEO fields if present
+	if metaTitle, ok := upd["meta_title"].(string); ok {
+		upd["meta_title"] = metaTitle
+	}
+	if metaDesc, ok := upd["meta_description"].(string); ok {
+		upd["meta_description"] = metaDesc
 	}
 
 	_, err = services.UpdateProductService(c.Param("productId"), upd)

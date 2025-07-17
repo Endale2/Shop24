@@ -116,6 +116,28 @@
           </button>
         </div>
 
+        <div class="border-t border-gray-200 pt-6 pb-6">
+          <div class="flex items-center space-x-3">
+            <div class="w-8 h-8 bg-yellow-100 rounded-full flex items-center justify-center">
+              <span class="text-yellow-600 font-semibold text-sm">SEO</span>
+            </div>
+            <h3 class="text-lg font-semibold text-gray-800">Advanced Fields (SEO)</h3>
+            <button type="button" @click="showAdvanced = !showAdvanced" class="ml-4 px-3 py-1.5 rounded bg-gray-100 text-gray-700 text-sm font-medium hover:bg-yellow-50">
+              {{ showAdvanced ? 'Hide' : 'Show' }}
+            </button>
+          </div>
+          <div v-if="showAdvanced" class="space-y-4 mt-4">
+            <div>
+              <label for="meta-title" class="block text-sm font-medium text-gray-700 mb-2">Meta Title</label>
+              <input id="meta-title" v-model="productToEdit.meta_title" type="text" class="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition duration-150 shadow-sm" placeholder="SEO meta title (optional)" />
+            </div>
+            <div>
+              <label for="meta-description" class="block text-sm font-medium text-gray-700 mb-2">Meta Description</label>
+              <textarea id="meta-description" v-model="productToEdit.meta_description" rows="2" class="w-full border border-gray-300 rounded-md px-4 py-2 focus:ring-2 focus:ring-yellow-500 focus:border-yellow-500 transition duration-150 shadow-sm resize-y" placeholder="SEO meta description (optional)"></textarea>
+            </div>
+          </div>
+        </div>
+
         <div class="border-t border-gray-200 pt-6">
           <h3 class="text-lg font-semibold text-gray-800 mb-4">Product Variants</h3>
           <div v-for="(variant, vIndex) in productToEdit.variants" :key="vIndex" class="bg-gray-50 p-4 rounded-md mb-4 border border-gray-200">
@@ -248,11 +270,14 @@ const productToEdit = ref({
   images: [],
   main_image: null,
   variants: [],
+  meta_title: '',
+  meta_description: '',
 });
 const loading = ref(true);
 const saving = ref(false);
 const error = ref(null);
 const variantOptionError = ref(null);
+const showAdvanced = ref(false);
 
 const activeShop = computed(() => shopStore.activeShop);
 
@@ -339,6 +364,8 @@ async function fetchProductDetails() {
         stock: v.stock,
         image: v.image
       })),
+      meta_title: fetchedProduct.meta_title || '',
+      meta_description: fetchedProduct.meta_description || '',
     };
   } catch (e) {
     console.error('Failed to load product details for editing:', e);
@@ -364,6 +391,8 @@ async function submitChanges() {
     category: productToEdit.value.category,
     images: productToEdit.value.images.filter(img => img),
     main_image: productToEdit.value.main_image || null,
+    meta_title: productToEdit.value.meta_title,
+    meta_description: productToEdit.value.meta_description,
   };
 
   if (productToEdit.value.variants.length > 0) {
