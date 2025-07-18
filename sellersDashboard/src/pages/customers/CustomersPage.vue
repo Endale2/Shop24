@@ -116,7 +116,7 @@
       <h3 class="text-lg font-semibold text-gray-900 mb-4">Filter by Segment</h3>
       <div class="flex flex-wrap gap-3">
         <button
-          @click="selectedSegment = null"
+          @click="handleAllCustomersClick"
           :class="selectedSegment === null ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
           class="px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200"
         >
@@ -125,7 +125,7 @@
         <button
           v-for="segment in segments"
           :key="segment.id"
-          @click="selectedSegment = segment.id"
+          @click="() => handleSegmentClick(segment.id)"
           :class="selectedSegment === segment.id ? 'bg-green-600 text-white' : 'bg-gray-100 text-gray-700 hover:bg-gray-200'"
           class="px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center"
         >
@@ -371,8 +371,8 @@
       </div>
     </div>
 
-    <!-- Pagination Controls -->
-    <div v-if="total > pageSize" class="flex justify-center mt-8">
+    <!-- Pagination Controls (Top) -->
+    <div v-if="total > pageSize && customers.length" class="flex justify-center mb-4">
       <button
         :disabled="page === 1"
         @click="handlePageChange(page - 1)"
@@ -387,56 +387,51 @@
     </div>
 
     <!-- Create Segment Modal -->
-    <div v-if="showCreateSegmentModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-xl shadow-xl max-w-md w-full mx-4">
-        <div class="p-6">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Create New Segment</h3>
-          
-          <form @submit.prevent="createSegment">
-            <div class="space-y-4">
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Segment Name</label>
-                <input
-                  v-model="newSegment.name"
-                  type="text"
-                  required
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="e.g., VIP Customers"
-                />
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
-                <textarea
-                  v-model="newSegment.description"
-                  rows="3"
-                  class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                  placeholder="Optional description..."
-                ></textarea>
-              </div>
-              
-              <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Color</label>
-                <input
-                  v-model="newSegment.color"
-                  type="color"
-                  class="w-full h-10 border border-gray-300 rounded-lg cursor-pointer"
-                />
-              </div>
+    <div v-if="showCreateSegmentModal" class="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-none transition-opacity">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full mx-4 border border-gray-100 relative animate-fadeIn">
+        <button @click="showCreateSegmentModal = false" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-xl focus:outline-none">&times;</button>
+        <div class="p-8">
+          <h3 class="text-2xl font-bold text-gray-900 mb-6 text-center">Create New Segment</h3>
+          <form @submit.prevent="createSegment" class="space-y-5">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Segment Name</label>
+              <input
+                v-model="newSegment.name"
+                type="text"
+                required
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 text-gray-900"
+                placeholder="e.g., VIP Customers"
+              />
             </div>
-            
-            <div class="flex justify-end space-x-3 mt-6">
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Description</label>
+              <textarea
+                v-model="newSegment.description"
+                rows="3"
+                class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 text-gray-900"
+                placeholder="Optional description..."
+              ></textarea>
+            </div>
+            <div>
+              <label class="block text-sm font-semibold text-gray-700 mb-1">Color</label>
+              <input
+                v-model="newSegment.color"
+                type="color"
+                class="w-16 h-10 border border-gray-300 rounded-lg cursor-pointer bg-gray-50"
+              />
+            </div>
+            <div class="flex justify-end space-x-3 mt-8">
               <button
                 type="button"
                 @click="showCreateSegmentModal = false"
-                class="px-4 py-2 text-gray-700 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
+                class="px-5 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 font-medium transition-colors shadow-sm"
               >
                 Cancel
               </button>
               <button
                 type="submit"
                 :disabled="creatingSegment"
-                class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors"
+                class="px-5 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 font-semibold transition-colors shadow-sm"
               >
                 {{ creatingSegment ? 'Creating...' : 'Create Segment' }}
               </button>
@@ -447,15 +442,15 @@
     </div>
 
     <!-- Manage Customer Segments Modal -->
-    <div v-if="showSegmentModal && selectedCustomer" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-xl shadow-xl max-w-lg w-full mx-4">
-        <div class="p-6">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">
+    <div v-if="showSegmentModal && selectedCustomer" class="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-none transition-opacity">
+      <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full mx-4 border border-gray-100 relative animate-fadeIn">
+        <button @click="showSegmentModal = false; selectedCustomer = null" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-xl focus:outline-none">&times;</button>
+        <div class="p-8">
+          <h3 class="text-2xl font-bold text-gray-900 mb-6 text-center">
             Manage Segments for {{ selectedCustomer.firstName }} {{ selectedCustomer.lastName }}
           </h3>
-          
           <div class="space-y-4">
-            <div v-for="segment in segments" :key="segment.id" class="flex items-center justify-between p-3 border border-gray-200 rounded-lg">
+            <div v-for="segment in segments" :key="segment.id" class="flex items-center justify-between p-4 border border-gray-100 rounded-lg bg-gray-50">
               <div class="flex items-center">
                 <div
                   v-if="segment.color"
@@ -463,32 +458,30 @@
                   :style="{ backgroundColor: segment.color }"
                 ></div>
                 <div>
-                  <div class="font-medium text-gray-900">{{ segment.name }}</div>
+                  <div class="font-semibold text-gray-900">{{ segment.name }}</div>
                   <div class="text-sm text-gray-500">{{ segment.description || 'No description' }}</div>
                 </div>
               </div>
-              
               <button
                 v-if="isCustomerInSegment(selectedCustomer.id, segment.id)"
                 @click="removeCustomerFromSegment(selectedCustomer.id, segment.id)"
-                class="text-red-600 hover:text-red-800 transition-colors"
+                class="px-4 py-1 text-sm rounded-lg bg-red-50 text-red-600 hover:bg-red-100 font-medium transition-colors shadow-sm"
               >
                 Remove
               </button>
               <button
                 v-else
                 @click="addCustomerToSegment(selectedCustomer.id, segment.id)"
-                class="text-green-600 hover:text-green-800 transition-colors"
+                class="px-4 py-1 text-sm rounded-lg bg-green-50 text-green-700 hover:bg-green-100 font-medium transition-colors shadow-sm"
               >
                 Add
               </button>
             </div>
           </div>
-          
-          <div class="flex justify-end mt-6">
+          <div class="flex justify-end mt-8">
             <button
               @click="showSegmentModal = false; selectedCustomer = null"
-              class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+              class="px-5 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors shadow-sm"
             >
               Close
             </button>
@@ -587,6 +580,7 @@ async function refreshAll() {
 async function fetchCustomers() {
   loading.value = true
   try {
+    error.value = null;
     const { customers: custs, total: t, page: p, pageSize: ps } = await customerService.fetchAll(
       activeShop.value.id,
       {
@@ -596,14 +590,25 @@ async function fetchCustomers() {
         segmentId: selectedSegment.value || ''
       }
     )
-    customers.value = custs
-    total.value = t
-    // page.value = p // keep current
-    pageSize.value = ps
+    customers.value = Array.isArray(custs) ? custs : [];
+    total.value = typeof t === 'number' ? t : 0;
+    pageSize.value = typeof ps === 'number' ? ps : 10;
+    // If no customers, do not set error
+    if (customers.value.length === 0) {
+      error.value = null;
+    }
   } catch (e) {
-    error.value = 'Failed to load customers. Please try again.'
+    // Only show error if it's a real fetch error, not just empty results
+    if (e && e.response && (e.response.status === 404 || e.response.status === 204)) {
+      customers.value = [];
+      total.value = 0;
+      pageSize.value = 10;
+      error.value = null;
+    } else {
+      error.value = 'Failed to load customers. Please try again.';
+    }
   } finally {
-    loading.value = false
+    loading.value = false;
   }
 }
 
@@ -725,6 +730,21 @@ function handlePageChange(newPage) {
     page.value = newPage
   }
 }
+
+// When clicking 'All Customers', reset segment, page, and search
+function handleAllCustomersClick() {
+  selectedSegment.value = null;
+  page.value = 1;
+}
+// When clicking a segment, set segment, reset page and search
+function handleSegmentClick(segmentId) {
+  selectedSegment.value = segmentId;
+  page.value = 1;
+}
+// When searching, reset page
+watch(search, () => {
+  page.value = 1;
+});
 </script>
 
 <style scoped>
@@ -734,5 +754,12 @@ function handlePageChange(newPage) {
 }
 .animate-spin {
   animation: spin 1s linear infinite;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(20px) scale(0.98); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.animate-fadeIn {
+  animation: fadeIn 0.25s cubic-bezier(0.4,0.0,0.2,1);
 }
 </style>
