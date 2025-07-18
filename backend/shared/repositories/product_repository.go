@@ -10,6 +10,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var productCollection *mongo.Collection = config.GetCollection("DRPS", "products")
@@ -119,7 +120,6 @@ func CountByCategory() (map[string]int64, error) {
 	return results, nil
 }
 
-
 // GetProductsByFilter retrieves products matching an arbitrary filter.
 func GetProductsByFilter(filter bson.M) ([]models.Product, error) {
 	cursor, err := productCollection.Find(context.Background(), filter)
@@ -139,34 +139,64 @@ func GetProductsByFilter(filter bson.M) ([]models.Product, error) {
 	return products, nil
 }
 
-
 // GetProductsByShopSlug retrieves all products for the shop with the given slug.
 func GetProductsByShopSlug(slug string) ([]models.Product, error) {
-    // 1) Lookup the shop by slug
-    shop, err := GetShopBySlug(slug)
-    if err != nil {
-        return nil, err
-    }
-    if shop == nil {
-        // no such shop
-        return nil, nil
-    }
-    // 2) Use the existing filter helper
-    return GetProductsByFilter(bson.M{"shop_id": shop.ID})
+	// 1) Lookup the shop by slug
+	shop, err := GetShopBySlug(slug)
+	if err != nil {
+		return nil, err
+	}
+	if shop == nil {
+		// no such shop
+		return nil, nil
+	}
+	// 2) Use the existing filter helper
+	return GetProductsByFilter(bson.M{"shop_id": shop.ID})
 }
 
 // GetProductBySlug retrieves a product by its slug.
 func GetProductBySlug(slug string) (*models.Product, error) {
-    var p models.Product
-    err := productCollection.FindOne(
-        context.Background(),
-        bson.M{"slug": slug},
-    ).Decode(&p)
-    if err != nil {
-        if err == mongo.ErrNoDocuments {
-            return nil, nil
-        }
-        return nil, err
-    }
-    return &p, nil
+	var p models.Product
+	err := productCollection.FindOne(
+		context.Background(),
+		bson.M{"slug": slug},
+	).Decode(&p)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &p, nil
+}
+
+// GetProductsByFilterPaginated retrieves products matching a filter, paginated, and returns total count.
+func GetProductsByFilterPaginated(filter bson.M, page, limit int) ([]models.Product, int64, error) {
+	skip := (page - 1) * limit
+
+	total, err := productCollection.CountDocuments(context.Background(), filter)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	findOptions := options.Find()
+	findOptions.SetSort(bson.D{{"created_at", -1}})
+	findOptions.SetSkip(int64(skip))
+	findOptions.SetLimit(int64(limit))
+
+	cursor, err := productCollection.Find(context.Background(), filter, findOptions)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer cursor.Close(context.Background())
+
+	var products []models.Product
+	for cursor.Next(context.Background()) {
+		var p models.Product
+		if err := cursor.Decode(&p); err != nil {
+			return nil, 0, err
+		}
+		products = append(products, p)
+	}
+	return products, total, nil
 }

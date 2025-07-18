@@ -570,3 +570,36 @@ func ProductToAPIResponseWithDiscounts(p *models.Product) map[string]interface{}
 
 	return resp
 }
+
+// ListProductsByShopPaginatedService returns paginated, filterable products for a shop.
+func ListProductsByShopPaginatedService(shopID primitive.ObjectID, page, limit int, search, category, stockStatus string) ([]models.Product, int64, error) {
+	filter := bson.M{"shop_id": shopID}
+
+	if search != "" {
+		searchRegex := primitive.Regex{Pattern: search, Options: "i"}
+		filter["$or"] = []bson.M{
+			{"name": searchRegex},
+			{"category": searchRegex},
+		}
+	}
+	if category != "" {
+		filter["category"] = category
+	}
+	if stockStatus != "" {
+		switch stockStatus {
+		case "in_stock":
+			filter["stock"] = bson.M{"$gt": 0}
+		case "out_of_stock":
+			filter["stock"] = 0
+		}
+	}
+
+	products, total, err := repositories.GetProductsByFilterPaginated(filter, page, limit)
+	if err != nil {
+		return nil, 0, err
+	}
+	for i := range products {
+		normalizeProduct(&products[i])
+	}
+	return products, total, nil
+}

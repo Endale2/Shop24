@@ -106,6 +106,24 @@
     <!-- Content -->
     <div v-else>
       <div v-if="paginatedProducts.length">
+        <!-- Add this above the product table/grid -->
+        <div class="flex flex-wrap gap-4 mb-4 items-center">
+          <div class="flex gap-2 items-center">
+            <span class="text-gray-700 font-medium">Total:</span>
+            <span class="text-gray-900">{{ stats.total_products }}</span>
+            <span class="text-green-700 ml-4">In Stock: {{ stats.in_stock }}</span>
+            <span class="text-red-700 ml-4">Out of Stock: {{ stats.out_of_stock }}</span>
+          </div>
+          <div class="ml-auto flex gap-2 items-center">
+            <label for="stockStatus" class="text-sm text-gray-700">Stock Status:</label>
+            <select id="stockStatus" v-model="selectedStockStatus" @change="handleStockStatusChange" class="border border-gray-300 rounded px-2 py-1 text-sm">
+              <option value="">All</option>
+              <option value="in_stock">In Stock</option>
+              <option value="out_of_stock">Out of Stock</option>
+            </select>
+          </div>
+        </div>
+
         <!-- List View -->
         <div v-if="currentView === 'list'" class="overflow-x-auto bg-white shadow-lg rounded-xl">
           <table class="min-w-full divide-y divide-gray-200">
@@ -170,7 +188,7 @@
                 <td class="py-3 px-6">
                   <span
                     :class="{
-                      'px-2 py-1 text-xs font-medium rounded-full': true,
+                      'px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap w-max': true,
                       'bg-green-100 text-green-800': getProductStock(prod) > 0,
                       'bg-red-100 text-red-800': getProductStock(prod) <= 0
                     }"
@@ -204,7 +222,7 @@
               <div class="absolute top-2 right-2">
                 <span
                   :class="{
-                    'px-2 py-1 text-xs font-medium rounded-full': true,
+                    'px-2 py-1 text-xs font-medium rounded-full whitespace-nowrap w-max': true,
                     'bg-green-100 text-green-800': getProductStock(prod) > 0,
                     'bg-red-100 text-red-800': getProductStock(prod) <= 0
                   }"
@@ -302,30 +320,30 @@ const router = useRouter()
 const shopStore = useShopStore()
 
 // Reactive state
-const allProducts = ref([])
+const allProducts = ref([]) // not used anymore, but kept for compatibility
 const products = ref([])
 const loading = ref(false)
 const error = ref(null)
 const currentView = ref('list')
 
-// Search state
+// Search/filter state
 const searchQuery = ref('')
+const selectedStockStatus = ref('')
+const selectedCategory = ref('') // for future use
 let searchTimeout = null
 
 // Pagination state
 const currentPage = ref(1)
-const itemsPerPage = 8
+const itemsPerPage = 10
+const pagination = ref({ page: 1, limit: 10, total: 0, total_pages: 1 })
+const stats = ref({ total_products: 0, in_stock: 0, out_of_stock: 0 })
 
 // Computed property for the active shop
 const activeShop = computed(() => shopStore.activeShop)
 
 // Computed properties for pagination
-const totalPages = computed(() => Math.ceil(products.value.length / itemsPerPage))
-const paginatedProducts = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  const end = start + itemsPerPage
-  return products.value.slice(start, end)
-})
+const totalPages = computed(() => pagination.value.total_pages || 1)
+const paginatedProducts = computed(() => products.value)
 
 /**
  * Dynamically applies classes to view toggle buttons based on the current view.
@@ -365,19 +383,22 @@ async function fetchProducts() {
     router.replace({ name: 'ShopSelection' })
     return
   }
-
   loading.value = true
   error.value = null
   try {
-    const fetchedData = await productService.fetchAllByShop(activeShop.value.id)
-    allProducts.value = fetchedData.map(prod => ({
-      ...prod,
-      id: prod.id || prod._id,
-      images: prod.images || [],
-      variants: prod.variants || []
-    }))
-    applySearchFilter()
-    currentPage.value = 1
+    const { products: fetched, pagination: pag, stats: st } = await productService.fetchAllByShopPaginated(
+      activeShop.value.id,
+      {
+        page: currentPage.value,
+        limit: itemsPerPage,
+        search: searchQuery.value,
+        category: selectedCategory.value,
+        stockStatus: selectedStockStatus.value,
+      }
+    )
+    products.value = fetched
+    pagination.value = pag || { page: 1, limit: itemsPerPage, total: fetched.length, total_pages: 1 }
+    stats.value = st || { total_products: fetched.length, in_stock: 0, out_of_stock: 0 }
   } catch (e) {
     console.error('Failed to load products:', e)
     error.value = 'Failed to load products. Please try again.'
@@ -389,27 +410,18 @@ async function fetchProducts() {
 /**
  * Applies the search filter to the products.
  */
-function applySearchFilter() {
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    products.value = allProducts.value.filter(prod =>
-      prod.name.toLowerCase().includes(query) ||
-      prod.category?.toLowerCase().includes(query)
-    )
-  } else {
-    products.value = [...allProducts.value]
-  }
-  currentPage.value = 1
-}
-
-/**
- * Debounces the search input to avoid excessive API calls or filtering.
- */
 function debouncedSearch() {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
-    applySearchFilter()
+    currentPage.value = 1
+    fetchProducts()
   }, 300)
+}
+
+function handleStockStatusChange(e) {
+  selectedStockStatus.value = e.target.value
+  currentPage.value = 1
+  fetchProducts()
 }
 
 /**
@@ -418,6 +430,7 @@ function debouncedSearch() {
 function prevPage() {
   if (currentPage.value > 1) {
     currentPage.value--
+    fetchProducts()
   }
 }
 
@@ -427,6 +440,7 @@ function prevPage() {
 function nextPage() {
   if (currentPage.value < totalPages.value) {
     currentPage.value++
+    fetchProducts()
   }
 }
 
@@ -472,6 +486,7 @@ onMounted(() => {
 // Watch for changes in activeShop to refetch products if the shop changes
 watch(activeShop, (newShop, oldShop) => {
   if (newShop?.id !== oldShop?.id) {
+    currentPage.value = 1
     fetchProducts()
   }
 })

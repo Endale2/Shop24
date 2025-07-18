@@ -3,6 +3,7 @@ package controllers
 import (
 	"math/rand"
 	"net/http"
+	"strconv"
 	"strings"
 	"time"
 
@@ -198,17 +199,66 @@ func GetProducts(c *gin.Context) {
 		return
 	}
 
-	products, err := services.GetProductsByShopIDService(shopID)
+	// Pagination and filter params
+	page := 1
+	limit := 10
+	if pageStr := c.Query("page"); pageStr != "" {
+		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
+			page = p
+		}
+	}
+	if limitStr := c.Query("limit"); limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 && l <= 100 {
+			limit = l
+		}
+	}
+	search := c.Query("search")
+	category := c.Query("category")
+	stockStatus := c.Query("stock_status")
+
+	products, total, err := services.ListProductsByShopPaginatedService(shopID, page, limit, search, category, stockStatus)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "fetch failed"})
 		return
 	}
 
+	// Calculate stock stats
+	totalInStock := 0
+	totalOutOfStock := 0
+	for _, p := range products {
+		stock := p.Stock
+		if stock > 0 {
+			totalInStock++
+		} else {
+			totalOutOfStock++
+		}
+	}
+
+	// Format products for API response
 	apiProducts := make([]map[string]interface{}, 0, len(products))
 	for i := range products {
 		apiProducts = append(apiProducts, services.ProductToAPIResponse(&products[i]))
 	}
-	c.JSON(http.StatusOK, apiProducts)
+
+	totalPages := 1
+	if limit > 0 {
+		totalPages = int((total + int64(limit) - 1) / int64(limit))
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"products": apiProducts,
+		"pagination": gin.H{
+			"page":        page,
+			"limit":       limit,
+			"total":       total,
+			"total_pages": totalPages,
+		},
+		"stats": gin.H{
+			"total_products": total,
+			"in_stock":       totalInStock,
+			"out_of_stock":   totalOutOfStock,
+		},
+	})
 }
 
 // GetProduct handles GET /seller/shops/:shopId/products/:productId

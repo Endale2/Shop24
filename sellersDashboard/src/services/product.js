@@ -31,6 +31,82 @@ export const productService = {
     }))
   },
 
+  // New paginated version for ProductsPage.vue
+  async fetchAllByShopPaginated(shopId, { page = 1, limit = 10, search = '', category = '', stockStatus = '' } = {}) {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString(),
+    })
+    if (search) params.append('search', search)
+    if (category) params.append('category', category)
+    if (stockStatus) params.append('stock_status', stockStatus)
+
+    const res = await api.get(`/seller/shops/${shopId}/products?${params}`)
+    if (res.data && Array.isArray(res.data.products)) {
+      return {
+        products: res.data.products.map(p => ({
+          id: p.id || p._id || p.ID,
+          shopId: p.shop_id || p.shopId || p.ShopID,
+          name: p.name || p.Name,
+          description: p.description || p.Description,
+          images: p.images || p.Images || [],
+          main_image: p.main_image || p.MainImage || '',
+          category: p.category || p.Category,
+          price: Number(p.price || p.Price) || 0,
+          stock: p.stock || p.Stock || 0,
+          starting_price: p.starting_price,
+          total_stock: p.total_stock,
+          variants: (p.variants || p.Variants || []).map(v => ({
+            id: v.id || v.variant_id || v.VariantID,
+            options: v.options || v.Options || [],
+            price: Number(v.price || v.Price) || 0,
+            stock: v.stock || v.Stock || 0,
+            image: v.image || v.Image || '',
+            createdAt: v.createdAt || v.CreatedAt,
+            updatedAt: v.updatedAt || v.UpdatedAt,
+          })),
+          createdAt: p.createdAt || p.CreatedAt,
+          updatedAt: p.updatedAt || p.UpdatedAt,
+          meta_title: p.meta_title || '',
+          meta_description: p.meta_description || '',
+        })),
+        pagination: res.data.pagination,
+        stats: res.data.stats,
+      }
+    }
+    // fallback: old array format
+    return {
+      products: res.data.map(p => ({
+        id: p.id || p._id || p.ID,
+        shopId: p.shop_id || p.shopId || p.ShopID,
+        name: p.name || p.Name,
+        description: p.description || p.Description,
+        images: p.images || p.Images || [],
+        main_image: p.main_image || p.MainImage || '',
+        category: p.category || p.Category,
+        price: Number(p.price || p.Price) || 0,
+        stock: p.stock || p.Stock || 0,
+        starting_price: p.starting_price,
+        total_stock: p.total_stock,
+        variants: (p.variants || p.Variants || []).map(v => ({
+          id: v.id || v.variant_id || v.VariantID,
+          options: v.options || v.Options || [],
+          price: Number(v.price || v.Price) || 0,
+          stock: v.stock || v.Stock || 0,
+          image: v.image || v.Image || '',
+          createdAt: v.createdAt || v.CreatedAt,
+          updatedAt: v.updatedAt || v.UpdatedAt,
+        })),
+        createdAt: p.createdAt || p.CreatedAt,
+        updatedAt: p.updatedAt || p.UpdatedAt,
+        meta_title: p.meta_title || '',
+        meta_description: p.meta_description || '',
+      })),
+      pagination: null,
+      stats: null,
+    }
+  },
+
   async fetchById(shopId, productId) {
     const res = await api.get(`/seller/shops/${shopId}/products/${productId}`)
     const p = res.data
