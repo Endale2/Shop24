@@ -18,16 +18,14 @@
 
       <div class="flex space-x-4 items-center">
         <select
-          v-model="statusFilter"
-          @change="applyFilters"
+          v-model="itemsPerPage"
+          @change="onLimitChange"
           class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-150 ease-in-out shadow-sm"
         >
-          <option value="">All Statuses</option>
-          <option value="pending">Pending</option>
-          <option value="paid">Paid</option>
-          <option value="shipped">Shipped</option>
-          <option value="delivered">Delivered</option>
-          <option value="cancelled">Cancelled</option>
+          <option value="10">10 per page</option>
+          <option value="25">25 per page</option>
+          <option value="50">50 per page</option>
+          <option value="100">100 per page</option>
         </select>
 
         <div class="inline-flex rounded-lg shadow-sm overflow-hidden border border-gray-200 bg-gray-50" role="group">
@@ -70,7 +68,7 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-500">Total Orders</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ allOrders.length }}</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ orderStats.total_orders }}</p>
           </div>
         </div>
       </div>
@@ -84,7 +82,7 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-500">Pending</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ getStatusCount('pending') }}</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ orderStats.pending_orders }}</p>
           </div>
         </div>
       </div>
@@ -98,7 +96,7 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-500">Delivered</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ getStatusCount('delivered') }}</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ orderStats.delivered_orders }}</p>
           </div>
         </div>
       </div>
@@ -112,7 +110,7 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-500">Total Revenue</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ formatPrice(getTotalRevenue()) }}</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ formatPrice(orderStats.total_revenue) }}</p>
           </div>
         </div>
       </div>
@@ -124,11 +122,11 @@
           <thead class="bg-gray-100">
             <tr>
               <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Order ID</th>
-              <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Customer</th>
               <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Items</th>
               <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Total</th>
               <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
               <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Date</th>
+              <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Customer</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-gray-200">
@@ -164,7 +162,7 @@
     </div>
 
     <div v-else>
-      <div v-if="paginatedOrders.length">
+      <div v-if="allOrders.length">
         <div v-if="currentView === 'list'" class="overflow-x-auto bg-white shadow-lg rounded-xl">
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-100">
@@ -179,7 +177,7 @@
             </thead>
             <tbody class="divide-y divide-gray-200">
               <tr
-                v-for="(order, i) in paginatedOrders"
+                v-for="(order, i) in allOrders"
                 :key="order.id"
                 @click="goToDetail(order.id)"
                 class="cursor-pointer transition duration-150 ease-in-out transform hover:scale-[1.005] hover:bg-green-50"
@@ -189,7 +187,7 @@
                   {{ formatOrderId(order.id, order.orderNumber) }}
                 </td>
                 <td class="py-3 px-6 text-sm text-gray-800">
-                  {{ formatCustomerId(order.customerId) }}
+                  {{ getCustomerDisplayName(order) }}
                 </td>
                 <td class="py-3 px-6 text-sm text-gray-700">
                   <div class="flex items-center space-x-2">
@@ -230,7 +228,7 @@
 
         <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           <div
-            v-for="order in paginatedOrders"
+            v-for="order in allOrders"
             :key="order.id"
             @click="goToDetail(order.id)"
             class="bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer transform hover:scale-105 hover:shadow-xl transition duration-200 ease-in-out flex flex-col group"
@@ -247,7 +245,7 @@
               
               <div class="space-y-2 mb-4">
                 <p class="text-sm text-gray-600">
-                  <span class="font-medium">Customer:</span> {{ formatCustomerId(order.customerId) }}
+                  <span class="font-medium">Customer:</span> {{ getCustomerDisplayName(order) }}
                 </p>
                 <p class="text-sm text-gray-600">
                   <span class="font-medium">Items:</span> {{ order.items.length }} item{{ order.items.length !== 1 ? 's' : '' }}
@@ -277,7 +275,26 @@
           >
             Previous
           </button>
-          <span class="text-gray-700 text-lg font-medium">Page {{ currentPage }} of {{ totalPages }}</span>
+          
+          <!-- Page jumpers -->
+          <div class="flex space-x-1">
+            <button
+              v-for="page in getVisiblePages()"
+              :key="page"
+              @click="goToPage(page)"
+              :class="[
+                'px-3 py-2 text-sm font-medium rounded-lg transition duration-150 ease-in-out',
+                page === currentPage
+                  ? 'bg-green-600 text-white'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+              ]"
+            >
+              {{ page }}
+            </button>
+            <span v-if="hasMorePagesBefore()" class="px-2 py-2 text-gray-500">...</span>
+            <span v-if="hasMorePagesAfter()" class="px-2 py-2 text-gray-500">...</span>
+          </div>
+          
           <button
             @click="nextPage"
             :disabled="currentPage === totalPages"
@@ -285,6 +302,10 @@
           >
             Next
           </button>
+        </div>
+
+        <div class="text-center mt-2 text-sm text-gray-600">
+          Page {{ currentPage }} of {{ totalPages }} ({{ totalOrders }} total orders)
         </div>
       </div>
 
@@ -321,47 +342,54 @@ const router = useRouter()
 const shopStore = useShopStore()
 
 // Reactive state
-const allOrders = ref([]) // Holds all fetched orders
-const orders = ref([]) // Orders filtered by search and status, before pagination
+const allOrders = ref([]) // Holds current page orders
 const loading = ref(false)
 const error = ref(null)
 const currentView = ref('list')
 
-// Search and filter state
+// Search state
 const searchQuery = ref('')
-const statusFilter = ref('')
 let searchTimeout = null // To debounce search input
 
-// Pagination state
+// Backend pagination state
 const currentPage = ref(1)
-const itemsPerPage = 8 // You can adjust this number
+const itemsPerPage = ref(10)
+const totalOrders = ref(0)
+const totalPages = ref(0)
+
+// Backend stats state
+const orderStats = ref({
+  total_orders: 0,
+  total_revenue: 0,
+  pending_orders: 0,
+  delivered_orders: 0
+})
 
 // Computed property for the active shop
 const activeShop = computed(() => shopStore.activeShop)
 
-// Computed properties for pagination
-const totalPages = computed(() => Math.ceil(orders.value.length / itemsPerPage))
-const paginatedOrders = computed(() => {
-  const start = (currentPage.value - 1) * itemsPerPage
-  const end = start + itemsPerPage
-  return orders.value.slice(start, end)
-})
-
 /**
- * Gets the count of orders by status.
+ * Gets the count of orders by status from backend stats.
  * @param {string} status - The status to count.
  * @returns {number} The count of orders with that status.
  */
 function getStatusCount(status) {
-  return allOrders.value.filter(order => order.status?.toLowerCase() === status.toLowerCase()).length
+  switch (status) {
+    case 'pending':
+      return orderStats.value.pending_orders || 0
+    case 'delivered':
+      return orderStats.value.delivered_orders || 0
+    default:
+      return 0
+  }
 }
 
 /**
- * Calculates the total revenue from all orders.
+ * Gets total revenue from backend stats (only paid, shipped, delivered orders).
  * @returns {number} The total revenue.
  */
 function getTotalRevenue() {
-  return allOrders.value.reduce((total, order) => total + (order.total || 0), 0)
+  return orderStats.value.total_revenue || 0
 }
 
 /**
@@ -376,7 +404,7 @@ function viewButtonClass(view) {
 }
 
 /**
- * Fetches orders from the service.
+ * Fetches orders from the service with pagination.
  */
 async function fetchOrders() {
   if (!activeShop.value?.id) {
@@ -387,14 +415,36 @@ async function fetchOrders() {
   loading.value = true
   error.value = null
   try {
-    // Fetch orders using the shop ID
-    const fetchedData = await orderService.fetchAllByShop(activeShop.value.id)
-    allOrders.value = fetchedData.map(order => ({
-      ...order, // Keep all original order properties
-      id: order.id || order._id, // Standardize ID
-    }))
-    applyFilters() // Apply initial filters
-    currentPage.value = 1 // Reset pagination on new fetch
+    // Fetch orders using the shop ID with pagination and search
+    const response = await orderService.fetchAllByShop(
+      activeShop.value.id, 
+      currentPage.value, 
+      itemsPerPage.value,
+      searchQuery.value
+    )
+    
+    console.log('Fetched orders response:', response) // Debug log
+    
+    if (response.pagination) {
+      // New paginated format
+      allOrders.value = response.orders
+      totalOrders.value = response.pagination.total
+      totalPages.value = response.pagination.total_pages
+      currentPage.value = response.pagination.page
+      itemsPerPage.value = response.pagination.limit
+      
+      // Update stats if available
+      if (response.stats) {
+        orderStats.value = response.stats
+      }
+    } else {
+      // Fallback to old format
+      allOrders.value = response.orders || response
+      totalOrders.value = allOrders.value.length
+      totalPages.value = 1
+    }
+    
+    console.log('Processed orders:', allOrders.value) // Debug log
   } catch (e) {
     console.error('Failed to load orders:', e)
     error.value = 'Failed to load orders. Please try again.'
@@ -404,30 +454,12 @@ async function fetchOrders() {
 }
 
 /**
- * Applies search and status filters to the orders.
+ * Applies search filter to the orders.
+ * With backend pagination, we refetch data with search
  */
 function applyFilters() {
-  let filtered = [...allOrders.value]
-
-  // Apply status filter
-  if (statusFilter.value) {
-    filtered = filtered.filter(order => 
-      order.status?.toLowerCase() === statusFilter.value.toLowerCase()
-    )
-  }
-
-  // Apply search filter
-  if (searchQuery.value) {
-    const query = searchQuery.value.toLowerCase()
-    filtered = filtered.filter(order =>
-      order.id?.toLowerCase().includes(query) ||
-      order.customerId?.toLowerCase().includes(query) ||
-      order.items?.some(item => item.name?.toLowerCase().includes(query))
-    )
-  }
-
-  orders.value = filtered
-  currentPage.value = 1 // Reset to first page after filtering
+  currentPage.value = 1 // Reset to first page when applying filters
+  fetchOrders()
 }
 
 /**
@@ -437,7 +469,7 @@ function debouncedSearch() {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
     applyFilters()
-  }, 300) // 300ms debounce time
+  }, 500) // Increased debounce time for backend requests
 }
 
 /**
@@ -446,6 +478,7 @@ function debouncedSearch() {
 function prevPage() {
   if (currentPage.value > 1) {
     currentPage.value--
+    fetchOrders()
   }
 }
 
@@ -455,7 +488,70 @@ function prevPage() {
 function nextPage() {
   if (currentPage.value < totalPages.value) {
     currentPage.value++
+    fetchOrders()
   }
+}
+
+/**
+ * Gets visible pages for pagination with ellipsis.
+ */
+function getVisiblePages() {
+  const pages = []
+  const total = totalPages.value
+  const current = currentPage.value
+  
+  if (total <= 7) {
+    // Show all pages if total is 7 or less
+    for (let i = 1; i <= total; i++) {
+      pages.push(i)
+    }
+  } else {
+    // Show first page, last page, current page, and 2 pages on each side
+    if (current <= 4) {
+      // Near the beginning
+      for (let i = 1; i <= 5; i++) {
+        pages.push(i)
+      }
+      pages.push('...')
+      pages.push(total)
+    } else if (current >= total - 3) {
+      // Near the end
+      pages.push(1)
+      pages.push('...')
+      for (let i = total - 4; i <= total; i++) {
+        pages.push(i)
+      }
+    } else {
+      // In the middle
+      pages.push(1)
+      pages.push('...')
+      for (let i = current - 1; i <= current + 1; i++) {
+        pages.push(i)
+      }
+      pages.push('...')
+      pages.push(total)
+    }
+  }
+  
+  return pages
+}
+
+/**
+ * Handles jumping to a specific page.
+ */
+function goToPage(page) {
+  if (typeof page === 'number' && page >= 1 && page <= totalPages.value) {
+    currentPage.value = page
+    fetchOrders()
+  }
+}
+
+/**
+ * Handles limit change and refetches data.
+ */
+function onLimitChange() {
+  currentPage.value = 1 // Reset to first page when changing limit
+  fetchOrders()
 }
 
 /**
@@ -536,6 +632,31 @@ function getStatusClass(status) {
     'cancelled': 'bg-red-100 text-red-800'
   }
   return statusMap[status?.toLowerCase()] || 'bg-gray-100 text-gray-800'
+}
+
+// Helper function to get customer display name (only firstName)
+function getCustomerDisplayName(order) {
+  const firstName = order.customerFirstName || ''
+  const email = order.customerEmail || ''
+  
+  if (firstName) {
+    return firstName
+  } else if (email) {
+    return email
+  } else {
+    // Fallback to customer ID if no name or email is available
+    return `Customer #${(order.customer_id || order.customerId || '').slice(-6).toUpperCase()}`
+  }
+}
+
+// Computed property to determine if there are more pages before the current one
+function hasMorePagesBefore() {
+  return currentPage.value > 2
+}
+
+// Computed property to determine if there are more pages after the current one
+function hasMorePagesAfter() {
+  return currentPage.value < totalPages.value - 1
 }
 
 // Initial data fetch on component mount

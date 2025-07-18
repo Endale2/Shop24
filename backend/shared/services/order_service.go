@@ -111,6 +111,116 @@ func ListOrdersByShopService(shopIDHex string) ([]models.Order, error) {
 	return repositories.ListOrders(context.Background(), bson.M{"shop_id": shopID})
 }
 
+// ListOrdersByShopPaginatedService returns paginated orders with customer information
+func ListOrdersByShopPaginatedService(shopIDHex string, page, limit int, searchQuery string) ([]map[string]interface{}, int64, error) {
+	shopID, err := primitive.ObjectIDFromHex(shopIDHex)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Build filter
+	filter := bson.M{"shop_id": shopID}
+
+	// Add search filter if provided
+	if searchQuery != "" {
+		// Search in order number, customer ID, or product names
+		searchRegex := primitive.Regex{Pattern: searchQuery, Options: "i"}
+		filter["$or"] = []bson.M{
+			{"order_number": searchRegex},
+			{"customer_id": searchRegex},
+			{"items.name": searchRegex},
+		}
+	}
+
+	// Get paginated orders
+	orders, total, err := repositories.ListOrdersPaginated(context.Background(), filter, page, limit)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Enhance orders with customer information
+	var enhancedOrders []map[string]interface{}
+	for _, order := range orders {
+		orderMap := map[string]interface{}{
+			"id":             order.ID,
+			"order_number":   order.OrderNumber,
+			"shop_id":        order.ShopID,
+			"customer_id":    order.CustomerID,
+			"items":          order.Items,
+			"subtotal":       order.Subtotal,
+			"discount_total": order.DiscountTotal,
+			"total":          order.Total,
+			"status":         order.Status,
+			"created_at":     order.CreatedAt,
+			"updated_at":     order.UpdatedAt,
+		}
+
+		// Try to get customer details
+		customer, err := repositories.GetCustomerByID(order.CustomerID.Hex())
+		if err != nil {
+			// Set empty customer fields
+			orderMap["customerFirstName"] = ""
+			orderMap["customerLastName"] = ""
+			orderMap["customerEmail"] = ""
+		} else if customer != nil {
+			orderMap["customerFirstName"] = customer.FirstName
+			orderMap["customerLastName"] = customer.LastName
+			orderMap["customerEmail"] = customer.Email
+		} else {
+			// Customer not found
+			orderMap["customerFirstName"] = ""
+			orderMap["customerLastName"] = ""
+			orderMap["customerEmail"] = ""
+		}
+
+		enhancedOrders = append(enhancedOrders, orderMap)
+	}
+
+	return enhancedOrders, total, nil
+}
+
+// GetOrderStatsByShopService returns order statistics for a shop
+func GetOrderStatsByShopService(shopIDHex string) (map[string]interface{}, error) {
+	shopID, err := primitive.ObjectIDFromHex(shopIDHex)
+	if err != nil {
+		return nil, err
+	}
+
+	// Get all orders for the shop
+	orders, err := repositories.ListOrders(context.Background(), bson.M{"shop_id": shopID})
+	if err != nil {
+		return nil, err
+	}
+
+	// Calculate statistics
+	totalOrders := len(orders)
+	totalRevenue := 0.0
+	pendingOrders := 0
+	deliveredOrders := 0
+
+	for _, order := range orders {
+		// Count orders by status
+		switch order.Status {
+		case "pending":
+			pendingOrders++
+		case "delivered":
+			deliveredOrders++
+		}
+
+		// Calculate revenue for certain statuses (paid, shipped, delivered)
+		if order.Status == "paid" || order.Status == "shipped" || order.Status == "delivered" {
+			totalRevenue += order.Total
+		}
+	}
+
+	return map[string]interface{}{
+		"total_orders":     totalOrders,
+		"total_revenue":    totalRevenue,
+		"pending_orders":   pendingOrders,
+		"delivered_orders": deliveredOrders,
+	}, nil
+}
+
 func UpdateOrderService(idHex string, updates bson.M) (*models.Order, error) {
 	updates["updated_at"] = time.Now()
 	if _, err := repositories.UpdateOrder(context.Background(), idHex, updates); err != nil {

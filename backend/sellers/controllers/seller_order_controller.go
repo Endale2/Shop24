@@ -3,7 +3,10 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
 	"time"
+
+	"math"
 
 	"github.com/Endale2/DRPS/shared/models"
 	"github.com/Endale2/DRPS/shared/services"
@@ -57,12 +60,73 @@ func ListOrders(c *gin.Context) {
 
 	// TODO: verify that shop belongs to seller
 
-	orders, err := services.ListOrdersByShopService(shopHex)
+	// Get pagination parameters
+	page := 1
+	limit := 10
+
+	if pageStr := c.Query("page"); pageStr != "" {
+		if p, err := strconv.Atoi(pageStr); err == nil && p > 0 {
+			page = p
+		}
+	}
+
+	if limitStr := c.Query("limit"); limitStr != "" {
+		if l, err := strconv.Atoi(limitStr); err == nil && l > 0 && l <= 100 {
+			limit = l
+		}
+	}
+
+	// Get search parameter
+	searchQuery := c.Query("search")
+
+	// Get paginated orders with customer information
+	orders, total, err := services.ListOrdersByShopPaginatedService(shopHex, page, limit, searchQuery)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	c.JSON(http.StatusOK, orders)
+
+	// Get order statistics
+	stats, err := services.GetOrderStatsByShopService(shopHex)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Calculate pagination info
+	totalPages := int(math.Ceil(float64(total) / float64(limit)))
+
+	c.JSON(http.StatusOK, gin.H{
+		"orders": orders,
+		"stats":  stats,
+		"pagination": gin.H{
+			"page":        page,
+			"limit":       limit,
+			"total":       total,
+			"total_pages": totalPages,
+		},
+	})
+}
+
+// GET    /seller/shops/:shopId/orders/stats
+func GetOrderStats(c *gin.Context) {
+	_, _ = c.Get("user_id")
+
+	shopHex := c.Param("shopId")
+	if _, err := primitive.ObjectIDFromHex(shopHex); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid shop ID"})
+		return
+	}
+
+	// TODO: verify that shop belongs to seller
+
+	stats, err := services.GetOrderStatsByShopService(shopHex)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, stats)
 }
 
 // GET    /seller/shops/:shopId/orders/:orderId

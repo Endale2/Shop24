@@ -77,10 +77,6 @@
               <FolderAddIcon class="w-5 h-5 mr-2" />
               Manage Segments
             </button>
-            <button class="flex-1 w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 border border-gray-300 text-base font-medium rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition duration-150 ease-in-out">
-              <PencilIcon class="w-5 h-5 mr-2" />
-              Edit Profile
-            </button>
             <button 
               @click="unlinkCustomer"
               class="flex-1 w-full sm:w-auto inline-flex items-center justify-center px-6 py-3 border border-red-300 text-base font-medium rounded-lg shadow-sm text-red-700 bg-white hover:bg-red-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition duration-150 ease-in-out"
@@ -150,16 +146,16 @@
         <h3 class="text-xl font-semibold text-gray-900 mb-4">Order History in This Shop</h3>
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center">
-            <div class="text-2xl font-bold text-gray-900">{{ customerHistory.order_count }}</div>
+            <div class="text-2xl font-bold text-gray-900">{{ filteredOrderCount }}</div>
             <div class="text-sm text-gray-600">Total Orders</div>
           </div>
           <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center">
-            <div class="text-2xl font-bold text-gray-900">${{ customerHistory.total_spend.toFixed(2) }}</div>
+            <div class="text-2xl font-bold text-gray-900">${{ filteredTotalSpend.toFixed(2) }}</div>
             <div class="text-sm text-gray-600">Total Spend</div>
           </div>
           <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center">
             <div class="text-2xl font-bold text-gray-900">
-              <span v-if="customerHistory.last_order">{{ formatDate(customerHistory.last_order.created_at) }}</span>
+              <span v-if="filteredLastOrder">{{ formatDate(filteredLastOrder.created_at) }}</span>
               <span v-else>—</span>
             </div>
             <div class="text-sm text-gray-600">Last Order</div>
@@ -377,6 +373,17 @@ const customerHistory = ref({ orders: [], order_count: 0, total_spend: 0, last_o
 
 // Computed
 const activeShop = computed(() => shopStore.activeShop)
+
+// Add a computed for filtered orders (paid/shipped/delivered only)
+const filteredOrders = computed(() => (customerHistory.value.orders || []).filter(order => ['paid', 'shipped', 'delivered'].includes((order.status || '').toLowerCase())))
+const filteredOrderCount = computed(() => filteredOrders.value.length)
+const filteredTotalSpend = computed(() => filteredOrders.value.reduce((sum, order) => sum + (order.total || 0), 0))
+const filteredLastOrder = computed(() => {
+  if (!filteredOrders.value.length) return null
+  return filteredOrders.value.reduce((latest, order) => {
+    return !latest || new Date(order.created_at) > new Date(latest.created_at) ? order : latest
+  }, null)
+})
 
 // Fetch data
 onMounted(async () => {

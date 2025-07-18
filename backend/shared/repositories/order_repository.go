@@ -42,7 +42,42 @@ func ListOrders(ctx context.Context, filter bson.M) ([]models.Order, error) {
 		}
 		out = append(out, o)
 	}
-	return out, nil
+	return out, err
+}
+
+// ListOrdersPaginated returns paginated orders with total count
+func ListOrdersPaginated(ctx context.Context, filter bson.M, page, limit int) ([]models.Order, int64, error) {
+	// Calculate skip value
+	skip := (page - 1) * limit
+
+	// Get total count
+	total, err := orderCol.CountDocuments(ctx, filter)
+	if err != nil {
+		return nil, 0, err
+	}
+
+	// Get paginated results
+	findOptions := options.Find().
+		SetSort(bson.D{{"created_at", -1}}).
+		SetSkip(int64(skip)).
+		SetLimit(int64(limit))
+
+	cur, err := orderCol.Find(ctx, filter, findOptions)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer cur.Close(ctx)
+
+	var out []models.Order
+	for cur.Next(ctx) {
+		var o models.Order
+		if err := cur.Decode(&o); err != nil {
+			continue
+		}
+		out = append(out, o)
+	}
+
+	return out, total, err
 }
 
 func UpdateOrder(ctx context.Context, hexID string, upd bson.M) (*mongo.UpdateResult, error) {

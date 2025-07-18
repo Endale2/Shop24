@@ -99,6 +99,7 @@ func SellerRoute(r *gin.Engine) {
 		{
 			orders.POST("", controllers.CreateOrder)
 			orders.GET("", controllers.ListOrders)
+			orders.GET("/stats", controllers.GetOrderStats)
 			orders.GET("/:orderId", controllers.GetOrder)
 			orders.GET("/:orderId/details", controllers.GetOrderWithCustomerDetails)
 			orders.PATCH("/:orderId", controllers.UpdateOrder)

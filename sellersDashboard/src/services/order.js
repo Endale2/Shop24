@@ -1,14 +1,43 @@
 import api from './api'
 
 export const orderService = {
-  async fetchAllByShop(shopId) {
-    const res = await api.get(`/seller/shops/${shopId}/orders`)
-    if (!Array.isArray(res.data)) return [];
-    return res.data.map(o => ({
+  async fetchAllByShop(shopId, page = 1, limit = 10, search = '') {
+    const params = new URLSearchParams({
+      page: page.toString(),
+      limit: limit.toString()
+    })
+    
+    if (search) {
+      params.append('search', search)
+    }
+    
+    const res = await api.get(`/seller/shops/${shopId}/orders?${params}`)
+    
+    // Handle both old format (array) and new format (object with orders and pagination)
+    let orders = []
+    let pagination = null
+    let stats = null
+    
+    if (Array.isArray(res.data)) {
+      // Old format - backward compatibility
+      orders = res.data
+    } else if (res.data && Array.isArray(res.data.orders)) {
+      // New format with pagination and stats
+      orders = res.data.orders
+      pagination = res.data.pagination
+      stats = res.data.stats
+    } else {
+      return { orders: [], pagination: null, stats: null }
+    }
+    
+    const mappedOrders = orders.map(o => ({
       id: o.ID ?? o.id,
       orderNumber: o.order_number ?? o.OrderNumber,
       shopId: o.shop_id ?? o.ShopID,
       customerId: o.customer_id ?? o.CustomerID,
+      customerFirstName: o.customerFirstName ?? o.customer_first_name ?? '',
+      customerLastName: o.customerLastName ?? o.customer_last_name ?? '',
+      customerEmail: o.customerEmail ?? o.customer_email ?? '',
       items: (o.Items ?? o.items ?? []).map(item => ({
         productId: item.product_id ?? item.ProductID,
         variantId: item.variant_id ?? item.VariantID,
@@ -27,6 +56,17 @@ export const orderService = {
       createdAt: o.CreatedAt ?? o.created_at ?? o.createdAt,
       updatedAt: o.UpdatedAt ?? o.updated_at ?? o.updatedAt,
     }))
+    
+    return {
+      orders: mappedOrders,
+      pagination: pagination,
+      stats: stats
+    }
+  },
+
+  async fetchOrderStats(shopId) {
+    const res = await api.get(`/seller/shops/${shopId}/orders/stats`)
+    return res.data
   },
 
   async fetchById(shopId, orderId) {
