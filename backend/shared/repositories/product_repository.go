@@ -171,6 +171,8 @@ func GetProductBySlug(slug string) (*models.Product, error) {
 }
 
 // GetProductsByFilterPaginated retrieves products matching a filter, paginated, and returns total count.
+// NOTE: Products are sorted by 'createdAt' descending (newest first) for performance and UX.
+// Ensure there is an index on 'createdAt' for optimal performance.
 func GetProductsByFilterPaginated(filter bson.M, page, limit int) ([]models.Product, int64, error) {
 	skip := (page - 1) * limit
 
@@ -180,7 +182,7 @@ func GetProductsByFilterPaginated(filter bson.M, page, limit int) ([]models.Prod
 	}
 
 	findOptions := options.Find()
-	findOptions.SetSort(bson.D{{"created_at", -1}})
+	findOptions.SetSort(bson.D{{"createdAt", -1}}) // newest first
 	findOptions.SetSkip(int64(skip))
 	findOptions.SetLimit(int64(limit))
 
