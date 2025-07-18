@@ -69,7 +69,7 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-600">Total Customers</p>
-            <p class="text-2xl font-bold text-gray-900">{{ customers.length }}</p>
+            <p class="text-2xl font-bold text-gray-900">{{ stats.total }}</p>
           </div>
         </div>
       </div>
@@ -81,7 +81,7 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-600">Segments</p>
-            <p class="text-2xl font-bold text-gray-900">{{ segments.length }}</p>
+            <p class="text-2xl font-bold text-gray-900">{{ stats.segments }}</p>
           </div>
         </div>
       </div>
@@ -93,7 +93,7 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-600">This Month</p>
-            <p class="text-2xl font-bold text-gray-900">{{ newCustomersThisMonth }}</p>
+            <p class="text-2xl font-bold text-gray-900">{{ stats.thisMonth }}</p>
           </div>
         </div>
       </div>
@@ -105,7 +105,7 @@
           </div>
           <div class="ml-4">
             <p class="text-sm font-medium text-gray-600">Segmented</p>
-            <p class="text-2xl font-bold text-gray-900">{{ segmentedCustomersCount }}</p>
+            <p class="text-2xl font-bold text-gray-900">{{ stats.segmented }}</p>
           </div>
         </div>
       </div>
@@ -199,7 +199,7 @@
 
     <!-- Content -->
     <div v-else>
-      <div v-if="filteredCustomers.length">
+      <div v-if="customers.length">
         <!-- List View -->
         <div v-if="currentView === 'list'" class="overflow-x-auto bg-white shadow-lg rounded-xl">
           <table class="min-w-full divide-y divide-gray-200">
@@ -214,7 +214,7 @@
             </thead>
             <tbody class="divide-y divide-gray-200">
               <tr
-                v-for="(cust, i) in filteredCustomers"
+                v-for="(cust, i) in customers"
                 :key="cust.id"
                 class="transition duration-150 ease-in-out transform hover:scale-[1.005] hover:bg-green-50 cursor-pointer group"
                 :class="{ 'bg-gray-50': i % 2 === 1 }"
@@ -289,7 +289,7 @@
         <!-- Card View -->
         <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           <div
-            v-for="cust in filteredCustomers"
+            v-for="cust in customers"
             :key="cust.id"
             class="bg-white rounded-xl shadow-lg overflow-hidden cursor-pointer transform hover:scale-105 hover:shadow-xl transition duration-200 ease-in-out flex flex-col group"
           >
@@ -369,6 +369,21 @@
           </p>
         </div>
       </div>
+    </div>
+
+    <!-- Pagination Controls -->
+    <div v-if="total > pageSize" class="flex justify-center mt-8">
+      <button
+        :disabled="page === 1"
+        @click="handlePageChange(page - 1)"
+        class="px-4 py-2 mx-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+      >Prev</button>
+      <span class="px-4 py-2 mx-1">Page {{ page }} of {{ Math.ceil(total / pageSize) }}</span>
+      <button
+        :disabled="page >= Math.ceil(total / pageSize)"
+        @click="handlePageChange(page + 1)"
+        class="px-4 py-2 mx-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+      >Next</button>
     </div>
 
     <!-- Create Segment Modal -->
@@ -485,7 +500,7 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useShopStore } from '@/store/shops'
 import { customerService } from '@/services/customer'
@@ -521,6 +536,10 @@ const showCreateSegmentModal = ref(false)
 const showSegmentModal = ref(false)
 const selectedCustomer = ref(null)
 const creatingSegment = ref(false)
+const page = ref(1)
+const pageSize = ref(10)
+const total = ref(0)
+const stats = ref({ total: 0, segments: 0, thisMonth: 0, segmented: 0 })
 
 // New segment form
 const newSegment = ref({
@@ -532,65 +551,78 @@ const newSegment = ref({
 // Computed
 const activeShop = computed(() => shopStore.activeShop)
 
-const filteredCustomers = computed(() => {
-  let filtered = customers.value
-  
-  // Filter by search term
-  const term = search.value.trim().toLowerCase()
-  if (term) {
-    filtered = filtered.filter(c => {
-      const fullName = `${c.firstName} ${c.lastName}`.toLowerCase()
-      return fullName.includes(term) || (c.email?.toLowerCase().includes(term))
-    })
-  }
-  
-  // Filter by segment
-  if (selectedSegment.value) {
-    filtered = filtered.filter(c => isCustomerInSegment(c.id, selectedSegment.value))
-  }
-  
-  return filtered
-})
+const filteredCustomers = computed(() => customers.value) // No local filtering
 
-const newCustomersThisMonth = computed(() => {
-  const now = new Date()
-  const thisMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-  return customers.value.filter(c => new Date(c.createdAt) >= thisMonth).length
-})
-
-const segmentedCustomersCount = computed(() => {
-  return customers.value.filter(c => getCustomerSegments(c.id).length > 0).length
-})
+const newCustomersThisMonth = computed(() => stats.value.thisMonth)
+const segmentedCustomersCount = computed(() => stats.value.segmented)
 
 // Fetch data
 onMounted(async () => {
-  console.log('🔎 customers  activeShop is:', activeShop.value)
   if (!activeShop.value?.id) {
     router.replace({ name: 'ShopSelection' })
     return
   }
-  await refreshData()
+  await refreshAll()
 })
 
-// Refresh both customers and segments data
-async function refreshData() {
+watch([search, selectedSegment, page], async () => {
+  await fetchCustomers()
+})
+
+async function refreshAll() {
   loading.value = true
   try {
-    const [customersResult, segmentsResult] = await Promise.all([
-      customerService.fetchAll(activeShop.value.id),
-      customerSegmentService.fetchAll(activeShop.value.id)
+    await Promise.all([
+      fetchCustomers(),
+      fetchSegments(),
+      fetchStats()
     ])
-    customers.value = Array.isArray(customersResult) ? customersResult : []
-    segments.value = Array.isArray(segmentsResult) ? segmentsResult : []
   } catch (e) {
-    console.error(e)
     error.value = 'Failed to load customers. Please try again later.'
   } finally {
     loading.value = false
   }
 }
 
-// Methods
+async function fetchCustomers() {
+  loading.value = true
+  try {
+    const { customers: custs, total: t, page: p, pageSize: ps } = await customerService.fetchAll(
+      activeShop.value.id,
+      {
+        page: page.value,
+        limit: pageSize.value,
+        search: search.value,
+        segmentId: selectedSegment.value || ''
+      }
+    )
+    customers.value = custs
+    total.value = t
+    // page.value = p // keep current
+    pageSize.value = ps
+  } catch (e) {
+    error.value = 'Failed to load customers. Please try again.'
+  } finally {
+    loading.value = false
+  }
+}
+
+async function fetchSegments() {
+  try {
+    segments.value = await customerSegmentService.fetchAll(activeShop.value.id)
+  } catch (e) {
+    error.value = 'Failed to load segments.'
+  }
+}
+
+async function fetchStats() {
+  try {
+    stats.value = await customerService.fetchStats(activeShop.value.id)
+  } catch (e) {
+    error.value = 'Failed to load stats.'
+  }
+}
+
 function viewButtonClass(view) {
   return view === currentView.value
     ? 'bg-green-600 text-white hover:bg-green-700 shadow-inner'
@@ -625,8 +657,7 @@ function goToCustomerDetail(customerId) {
 }
 
 function getCustomerSegments(customerId) {
-  // Find segments that contain this customer
-  return segments.value.filter(segment => 
+  return segments.value.filter(segment =>
     segment.customer_ids && segment.customer_ids.includes(customerId)
   )
 }
@@ -644,15 +675,13 @@ function getCustomersInSegment(segmentId) {
 
 async function createSegment() {
   if (!newSegment.value.name.trim()) return
-  
   creatingSegment.value = true
   try {
     await customerSegmentService.create(activeShop.value.id, newSegment.value)
     showCreateSegmentModal.value = false
     newSegment.value = { name: '', description: '', color: '#3B82F6' }
-    await refreshData() // Refresh all data
+    await refreshAll()
   } catch (e) {
-    console.error('Failed to create segment:', e)
     error.value = 'Failed to create segment. Please try again.'
   } finally {
     creatingSegment.value = false
@@ -662,9 +691,8 @@ async function createSegment() {
 async function addCustomerToSegment(customerId, segmentId) {
   try {
     await customerSegmentService.addCustomer(activeShop.value.id, segmentId, customerId)
-    await refreshData() // Refresh all data
+    await refreshAll()
   } catch (e) {
-    console.error('Failed to add customer to segment:', e)
     error.value = 'Failed to add customer to segment. Please try again.'
   }
 }
@@ -672,27 +700,30 @@ async function addCustomerToSegment(customerId, segmentId) {
 async function removeCustomerFromSegment(customerId, segmentId) {
   try {
     await customerSegmentService.removeCustomer(activeShop.value.id, segmentId, customerId)
-    await refreshData() // Refresh all data
+    await refreshAll()
   } catch (e) {
-    console.error('Failed to remove customer from segment:', e)
     error.value = 'Failed to remove customer from segment. Please try again.'
   }
 }
 
 async function unlinkCustomer(linkId) {
   if (!confirm('Are you sure you want to remove this customer from your shop?')) return
-  
   try {
     await customerService.delete(activeShop.value.id, linkId)
-    await refreshData() // Refresh all data
+    await refreshAll()
   } catch (e) {
-    console.error('Failed to unlink customer:', e)
     error.value = 'Failed to remove customer. Please try again.'
   }
 }
 
 function goToSegmentsPage() {
   router.push({ name: 'CustomerSegments' })
+}
+
+function handlePageChange(newPage) {
+  if (newPage !== page.value) {
+    page.value = newPage
+  }
 }
 </script>
 

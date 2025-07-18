@@ -3,20 +3,28 @@ import api from './api'
 
 export const customerService = {
   /**
-   * Fetch all customers for a given shop.
+   * Fetch all customers for a given shop, paginated and filtered by search/segment.
    * @param {string} shopId
-   * @returns {Promise<Array<Object>>}
+   * @param {Object} options
+   * @param {number} options.page
+   * @param {number} options.limit
+   * @param {string} options.search
+   * @param {string} options.segmentId
+   * @returns {Promise<Object>} { customers, total, page, pageSize }
    */
-  async fetchAll(shopId) {
-    const res = await api.get(`/seller/shops/${shopId}/customers`)
-    // normalize list entries
-    // The incoming data structure wraps each customer in a 'customer' key.
-    // We need to access c.customer for the actual customer details.
-    return res.data.map(item => ({ // Renamed 'c' to 'item' for clarity
-      id:           item.customer.id, // Access customer.id
+  async fetchAll(shopId, { page = 1, limit = 10, search = '', segmentId = '' } = {}) {
+    const params = []
+    if (page) params.push(`page=${page}`)
+    if (limit) params.push(`limit=${limit}`)
+    if (search) params.push(`search=${encodeURIComponent(search)}`)
+    if (segmentId) params.push(`segmentId=${segmentId}`)
+    const query = params.length ? `?${params.join('&')}` : ''
+    const res = await api.get(`/seller/shops/${shopId}/customers${query}`)
+    // Normalize list entries
+    const customers = res.data.customers.map(item => ({
+      id:           item.customer.id,
       firstName:    item.customer.firstName,
       lastName:     item.customer.lastName,
-      username:     item.customer.username,
       email:        item.customer.email,
       phone:        item.customer.phone,
       address:      item.customer.address,
@@ -26,9 +34,25 @@ export const customerService = {
       country:      item.customer.country,
       createdAt:    item.customer.createdAt,
       updatedAt:    item.customer.updatedAt,
-      linkId:       item.linkId ?? null, // linkId is outside the customer object
-      profile_image: item.customer.profile_image // Add profile_image
+      linkId:       item.linkId ?? null,
+      profile_image: item.customer.profile_image
     }))
+    return {
+      customers,
+      total: res.data.total,
+      page: res.data.page,
+      pageSize: res.data.pageSize
+    }
+  },
+
+  /**
+   * Fetch customer dashboard statistics.
+   * @param {string} shopId
+   * @returns {Promise<Object>} { total, segments, thisMonth, segmented }
+   */
+  async fetchStats(shopId) {
+    const res = await api.get(`/seller/shops/${shopId}/customers/stats`)
+    return res.data
   },
 
   /**
@@ -45,7 +69,6 @@ export const customerService = {
       id: c.id,
       firstName: c.firstName,
       lastName: c.lastName,
-      username: c.username,
       email: c.email,
       phone: c.phone,
       address: c.address,

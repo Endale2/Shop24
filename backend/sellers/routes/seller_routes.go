@@ -37,6 +37,7 @@ func SellerRoute(r *gin.Engine) {
 		{
 			custGroup.POST("/link", controllers.LinkCustomer)
 			custGroup.GET("", controllers.GetLinkedCustomers)
+			custGroup.GET("/stats", controllers.GetCustomerStats)
 			custGroup.GET("/:customerId", controllers.GetCustomerDetail)
 			custGroup.DELETE("/link/:linkId", controllers.UnlinkCustomer)
 			custGroup.GET("/:customerId/history", controllers.GetCustomerOrderHistory)

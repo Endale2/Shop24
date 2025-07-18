@@ -1,6 +1,10 @@
 package controllers
 
 import (
+	"fmt"
+	"strings"
+	"time"
+
 	"net/http"
 
 	"github.com/Endale2/DRPS/sellers/models"
@@ -60,25 +64,125 @@ func GetLinkedCustomers(c *gin.Context) {
 		return
 	}
 
+	// Pagination params
+	page := 1
+	limit := 10
+	if p := c.Query("page"); p != "" {
+		fmt.Sscanf(p, "%d", &page)
+		if page < 1 {
+			page = 1
+		}
+	}
+	if l := c.Query("limit"); l != "" {
+		fmt.Sscanf(l, "%d", &limit)
+		if limit < 1 || limit > 100 {
+			limit = 10
+		}
+	}
+	search := c.Query("search")
+	segmentId := c.Query("segmentId")
+
+	// Get all links for this shop
 	links, err := scService.GetCustomerLinksForShop(shop.ID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not fetch links"})
 		return
 	}
 
-	// collect actual Customer records
-	var result []interface{}
+	// Optionally filter by segment
+	var segmentCustomerIDs map[primitive.ObjectID]bool
+	if segmentId != "" {
+		segID, err := primitive.ObjectIDFromHex(segmentId)
+		if err == nil {
+			// Fetch all segments and find the one with segID
+			allSegments, _ := customerSegmentSvc.GetCustomerSegmentsByShopService(shop.ID)
+			for _, seg := range allSegments {
+				if seg.ID == segID {
+					segmentCustomerIDs = make(map[primitive.ObjectID]bool)
+					for _, cid := range seg.CustomerIDs {
+						segmentCustomerIDs[cid] = true
+					}
+					break
+				}
+			}
+		}
+	}
+
+	// Collect and filter customers
+	var customers []sharedmodels.Customer
 	for _, link := range links {
 		cust, err := scService.GetCustomerByIDService(link.CustomerID.Hex())
 		if err == nil {
-			// optionally add the link ID so you can unlink later:
-			result = append(result, gin.H{
-				"linkId":   link.ID.Hex(),
-				"customer": cust,
-			})
+			// Filter by segment if needed
+			if segmentCustomerIDs != nil {
+				if !segmentCustomerIDs[link.CustomerID] {
+					continue
+				}
+			}
+			// Filter by search
+			if search != "" {
+				term := strings.ToLower(search)
+				fullName := strings.ToLower(cust.FirstName + " " + cust.LastName)
+				email := strings.ToLower(cust.Email)
+				if !strings.Contains(fullName, term) && !strings.Contains(email, term) {
+					continue
+				}
+			}
+			// Convert to sharedmodels.Customer if needed
+			sharedCust, ok := interface{}(cust).(sharedmodels.Customer)
+			if ok {
+				customers = append(customers, sharedCust)
+			} else {
+				// If not directly castable, manually map fields
+				customers = append(customers, sharedmodels.Customer{
+					ID:           cust.ID,
+					FirstName:    cust.FirstName,
+					LastName:     cust.LastName,
+					ProfileImage: cust.ProfileImage,
+					Email:        cust.Email,
+					Phone:        cust.Phone,
+					Address:      cust.Address,
+					City:         cust.City,
+					State:        cust.State,
+					PostalCode:   cust.PostalCode,
+					Country:      cust.Country,
+					CreatedAt:    cust.CreatedAt,
+					UpdatedAt:    cust.UpdatedAt,
+				})
+			}
 		}
 	}
-	c.JSON(http.StatusOK, result)
+
+	total := len(customers)
+	start := (page - 1) * limit
+	end := start + limit
+	if start > total {
+		start = total
+	}
+	if end > total {
+		end = total
+	}
+	pagedCustomers := customers[start:end]
+
+	// Return with linkId for each
+	var result []gin.H
+	for _, link := range links {
+		for _, cust := range pagedCustomers {
+			if link.CustomerID == cust.ID {
+				result = append(result, gin.H{
+					"linkId":   link.ID.Hex(),
+					"customer": cust,
+				})
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"customers": result,
+		"total":     total,
+		"page":      page,
+		"pageSize":  limit,
+	})
 }
 
 // Unlink (remove) a customer from this shop.
@@ -473,5 +577,83 @@ func GetCustomerOrderHistory(c *gin.Context) {
 			}
 			return nil
 		}(),
+	})
+}
+
+// Customer statistics for dashboard
+// GET /seller/shops/:shopId/customers/stats
+func GetCustomerStats(c *gin.Context) {
+	sellerHex, _ := c.Get("user_id")
+	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
+
+	shopIDhex := c.Param("shopId")
+	shop, err := scService.GetShopByIDService(shopIDhex)
+	if err != nil || shop.OwnerID != sellerID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "not your shop"})
+		return
+	}
+
+	links, err := scService.GetCustomerLinksForShop(shop.ID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not fetch links"})
+		return
+	}
+
+	// Get all customers
+	var customers []sharedmodels.Customer
+	for _, link := range links {
+		cust, err := scService.GetCustomerByIDService(link.CustomerID.Hex())
+		if err == nil {
+			sharedCust, ok := interface{}(cust).(sharedmodels.Customer)
+			if ok {
+				customers = append(customers, sharedCust)
+			} else {
+				customers = append(customers, sharedmodels.Customer{
+					ID:           cust.ID,
+					FirstName:    cust.FirstName,
+					LastName:     cust.LastName,
+					ProfileImage: cust.ProfileImage,
+					Email:        cust.Email,
+					Phone:        cust.Phone,
+					Address:      cust.Address,
+					City:         cust.City,
+					State:        cust.State,
+					PostalCode:   cust.PostalCode,
+					Country:      cust.Country,
+					CreatedAt:    cust.CreatedAt,
+					UpdatedAt:    cust.UpdatedAt,
+				})
+			}
+		}
+	}
+
+	// Segments
+	segments, _ := customerSegmentSvc.GetCustomerSegmentsByShopService(shop.ID)
+
+	// This month
+	now := time.Now()
+	thisMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, now.Location())
+	newCustomers := 0
+	segmented := 0
+	segmentMap := make(map[primitive.ObjectID]bool)
+	for _, seg := range segments {
+		for _, cid := range seg.CustomerIDs {
+			segmentMap[cid] = true
+		}
+	}
+	for _, cust := range customers {
+		if cust.CreatedAt.After(thisMonth) {
+			newCustomers++
+		}
+		if segmentMap[cust.ID] {
+			segmented++
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"total":     len(customers),
+		"segments":  len(segments),
+		"thisMonth": newCustomers,
+		"segmented": segmented,
 	})
 }
