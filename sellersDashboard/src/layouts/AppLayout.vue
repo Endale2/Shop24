@@ -3,7 +3,7 @@
     <transition name="fade">
       <div
         v-if="showSidebar"
-        class="fixed inset-0 bg-black bg-opacity-40 z-40 md:hidden"
+        class="fixed inset-0 bg-white/30 backdrop-blur-none z-40 md:hidden"
         @click="showSidebar = false"
       />
     </transition>
