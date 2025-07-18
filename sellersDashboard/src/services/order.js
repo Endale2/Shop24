@@ -177,5 +177,42 @@ export const orderService = {
 
   async delete(shopId, orderId) {
     await api.delete(`/seller/shops/${shopId}/orders/${orderId}`)
+  },
+
+  async fetchAllForDashboard(shopId) {
+    // Use dedicated dashboard endpoint that returns all orders without pagination
+    const res = await api.get(`/seller/shops/${shopId}/orders/dashboard`)
+    
+    // This endpoint returns a simple array of orders
+    const orders = Array.isArray(res.data) ? res.data : []
+    
+    const mappedOrders = orders.map(o => ({
+      id: o.ID ?? o.id,
+      orderNumber: o.order_number ?? o.OrderNumber,
+      shopId: o.shop_id ?? o.ShopID,
+      customerId: o.customer_id ?? o.CustomerID,
+      customerFirstName: o.customerFirstName ?? o.customer_first_name ?? '',
+      customerLastName: o.customerLastName ?? o.customer_last_name ?? '',
+      customerEmail: o.customerEmail ?? o.customer_email ?? '',
+      items: (o.Items ?? o.items ?? []).map(item => ({
+        productId: item.product_id ?? item.ProductID,
+        variantId: item.variant_id ?? item.VariantID,
+        variantName: item.variant_name ?? item.VariantName,
+        name: item.Name ?? item.name,
+        quantity: item.Quantity ?? item.quantity,
+        unitPrice: Number(item.unit_price ?? item.UnitPrice) || 0,
+        totalPrice: Number(item.total_price ?? item.TotalPrice) || 0,
+        image: item.image ?? item.Image,
+      })),
+      subtotal: Number(o.Subtotal ?? o.subtotal) || 0,
+      discountTotal: Number(o.discount_total ?? o.DiscountTotal) || 0,
+      total: Number(o.Total ?? o.total) || 0,
+      status: o.Status ?? o.status,
+      couponCode: o.coupon_code ?? o.CouponCode,
+      createdAt: o.CreatedAt ?? o.created_at ?? o.createdAt,
+      updatedAt: o.UpdatedAt ?? o.updated_at ?? o.updatedAt,
+    }))
+    
+    return mappedOrders
   }
 } 

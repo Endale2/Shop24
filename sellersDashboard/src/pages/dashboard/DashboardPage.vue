@@ -611,7 +611,7 @@ async function loadDashboardData() {
   try {
     // Load data in parallel
     const [orders, products, customers, discounts] = await Promise.all([
-      orderService.fetchAllByShop(shopId.value),
+      orderService.fetchAllForDashboard(shopId.value),
       productService.fetchAllByShop(shopId.value),
       customerService.fetchAll(shopId.value),
       discountService.fetchAllByShop(shopId.value)

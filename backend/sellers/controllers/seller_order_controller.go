@@ -9,6 +9,7 @@ import (
 	"math"
 
 	"github.com/Endale2/DRPS/shared/models"
+	"github.com/Endale2/DRPS/shared/repositories"
 	"github.com/Endale2/DRPS/shared/services"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
@@ -185,6 +186,66 @@ func GetOrderWithCustomerDetails(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, orderWithCustomer)
+}
+
+// GET    /seller/shops/:shopId/orders/dashboard
+func GetOrdersForDashboard(c *gin.Context) {
+	_, _ = c.Get("user_id")
+
+	shopHex := c.Param("shopId")
+	if _, err := primitive.ObjectIDFromHex(shopHex); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid shop ID"})
+		return
+	}
+
+	// TODO: verify that shop belongs to seller
+
+	// Get all orders for dashboard (no pagination)
+	orders, err := services.ListOrdersByShopService(shopHex)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	// Enhance orders with customer information
+	var enhancedOrders []map[string]interface{}
+	for _, order := range orders {
+		orderMap := map[string]interface{}{
+			"id":             order.ID,
+			"order_number":   order.OrderNumber,
+			"shop_id":        order.ShopID,
+			"customer_id":    order.CustomerID,
+			"items":          order.Items,
+			"subtotal":       order.Subtotal,
+			"discount_total": order.DiscountTotal,
+			"total":          order.Total,
+			"status":         order.Status,
+			"created_at":     order.CreatedAt,
+			"updated_at":     order.UpdatedAt,
+		}
+
+		// Try to get customer details
+		customer, err := repositories.GetCustomerByID(order.CustomerID.Hex())
+		if err != nil {
+			// Set empty customer fields
+			orderMap["customerFirstName"] = ""
+			orderMap["customerLastName"] = ""
+			orderMap["customerEmail"] = ""
+		} else if customer != nil {
+			orderMap["customerFirstName"] = customer.FirstName
+			orderMap["customerLastName"] = customer.LastName
+			orderMap["customerEmail"] = customer.Email
+		} else {
+			// Customer not found
+			orderMap["customerFirstName"] = ""
+			orderMap["customerLastName"] = ""
+			orderMap["customerEmail"] = ""
+		}
+
+		enhancedOrders = append(enhancedOrders, orderMap)
+	}
+
+	c.JSON(http.StatusOK, enhancedOrders)
 }
 
 // PATCH  /seller/shops/:shopId/orders/:orderId
