@@ -1,7 +1,7 @@
 import api from './api'
 
 export const orderService = {
-  async fetchAllByShop(shopId, page = 1, limit = 10, search = '') {
+  async fetchAllByShop(shopId, page = 1, limit = 10, search = '', status = '') {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString()
@@ -9,6 +9,9 @@ export const orderService = {
     
     if (search) {
       params.append('search', search)
+    }
+    if (status && status !== 'all') {
+      params.append('status', status)
     }
     
     const res = await api.get(`/seller/shops/${shopId}/orders?${params}`)

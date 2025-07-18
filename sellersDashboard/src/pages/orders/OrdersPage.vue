@@ -4,6 +4,61 @@
       Orders
     </h2>
 
+    <!-- Summary Cards -->
+    <div v-if="!loading && !error" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+      <div class="bg-white rounded-lg shadow p-4">
+        <div class="flex items-center">
+          <div class="p-2 bg-green-200 rounded-lg">
+            <svg class="w-6 h-6 text-green-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4" />
+            </svg>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-500">Completed Orders</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ completedOrdersCount }}</p>
+            <p class="text-xs text-gray-400 mt-1">(Excludes Pending and Cancelled)</p>
+          </div>
+        </div>
+      </div>
+      <div class="bg-white rounded-lg shadow p-4">
+        <div class="flex items-center">
+          <div class="p-2 bg-purple-100 rounded-lg">
+            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
+            </svg>
+          </div>
+          <div class="ml-4">
+            <p class="text-sm font-medium text-gray-500">Total Revenue</p>
+            <p class="text-2xl font-semibold text-gray-900">{{ formatPrice(orderStats.total_revenue) }}</p>
+            <p class="text-xs text-gray-400 mt-1">(Paid, Shipped, and Delivered orders only)</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Filter Tabs -->
+    <div v-if="!loading && !error" class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-6">
+      <div class="flex flex-wrap gap-3">
+        <button
+          v-for="tab in statusTabs"
+          :key="tab.value"
+          type="button"
+          @click.prevent="onTabClick(tab.value)"
+          :class="[
+            'px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center',
+            statusFilter === tab.value
+              ? 'bg-green-600 text-white'
+              : getTabColor(tab.value)
+          ]"
+        >
+          {{ tab.label }}
+          <span class="ml-2 bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full text-xs" :class="statusFilter === tab.value ? 'bg-white text-green-700' : ''">
+            {{ getTabCount(tab.value) }}
+          </span>
+        </button>
+      </div>
+    </div>
+
     <div class="flex flex-col sm:flex-row justify-between items-center mb-6 space-y-4 sm:space-y-0">
       <div class="w-full sm:w-1/2 relative">
         <input
@@ -15,105 +70,8 @@
         />
         <SearchIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
       </div>
-
-      <div class="flex space-x-4 items-center">
-        <select
-          v-model="itemsPerPage"
-          @change="onLimitChange"
-          class="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-150 ease-in-out shadow-sm"
-        >
-          <option value="10">10 per page</option>
-          <option value="25">25 per page</option>
-          <option value="50">50 per page</option>
-          <option value="100">100 per page</option>
-        </select>
-
-        <div class="inline-flex rounded-lg shadow-sm overflow-hidden border border-gray-200 bg-gray-50" role="group">
-          <button
-            @click="currentView = 'list'"
-            :class="[
-              'px-5 py-2.5 text-sm font-medium focus:z-10 focus:ring-2 focus:ring-green-500 focus:outline-none transition-colors duration-200 ease-in-out',
-              currentView === 'list'
-                ? 'bg-green-600 text-white hover:bg-green-700 shadow-inner'
-                : 'bg-gray-50 text-gray-700 hover:bg-gray-200'
-            ]"
-          >
-            <ListIcon class="w-5 h-5 inline-block mr-1" />
-            List View
-          </button>
-          <button
-            @click="currentView = 'grid'"
-            :class="[
-              'px-5 py-2.5 text-sm font-medium focus:z-10 focus:ring-2 focus:ring-green-500 focus:outline-none transition-colors duration-200 ease-in-out',
-              currentView === 'grid'
-                ? 'bg-green-600 text-white hover:bg-green-700 shadow-inner'
-                : 'bg-gray-50 text-gray-700 hover:bg-gray-200'
-            ]"
-          >
-            <GridIcon class="w-5 h-5 inline-block mr-1" />
-            Grid View
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- Stats Summary -->
-    <div v-if="!loading && !error" class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-      <div class="bg-white rounded-lg shadow p-4">
-        <div class="flex items-center">
-          <div class="p-2 bg-blue-100 rounded-lg">
-            <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path>
-            </svg>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-500">Total Orders</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ orderStats.total_orders }}</p>
-          </div>
-        </div>
-      </div>
-      
-      <div class="bg-white rounded-lg shadow p-4">
-        <div class="flex items-center">
-          <div class="p-2 bg-yellow-100 rounded-lg">
-            <svg class="w-6 h-6 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-500">Pending</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ orderStats.pending_orders }}</p>
-          </div>
-        </div>
-      </div>
-      
-      <div class="bg-white rounded-lg shadow p-4">
-        <div class="flex items-center">
-          <div class="p-2 bg-green-100 rounded-lg">
-            <svg class="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-500">Delivered</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ orderStats.delivered_orders }}</p>
-          </div>
-        </div>
-      </div>
-      
-      <div class="bg-white rounded-lg shadow p-4">
-        <div class="flex items-center">
-          <div class="p-2 bg-purple-100 rounded-lg">
-            <svg class="w-6 h-6 text-purple-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"></path>
-            </svg>
-          </div>
-          <div class="ml-4">
-            <p class="text-sm font-medium text-gray-500">Total Revenue</p>
-            <p class="text-2xl font-semibold text-gray-900">{{ formatPrice(orderStats.total_revenue) }}</p>
-          </div>
-        </div>
-      </div>
+      <!-- Removed status dropdown and itemsPerPage dropdown -->
+      <div></div>
     </div>
 
     <div v-if="loading">
@@ -353,9 +311,29 @@ let searchTimeout = null // To debounce search input
 
 // Backend pagination state
 const currentPage = ref(1)
-const itemsPerPage = ref(10)
+const itemsPerPage = ref(25) // Fixed value, not user-changeable
 const totalOrders = ref(0)
 const totalPages = ref(0)
+
+// Status filter state
+const statusFilter = ref('all')
+
+// Status filter tabs
+const statusTabs = [
+  { label: 'All', value: 'all' },
+  { label: 'Pending', value: 'pending' },
+  { label: 'Paid', value: 'paid' },
+  { label: 'Shipped', value: 'shipped' },
+  { label: 'Delivered', value: 'delivered' },
+  { label: 'Cancelled', value: 'cancelled' },
+]
+
+function onTabClick(val) {
+  if (statusFilter.value !== val) {
+    statusFilter.value = val
+    applyFilters()
+  }
+}
 
 // Backend stats state
 const orderStats = ref({
@@ -404,7 +382,7 @@ function viewButtonClass(view) {
 }
 
 /**
- * Fetches orders from the service with pagination.
+ * Fetches orders from the service with pagination and status filter.
  */
 async function fetchOrders() {
   if (!activeShop.value?.id) {
@@ -415,12 +393,13 @@ async function fetchOrders() {
   loading.value = true
   error.value = null
   try {
-    // Fetch orders using the shop ID with pagination and search
+    // Fetch orders using the shop ID with pagination, search, and status
     const response = await orderService.fetchAllByShop(
       activeShop.value.id, 
       currentPage.value, 
       itemsPerPage.value,
-      searchQuery.value
+      searchQuery.value,
+      statusFilter.value
     )
     
     console.log('Fetched orders response:', response) // Debug log
@@ -547,14 +526,6 @@ function goToPage(page) {
 }
 
 /**
- * Handles limit change and refetches data.
- */
-function onLimitChange() {
-  currentPage.value = 1 // Reset to first page when changing limit
-  fetchOrders()
-}
-
-/**
  * Navigates to the order detail page.
  * @param {string} orderId - The ID of the order.
  */
@@ -657,6 +628,43 @@ function hasMorePagesBefore() {
 // Computed property to determine if there are more pages after the current one
 function hasMorePagesAfter() {
   return currentPage.value < totalPages.value - 1
+}
+
+// Add a computed property for completed orders (excluding pending and cancelled)
+const completedOrdersCount = computed(() => {
+  const stats = orderStats.value
+  return (
+    (stats.total_orders || 0)
+    - (stats.pending_orders || 0)
+    - (stats.cancelled_orders || 0)
+  )
+})
+
+// Helper to get the count for each tab
+function getTabCount(val) {
+  const stats = orderStats.value
+  switch (val) {
+    case 'all': return stats.total_orders ?? 0
+    case 'pending': return stats.pending_orders ?? 0
+    case 'paid': return stats.paid_orders ?? 0
+    case 'shipped': return stats.shipped_orders ?? 0
+    case 'delivered': return stats.delivered_orders ?? 0
+    case 'cancelled': return stats.cancelled_orders ?? 0
+    default: return null
+  }
+}
+
+// Helper to get color classes for each status tab
+function getTabColor(val) {
+  switch (val) {
+    case 'pending': return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200';
+    case 'paid': return 'bg-blue-100 text-blue-800 hover:bg-blue-200';
+    case 'shipped': return 'bg-purple-100 text-purple-800 hover:bg-purple-200';
+    case 'delivered': return 'bg-green-100 text-green-800 hover:bg-green-200';
+    case 'cancelled': return 'bg-red-100 text-red-800 hover:bg-red-200';
+    case 'all':
+    default: return 'bg-gray-100 text-gray-700 hover:bg-gray-200';
+  }
 }
 
 // Initial data fetch on component mount

@@ -80,8 +80,11 @@ func ListOrders(c *gin.Context) {
 	// Get search parameter
 	searchQuery := c.Query("search")
 
+	// Get status parameter
+	status := c.Query("status")
+
 	// Get paginated orders with customer information
-	orders, total, err := services.ListOrdersByShopPaginatedService(shopHex, page, limit, searchQuery)
+	orders, total, err := services.ListOrdersByShopPaginatedService(shopHex, page, limit, searchQuery, status)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

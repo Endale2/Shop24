@@ -112,7 +112,7 @@ func ListOrdersByShopService(shopIDHex string) ([]models.Order, error) {
 }
 
 // ListOrdersByShopPaginatedService returns paginated orders with customer information
-func ListOrdersByShopPaginatedService(shopIDHex string, page, limit int, searchQuery string) ([]map[string]interface{}, int64, error) {
+func ListOrdersByShopPaginatedService(shopIDHex string, page, limit int, searchQuery string, status string) ([]map[string]interface{}, int64, error) {
 	shopID, err := primitive.ObjectIDFromHex(shopIDHex)
 	if err != nil {
 		return nil, 0, err
@@ -130,6 +130,11 @@ func ListOrdersByShopPaginatedService(shopIDHex string, page, limit int, searchQ
 			{"customer_id": searchRegex},
 			{"items.name": searchRegex},
 		}
+	}
+
+	// Add status filter if provided
+	if status != "" && status != "all" {
+		filter["status"] = status
 	}
 
 	// Get paginated orders
@@ -197,6 +202,9 @@ func GetOrderStatsByShopService(shopIDHex string) (map[string]interface{}, error
 	totalRevenue := 0.0
 	pendingOrders := 0
 	deliveredOrders := 0
+	paidOrders := 0
+	shippedOrders := 0
+	cancelledOrders := 0
 
 	for _, order := range orders {
 		// Count orders by status
@@ -205,6 +213,12 @@ func GetOrderStatsByShopService(shopIDHex string) (map[string]interface{}, error
 			pendingOrders++
 		case "delivered":
 			deliveredOrders++
+		case "paid":
+			paidOrders++
+		case "shipped":
+			shippedOrders++
+		case "cancelled":
+			cancelledOrders++
 		}
 
 		// Calculate revenue for certain statuses (paid, shipped, delivered)
@@ -218,6 +232,9 @@ func GetOrderStatsByShopService(shopIDHex string) (map[string]interface{}, error
 		"total_revenue":    totalRevenue,
 		"pending_orders":   pendingOrders,
 		"delivered_orders": deliveredOrders,
+		"paid_orders":      paidOrders,
+		"shipped_orders":   shippedOrders,
+		"cancelled_orders": cancelledOrders,
 	}, nil
 }
 
