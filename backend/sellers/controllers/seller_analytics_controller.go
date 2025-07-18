@@ -423,3 +423,180 @@ func GetShopRecentOrders(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, result)
 }
+
+// GET /seller/shops/:shopId/analytics/dashboard
+func GetShopDashboardAnalytics(c *gin.Context) {
+	_, shopID, ok := getShopAndVerifySeller(c)
+	if !ok {
+		return
+	}
+
+	orders, _ := services.ListOrdersByShopService(shopID.Hex())
+	products, _ := services.GetProductsByShopIDService(shopID)
+	customers, _ := repositories.GetShopCustomerLinks(shopID)
+	discounts, _ := repositories.ListDiscountsByShop(shopID)
+
+	soldOrders := filterSoldOrders(orders)
+	totalOrders := len(soldOrders)
+	pendingOrders := 0
+	newOrdersToday := 0
+	today := time.Now()
+	today = time.Date(today.Year(), today.Month(), today.Day(), 0, 0, 0, 0, today.Location())
+	totalRevenue := 0.0
+	revenueToday := 0.0
+	for _, o := range orders {
+		if o.Status == "pending" {
+			pendingOrders++
+		}
+		if o.CreatedAt.After(today) {
+			if o.Status == "paid" || o.Status == "shipped" || o.Status == "delivered" {
+				newOrdersToday++
+				revenueToday += o.Total
+			}
+		}
+	}
+	for _, o := range soldOrders {
+		totalRevenue += o.Total
+	}
+	avgOrderValue := 0.0
+	if totalOrders > 0 {
+		avgOrderValue = totalRevenue / float64(totalOrders)
+	}
+
+	totalProducts := len(products)
+	lowStockProducts := 0
+	for _, p := range products {
+		if p.Stock < 10 {
+			lowStockProducts++
+		}
+	}
+	sort.Slice(products, func(i, j int) bool {
+		return products[i].CreatedAt.After(products[j].CreatedAt)
+	})
+	recentProducts := []gin.H{}
+	maxRecent := 5
+	if len(products) < maxRecent {
+		maxRecent = len(products)
+	}
+	for i := 0; i < maxRecent; i++ {
+		p := products[i]
+		price := p.Price
+		if len(p.Variants) > 0 {
+			minPrice := p.Variants[0].Price
+			for _, v := range p.Variants {
+				if v.Price < minPrice {
+					minPrice = v.Price
+				}
+			}
+			price = minPrice
+		}
+		recentProducts = append(recentProducts, gin.H{
+			"id":        p.ID.Hex(),
+			"name":      p.Name,
+			"category":  p.Category,
+			"mainImage": p.MainImage,
+			"stock":     p.Stock,
+			"createdAt": p.CreatedAt,
+			"price":     price,
+		})
+	}
+	totalCustomers := len(customers)
+	newCustomersToday := 0
+	for _, cst := range customers {
+		if cst.CreatedAt.After(today) {
+			newCustomersToday++
+		}
+	}
+	activeDiscounts := 0
+	for _, d := range discounts {
+		if d.Active {
+			activeDiscounts++
+		}
+	}
+	productSales := map[primitive.ObjectID]int{}
+	for _, o := range soldOrders {
+		for _, item := range o.Items {
+			productSales[item.ProductID] += item.Quantity
+		}
+	}
+	topProductID := primitive.NilObjectID
+	topProductQty := 0
+	for pid, qty := range productSales {
+		if qty > topProductQty {
+			topProductID = pid
+			topProductQty = qty
+		}
+	}
+	var topProduct *models.Product
+	for _, p := range products {
+		if p.ID == topProductID {
+			topProduct = &p
+			break
+		}
+	}
+	sort.Slice(soldOrders, func(i, j int) bool {
+		return soldOrders[i].CreatedAt.After(soldOrders[j].CreatedAt)
+	})
+	recentOrders := []models.Order{}
+	if len(soldOrders) > 5 {
+		recentOrders = soldOrders[:5]
+	} else {
+		recentOrders = soldOrders
+	}
+
+	// --- Weekly sales (last 7 days, by date) ---
+	days := 7
+	now := time.Now()
+	revenueMap := make(map[string]float64)
+	for i := 0; i < days; i++ {
+		date := now.AddDate(0, 0, -i).Format("2006-01-02")
+		revenueMap[date] = 0
+	}
+	for _, o := range soldOrders {
+		date := o.CreatedAt.Format("2006-01-02")
+		if _, ok := revenueMap[date]; ok {
+			revenueMap[date] += o.Total
+		}
+	}
+	weeklySales := make([]gin.H, 0, days)
+	weekdays := []string{"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"}
+	for i := days - 1; i >= 0; i-- {
+		date := now.AddDate(0, 0, -i)
+		dateStr := date.Format("2006-01-02")
+		weekday := weekdays[date.Weekday()]
+		weeklySales = append(weeklySales, gin.H{
+			"day":    weekday,
+			"amount": revenueMap[dateStr],
+		})
+	}
+
+	resp := gin.H{
+		"total_products":      totalProducts,
+		"low_stock_products":  lowStockProducts,
+		"total_orders":        totalOrders,
+		"pending_orders":      pendingOrders,
+		"new_orders_today":    newOrdersToday,
+		"total_customers":     totalCustomers,
+		"new_customers_today": newCustomersToday,
+		"total_revenue":       totalRevenue,
+		"revenue_today":       revenueToday,
+		"average_order_value": avgOrderValue,
+		"active_discounts":    activeDiscounts,
+		"recent_orders":       recentOrders,
+		"recent_products":     recentProducts,
+		"weekly_sales":        weeklySales,
+	}
+	if topProduct != nil {
+		resp["top_product"] = gin.H{
+			"id":        topProduct.ID.Hex(),
+			"name":      topProduct.Name,
+			"category":  topProduct.Category,
+			"mainImage": topProduct.MainImage,
+			"totalSold": topProductQty,
+		}
+	} else {
+		resp["top_product"] = nil
+	}
+
+	c.JSON(http.StatusOK, resp)
+}

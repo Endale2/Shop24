@@ -1,323 +1,287 @@
+
 <template>
-  <div class="p-4 sm:p-6 max-w-7xl mx-auto font-sans">
-    <!-- Header -->
-    <div class="mb-8">
-      <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">
-        Dashboard Overview
-      </h1>
-      <p class="text-lg text-gray-600 mt-2">
-        Monitor your shop's performance and key metrics
-      </p>
-    </div>
-
-    <!-- Loading State -->
-    <div v-if="loading" class="text-center py-16 text-gray-600 text-lg">
-      <div class="flex flex-col items-center justify-center">
-        <div class="animate-spin h-10 w-10 text-green-500 mb-4 border-4 border-green-200 border-t-green-500 rounded-full"></div>
-        <p>Loading dashboard data...</p>
+  <div class="bg-slate-50 font-sans min-h-screen">
+    <div class="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+      
+      <div class="mb-10">
+        <h1 class="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight">
+          Dashboard
+        </h1>
+        <p class="text-lg text-slate-500 mt-1">
+          Welcome back! Here's a snapshot of your shop's performance. 🚀
+        </p>
       </div>
-    </div>
 
-    <!-- Dashboard Content -->
-    <div v-else class="space-y-8">
-      <!-- Summary Cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <!-- Total Products -->
-        <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow duration-200">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm font-medium text-gray-600">Total Products</p>
-              <p class="text-3xl font-bold text-gray-900">{{ stats.products }}</p>
-              <p class="text-sm text-blue-600 mt-1">
-                <CubeIcon class="w-4 h-4 inline mr-1" />
-                {{ stats.lowStockProducts }} low stock
-              </p>
-            </div>
-            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-              <CubeIcon class="w-6 h-6 text-green-600" />
-            </div>
-          </div>
-        </div>
-
-        <!-- Total Orders -->
-        <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow duration-200">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm font-medium text-gray-600">Total Orders <span class="text-xs text-gray-400" title="Only paid, shipped, or delivered orders are counted.">(paid/shipped/delivered)</span></p>
-              <p class="text-3xl font-bold text-gray-900">{{ stats.orders }}</p>
-              <p class="text-sm text-green-600 mt-1">
-                <TrendingUpIcon class="w-4 h-4 inline mr-1" />
-                +{{ stats.newOrdersToday }} today
-              </p>
-            </div>
-            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-              <ShoppingBagIcon class="w-6 h-6 text-blue-600" />
-            </div>
-          </div>
-        </div>
-        <!-- Pending Orders -->
-        <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow duration-200">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm font-medium text-gray-600">Pending Orders</p>
-              <p class="text-3xl font-bold text-yellow-600">{{ pendingOrdersCount }}</p>
-              <p class="text-sm text-yellow-600 mt-1">
-                <TrendingUpIcon class="w-4 h-4 inline mr-1" />
-                Awaiting payment or fulfillment
-              </p>
-            </div>
-            <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-              <ShoppingBagIcon class="w-6 h-6 text-yellow-600" />
-            </div>
-          </div>
-        </div>
-
-        <!-- Total Customers -->
-        <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow duration-200">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm font-medium text-gray-600">Total Customers</p>
-              <p class="text-3xl font-bold text-gray-900">{{ stats.customers }}</p>
-              <p class="text-sm text-green-600 mt-1">
-                <UserAddIcon class="w-4 h-4 inline mr-1" />
-                +{{ stats.newCustomersToday }} today
-              </p>
-            </div>
-            <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-              <UsersIcon class="w-6 h-6 text-yellow-600" />
-            </div>
-          </div>
-        </div>
-
-        <!-- Total Sales -->
-        <div class="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow duration-200">
-          <div class="flex items-center justify-between">
-            <div>
-              <p class="text-sm font-medium text-gray-600">Total Sales</p>
-              <p class="text-3xl font-bold text-gray-900">${{ formatCurrency(getPaidRevenue()) }}</p>
-              <p class="text-sm text-green-600 mt-1">
-                <TrendingUpIcon class="w-4 h-4 inline mr-1" />
-                +${{ formatCurrency(stats.salesToday) }} today
-              </p>
-            </div>
-            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-              <CurrencyDollarIcon class="w-6 h-6 text-purple-600" />
-            </div>
-          </div>
+      <div v-if="loading" class="text-center py-24 text-slate-500">
+        <div class="flex flex-col items-center justify-center">
+          <div class="animate-spin h-12 w-12 text-green-500 mb-4 border-4 border-green-200 border-t-green-500 rounded-full"></div>
+          <p class="text-lg font-medium">Summoning the latest data...</p>
         </div>
       </div>
 
-      <!-- Performance Metrics -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Sales Chart -->
-        <div class="lg:col-span-2 bg-white rounded-xl shadow-md border border-gray-200">
-          <div class="p-6 border-b border-gray-200">
-            <h2 class="text-xl font-semibold text-gray-900">Sales Performance</h2>
-            <p class="text-sm text-gray-600 mt-1">Last 7 days revenue trend</p>
+      <div v-else class="space-y-8">
+        
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+          <div class="bg-white rounded-2xl shadow-sm p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-slate-500">Total Products</p>
+                <p class="text-3xl font-bold text-slate-800">{{ stats.products }}</p>
+                <p class="text-sm text-sky-600 mt-2 flex items-center font-semibold">
+                  <CubeIcon class="w-4 h-4 inline mr-1.5" />
+                  {{ stats.lowStockProducts }} low stock
+                </p>
+              </div>
+              <div class="w-12 h-12 bg-sky-50 rounded-xl flex items-center justify-center">
+                <CubeIcon class="w-6 h-6 text-sky-500" />
+              </div>
+            </div>
           </div>
-          <div class="p-6">
-            <div class="h-64 flex items-center justify-center">
-              <div class="text-center">
-                <div class="text-4xl font-bold text-green-600 mb-2">${{ formatCurrency(stats.sales) }}</div>
-                <div class="text-lg text-gray-600 mb-4">Total Revenue</div>
-                <div class="grid grid-cols-7 gap-2">
-                  <div 
-                    v-for="(day, index) in weeklySales" 
-                    :key="index"
-                    class="text-center"
-                  >
-                    <div class="text-xs text-gray-500 mb-1">{{ day.day }}</div>
+
+          <!-- Total Orders (with clarification) -->
+          <div class="bg-white rounded-2xl shadow-sm p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-emerald-600 flex items-center">
+                  Total Orders
+                  <span class="ml-2 text-xs text-slate-400 font-normal">(paid, shipped, delivered)</span>
+                </p>
+                <p class="text-3xl font-black text-emerald-700">{{ stats.orders }}</p>
+                <p class="text-sm text-emerald-600 mt-2 flex items-center font-semibold">
+                  <TrendingUpIcon class="w-4 h-4 inline mr-1.5" />
+                  +{{ stats.newOrdersToday }} today
+                </p>
+              </div>
+              <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
+                <ShoppingBagIcon class="w-6 h-6 text-emerald-500" />
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl shadow-sm p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-slate-500">Pending Orders</p>
+                <p class="text-3xl font-bold text-amber-500">{{ pendingOrdersCount }}</p>
+                 <p class="text-sm text-amber-600 mt-2 flex items-center font-semibold">
+                  <TrendingUpIcon class="w-4 h-4 inline mr-1.5" />
+                   Awaiting action
+                </p>
+              </div>
+              <div class="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center">
+                <ShoppingBagIcon class="w-6 h-6 text-amber-500" />
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl shadow-sm p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-slate-500">Total Customers</p>
+                <p class="text-3xl font-bold text-slate-800">{{ stats.customers }}</p>
+                <p class="text-sm text-emerald-600 mt-2 flex items-center font-semibold">
+                  <UserAddIcon class="w-4 h-4 inline mr-1.5" />
+                  +{{ stats.newCustomersToday }} today
+                </p>
+              </div>
+              <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
+                <UsersIcon class="w-6 h-6 text-emerald-500" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Total Sales (Green) -->
+          <div class="bg-white rounded-2xl shadow-sm p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+            <div class="flex items-center justify-between">
+              <div>
+                <p class="text-sm font-medium text-emerald-600 flex items-center">
+                  Total Revenue
+                  <span class="ml-2 text-xs text-slate-400 font-normal">(all paid, shipped, delivered)</span>
+                </p>
+                <p class="text-3xl font-black text-emerald-700">${{ formatCurrency(stats.totalRevenue) }}</p>
+                <p class="text-sm text-emerald-600 mt-2 flex items-center font-semibold">
+                  <TrendingUpIcon class="w-4 h-4 inline mr-1.5" />
+                  +${{ formatCurrency(stats.revenueToday) }} today
+                </p>
+              </div>
+              <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
+                <CurrencyDollarIcon class="w-6 h-6 text-emerald-500" />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          
+          <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm">
+            <div class="p-6 border-b border-slate-100">
+              <h2 class="text-xl font-bold text-slate-800">Sales Performance</h2>
+              <p class="text-sm text-slate-500 mt-1">Last 7 days revenue trend</p>
+            </div>
+            <div class="p-6">
+              <div class="h-64 flex items-end justify-center">
+                <div class="w-full">
+                  <div class="grid grid-cols-7 gap-4">
                     <div 
-                      class="bg-green-200 rounded-t"
-                      :style="{ height: `${Math.max(day.amount / maxWeeklySales * 100, 4)}px` }"
-                    ></div>
-                    <div class="text-xs text-gray-600 mt-1">${{ formatCurrency(day.amount) }}</div>
+                      v-for="(day, index) in weeklySales" 
+                      :key="index"
+                      class="text-center flex flex-col items-center justify-end"
+                    >
+                      <div class="text-sm font-semibold text-slate-700 mb-1">${{ formatCurrency(day.amount) }}</div>
+                      <div 
+                        class="bg-gradient-to-t from-green-400 to-green-500 w-full rounded-t-lg transition-all duration-300"
+                        :style="{ height: `${Math.max(day.amount / maxWeeklySales * 150, 4)}px` }"
+                      ></div>
+                      <div class="text-xs text-slate-400 font-medium uppercase tracking-wider mt-2">{{ day.day }}</div>
+                    </div>
                   </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="bg-white rounded-2xl shadow-sm">
+            <div class="p-6 border-b border-slate-100">
+              <h2 class="text-xl font-bold text-slate-800">Quick Stats</h2>
+            </div>
+            <div class="p-6 divide-y divide-slate-100">
+              <div class="flex items-center justify-between py-3">
+                <div>
+                  <p class="text-sm text-slate-500">Avg Order Value</p>
+                  <p class="text-2xl font-bold text-slate-800">${{ formatCurrency(stats.averageOrderValue) }}</p>
+                </div>
+                <div class="w-10 h-10 bg-sky-50 rounded-lg flex items-center justify-center">
+                  <ShoppingCartIcon class="w-5 h-5 text-sky-500" />
+                </div>
+              </div>
+              <div class="flex items-center justify-between py-3">
+                <div>
+                  <p class="text-sm text-slate-500">Conversion Rate</p>
+                  <p class="text-2xl font-bold text-slate-800">{{ stats.conversionRate }}%</p>
+                </div>
+                <div class="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center">
+                  <ChartBarIcon class="w-5 h-5 text-emerald-500" />
+                </div>
+              </div>
+              <div class="flex items-center justify-between py-3">
+                <div>
+                  <p class="text-sm text-slate-500">Top Seller</p>
+                  <p class="text-lg font-semibold text-slate-800 truncate max-w-40">{{ stats.topProduct?.name || 'N/A' }}</p>
+                </div>
+                <div class="w-10 h-10 bg-violet-50 rounded-lg flex items-center justify-center">
+                  <StarIcon class="w-5 h-5 text-violet-500" />
+                </div>
+              </div>
+              <div class="flex items-center justify-between pt-3">
+                <div>
+                  <p class="text-sm text-slate-500">Active Discounts</p>
+                  <p class="text-2xl font-bold text-slate-800">{{ stats.activeDiscounts }}</p>
+                </div>
+                <div class="w-10 h-10 bg-rose-50 rounded-lg flex items-center justify-center">
+                  <TagIcon class="w-5 h-5 text-rose-500" />
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Quick Stats -->
-        <div class="bg-white rounded-xl shadow-md border border-gray-200">
-          <div class="p-6 border-b border-gray-200">
-            <h2 class="text-xl font-semibold text-gray-900">Quick Stats</h2>
-          </div>
-          <div class="p-6 space-y-6">
-            <!-- Average Order Value -->
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm text-gray-600">Avg Order Value</p>
-                <p class="text-2xl font-bold text-gray-900">${{ formatCurrency(stats.averageOrderValue) }}</p>
-              </div>
-              <div class="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
-                <ShoppingCartIcon class="w-5 h-5 text-blue-600" />
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+          
+          <div class="bg-white rounded-2xl shadow-sm">
+            <div class="p-6 border-b border-slate-100">
+              <div class="flex items-center justify-between">
+                <h2 class="text-xl font-bold text-slate-800">Recent Orders</h2>
+                <router-link to="/dashboard/orders" class="text-sm text-green-600 hover:text-green-700 font-semibold">
+                  View all
+                </router-link>
               </div>
             </div>
-
-            <!-- Conversion Rate -->
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm text-gray-600">Conversion Rate</p>
-                <p class="text-2xl font-bold text-gray-900">{{ stats.conversionRate }}%</p>
-              </div>
-              <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                <ChartBarIcon class="w-5 h-5 text-green-600" />
+            <div v-if="recentOrders.length === 0" class="p-6">
+              <div class="text-center py-8 text-slate-400">
+                <ShoppingBagIcon class="w-12 h-12 mx-auto mb-4 text-slate-300" />
+                <p class="font-semibold text-slate-600">No orders yet</p>
+                <p class="text-sm">New orders will appear here once placed.</p>
               </div>
             </div>
-
-            <!-- Top Selling Product -->
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm text-gray-600">Top Seller</p>
-                <p class="text-lg font-semibold text-gray-900 truncate max-w-32">{{ stats.topProduct?.name || 'N/A' }}</p>
-              </div>
-              <div class="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
-                <StarIcon class="w-5 h-5 text-purple-600" />
-              </div>
-            </div>
-
-            <!-- Active Discounts -->
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm text-gray-600">Active Discounts</p>
-                <p class="text-2xl font-bold text-gray-900">{{ stats.activeDiscounts }}</p>
-              </div>
-              <div class="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
-                <TagIcon class="w-5 h-5 text-orange-600" />
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Recent Activity -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- Recent Orders -->
-        <div class="bg-white rounded-xl shadow-md border border-gray-200">
-          <div class="p-6 border-b border-gray-200">
-            <div class="flex items-center justify-between">
-              <h2 class="text-xl font-semibold text-gray-900">Recent Orders</h2>
-              <router-link 
-                to="/orders" 
-                class="text-sm text-green-600 hover:text-green-700 font-medium"
-              >
-                View all orders
-              </router-link>
-            </div>
-          </div>
-          <div class="p-6">
-            <div v-if="recentOrders.length === 0" class="text-center py-8 text-gray-500">
-              <ShoppingBagIcon class="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <p>No orders yet</p>
-              <p class="text-sm">Orders will appear here once customers start shopping</p>
-            </div>
-            <div v-else class="space-y-4">
-              <div 
-                v-for="order in recentOrders.slice(0, 5)" 
-                :key="order.id"
-                class="flex items-center justify-between p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200 cursor-pointer"
-                @click="goToOrder(order.id)"
-              >
-                <div class="flex items-center space-x-3">
-                  <div class="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
-                    <ShoppingBagIcon class="w-5 h-5 text-green-600" />
+            <div v-else class="divide-y divide-slate-100">
+              <div v-for="order in recentOrders.slice(0, 5)" :key="order.id" class="flex items-center justify-between p-4 transition-colors duration-200 hover:bg-slate-50/75 cursor-pointer" @click="goToOrder(order.id)">
+                <div class="flex items-center space-x-4">
+                  <div class="w-10 h-10 bg-emerald-50 rounded-lg flex-shrink-0 flex items-center justify-center">
+                    <ShoppingBagIcon class="w-5 h-5 text-emerald-500" />
                   </div>
                   <div>
-                    <p class="font-medium text-gray-900">#{{ order.orderNumber }}</p>
-                    <p class="text-sm text-gray-600">{{ formatDateTime(order.createdAt) }}</p>
+                    <p class="font-semibold text-slate-800">#{{ order.orderNumber }}</p>
+                    <p class="text-sm text-slate-500">{{ formatDateTime(order.createdAt) }}</p>
                   </div>
                 </div>
                 <div class="text-right">
-                  <p class="font-semibold text-gray-900">${{ formatCurrency(order.total) }}</p>
-                  <span :class="getStatusClass(order.status)" class="inline-flex px-2 py-1 rounded-full text-xs font-medium">
+                  <p class="font-semibold text-slate-800">${{ formatCurrency(order.total) }}</p>
+                  <span :class="getStatusClass(order.status)" class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold leading-none">
                     {{ formatStatus(order.status) }}
                   </span>
                 </div>
               </div>
             </div>
           </div>
+
+          <div class="bg-white rounded-2xl shadow-sm">
+            <div class="p-6 border-b border-slate-100">
+              <div class="flex items-center justify-between">
+                <h2 class="text-xl font-bold text-slate-800">Recent Products</h2>
+                <router-link to="/dashboard/products" class="text-sm text-green-600 hover:text-green-700 font-semibold">
+                  View all
+                </router-link>
+              </div>
+            </div>
+             <div v-if="recentProducts.length === 0" class="p-6">
+               <div class="text-center py-8 text-slate-400">
+                 <CubeIcon class="w-12 h-12 mx-auto mb-4 text-slate-300" />
+                 <p class="font-semibold text-slate-600">No products yet</p>
+                 <p class="text-sm">Add your first product to get started.</p>
+               </div>
+             </div>
+            <div v-else class="divide-y divide-slate-100">
+              <div v-for="product in recentProducts" :key="product.id" class="flex items-center space-x-4 p-3 transition-colors duration-200 hover:bg-slate-50/75 cursor-pointer group" @click="goToProduct(product.id)">
+                <img :src="getProductImage(product)" :alt="product.name" class="w-14 h-14 rounded-lg object-cover border border-slate-100 group-hover:ring-2 group-hover:ring-green-300 transition" @error="$event.target.src='/placeholder-product.jpg'" />
+                <div class="flex-1 min-w-0">
+                  <p class="font-semibold text-slate-800 truncate">{{ product.name }}</p>
+                  <p class="text-sm text-slate-500">${{ formatCurrency(product.price) }}</p>
+                  <span v-if="getProductStock(product) === 0" class="inline-block mt-1 px-2 py-0.5 bg-rose-100 text-rose-700 text-xs rounded-full font-semibold">Out of Stock</span>
+                </div>
+                <div class="text-right flex-shrink-0">
+                  <p class="text-sm font-medium text-slate-600">Stock: {{ getProductStock(product) }}</p>
+                  <p class="text-xs text-slate-400">{{ formatDate(product.createdAt) }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <!-- Recent Products -->
-        <div class="bg-white rounded-xl shadow-md border border-gray-200">
-          <div class="p-6 border-b border-gray-200">
-            <div class="flex items-center justify-between">
-              <h2 class="text-xl font-semibold text-gray-900">Recent Products</h2>
-              <router-link 
-                to="/products" 
-                class="text-sm text-green-600 hover:text-green-700 font-medium"
-              >
-                View all products
-              </router-link>
-            </div>
+        <div class="bg-white rounded-2xl shadow-sm">
+          <div class="p-6 border-b border-slate-100">
+            <h2 class="text-xl font-bold text-slate-800">Alerts & Notifications</h2>
           </div>
           <div class="p-6">
-            <div v-if="recentProducts.length === 0" class="text-center py-8 text-gray-500">
-              <CubeIcon class="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <p>No products yet</p>
-              <p class="text-sm">Add your first product to get started</p>
+            <div v-if="alerts.length === 0" class="text-center py-8 text-slate-400">
+              <CheckCircleIcon class="w-12 h-12 mx-auto mb-4 text-emerald-400" />
+              <p class="font-semibold text-slate-600">All good!</p>
+              <p class="text-sm">No new alerts to show right now.</p>
             </div>
             <div v-else class="space-y-4">
-              <div 
-                v-for="product in recentProducts.slice(0, 5)" 
-                :key="product.id"
-                class="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200 cursor-pointer group"
-                @click="goToProduct(product.id)"
-              >
-                <img 
-                  :src="getProductImage(product)" 
-                  :alt="product.name"
-                  class="w-12 h-12 min-w-[3rem] min-h-[3rem] max-w-[3rem] max-h-[3rem] rounded-lg object-cover border border-gray-200 group-hover:ring-2 group-hover:ring-green-400 transition"
-                  @error="$event.target.src='/placeholder-product.jpg'"
-                />
-                <div class="flex-1 min-w-0">
-                  <p class="font-medium text-gray-900 truncate">{{ product.name }}</p>
-                  <p class="text-sm text-gray-600">{{ getProductPriceDisplay(product) }}</p>
-                  <span v-if="getProductStock(product) === 0" class="inline-block mt-1 px-2 py-0.5 bg-red-100 text-red-700 text-xs rounded-full font-semibold">Out of Stock</span>
+              <div v-for="alert in alerts" :key="alert.id" :class="getAlertClass(alert.type)" class="flex items-start p-4 rounded-lg">
+                <component :is="getAlertIcon(alert.type)" class="w-6 h-6 mr-3 flex-shrink-0 mt-0.5" />
+                <div class="flex-1">
+                  <p class="font-semibold">{{ alert.title }}</p>
+                  <p class="text-sm opacity-90">{{ alert.message }}</p>
                 </div>
-                <div class="text-right flex flex-col items-end min-w-[70px]">
-                  <p class="text-sm text-gray-600">Stock: {{ getProductStock(product) }}</p>
-                  <p class="text-xs text-gray-500">{{ formatDate(product.createdAt) }}</p>
-                </div>
+                <button @click="dismissAlert(alert.id)" class="ml-4 p-1 rounded-full hover:bg-black/10 transition-colors">
+                   <XIcon class="w-4 h-4" />
+                </button>
               </div>
             </div>
           </div>
         </div>
-      </div>
-
-      <!-- Alerts & Notifications -->
-      <div class="bg-white rounded-xl shadow-md border border-gray-200">
-        <div class="p-6 border-b border-gray-200">
-          <h2 class="text-xl font-semibold text-gray-900">Alerts & Notifications</h2>
-        </div>
-        <div class="p-6">
-          <div v-if="alerts.length === 0" class="text-center py-8 text-gray-500">
-            <CheckCircleIcon class="w-12 h-12 mx-auto mb-4 text-green-300" />
-            <p>All good! No alerts at the moment</p>
-          </div>
-          <div v-else class="space-y-4">
-            <div 
-              v-for="alert in alerts" 
-              :key="alert.id"
-              :class="getAlertClass(alert.type)"
-              class="flex items-center p-4 rounded-lg"
-            >
-              <component :is="getAlertIcon(alert.type)" class="w-5 h-5 mr-3" />
-              <div class="flex-1">
-                <p class="font-medium">{{ alert.title }}</p>
-                <p class="text-sm opacity-90">{{ alert.message }}</p>
-              </div>
-              <button 
-                @click="dismissAlert(alert.id)"
-                class="text-sm opacity-70 hover:opacity-100"
-              >
-                Dismiss
-              </button>
-            </div>
-          </div>
-        </div>
+        
       </div>
     </div>
   </div>
@@ -327,10 +291,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useShopStore } from '@/store/shops'
-import { orderService } from '@/services/order'
-import { productService } from '@/services/product'
-import { customerService } from '@/services/customer'
-import { discountService } from '@/services/discount'
+import { dashboardService } from '@/services/dashboard'
 import { format } from 'date-fns'
 import {
   CubeIcon,
@@ -359,15 +320,16 @@ const stats = ref({
   products: 0,
   orders: 0,
   customers: 0,
-  sales: 0,
-  salesToday: 0,
+  totalRevenue: 0,
+  revenueToday: 0,
   newOrdersToday: 0,
   newCustomersToday: 0,
   lowStockProducts: 0,
   averageOrderValue: 0,
   conversionRate: 0,
   topProduct: null,
-  activeDiscounts: 0
+  activeDiscounts: 0,
+  pendingOrders: 0
 })
 const recentOrders = ref([])
 const recentProducts = ref([])
@@ -380,13 +342,8 @@ const maxWeeklySales = computed(() => {
   return Math.max(...weeklySales.value.map(day => day.amount))
 })
 
-// Add computed for pending orders
-const pendingOrdersCount = computed(() => recentOrders.value.filter(order => (order.status || '').toLowerCase() === 'pending').length)
+const pendingOrdersCount = computed(() => stats.value.pendingOrders || 0)
 
-// Helper: filter orders by status considered as 'sold'
-function filterSoldOrders(orders) {
-  return orders.filter(order => ['paid', 'shipped', 'delivered'].includes((order.status || '').toLowerCase()))
-}
 
 // --- Navigation helpers ---
 function goToOrder(orderId) {
@@ -400,12 +357,12 @@ function goToAnalytics() {
 }
 
 function getProductImage(product) {
+  if (product.mainImage) return product.mainImage
   if (product.main_image) return product.main_image
   if (Array.isArray(product.images) && product.images.length > 0) return product.images[0]
   return '/placeholder-product.jpg'
 }
 
-// Helper functions for product display
 function getProductStock(product) {
   if (product.total_stock !== undefined) return product.total_stock
   if (product.stock !== undefined) return product.stock
@@ -415,35 +372,6 @@ function getProductStock(product) {
   return 0
 }
 
-function getProductPrice(product) {
-  if (product.starting_price != null) return product.starting_price
-  if (product.price != null) return product.price
-  if (product.variants && product.variants.length > 0) {
-    const prices = product.variants.map(v => v.price).filter(p => p > 0)
-    return prices.length > 0 ? Math.min(...prices) : 0
-  }
-  return 0
-}
-
-function getProductPriceDisplay(product) {
-  if (product.starting_price != null) {
-    return `from $${formatCurrency(product.starting_price)}`
-  }
-  if (product.price != null) {
-    return `$${formatCurrency(product.price)}`
-  }
-  if (product.variants && product.variants.length > 0) {
-    const prices = product.variants.map(v => v.price).filter(p => p > 0)
-    if (prices.length > 0) {
-      const minPrice = Math.min(...prices)
-      const maxPrice = Math.max(...prices)
-      return minPrice === maxPrice ? `$${formatCurrency(minPrice)}` : `from $${formatCurrency(minPrice)}`
-    }
-  }
-  return 'N/A'
-}
-
-// Methods
 function formatCurrency(amount) {
   return (amount || 0).toFixed(2)
 }
@@ -477,23 +405,25 @@ function formatStatus(status) {
   return statusMap[status] || status
 }
 
+
 function getStatusClass(status) {
   const classMap = {
-    'pending': 'bg-yellow-100 text-yellow-800',
-    'paid': 'bg-blue-100 text-blue-800',
-    'shipped': 'bg-purple-100 text-purple-800',
-    'delivered': 'bg-green-100 text-green-800',
-    'cancelled': 'bg-red-100 text-red-800'
+    'pending': 'bg-amber-100 text-amber-700',
+    'paid': 'bg-sky-100 text-sky-700',
+    'shipped': 'bg-violet-100 text-violet-700',
+    'delivered': 'bg-emerald-100 text-emerald-700',
+    'cancelled': 'bg-rose-100 text-rose-700'
   }
-  return classMap[status] || 'bg-gray-100 text-gray-800'
+  return classMap[status] || 'bg-slate-100 text-slate-700'
 }
+
 
 function getAlertClass(type) {
   const classMap = {
-    'warning': 'bg-yellow-50 text-yellow-800 border border-yellow-200',
-    'error': 'bg-red-50 text-red-800 border border-red-200',
-    'info': 'bg-blue-50 text-blue-800 border border-blue-200',
-    'success': 'bg-green-50 text-green-800 border border-green-200'
+    'warning': 'bg-amber-50 text-amber-800',
+    'error': 'bg-rose-50 text-rose-800',
+    'info': 'bg-sky-50 text-sky-800',
+    'success': 'bg-emerald-50 text-emerald-800'
   }
   return classMap[type] || classMap.info
 }
@@ -512,44 +442,35 @@ function dismissAlert(alertId) {
   alerts.value = alerts.value.filter(alert => alert.id !== alertId)
 }
 
-// --- Revenue calculation: only count paid, shipped, delivered ---
 function getPaidRevenue() {
-  return filterSoldOrders(recentOrders.value)
-    .reduce((sum, order) => sum + (order.total || 0), 0)
+  return stats.value.totalRevenue || 0
 }
 
-// Generate weekly sales data
+// Generate weekly sales data from recentOrders
 function generateWeeklySales(orders) {
-  const days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+  const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
   const today = new Date()
   const weekData = []
-
   for (let i = 6; i >= 0; i--) {
     const date = new Date(today)
     date.setDate(date.getDate() - i)
     date.setHours(0, 0, 0, 0)
-
-    const dayOrders = filterSoldOrders(orders).filter(order => {
+    const dayOrders = orders.filter(order => {
       const orderDate = new Date(order.createdAt)
       orderDate.setHours(0, 0, 0, 0)
       return orderDate.getTime() === date.getTime()
     })
-
     const daySales = dayOrders.reduce((sum, order) => sum + (order.total || 0), 0)
-
     weekData.push({
       day: days[date.getDay()],
       amount: daySales
     })
   }
-
   return weekData
 }
 
-// Generate alerts based on data
 function generateAlerts(products, orders, discounts) {
   const alerts = []
-
   // Low stock alerts
   const lowStockProducts = products.filter(p => (p.stock || 0) < 5)
   if (lowStockProducts.length > 0) {
@@ -560,7 +481,6 @@ function generateAlerts(products, orders, discounts) {
       message: `${lowStockProducts.length} product(s) have low stock (less than 5 items)`
     })
   }
-
   // No orders today
   const today = new Date()
   today.setHours(0, 0, 0, 0)
@@ -569,7 +489,6 @@ function generateAlerts(products, orders, discounts) {
     orderDate.setHours(0, 0, 0, 0)
     return orderDate.getTime() === today.getTime()
   })
-
   if (ordersToday.length === 0) {
     alerts.push({
       id: 'no-orders',
@@ -578,107 +497,57 @@ function generateAlerts(products, orders, discounts) {
       message: 'Consider running a promotion to boost sales'
     })
   }
-
   // Expiring discounts
-  const now = new Date()
-  const expiringDiscounts = discounts.filter(discount => {
-    if (!discount.active || !discount.endAt) return false
-    const endDate = new Date(discount.endAt)
-    const daysUntilExpiry = (endDate - now) / (1000 * 60 * 60 * 24)
-    return daysUntilExpiry <= 7 && daysUntilExpiry > 0
-  })
-
-  if (expiringDiscounts.length > 0) {
-    alerts.push({
-      id: 'expiring-discounts',
-      type: 'warning',
-      title: 'Expiring Discounts',
-      message: `${expiringDiscounts.length} discount(s) will expire within 7 days`
-    })
-  }
-
+  // Not available in dashboard data, skip or fetch separately if needed
   return alerts
 }
 
-// Load dashboard data
 async function loadDashboardData() {
   if (!shopId.value) {
-    console.warn('No active shop selected')
     loading.value = false
     return
   }
-
   try {
-    // Load data in parallel
-    const [orders, products, customers, discounts] = await Promise.all([
-      orderService.fetchAllForDashboard(shopId.value),
-      productService.fetchAllByShop(shopId.value),
-      customerService.fetchAll(shopId.value),
-      discountService.fetchAllByShop(shopId.value)
-    ])
-
-    // Process orders
-    recentOrders.value = orders.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    
-    const ordersToday = orders.filter(order => {
-      const orderDate = new Date(order.createdAt)
-      orderDate.setHours(0, 0, 0, 0)
-      return orderDate.getTime() === today.getTime()
-    })
-
-    // Process products
-    recentProducts.value = products.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-    const lowStockProducts = products.filter(p => (p.stock || 0) < 10)
-
-    // Process customers
-    const customersToday = customers.filter(customer => {
-      const customerDate = new Date(customer.createdAt)
-      customerDate.setHours(0, 0, 0, 0)
-      return customerDate.getTime() === today.getTime()
-    })
-
-    // Process discounts
-    const activeDiscounts = discounts.filter(d => d.active)
-
-    // Calculate stats
-    const soldOrders = filterSoldOrders(orders)
-    const totalSales = soldOrders.reduce((sum, order) => sum + (order.total || 0), 0)
-    const salesToday = soldOrders.filter(order => {
-      const orderDate = new Date(order.createdAt)
-      orderDate.setHours(0, 0, 0, 0)
-      return orderDate.getTime() === today.getTime()
-    }).reduce((sum, order) => sum + (order.total || 0), 0)
-    const averageOrderValue = soldOrders.length > 0 ? totalSales / soldOrders.length : 0
-
-    // Find top product (by stock for now, could be by sales)
-    const topProduct = products.length > 0 ? products.reduce((top, current) => 
-      (current.stock || 0) > (top.stock || 0) ? current : top
-    ) : null
-
+    const data = await dashboardService.fetchDashboardData(shopId.value)
+    // Map backend data to UI state
     stats.value = {
-      products: products.length,
-      orders: soldOrders.length,
-      customers: customers.length,
-      sales: totalSales,
-      salesToday: salesToday,
-      newOrdersToday: ordersToday.length, // Optionally filter by sold status if needed
-      newCustomersToday: customersToday.length,
-      lowStockProducts: lowStockProducts.length,
-      averageOrderValue: averageOrderValue,
-      conversionRate: customers.length > 0 ? Math.round((soldOrders.length / customers.length) * 100) : 0,
-      topProduct: topProduct,
-      activeDiscounts: activeDiscounts.length
+      products: data.total_products,
+      orders: data.total_orders,
+      customers: data.total_customers,
+      totalRevenue: data.total_revenue,
+      revenueToday: data.revenue_today,
+      newOrdersToday: data.new_orders_today,
+      newCustomersToday: data.new_customers_today,
+      lowStockProducts: data.low_stock_products,
+      averageOrderValue: data.average_order_value,
+      conversionRate: data.total_customers > 0 ? Math.round((data.total_orders / data.total_customers) * 100) : 0,
+      topProduct: data.top_product,
+      activeDiscounts: data.active_discounts,
+      pendingOrders: data.pending_orders
     }
-
-    // Generate weekly sales data
-    weeklySales.value = generateWeeklySales(orders)
-
-    // Generate alerts
-    alerts.value = generateAlerts(products, orders, discounts)
-
+    recentOrders.value = (data.recent_orders || []).map(order => ({
+      id: order.id || order._id || '',
+      orderNumber: order.order_number || order.orderNumber || '',
+      customerId: order.customer_id || order.customerId || '',
+      total: order.total,
+      status: order.status,
+      createdAt: order.created_at || order.createdAt
+    }))
+    recentProducts.value = (data.recent_products || []).map(product => ({
+      id: product.id || product._id || '',
+      name: product.name,
+      category: product.category,
+      mainImage: product.mainImage || product.main_image,
+      stock: product.stock,
+      price: product.price, // Use backend price
+      createdAt: product.created_at || product.createdAt
+    }))
+    // Use backend-provided weekly_sales for the graph
+    weeklySales.value = (data.weekly_sales || []).map(day => ({
+      day: day.day,
+      amount: day.amount
+    }))
+    alerts.value = generateAlerts(data.recent_products || [], data.recent_orders || [], [])
   } catch (error) {
     console.error('Failed to load dashboard data:', error)
   } finally {
@@ -686,7 +555,6 @@ async function loadDashboardData() {
   }
 }
 
-// Watch for shop changes
 watch(() => shopStore.activeShop, (newShop) => {
   if (newShop?.id) {
     loadDashboardData()
@@ -704,9 +572,9 @@ onMounted(() => {
 /* Custom styles if needed */
 @media (max-width: 640px) {
   .min-w-0 { min-width: 0 !important; }
-  .min-w-[3rem] { min-width: 3rem !important; }
-  .max-w-[3rem] { max-width: 3rem !important; }
-  .min-h-[3rem] { min-height: 3rem !important; }
-  .max-h-[3rem] { max-height: 3rem !important; }
+  .min-w-3rem { min-width: 3rem !important; }
+  .max-w-3rem { max-width: 3rem !important; }
+  .min-h-3rem { min-height: 3rem !important; }
+  .max-h-3rem { max-height: 3rem !important; }
 }
 </style>

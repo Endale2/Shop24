@@ -121,6 +121,7 @@ func SellerRoute(r *gin.Engine) {
 			analyticsGroup.GET("/customers-over-time", controllers.GetShopCustomersOverTime)
 			analyticsGroup.GET("/category-sales", controllers.GetShopCategorySales)
 			analyticsGroup.GET("/recent-orders", controllers.GetShopRecentOrders)
+			analyticsGroup.GET("/dashboard", controllers.GetShopDashboardAnalytics) // NEW ENDPOINT
 		}
 
 	}
