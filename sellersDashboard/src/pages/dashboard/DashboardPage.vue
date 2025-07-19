@@ -172,7 +172,7 @@
                   <StarIcon class="w-5 h-5 text-violet-500" />
                 </div>
               </div>
-              <div class="flex items-center justify-between pt-3">
+              <div class="flex items-center justify-between pt-3 cursor-pointer hover:bg-rose-50/50 rounded-lg transition" @click="goToDiscounts">
                 <div>
                   <p class="text-sm text-slate-500">Active Discounts</p>
                   <p class="text-2xl font-bold text-slate-800">{{ stats.activeDiscounts }}</p>
@@ -354,6 +354,10 @@ function goToProduct(productId) {
 }
 function goToAnalytics() {
   router.push({ name: 'Analytics' })
+}
+
+function goToDiscounts() {
+  router.push({ name: 'Discounts' })
 }
 
 function getProductImage(product) {

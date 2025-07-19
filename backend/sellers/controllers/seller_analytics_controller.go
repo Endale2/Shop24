@@ -509,7 +509,7 @@ func GetShopDashboardAnalytics(c *gin.Context) {
 	}
 	activeDiscounts := 0
 	for _, d := range discounts {
-		if d.Active {
+		if d.IsActive() {
 			activeDiscounts++
 		}
 	}
