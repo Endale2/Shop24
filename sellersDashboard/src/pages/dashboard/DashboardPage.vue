@@ -1,13 +1,13 @@
 
 <template>
   <div class="bg-slate-50 font-sans min-h-screen">
-    <div class="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto">
+    <div class="p-2 sm:p-4 lg:p-8 max-w-7xl mx-auto">
       
-      <div class="mb-10">
-        <h1 class="text-3xl sm:text-4xl font-black text-slate-800 tracking-tight">
+      <div class="mb-8 sm:mb-10">
+        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-800 tracking-tight">
           Dashboard
         </h1>
-        <p class="text-lg text-slate-500 mt-1">
+        <p class="text-base sm:text-lg text-slate-500 mt-1">
           Welcome back! Here's a snapshot of your shop's performance. 🚀
         </p>
       </div>
@@ -21,7 +21,8 @@
 
       <div v-else class="space-y-8">
         
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
+        <!-- Responsive Stat Cards -->
+        <div class="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
           <div class="bg-white rounded-2xl shadow-sm p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
             <div class="flex items-center justify-between">
               <div>
@@ -111,7 +112,8 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <!-- Responsive Main Content Grids -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
           
           <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm">
             <div class="p-6 border-b border-slate-100">
@@ -185,7 +187,7 @@
           </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
           
           <div class="bg-white rounded-2xl shadow-sm">
             <div class="p-6 border-b border-slate-100">
