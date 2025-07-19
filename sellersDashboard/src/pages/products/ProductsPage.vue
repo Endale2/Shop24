@@ -105,25 +105,30 @@
 
     <!-- Content -->
     <div v-else>
-      <div v-if="paginatedProducts.length">
-        <!-- Add this above the product table/grid -->
-        <div class="flex flex-wrap gap-4 mb-4 items-center">
-          <div class="flex gap-2 items-center">
-            <span class="text-gray-700 font-medium">Total:</span>
-            <span class="text-gray-900">{{ stats.total_products }}</span>
-            <span class="text-green-700 ml-4">In Stock: {{ stats.in_stock }}</span>
-            <span class="text-red-700 ml-4">Out of Stock: {{ stats.out_of_stock }}</span>
-          </div>
-          <div class="ml-auto flex gap-2 items-center">
-            <label for="stockStatus" class="text-sm text-gray-700">Stock Status:</label>
-            <select id="stockStatus" v-model="selectedStockStatus" @change="handleStockStatusChange" class="border border-gray-300 rounded px-2 py-1 text-sm">
-              <option value="">All</option>
-              <option value="in_stock">In Stock</option>
-              <option value="out_of_stock">Out of Stock</option>
-            </select>
-          </div>
+      <!-- Stock Status Tabs -->
+      <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-4 mb-4">
+        <div class="flex flex-wrap gap-3">
+          <button
+            v-for="tab in stockTabs"
+            :key="tab.value"
+            type="button"
+            @click.prevent="onStockTabClick(tab.value)"
+            :class="[
+              'px-4 py-2 rounded-lg text-sm font-medium transition-colors duration-200 flex items-center',
+              selectedStockStatus === tab.value
+                ? 'bg-green-600 text-white'
+                : getStockTabColor(tab.value)
+            ]"
+          >
+            {{ tab.label }}
+            <span class="ml-2 bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full text-xs" :class="selectedStockStatus === tab.value ? 'bg-white text-green-700' : ''">
+              {{ getStockTabCount(tab.value) }}
+            </span>
+          </button>
         </div>
+      </div>
 
+      <div v-if="paginatedProducts.length">
         <!-- List View -->
         <div v-if="currentView === 'list'" class="overflow-x-auto bg-white shadow-lg rounded-xl">
           <table class="min-w-full divide-y divide-gray-200">
@@ -418,12 +423,6 @@ function debouncedSearch() {
   }, 300)
 }
 
-function handleStockStatusChange(e) {
-  selectedStockStatus.value = e.target.value
-  currentPage.value = 1
-  fetchProducts()
-}
-
 /**
  * Handles going to the previous page.
  */
@@ -478,9 +477,58 @@ function formatPrice(p) {
   return p != null ? `$${p.toFixed(2)}` : 'N/A'
 }
 
+const stockTabs = [
+  { label: 'All', value: '' },
+  { label: 'In Stock', value: 'in_stock' },
+  { label: 'Out of Stock', value: 'out_of_stock' },
+]
+
+const tabCounts = ref({ all: 0, in_stock: 0, out_of_stock: 0 })
+
+async function fetchTabCounts() {
+  if (!activeShop.value?.id) return
+  // Fetch counts for all tabs in parallel
+  const [allRes, inStockRes, outStockRes] = await Promise.all([
+    productService.fetchAllByShopPaginated(activeShop.value.id, { page: 1, limit: 1, stockStatus: '' }),
+    productService.fetchAllByShopPaginated(activeShop.value.id, { page: 1, limit: 1, stockStatus: 'in_stock' }),
+    productService.fetchAllByShopPaginated(activeShop.value.id, { page: 1, limit: 1, stockStatus: 'out_of_stock' })
+  ])
+  tabCounts.value.all = allRes.pagination ? allRes.pagination.total : (allRes.products?.length || 0)
+  tabCounts.value.in_stock = inStockRes.pagination ? inStockRes.pagination.total : (inStockRes.products?.length || 0)
+  tabCounts.value.out_of_stock = outStockRes.pagination ? outStockRes.pagination.total : (outStockRes.products?.length || 0)
+}
+
+function getStockTabCount(val) {
+  switch (val) {
+    case 'in_stock': return tabCounts.value.in_stock
+    case 'out_of_stock': return tabCounts.value.out_of_stock
+    case '':
+    default: return tabCounts.value.all
+  }
+}
+
+async function onStockTabClick(val) {
+  if (selectedStockStatus.value !== val) {
+    selectedStockStatus.value = val
+    currentPage.value = 1
+    await fetchProducts()
+    await fetchTabCounts()
+  }
+}
+
+function getStockTabColor(val) {
+  switch (val) {
+    case 'in_stock': return 'bg-green-100 text-green-800 hover:bg-green-200';
+    case 'out_of_stock': return 'bg-red-100 text-red-800 hover:bg-red-200';
+    case '':
+    default: return 'bg-gray-100 text-gray-700 hover:bg-gray-200';
+  }
+}
+
 // Initial data fetch on component mount
 onMounted(() => {
   fetchProducts()
+  fetchTabCounts()
 })
 
 // Watch for changes in activeShop to refetch products if the shop changes
@@ -488,6 +536,7 @@ watch(activeShop, (newShop, oldShop) => {
   if (newShop?.id !== oldShop?.id) {
     currentPage.value = 1
     fetchProducts()
+    fetchTabCounts()
   }
 })
 </script>
