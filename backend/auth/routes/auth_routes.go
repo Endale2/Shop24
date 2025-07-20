@@ -28,11 +28,11 @@ func AuthRoutes(r *gin.Engine) {
 		authGroup.PATCH("/seller/update-profile", middlewares.AuthMiddleware(), controllers.UpdateCurrentSeller)
 
 		// Customer authentication routes
-		authGroup.GET("/customer/oauth/google", controllers.CustomerOAuthRedirect)
-		authGroup.GET("/customer/oauth/google/callback", controllers.CustomerOAuthCallback)
-		// TODO: Add Telegram endpoints here
+		authGroup.POST("/customer/request-otp", controllers.CustomerRequestOTP)
+		authGroup.POST("/customer/verify-otp", controllers.CustomerVerifyOTP)
 		authGroup.POST("/customer/refresh", controllers.CustomerRefresh)
 		authGroup.POST("/customer/logout", controllers.CustomerLogout)
 		authGroup.GET("/customer/me", controllers.CustomerMe)
+		authGroup.PATCH("/customer/me", controllers.UpdateCustomerMe)
 	}
 }

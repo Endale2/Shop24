@@ -383,7 +383,7 @@
           <p class="mt-2 text-gray-500">Start shopping to add items to your cart.</p>
           <div class="mt-6">
             <router-link
-              :to="{ path: '/' }"
+              :to="{ path: `/${shopSlug}/` }"
               class="inline-flex items-center px-4 py-2 bg-black text-white rounded-md font-medium hover:bg-gray-800"
             >
               Continue Shopping

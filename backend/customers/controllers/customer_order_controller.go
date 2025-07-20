@@ -2,7 +2,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -420,7 +419,6 @@ func PlaceOrder(c *gin.Context) {
 		// Get active discounts for this product/variant - ALL discount logic server-side
 		discounts, err := services.GetActiveDiscountsForProductService(shop.ID, productID, variantID, collectionIDs)
 		if err != nil {
-			fmt.Printf("Error getting discounts: %v\n", err)
 			discounts = []models.Discount{}
 		}
 
@@ -428,21 +426,13 @@ func PlaceOrder(c *gin.Context) {
 		var bestDiscount *models.Discount
 		bestSavings := 0.0
 
-		fmt.Printf("Found %d discounts for product %s, variant %s\n", len(discounts), productID.Hex(), variantID.Hex())
-
 		// Use the improved discount selection logic
 		bestDiscount, _ = services.GetBestEligibleDiscountForProduct(productID, variantID, customerID, customerSegmentIDs, discounts)
 
 		if bestDiscount != nil {
-			fmt.Printf("Selected best discount: %s (Type: %s, Value: %.2f)\n",
-				bestDiscount.Name, bestDiscount.Type, bestDiscount.Value)
-
 			// Calculate actual savings for this specific order
 			bestSavings = bestDiscount.CalculateDiscountForQuantity(unitPrice, itemReq.Quantity)
-			fmt.Printf("Discount savings: %.2f for unit price: %.2f, quantity: %d\n",
-				bestSavings, unitPrice, itemReq.Quantity)
 		} else {
-			fmt.Printf("No eligible discount found for this product/variant\n")
 		}
 
 		// Apply discount if found - server-side calculation
@@ -452,7 +442,6 @@ func PlaceOrder(c *gin.Context) {
 			itemDiscountAmount = bestSavings
 			appliedDiscountIDs = append(appliedDiscountIDs, bestDiscount.ID)
 			appliedDiscountIDsMap[bestDiscount.ID] = struct{}{}
-			fmt.Printf("Applied discount: %s, amount: %.2f\n", bestDiscount.Name, itemDiscountAmount)
 		}
 
 		totalDiscount += itemDiscountAmount
@@ -538,18 +527,18 @@ func PlaceOrder(c *gin.Context) {
 			if !variantID.IsZero() {
 				err := services.ReduceVariantStock(productID, variantID, itemReq.Quantity)
 				if err != nil {
-					fmt.Printf("Warning: Failed to reduce stock for variant %s: %v\n", itemReq.VariantID, err)
+					// fmt.Printf("Warning: Failed to reduce stock for variant %s: %v\n", itemReq.VariantID, err)
 				}
 			} else {
 				err := services.ReduceProductStock(productID, itemReq.Quantity)
 				if err != nil {
-					fmt.Printf("Warning: Failed to reduce stock for product %s: %v\n", itemReq.ProductID, err)
+					// fmt.Printf("Warning: Failed to reduce stock for product %s: %v\n", itemReq.ProductID, err)
 				}
 			}
 		} else {
 			err := services.ReduceProductStock(productID, itemReq.Quantity)
 			if err != nil {
-				fmt.Printf("Warning: Failed to reduce stock for product %s: %v\n", itemReq.ProductID, err)
+				// fmt.Printf("Warning: Failed to reduce stock for product %s: %v\n", itemReq.ProductID, err)
 			}
 		}
 	}

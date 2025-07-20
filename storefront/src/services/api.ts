@@ -2,6 +2,7 @@ import axios from 'axios'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import router from '../router'
+import { getCurrentShopSlug } from './shop';
 
 const api = axios.create({
   baseURL: 'http://localhost:8080',
@@ -22,13 +23,12 @@ api.interceptors.response.use(
         if (!hasRefreshToken) {
           // No refresh token, clear user and redirect to login
           authStore.user = null
-          // Get current route to extract shop slug for login redirect
-          const currentRoute = router.currentRoute.value
-          const shopSlug = currentRoute.params.shopSlug
+          // Get current shop slug from path
+          const shopSlug = getCurrentShopSlug()
           if (shopSlug) {
-            router.push(`/shops/${shopSlug}/login`)
+            router.push(`/${shopSlug}/login`)
           } else {
-            router.push('/')
+            router.push('/select-shop')
           }
           return Promise.reject(error)
         }
@@ -37,13 +37,12 @@ api.interceptors.response.use(
       } catch (refreshError) {
         const authStore = useAuthStore()
         authStore.user = null
-        // Get current route to extract shop slug for login redirect
-        const currentRoute = router.currentRoute.value
-        const shopSlug = currentRoute.params.shopSlug
+        // Get current shop slug from path
+        const shopSlug = getCurrentShopSlug()
         if (shopSlug) {
-          router.push(`/shops/${shopSlug}/login`)
+          router.push(`/${shopSlug}/login`)
         } else {
-          router.push('/')
+          router.push('/select-shop')
         }
         return Promise.reject(refreshError)
       }

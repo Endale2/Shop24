@@ -2,10 +2,13 @@ package services
 
 import (
 	"errors"
+	"fmt"
+	"math/rand"
+	"sync"
 	"time"
 
-	authModels "github.com/Endale2/DRPS/auth/models"
-	authRepo "github.com/Endale2/DRPS/auth/repositories"
+	"strings"
+
 	"github.com/Endale2/DRPS/auth/utils" // Ensure utils package has VerifyGoogleIDToken and CreateToken
 	customerModels "github.com/Endale2/DRPS/customers/models"
 	customerRepo "github.com/Endale2/DRPS/customers/repositories"
@@ -17,62 +20,73 @@ type OptionalProfile struct {
 	FirstName, LastName, Phone, Address, City, State, PostalCode, Country string
 }
 
-// CustomerLoginOAuth handles Google (or other) OAuth login for customers.
-func CustomerLoginOAuth(provider, idToken string) (*customerModels.Customer, string, string, error) {
-	// Use the correct client ID for customers
-	payload, err := utils.VerifyGoogleIDToken(idToken, utils.GoogleCustomerClientID())
-	if err != nil {
-		return nil, "", "", err
-	}
+var (
+	otpStore = struct {
+		sync.Mutex
+		m map[string]otpEntry
+	}{m: make(map[string]otpEntry)}
+)
 
-	rec, _ := authRepo.FindAuthCustomerByProvider(provider, payload.Sub)
-	if rec == nil {
-		// First-time login: create customer profile + auth entry
+type otpEntry struct {
+	OTP     string
+	Expires time.Time
+}
+
+func generateOTP() string {
+	return fmt.Sprintf("%06d", rand.Intn(1000000))
+}
+
+// SendCustomerOTP generates and sends an OTP to the given email
+func SendCustomerOTP(email string) error {
+	otp := generateOTP()
+	otpStore.Lock()
+	otpStore.m[strings.ToLower(email)] = otpEntry{OTP: otp, Expires: time.Now().Add(5 * time.Minute)}
+	otpStore.Unlock()
+	fmt.Printf("[DEBUG] OTP for %s: %s\n", email, otp)
+	return nil
+}
+
+// VerifyCustomerOTP checks the OTP, creates/fetches customer, returns tokens and profile completeness
+func VerifyCustomerOTP(email, otp string) (*customerModels.Customer, string, string, bool, error) {
+	emailKey := strings.ToLower(email)
+	otpStore.Lock()
+	entry, ok := otpStore.m[emailKey]
+	otpStore.Unlock()
+	if !ok || entry.Expires.Before(time.Now()) || entry.OTP != otp {
+		return nil, "", "", false, errors.New("invalid or expired OTP")
+	}
+	// Remove OTP after use
+	otpStore.Lock()
+	delete(otpStore.m, emailKey)
+	otpStore.Unlock()
+	// Find or create customer
+	cust, err := customerRepo.GetCustomerByEmail(email)
+	if err != nil {
+		return nil, "", "", false, err
+	}
+	if cust == nil {
 		now := time.Now()
-		cust := &customerModels.Customer{
-			FirstName:    payload.GivenName,
-			LastName:     payload.FamilyName,
-			Email:        payload.Email,
-			ProfileImage: payload.Picture,
-			CreatedAt:    now,
-			UpdatedAt:    now,
+		cust = &customerModels.Customer{
+			Email:     email,
+			CreatedAt: now,
+			UpdatedAt: now,
 		}
 		res, err := customerRepo.CreateCustomer(cust)
 		if err != nil {
-			return nil, "", "", err
+			return nil, "", "", false, err
 		}
 		cust.ID = res.InsertedID.(primitive.ObjectID)
-
-		rec = &authModels.AuthCustomer{
-			Email:      payload.Email,
-			Username:   payload.Email, // Consistent with customer profile
-			Provider:   provider,
-			ProviderID: payload.Sub,
-			CustomerID: cust.ID,
-			Password:   "", // OAuth users don't have a local password
-		}
-		if _, err := authRepo.CreateAuthCustomer(rec); err != nil {
-			return nil, "", "", err
-		}
 	}
-
-	// Retrieve the customer profile
-	cust, err := customerRepo.GetCustomerByID(rec.CustomerID)
-	if err != nil || cust == nil {
-		return nil, "", "", errors.New("customer profile not found")
-	}
-
+	// Check profile completeness
+	complete := cust.FirstName != "" && cust.LastName != "" && cust.Phone != "" && cust.Address != "" && cust.City != "" && cust.State != "" && cust.PostalCode != "" && cust.Country != ""
 	// Generate tokens
 	at, err := utils.CreateToken(cust.ID.Hex(), 5*time.Minute)
 	if err != nil {
-		return nil, "", "", errors.New("failed to generate access token")
+		return nil, "", "", complete, errors.New("failed to generate access token")
 	}
 	rt, err := utils.CreateToken(cust.ID.Hex(), 7*24*time.Hour)
 	if err != nil {
-		return nil, "", "", errors.New("failed to generate refresh token")
+		return nil, "", "", complete, errors.New("failed to generate refresh token")
 	}
-
-	return cust, at, rt, nil
+	return cust, at, rt, complete, nil
 }
-
-// TODO: Add CustomerLoginOAuth logic for Telegram here

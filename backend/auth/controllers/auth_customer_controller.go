@@ -1,82 +1,59 @@
 package controllers
 
 import (
-	"fmt"
-	"net/http"
-	"os" // Needed for os.Getenv
-	"strings"
+	"net/http" // Needed for os.Getenv
 	"time"
 
 	authServices "github.com/Endale2/DRPS/auth/services"
-	"github.com/Endale2/DRPS/auth/utils" // Ensure utils package has GoogleOAuthConfig and ParseToken
-	customerRepo "github.com/Endale2/DRPS/customers/repositories"
-	sharedServices "github.com/Endale2/DRPS/shared/services" // Ensure this path is correct
+	"github.com/Endale2/DRPS/auth/utils"                          // Ensure utils package has GoogleOAuthConfig and ParseToken
+	customerRepo "github.com/Endale2/DRPS/customers/repositories" // Ensure this path is correct
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
-	"golang.org/x/oauth2" // Needed for oauth2.AccessTypeOffline
+
+	// Needed for oauth2.AccessTypeOffline
+	"go.mongodb.org/mongo-driver/bson"
 )
 
-// CustomerOAuthRedirect redirects to Google's OAuth consent page for customers.
-// It accepts an optional shopId query parameter to link the customer to a shop.
-func CustomerOAuthRedirect(c *gin.Context) {
-	shopID := c.Query("shopId")
-	// Encode state as "customer_state:<shopId>" or just "customer_state:" if empty
-	state := fmt.Sprintf("customer_state:%s", shopID)
-	url := utils.GetGoogleOAuthConfigForCustomer().AuthCodeURL(state, oauth2.AccessTypeOffline)
-	fmt.Println("CUSTOMER OAUTH REDIRECT URL:", url)
-	c.Redirect(http.StatusFound, url)
+// Only keep OTP and profile logic for customer authentication
+
+// CustomerRequestOTP handles POST /auth/customer/request-otp
+func CustomerRequestOTP(c *gin.Context) {
+	var req struct {
+		Email string `json:"email" binding:"required,email"`
+	}
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	err := authServices.SendCustomerOTP(req.Email)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to send OTP"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "OTP sent if email is valid"})
 }
 
-// CustomerOAuthCallback handles Google's OAuth callback for customers.
-// It links the customer to a shop if a shopId was passed in the state.
-func CustomerOAuthCallback(c *gin.Context) {
-	// 1. Parse state to extract shopId
-	rawState := c.Query("state")
-	parts := strings.SplitN(rawState, ":", 2)
-	var shopID string
-	if len(parts) == 2 {
-		shopID = parts[1]
+// CustomerVerifyOTP handles POST /auth/customer/verify-otp
+func CustomerVerifyOTP(c *gin.Context) {
+	var req struct {
+		Email string `json:"email" binding:"required,email"`
+		OTP   string `json:"otp" binding:"required"`
 	}
-
-	// 2. Exchange the code for a token
-	code := c.Query("code")
-	tok, err := utils.GetGoogleOAuthConfigForCustomer().Exchange(c, code)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "OAuth exchange failed for customer"})
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	// Extract ID token
-	idToken, ok := tok.Extra("id_token").(string)
-	if !ok {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "ID token not found in OAuth response"})
-		return
-	}
-
-	// 3. Create or fetch your customer, and issue app tokens
-	cust, at, rt, err := authServices.CustomerLoginOAuth("google", idToken)
+	cust, at, rt, profileComplete, err := authServices.VerifyCustomerOTP(req.Email, req.OTP)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
-
-	// 4. Link customer to shop if shopID present
-	if shopID != "" {
-		if shopOID, err := primitive.ObjectIDFromHex(shopID); err == nil {
-			_, _, _ = sharedServices.LinkIfNotLinked(shopOID, cust.ID)
-		}
-	}
-
-	// 5. Set HTTP-only cookies
-	c.SetCookie("access_token", at, int((5 * time.Minute).Seconds()), "/", "", false, true)
-	c.SetCookie("refresh_token", rt, int((7 * 24 * time.Hour).Seconds()), "/", "", false, true)
-
-	// 6. Redirect to your customer-specific SPA route
-	frontend := os.Getenv("CUSTOMER_FRONTEND_URL")
-	if frontend == "" {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "CUSTOMER_FRONTEND_URL not set in environment"})
-		return
-	}
-	c.Redirect(http.StatusFound, fmt.Sprintf("%s/customer/dashboard", frontend))
+	// Set cookies for cross-path local dev: Domain=.localhost, Path=/, HttpOnly, Secure=false, SameSite=Lax
+	c.SetCookie("access_token", at, int((5 * time.Minute).Seconds()), "/", ".localhost", false, true)
+	c.SetSameSite(http.SameSiteLaxMode)
+	c.SetCookie("refresh_token", rt, int((7 * 24 * time.Hour).Seconds()), "/", ".localhost", false, true)
+	c.SetSameSite(http.SameSiteLaxMode)
+	c.JSON(http.StatusOK, gin.H{"profile": cust, "profileComplete": profileComplete})
 }
 
 // TODO: Add CustomerTelegramOAuth handler here
@@ -88,20 +65,18 @@ func CustomerRefresh(c *gin.Context) {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "refresh token missing"})
 		return
 	}
-
 	claims, err := utils.ParseToken(rt)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired refresh token"})
 		return
 	}
-
 	at, err := utils.CreateToken(claims.UserID, 5*time.Minute)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create access token"})
 		return
 	}
-
-	c.SetCookie("access_token", at, int((5 * time.Minute).Seconds()), "/", "", false, true)
+	c.SetCookie("access_token", at, int((5 * time.Minute).Seconds()), "/", ".localhost", false, true)
+	c.SetSameSite(http.SameSiteLaxMode)
 	c.JSON(http.StatusOK, gin.H{"message": "access token refreshed"})
 }
 
@@ -138,9 +113,85 @@ func CustomerMe(c *gin.Context) {
 	c.JSON(http.StatusOK, customer)
 }
 
+// UpdateCustomerMe allows the authenticated customer to update their profile
+func UpdateCustomerMe(c *gin.Context) {
+	tokenStr, err := c.Cookie("access_token")
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "access token missing"})
+		return
+	}
+	claims, err := utils.ParseToken(tokenStr)
+	if err != nil {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "invalid or expired token"})
+		return
+	}
+	custID, err := primitive.ObjectIDFromHex(claims.UserID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid customer ID in token"})
+		return
+	}
+	var in struct {
+		FirstName  *string `json:"firstName"`
+		LastName   *string `json:"lastName"`
+		Phone      *string `json:"phone"`
+		Address    *string `json:"address"`
+		City       *string `json:"city"`
+		State      *string `json:"state"`
+		PostalCode *string `json:"postalCode"`
+		Country    *string `json:"country"`
+	}
+	if err := c.ShouldBindJSON(&in); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	update := bson.M{}
+	if in.FirstName != nil {
+		update["firstName"] = *in.FirstName
+	}
+	if in.LastName != nil {
+		update["lastName"] = *in.LastName
+	}
+	if in.Phone != nil {
+		update["phone"] = *in.Phone
+	}
+	if in.Address != nil {
+		update["address"] = *in.Address
+	}
+	if in.City != nil {
+		update["city"] = *in.City
+	}
+	if in.State != nil {
+		update["state"] = *in.State
+	}
+	if in.PostalCode != nil {
+		update["postalCode"] = *in.PostalCode
+	}
+	if in.Country != nil {
+		update["country"] = *in.Country
+	}
+	if len(update) == 0 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "no fields to update"})
+		return
+	}
+	update["updatedAt"] = time.Now()
+	err = customerRepo.UpdateCustomerByID(custID, update)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to update profile"})
+		return
+	}
+	customer, err := customerRepo.GetCustomerByID(custID)
+	if err != nil || customer == nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to load updated profile"})
+		return
+	}
+	c.JSON(http.StatusOK, customer)
+}
+
 // CustomerLogout clears auth cookies.
 func CustomerLogout(c *gin.Context) {
-	c.SetCookie("access_token", "", -1, "/", "", false, true)
-	c.SetCookie("refresh_token", "", -1, "/", "", false, true)
+	c.SetCookie("access_token", "", -1, "/", ".localhost", false, true)
+	c.SetSameSite(http.SameSiteLaxMode)
+	c.SetCookie("refresh_token", "", -1, "/", ".localhost", false, true)
+	c.SetSameSite(http.SameSiteLaxMode)
 	c.JSON(http.StatusOK, gin.H{"message": "logged out"})
 }

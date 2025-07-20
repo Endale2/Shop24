@@ -24,10 +24,7 @@ func main() {
 		log.Println("⚠️  No .env file found, using system env")
 	}
 
-	// Warn if GOOGLE_CUSTOMER_CLIENT_ID is missing
-	if os.Getenv("GOOGLE_CUSTOMER_CLIENT_ID") == "" {
-		log.Println("❌ GOOGLE_CUSTOMER_CLIENT_ID is not set! Customer OAuth will fail.")
-	}
+
 
 	// Check for required JWT secret
 	jwtSecret := os.Getenv("JWT_SECRET")
@@ -64,11 +61,11 @@ func main() {
 				return true
 			}
 			// 3) Storefront root
-			if host == "localhost" && port == "5175" {
+			if (host == "localhost" || host == "127.0.0.1") && port == "5175" {
 				return true
 			}
-			// 4) Any storefront subdomain on 5175, e.g. shop123.localhost:5175
-			if port == "5175" && strings.HasSuffix(host, ".localhost") {
+			// 4) Any storefront subdomain on 5175, e.g. shop123.localhost:5175 or shop123.127.0.0.1:5175
+			if port == "5175" && (strings.HasSuffix(host, ".localhost") || strings.HasSuffix(host, ".127.0.0.1")) {
 				return true
 			}
 			return false

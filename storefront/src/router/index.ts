@@ -15,10 +15,11 @@ import WishlistPage from '../pages/WishlistPage.vue'
 import MyOrdersPage from '../pages/MyOrdersPage.vue'
 import { useAuthStore } from '../stores/auth'
 import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router'
+import { getCurrentShopSlug, clearPersistedShop, setCurrentShopSlug } from '../services/shop'
 
 const routes = [
   {
-    path: '/',
+    path: '/:shopSlug',
     component: StoreLayout,
     children: [
       { path: '', name: 'Home', component: HomePage },
@@ -35,16 +36,33 @@ const routes = [
       { path: 'orders', name: 'MyOrders', component: MyOrdersPage },
     ],
   },
-  // Shop selection page (for root domain only)
+  // Shop selection page is now the root
   {
-    path: '/select-shop',
+    path: '/',
     component: ShopSelection
   },
-]
+];
 
 export const router = createRouter({
   history: createWebHistory(),
   routes,
 })
+
+// Global navigation guard: enforce shop slug presence in path
+router.beforeEach((to, from, next) => {
+  // Allow /select-shop and root
+  if (to.path === '/select-shop' || to.path === '/') return next();
+  const shopSlug = getCurrentShopSlug();
+  const toShopSlug = to.params.shopSlug as string | undefined;
+  if (toShopSlug && toShopSlug !== shopSlug) {
+    // User is navigating to a different shop, clear previous shop context
+    clearPersistedShop();
+    setCurrentShopSlug(toShopSlug);
+  }
+  if (!shopSlug && !toShopSlug) {
+    return next('/select-shop');
+  }
+  next();
+});
 
 export default router

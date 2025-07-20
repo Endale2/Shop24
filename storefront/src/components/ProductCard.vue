@@ -1,6 +1,6 @@
 <template>
   <router-link
-    :to="`/products/${product.slug}`"
+    :to="`/${shopSlug}/products/${product.slug}`"
     class="bg-white border border-gray-200 rounded-none p-4 group flex flex-col h-full transition-colors hover:border-black cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-200 relative"
     @mouseenter="onHover"
     @mouseleave="onLeave"

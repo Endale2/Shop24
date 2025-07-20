@@ -2,7 +2,6 @@ package services
 
 import (
 	"errors"
-	"fmt"
 	"strings"
 	"time"
 
@@ -405,7 +404,6 @@ func EnsureProductVariantIDs(product *models.Product) error {
 			newID := primitive.NewObjectID()
 			updatedVariants[i].VariantID = newID
 			needsUpdate = true
-			fmt.Printf("Generated new variant ID %s for product %s variant %d\n", newID.Hex(), product.ID.Hex(), i)
 		}
 	}
 
@@ -418,7 +416,6 @@ func EnsureProductVariantIDs(product *models.Product) error {
 		}
 		// Update the product in memory with the new variant IDs
 		product.Variants = updatedVariants
-		fmt.Printf("Updated product %s with %d variants in database\n", product.ID.Hex(), len(updatedVariants))
 	}
 
 	return nil

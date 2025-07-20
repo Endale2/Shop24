@@ -3,7 +3,6 @@ package services
 import (
 	"errors"
 
-	"fmt"
 	"time"
 
 	"github.com/Endale2/DRPS/shared/models"
@@ -185,13 +184,7 @@ func (s *CartService) CalculateTotals(cart *models.Cart, customerID primitive.Ob
 			if bestDiscount != nil {
 				itemDiscountAmount = bestDiscount.CalculateDiscountForQuantity(item.UnitPrice, item.Quantity)
 				item.AppliedDiscountIDs = append(item.AppliedDiscountIDs, bestDiscount.ID)
-				fmt.Printf("Cart: Applied discount %s (Type: %s, Value: %.2f) to item %s, savings: %.2f\n",
-					bestDiscount.Name, bestDiscount.Type, bestDiscount.Value, item.ProductID.Hex(), itemDiscountAmount)
-			} else {
-				fmt.Printf("Cart: No eligible discount found for item %s\n", item.ProductID.Hex())
 			}
-		} else {
-			fmt.Printf("Cart: No discounts found for item %s (error: %v)\n", item.ProductID.Hex(), err)
 		}
 
 		item.DiscountAmount = itemDiscountAmount
@@ -232,36 +225,22 @@ func (s *CartService) findBestEligibleDiscount(discounts []models.Discount, unit
 	var bestDiscount *models.Discount
 	bestSavings := 0.0
 
-	fmt.Printf("Cart: Checking %d discounts for unit price %.2f, quantity %d\n", len(discounts), unitPrice, quantity)
-
 	for i := range discounts {
 		discount := &discounts[i]
-		fmt.Printf("Cart: Checking discount: %s (Type: %s, Value: %.2f, Active: %v)\n",
-			discount.Name, discount.Type, discount.Value, discount.IsActive())
-
 		if discount.IsActive() {
 			// Use the improved validation function
 			canUse, err := CanCustomerUseDiscount(discount, customerID, customerSegmentIDs)
-			fmt.Printf("Cart: Customer can use discount: %v, error: %v\n", canUse, err)
 
 			if err == nil && canUse {
 				// Calculate actual savings for this discount using the correct method
 				savings := discount.CalculateDiscountForQuantity(unitPrice, quantity)
-				fmt.Printf("Cart: Discount savings: %.2f for unit price: %.2f, quantity: %d\n", savings, unitPrice, quantity)
 
 				if savings > bestSavings {
 					bestSavings = savings
 					bestDiscount = discount
-					fmt.Printf("Cart: New best discount: %s with savings: %.2f\n", discount.Name, savings)
 				}
 			}
 		}
-	}
-
-	if bestDiscount != nil {
-		fmt.Printf("Cart: Selected best discount: %s with savings: %.2f\n", bestDiscount.Name, bestSavings)
-	} else {
-		fmt.Printf("Cart: No eligible discount found\n")
 	}
 
 	return bestDiscount
