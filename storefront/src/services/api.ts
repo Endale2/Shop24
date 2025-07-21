@@ -4,48 +4,18 @@ import { useAuthStore } from '../stores/auth'
 import router from '../router'
 import { getCurrentShopSlug } from './shop';
 
-// Utility: Redirect to login or shop selection
-function redirectToLogin() {
-  const authStore = useAuthStore()
-  authStore.user = null
-  const shopSlug = getCurrentShopSlug()
-  if (shopSlug) {
-    router.push(`/${shopSlug}/login`)
-  } else {
-    router.push('/select-shop')
-  }
-}
-
 const api = axios.create({
   baseURL: 'http://localhost:8080',
   withCredentials: true,
 })
 
-// --- REQUEST INTERCEPTOR: Attach access token if present ---
-api.interceptors.request.use(
-  (config) => {
-    // Try to get access token from cookies
-    const match = document.cookie.match(/(?:^|; )access_token=([^;]*)/)
-    if (match && match[1]) {
-      config.headers = config.headers || {}
-      config.headers['Authorization'] = `Bearer ${decodeURIComponent(match[1])}`
-    }
-    return config
-  },
-  (error) => Promise.reject(error)
-)
-
-// --- RESPONSE INTERCEPTOR: Handle 401, refresh token, queue requests ---
 let isRefreshing = false
 let failedQueue: any[] = []
 
-function processQueue(error: any, token: string | null = null) {
+function processQueue(error: any) {
   failedQueue.forEach(prom => {
-    if (error) {
-      prom.reject(error)
-    } else {
-      prom.resolve(token)
-    }
+    if (error) prom.reject(error)
+    else prom.resolve()
   })
   failedQueue = []
 }
@@ -56,46 +26,32 @@ api.interceptors.response.use(
     const originalRequest = error.config
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
-        // Queue up requests while refresh is in progress
-        return new Promise(function(resolve, reject) {
-          failedQueue.push({resolve, reject})
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject })
         })
-        .then(() => api(originalRequest))
-        .catch(err => Promise.reject(err))
+          .then(() => api(originalRequest))
+          .catch(err => Promise.reject(err))
       }
       originalRequest._retry = true
       isRefreshing = true
       const authStore = useAuthStore()
-      // Check if refresh token exists in cookies before attempting refresh
-      const hasRefreshToken = document.cookie.includes('refresh_token')
-      // Only redirect to login for protected routes
-      const protectedRoutes = ['/account', '/orders', '/checkout'];
-      const currentPath = router.currentRoute.value.path;
-      if (!hasRefreshToken) {
-        // Only redirect if on a protected route
-        if (protectedRoutes.some(route => currentPath.startsWith(route))) {
-          redirectToLogin()
-        } else {
-          authStore.user = null
-        }
-        processQueue(error, null)
-        isRefreshing = false
-        return Promise.reject(error)
-      }
       try {
         await authStore.refreshToken()
-        processQueue(null, null)
+        processQueue(null)
         isRefreshing = false
         return api(originalRequest)
       } catch (refreshError) {
-        // Only redirect if on a protected route
-        if (protectedRoutes.some(route => currentPath.startsWith(route))) {
-          redirectToLogin()
-        } else {
-          authStore.user = null
-        }
-        processQueue(refreshError, null)
+        authStore.user = null
+        processQueue(refreshError)
         isRefreshing = false
+        // Optionally redirect to login if on protected route
+        const protectedRoutes = ['/account', '/orders', '/checkout']
+        const currentPath = router.currentRoute.value.path
+        if (protectedRoutes.some(route => currentPath.startsWith(route))) {
+          const shopSlug = getCurrentShopSlug()
+          if (shopSlug) router.push(`/${shopSlug}/login`)
+          else router.push('/select-shop')
+        }
         return Promise.reject(refreshError)
       }
     }

@@ -2,39 +2,37 @@ import api from './api'
 import { getCurrentShopSlug } from './shop';
 
 export interface RegisterPayload {
-  firstName: string
-  lastName: string
-  username: string
-  email: string
-  password: string
-  phone: string
-  address: string
-  city: string
-  state: string
-  postalCode: string
-  country: string
-  shopId: string
+  firstName?: string;
+  lastName?: string;
+  username: string;
+  email: string;
+  password: string;
+  shopId: string;
 }
 export interface LoginPayload {
-  email: string
-  password: string
-  shopId: string
+  email: string;
+  password: string;
+  shopId: string;
 }
 
-export async function register(data: { username: string; email: string; password: string; shopId: string; firstName?: string; lastName?: string }) {
-  return api.post('/auth/customer/register', data)
+export async function register(data: RegisterPayload) {
+  const shopId = data.shopId || getCurrentShopSlug();
+  return api.post('/auth/customer/register', { ...data, shopId });
 }
 
-export async function login(email: string, password: string, shopId: string) {
-  return api.post('/auth/customer/login', { email, password, shopId })
+export async function login(data: LoginPayload) {
+  const shopId = data.shopId || getCurrentShopSlug();
+  return api.post('/auth/customer/login', { ...data, shopId });
 }
 
 export async function requestOTP(email: string) {
-  return api.post('/auth/customer/request-otp', { email });
+  const shopId = getCurrentShopSlug();
+  return api.post('/auth/customer/request-otp', { email, shopId });
 }
 
 export async function verifyOTP(email: string, otp: string) {
-  return api.post('/auth/customer/verify-otp', { email, otp });
+  const shopId = getCurrentShopSlug();
+  return api.post('/auth/customer/verify-otp', { email, otp, shopId });
 }
 
 export async function getProfile() {
@@ -50,6 +48,5 @@ export async function refreshToken() {
 }
 
 export async function updateCustomerProfile(profile: any) {
-  // PATCH /auth/customer/me
-  return api.patch('/auth/customer/me', profile)
+  return api.patch('/auth/customer/me', profile);
 }

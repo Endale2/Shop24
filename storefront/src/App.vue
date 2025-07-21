@@ -1,14 +1,20 @@
 <template>
   <div>
-    <div v-if="authStore.error" class="bg-red-600 text-white text-center py-2 w-full z-50">
-      {{ authStore.error }}
+    <div v-if="authStore.sessionLoading">
+      <Loader text="Checking session..." />
     </div>
-    <router-view />
+    <div v-else>
+      <div v-if="authStore.error" class="bg-red-600 text-white text-center py-2 w-full z-50">
+        {{ authStore.error }}
+      </div>
+      <router-view />
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { useAuthStore } from './stores/auth'
+import Loader from '@/components/Loader.vue'
 const authStore = useAuthStore()
 </script>
 

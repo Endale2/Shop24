@@ -10,7 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 
-	// Needed for oauth2.AccessTypeOffline
+	
 	"go.mongodb.org/mongo-driver/bson"
 )
 
@@ -49,9 +49,9 @@ func CustomerVerifyOTP(c *gin.Context) {
 		return
 	}
 	// Set cookies for cross-path local dev: Domain=.localhost, Path=/, HttpOnly, Secure=false, SameSite=Lax
-	c.SetCookie("access_token", at, int((5 * time.Minute).Seconds()), "/", ".localhost", false, true)
+	c.SetCookie("access_token", at, int((5 * time.Minute).Seconds()), "/", "localhost", false, true)
 	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("refresh_token", rt, int((7 * 24 * time.Hour).Seconds()), "/", ".localhost", false, true)
+	c.SetCookie("refresh_token", rt, int((7 * 24 * time.Hour).Seconds()), "/", "localhost", false, true)
 	c.SetSameSite(http.SameSiteLaxMode)
 	c.JSON(http.StatusOK, gin.H{"profile": cust, "profileComplete": profileComplete})
 }
