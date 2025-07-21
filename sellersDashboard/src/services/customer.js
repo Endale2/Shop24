@@ -13,35 +13,44 @@ export const customerService = {
    * @returns {Promise<Object>} { customers, total, page, pageSize }
    */
   async fetchAll(shopId, { page = 1, limit = 10, search = '', segmentId = '' } = {}) {
-    const params = []
-    if (page) params.push(`page=${page}`)
-    if (limit) params.push(`limit=${limit}`)
-    if (search) params.push(`search=${encodeURIComponent(search)}`)
-    if (segmentId) params.push(`segmentId=${segmentId}`)
-    const query = params.length ? `?${params.join('&')}` : ''
-    const res = await api.get(`/seller/shops/${shopId}/customers${query}`)
-    // Normalize list entries
-    const customers = res.data.customers.map(item => ({
-      id:           item.customer.id,
-      firstName:    item.customer.firstName,
-      lastName:     item.customer.lastName,
-      email:        item.customer.email,
-      phone:        item.customer.phone,
-      address:      item.customer.address,
-      city:         item.customer.city,
-      state:        item.customer.state,
-      postalCode:   item.customer.postalCode,
-      country:      item.customer.country,
-      createdAt:    item.customer.createdAt,
-      updatedAt:    item.customer.updatedAt,
-      linkId:       item.linkId ?? null,
-      profile_image: item.customer.profile_image
-    }))
-    return {
-      customers,
-      total: res.data.total,
-      page: res.data.page,
-      pageSize: res.data.pageSize
+    if (!shopId) return { customers: [], total: 0, page: 1, pageSize: 10 };
+    try {
+      const params = []
+      if (page) params.push(`page=${page}`)
+      if (limit) params.push(`limit=${limit}`)
+      if (search) params.push(`search=${encodeURIComponent(search)}`)
+      if (segmentId) params.push(`segmentId=${segmentId}`)
+      const query = params.length ? `?${params.join('&')}` : ''
+      const res = await api.get(`/seller/shops/${shopId}/customers${query}`)
+      if (!res.data || !Array.isArray(res.data.customers)) {
+        return { customers: [], total: 0, page: 1, pageSize: 10 };
+      }
+      // Normalize list entries
+      const customers = res.data.customers.map(item => ({
+        id:           item.customer.id,
+        firstName:    item.customer.firstName,
+        lastName:     item.customer.lastName,
+        email:        item.customer.email,
+        phone:        item.customer.phone,
+        address:      item.customer.address,
+        city:         item.customer.city,
+        state:        item.customer.state,
+        postalCode:   item.customer.postalCode,
+        country:      item.customer.country,
+        createdAt:    item.customer.createdAt,
+        updatedAt:    item.customer.updatedAt,
+        linkId:       item.linkId ?? null,
+        profile_image: item.customer.profile_image
+      }))
+      return {
+        customers,
+        total: res.data.total,
+        page: res.data.page,
+        pageSize: res.data.pageSize
+      }
+    } catch (err) {
+      // Optionally log error
+      return { customers: [], total: 0, page: 1, pageSize: 10 };
     }
   },
 

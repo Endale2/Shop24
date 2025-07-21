@@ -136,7 +136,7 @@
           ></div>
           {{ segment.name }}
           <span class="ml-2 bg-gray-200 text-gray-700 px-2 py-0.5 rounded-full text-xs">
-            {{ getCustomersInSegment(segment.id).length }}
+            {{ (segment.customer_ids || []).length }}
           </span>
         </button>
       </div>
@@ -558,11 +558,21 @@ onMounted(async () => {
   await refreshAll()
 })
 
+watch(activeShop, (newShop, oldShop) => {
+  if (newShop?.id !== oldShop?.id) {
+    refreshAll()
+  }
+})
+
 watch([search, selectedSegment, page], async () => {
   await fetchCustomers()
 })
 
 async function refreshAll() {
+  if (!activeShop.value?.id) {
+    error.value = 'Please ensure you have an active shop selected and try again.'
+    return
+  }
   loading.value = true
   try {
     await Promise.all([
@@ -578,6 +588,10 @@ async function refreshAll() {
 }
 
 async function fetchCustomers() {
+  if (!activeShop.value?.id) {
+    error.value = 'Please ensure you have an active shop selected and try again.'
+    return
+  }
   loading.value = true
   try {
     error.value = null;
@@ -593,12 +607,10 @@ async function fetchCustomers() {
     customers.value = Array.isArray(custs) ? custs : [];
     total.value = typeof t === 'number' ? t : 0;
     pageSize.value = typeof ps === 'number' ? ps : 10;
-    // If no customers, do not set error
     if (customers.value.length === 0) {
       error.value = null;
     }
   } catch (e) {
-    // Only show error if it's a real fetch error, not just empty results
     if (e && e.response && (e.response.status === 404 || e.response.status === 204)) {
       customers.value = [];
       total.value = 0;
@@ -613,18 +625,31 @@ async function fetchCustomers() {
 }
 
 async function fetchSegments() {
+  if (!activeShop.value?.id) {
+    error.value = 'Please ensure you have an active shop selected and try again.'
+    return
+  }
   try {
-    segments.value = await customerSegmentService.fetchAll(activeShop.value.id)
+    let rawSegments = await customerSegmentService.fetchAll(activeShop.value.id)
+    if (!Array.isArray(rawSegments)) rawSegments = [];
+    segments.value = rawSegments.map(seg => ({
+      ...seg,
+      customer_ids: Array.isArray(seg.customer_ids) ? seg.customer_ids : [],
+    }))
   } catch (e) {
-    error.value = 'Failed to load segments.'
+    error.value = 'Failed to load segments. Please ensure you have an active shop selected and try again.'
   }
 }
 
 async function fetchStats() {
+  if (!activeShop.value?.id) {
+    error.value = 'Please ensure you have an active shop selected and try again.'
+    return
+  }
   try {
     stats.value = await customerService.fetchStats(activeShop.value.id)
   } catch (e) {
-    error.value = 'Failed to load stats.'
+    error.value = 'Failed to load stats. Please ensure you have an active shop selected and try again.'
   }
 }
 
