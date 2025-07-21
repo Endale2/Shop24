@@ -36,14 +36,12 @@
 
     <h1 class="text-3xl font-bold mb-8 text-gray-900 tracking-tight uppercase">{{ pageTitle }}</h1>
     
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+    <Loader v-if="isLoading" text="Loading products..." />
+    <div v-else class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
       <ProductCard v-for="p in filteredProducts" :key="p.id" :product="p" />
     </div>
 
-    <div v-if="isLoading" class="text-center py-10 text-gray-500">
-      Loading products...
-    </div>
-    <div v-else-if="filteredProducts.length === 0" class="text-center py-10 text-gray-500">
+    <div v-if="!isLoading && filteredProducts.length === 0" class="text-center py-10 text-gray-500">
       No products found in this collection.
     </div>
   </div>
@@ -57,6 +55,7 @@ import { fetchCollections, fetchCollectionDetail } from '@/services/collections'
 import { getCurrentShopSlug } from '@/services/shop';
 import type { Product } from '@/services/product';
 import type { Collection } from '@/services/collections';
+import Loader from '@/components/Loader.vue';
 
 const products = ref<Product[]>([]);
 const collections = ref<Collection[]>([]);

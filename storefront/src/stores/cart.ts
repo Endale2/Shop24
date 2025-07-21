@@ -33,11 +33,15 @@ export const useCartStore = defineStore('cart', {
         this.loading = false;
       }
     },
-    async addToCart(productId: string, variantId: string, quantity: number) {
+    async addToCart(productData: any, variantId: string, quantity: number) {
       const slug = this.shopSlug || getCurrentShopSlug();
       if (!slug) return;
       this.loading = true;
       this.error = null;
+
+      // Ensure product ID is a string, not an object
+      const productId = typeof productData === 'object' && productData !== null ? productData.id : productData;
+
       try {
         const { data } = await cartApi.addToCart(slug, productId, variantId, quantity);
         this.cart = data;

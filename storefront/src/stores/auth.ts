@@ -73,6 +73,12 @@ export const useAuthStore = defineStore('auth', {
     },
     async verifySession() {
       this.sessionLoading = true
+      // Only try to refresh if a token exists in cookies
+      if (!document.cookie.includes('refresh_token')) {
+        this.user = null
+        this.sessionLoading = false
+        return
+      }
       try {
         await this.refreshToken()
         await this.fetchProfile()

@@ -11,7 +11,8 @@
     <span>/</span>
     <span>{{ collection?.title || '' }}</span>
   </nav>
-  <div v-if="collection" class="space-y-10">
+  <Loader v-if="isLoading" text="Loading collection..." />
+  <div v-else-if="collection" class="space-y-10">
     <div class="relative h-64 md:h-80 bg-cover bg-center rounded-lg border border-gray-200 overflow-hidden" :style="{ backgroundImage: collection.image ? `url(${collection.image})` : '' }">
       <div class="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent flex flex-col items-center justify-end p-8 text-center">
         <h1 class="text-4xl md:text-5xl font-extrabold text-white tracking-tight uppercase" style="text-shadow: 2px 2px 4px rgba(0,0,0,0.5);">{{ collection.title }}</h1>
@@ -34,9 +35,6 @@
       </div>
     </div>
   </div>
-  <div v-else class="text-center py-16 text-gray-500">
-    Loading collection…
-  </div>
 </template>
 
 <script setup lang="ts">
@@ -45,14 +43,18 @@ import { useRoute } from 'vue-router'
 import { fetchCollectionDetail, CollectionDetail } from '@/services/collections'
 import { getCurrentShopSlug } from '@/services/shop'
 import ProductCard from '@/components/ProductCard.vue'
+import Loader from '@/components/Loader.vue';
 
 const route = useRoute()
 const handle = route.params.handle as string
 const collection = ref<CollectionDetail | null>(null)
+const isLoading = ref(true)
 
 onMounted(async () => {
   const shopSlug = getCurrentShopSlug();
   if (!shopSlug) return;
+  isLoading.value = true
   collection.value = await fetchCollectionDetail(shopSlug, handle)
+  isLoading.value = false
 })
 </script>

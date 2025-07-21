@@ -11,7 +11,8 @@
     <span>/</span>
     <span>{{ product?.name || 'Product Detail' }}</span>
   </nav>
-  <div v-if="product" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+  <Loader v-if="isLoading" text="Loading product..." />
+  <div v-else-if="product" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div class="flex flex-row lg:flex-col gap-4 overflow-x-auto lg:overflow-x-visible">
         <div
@@ -218,7 +219,6 @@
       </div>
     </div>
   </div>
-  <div v-else class="text-center py-20 text-gray-500 text-xl">Loading product…</div>
 </template>
 
 <script setup lang="ts">
@@ -232,6 +232,7 @@ import type { Product } from '@/services/product'
 import Header from '../components/Header.vue'
 import { formatDiscountValue } from '@/utils/discount'
 import { getCurrentShopSlug } from '@/services/shop';
+import Loader from '@/components/Loader.vue';
 
 // Define interfaces to match your data structure for better type safety
 interface ProductOption {
@@ -255,6 +256,7 @@ const selectedVariant = ref<Variant | null>(null)
 const currentImage = ref<string>('')
 const quantity = ref(1)
 const addToCartSuccess = ref(false)
+const isLoading = ref(true)
 
 const cartStore = useCartStore()
 const authStore = useAuthStore()
@@ -263,12 +265,14 @@ const wishlistStore = useWishlistStore()
 onMounted(async () => {
   const shopSlug = getCurrentShopSlug();
   if (!shopSlug || !handle) return;
+  isLoading.value = true
   product.value = await fetchProductDetail(shopSlug, handle);
   if (product.value) {
     currentImage.value = product.value.main_image;
   }
   // Set shop slug in cart store
   cartStore.setShopSlug(shopSlug);
+  isLoading.value = false
 })
 
 const galleryImages = computed<string[]>(() => {

@@ -17,8 +17,20 @@
         <p class="text-gray-600">Track your order history and status</p>
       </div>
 
+      <LoginPrompt
+        v-if="!authStore.user"
+        title="Sign in to view your orders"
+        message="Track your order history and status by signing into your account."
+      >
+        <template #icon>
+          <svg class="w-24 h-24 text-gray-300 mx-auto mb-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg>
+        </template>
+      </LoginPrompt>
+
       <!-- Loading State -->
-      <div v-if="loading" class="text-center py-12">
+      <div v-else-if="loading" class="text-center py-12">
         <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-black"></div>
         <p class="mt-4 text-gray-600">Loading your orders...</p>
       </div>
@@ -30,13 +42,13 @@
         </svg>
         <h3 class="text-lg font-semibold text-gray-900 mb-2">Unable to load orders</h3>
         <p class="text-gray-600 mb-4">{{ error }}</p>
-        <button @click="fetchOrders" class="bg-black text-white py-2 px-4 rounded-none font-semibold uppercase tracking-wide hover:bg-gray-800 transition-colors">
+        <button @click="fetchOrders" class="bg-black text-white py-2 px-4 rounded-md font-bold uppercase tracking-wide hover:bg-gray-800 transition-colors">
           Try Again
         </button>
       </div>
 
       <!-- Orders List -->
-      <div v-else-if="orders.length > 0" class="grid gap-6 md:grid-cols-2">
+      <div v-else-if="orders.length > 0" class="grid gap-6 lg:grid-cols-2">
         <div v-for="order in orders" :key="order._id" class="bg-white border border-gray-200 rounded-lg p-6 shadow-sm hover:shadow-lg transition-shadow duration-200 flex flex-col h-full">
           <!-- Order Header -->
           <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-4 gap-2">
@@ -100,7 +112,7 @@
         <p class="text-gray-600 mb-6">Start shopping to see your orders here</p>
         <router-link 
           :to="'/products'" 
-          class="inline-block bg-black text-white py-3 px-6 rounded-none font-semibold uppercase tracking-wide hover:bg-gray-800 transition-colors"
+          class="inline-block bg-black text-white py-3 px-6 rounded-md font-bold uppercase tracking-wide hover:bg-gray-800 transition-colors"
         >
           Browse Products
         </router-link>
@@ -115,6 +127,7 @@ import { useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { getCustomerOrders } from '@/services/order';
 import { PhotoIcon } from '@heroicons/vue/24/outline'
+import LoginPrompt from '@/components/LoginPrompt.vue';
 
 const route = useRoute();
 const authStore = useAuthStore();

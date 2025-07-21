@@ -133,10 +133,10 @@
 
         <!-- Action Buttons -->
         <div class="flex flex-col sm:flex-row gap-4">
-          <router-link :to="{ path: `/${shopSlug}/` }" class="flex-1 py-3 px-6 bg-black text-white rounded-md font-medium hover:bg-gray-800 text-center">
+          <router-link :to="{ path: `/${shopSlug}/` }" class="flex-1 py-3 px-6 bg-black text-white rounded-md font-bold uppercase tracking-wide hover:bg-gray-800 text-center transition-colors">
             Continue Shopping
           </router-link>
-          <router-link :to="{ name: 'MyOrders', params: { shopSlug: shopSlug } }" class="flex-1 py-3 px-6 border border-gray-300 text-gray-700 rounded-md font-medium hover:bg-gray-50 text-center">
+          <router-link :to="{ name: 'MyOrders', params: { shopSlug: shopSlug } }" class="flex-1 py-3 px-6 border border-gray-300 text-gray-700 rounded-md font-medium uppercase tracking-wide hover:bg-gray-50 text-center transition-colors">
             View My Orders
           </router-link>
         </div>

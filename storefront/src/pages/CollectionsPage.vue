@@ -10,7 +10,8 @@
       <span class="text-gray-900 font-medium">Collections</span>
     </nav>
     <h1 class="text-3xl font-bold mb-8 text-gray-900 tracking-tight uppercase">Collections</h1>
-    <div class="bg-white border border-gray-200 rounded-none p-6">
+    <Loader v-if="isLoading" text="Loading collections..." />
+    <div v-else class="bg-white border border-gray-200 rounded-none p-6">
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
         <router-link
           v-for="c in collections"
@@ -34,10 +35,12 @@ import { useRouter } from 'vue-router'
 import { fetchCollections } from '../services/collections'
 import type { Collection } from '../services/collections'
 import { getCurrentShopSlug } from '../services/shop';
+import Loader from '@/components/Loader.vue';
 
 const router = useRouter()
 
 const collections = ref<Collection[]>([])
+const isLoading = ref(true)
 
 function goBack() {
   router.back()
@@ -46,6 +49,8 @@ function goBack() {
 onMounted(async () => {
   const shopSlug = getCurrentShopSlug();
   if (!shopSlug) return;
+  isLoading.value = true
   collections.value = await fetchCollections(shopSlug)
+  isLoading.value = false
 })
 </script>

@@ -12,6 +12,9 @@ export const useWishlistStore = defineStore('wishlist', {
   }),
   actions: {
     setShopSlug(slug: string) {
+      if (this.shopSlug && this.shopSlug !== slug) {
+        this.clearWishlistState();
+      }
       this.shopSlug = slug;
     },
     async fetchWishlist() {
@@ -68,8 +71,5 @@ export const useWishlistStore = defineStore('wishlist', {
       this.products = [];
       this.error = null;
     },
-  },
-  persist: {
-    paths: ['productIds', 'shopSlug'],
   },
 }); 
