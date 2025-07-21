@@ -14,6 +14,9 @@ import OrderConfirmation from '../pages/OrderConfirmation.vue'
 import WishlistPage from '../pages/WishlistPage.vue'
 import MyOrdersPage from '../pages/MyOrdersPage.vue'
 import { useAuthStore } from '../stores/auth'
+import { useCartStore } from '../stores/cart'
+import { useWishlistStore } from '../stores/wishlist'
+import api from '../services/api'
 import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router'
 import { getCurrentShopSlug, clearPersistedShop, setCurrentShopSlug } from '../services/shop'
 
@@ -49,7 +52,7 @@ export const router = createRouter({
 })
 
 // Global navigation guard: enforce shop slug presence in path
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   // Allow /select-shop and root
   if (to.path === '/select-shop' || to.path === '/') return next();
   const shopSlug = getCurrentShopSlug();
@@ -58,6 +61,17 @@ router.beforeEach((to, from, next) => {
     // User is navigating to a different shop, clear previous shop context
     clearPersistedShop();
     setCurrentShopSlug(toShopSlug);
+
+    // Clear all localStorage
+    localStorage.clear();
+
+    // Call backend logout to clear cookies
+    try { await api.post('/auth/customer/logout'); } catch {}
+
+    // Reset Pinia stores
+    useAuthStore().$reset();
+    useCartStore().$reset();
+    useWishlistStore().$reset();
   }
   if (!shopSlug && !toShopSlug) {
     return next('/select-shop');
