@@ -8,7 +8,7 @@ import CollectionDetail from '../pages/CollectionDetail.vue'
 import AccountPage from '../pages/AccountPage.vue'
 import ShopSelection from '../pages/ShopSelection.vue'
 import LoginPage from '../pages/LoginPage.vue'
-import RegisterPage from '../pages/RegisterPage.vue'
+
 import CartPage from '../pages/CartPage.vue'
 import OrderConfirmation from '../pages/OrderConfirmation.vue'
 import WishlistPage from '../pages/WishlistPage.vue'
@@ -17,7 +17,7 @@ import { useAuthStore } from '../stores/auth'
 import { useCartStore } from '../stores/cart'
 import { useWishlistStore } from '../stores/wishlist'
 import api from '../services/api'
-import type { NavigationGuardNext, RouteLocationNormalized } from 'vue-router'
+
 import { getCurrentShopSlug, clearPersistedShop, setCurrentShopSlug } from '../services/shop'
 
 const routes = [
@@ -32,7 +32,6 @@ const routes = [
       { path: 'collections/:handle', name: 'CollectionDetail', component: CollectionDetail },
       { path: 'account', name: 'Account', component: AccountPage, meta: { requiresAuth: true } },
       { path: 'login', name: 'Login', component: LoginPage },
-      { path: 'register', name: 'Register', component: RegisterPage },
       { path: 'cart', name: 'Cart', component: CartPage, meta: { requiresAuth: true } },
       { path: 'order-confirmation/:orderId', name: 'OrderConfirmation', component: OrderConfirmation, meta: { requiresAuth: true } },
       { path: 'wishlist', name: 'Wishlist', component: WishlistPage, meta: { requiresAuth: true } },

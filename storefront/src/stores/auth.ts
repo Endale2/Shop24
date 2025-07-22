@@ -189,5 +189,8 @@ export const useAuthStore = defineStore('auth', {
       } catch {}
     },
   },
+  persist: {
+    paths: ['user', 'otpRequested', 'email', 'profileComplete']
+  },
   // No persistence: always rely on backend cookies for session state
 });

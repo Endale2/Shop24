@@ -59,6 +59,9 @@ const shopSlug = getCurrentShopSlug();
 onMounted(async () => {
   localStorage.clear();
   if (typeof authStore.$reset === 'function') authStore.$reset();
+  // Reset loading and error state to prevent stuck spinner
+  authStore.loading = false;
+  authStore.error = null;
   const cartStore = useCartStore();
   if (typeof cartStore.$reset === 'function') cartStore.$reset();
   try {
