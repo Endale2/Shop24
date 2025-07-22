@@ -1,12 +1,5 @@
 <template>
-  <!-- Breadcrumb and Back Button -->
-  <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-6">
-    <button disabled class="text-gray-300 flex items-center gap-1 font-medium text-xs mr-2 cursor-not-allowed">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-      Back
-    </button>
-    <span class="font-semibold text-black">Home</span>
-  </nav>
+  
   <Hero :shop="shop" />
   <section class="mt-12 max-w-7xl mx-auto px-2">
     <h2 class="text-3xl font-bold mb-8 text-gray-900 tracking-tight uppercase">Featured Products</h2>
@@ -18,6 +11,11 @@
       <p class="text-gray-600">No products available at the moment.</p>
     </div>
   </section>
+  <div class="text-center mt-8">
+    <router-link :to="`/${shop?.slug || getCurrentShopSlug()}/products`" class="inline-block bg-black text-white py-3 px-8 rounded font-semibold uppercase tracking-wide hover:bg-gray-800 transition-colors">
+      See All Products
+    </router-link>
+  </div>
 </template>
 
 <script setup lang="ts">

@@ -95,6 +95,7 @@ export const useAuthStore = defineStore('auth', {
       } catch (e: any) {
         this.error = e.response?.data?.error || 'OTP verification failed';
         setTimeout(() => (this.error = null), 5000);
+        throw e;
       } finally {
         this.loading = false;
       }
@@ -102,6 +103,8 @@ export const useAuthStore = defineStore('auth', {
     async fetchProfile() {
       try {
         console.log('[fetchProfile] Calling /me...')
+        // Log cookies for debugging
+        console.log('[fetchProfile] document.cookie:', document.cookie)
         const { data } = await getProfile()
         console.log('[fetchProfile] Raw response:', data)
         // Try to extract the user profile from various possible structures
@@ -118,12 +121,14 @@ export const useAuthStore = defineStore('auth', {
         } else {
           console.warn('[fetchProfile] Invalid user object:', user)
           this.user = null
+          throw new Error('Invalid user profile')
         }
       } catch (e) {
         console.error('[fetchProfile] Failed:', e)
         this.user = null
         this.otpRequested = false
         this.email = ''
+        throw e
       }
     },
     async refreshSession() {
@@ -136,23 +141,32 @@ export const useAuthStore = defineStore('auth', {
         this.error = e.response?.data?.error || 'Token refresh failed';
         this.user = null;
         setTimeout(() => (this.error = null), 5000);
+        throw e;
       } finally {
         this.loading = false;
       }
     },
     async verifySession() {
       this.sessionLoading = true;
-      if (!document.cookie.includes('refresh_token')) {
-        this.user = null;
-        this.sessionLoading = false;
-        return;
-      }
+      // Log cookies for debugging
+      console.log('[verifySession] document.cookie:', document.cookie)
       try {
-        await this.refreshSession();
+        console.log('[verifySession] Calling fetchProfile...')
         await this.fetchProfile();
         scheduleProactiveRefresh(this);
-      } catch {
+        console.log('[verifySession] Session verified, user:', this.user)
+      } catch (e) {
+        console.error('[verifySession] Session verification failed:', e)
         this.user = null;
+        // Clear localStorage and reset all relevant stores
+        localStorage.clear();
+        const cartStore = useCartStore();
+        if (cartStore && typeof cartStore.$reset === 'function') cartStore.$reset();
+        try {
+          const { useWishlistStore } = await import('./wishlist');
+          const wishlistStore = useWishlistStore();
+          if (wishlistStore && typeof wishlistStore.$reset === 'function') wishlistStore.$reset();
+        } catch {}
       } finally {
         this.sessionLoading = false;
       }
@@ -164,9 +178,16 @@ export const useAuthStore = defineStore('auth', {
       this.email = '';
       this.profileComplete = false;
       if (refreshTimeout) clearTimeout(refreshTimeout);
+      // Clear localStorage and reset all relevant stores
+      localStorage.clear();
+      const cartStore = useCartStore();
+      if (cartStore && typeof cartStore.$reset === 'function') cartStore.$reset();
+      try {
+        const { useWishlistStore } = await import('./wishlist');
+        const wishlistStore = useWishlistStore();
+        if (wishlistStore && typeof wishlistStore.$reset === 'function') wishlistStore.$reset();
+      } catch {}
     },
   },
-  persist: {
-    paths: ['user'],
-  },
+  // No persistence: always rely on backend cookies for session state
 });

@@ -45,8 +45,9 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { ref, watch, onMounted } from 'vue';
 import { useAuthStore } from '../stores/auth';
+import { useCartStore } from '../stores/cart';
 import { useRouter } from 'vue-router';
 import { getCurrentShopSlug } from '../services/shop';
 const authStore = useAuthStore();
@@ -55,19 +56,35 @@ const email = ref('');
 const otp = ref('');
 const shopSlug = getCurrentShopSlug();
 
+onMounted(async () => {
+  localStorage.clear();
+  if (typeof authStore.$reset === 'function') authStore.$reset();
+  const cartStore = useCartStore();
+  if (typeof cartStore.$reset === 'function') cartStore.$reset();
+  try {
+    const { useWishlistStore } = await import('../stores/wishlist');
+    const wishlistStore = useWishlistStore();
+    if (typeof wishlistStore.$reset === 'function') wishlistStore.$reset();
+  } catch {}
+});
+
 function onRequestOTP() {
   authStore.requestOTP(email.value);
 }
 async function onVerifyOTP() {
-  await authStore.verifyOTP(otp.value);
-  email.value = '';
-  otp.value = '';
-  if (authStore.user) {
-    if (!authStore.profileComplete) {
-      router.push({ path: `/${shopSlug}/account` }); // Profile completion page
-    } else {
-      router.push({ path: `/${shopSlug}/` }); // Home or intended page
+  try {
+    await authStore.verifyOTP(otp.value);
+    email.value = '';
+    otp.value = '';
+    if (authStore.user) {
+      if (!authStore.profileComplete) {
+        router.push({ path: `/${shopSlug}/account` }); // Profile completion page
+      } else {
+        router.push({ path: `/${shopSlug}/` }); // Home or intended page
+      }
     }
+  } catch (error) {
+    console.error('Failed to verify OTP:', error);
   }
 }
 watch(() => authStore.user, (user) => {

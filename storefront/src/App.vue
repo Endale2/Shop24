@@ -1,6 +1,6 @@
 <template>
   <div>
-    <div v-if="authStore.sessionLoading">
+    <div v-if="authStore.sessionLoading && route.meta.requiresAuth">
       <Loader text="Checking session..." />
     </div>
     <div v-else>
@@ -15,7 +15,9 @@
 <script setup lang="ts">
 import { useAuthStore } from './stores/auth'
 import Loader from '@/components/Loader.vue'
+import { useRoute } from 'vue-router'
 const authStore = useAuthStore()
+const route = useRoute()
 </script>
 
 <style>

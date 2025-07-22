@@ -22,6 +22,8 @@
               type="text"
               placeholder="Search products..."
               class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-all duration-300 ease-in-out"
+              v-model="searchInput"
+              @input="onSearchInput"
             />
           </div>
         </div>
@@ -193,6 +195,17 @@ const shopSlug = getCurrentShopSlug();
 const isMobileSearchVisible = ref(false);
 const isMobileMenuOpen = ref(false);
 const dropdownOpen = ref(false);
+const searchInput = ref('');
+let searchTimeout: ReturnType<typeof setTimeout> | null = null;
+
+function onSearchInput() {
+  if (searchTimeout) clearTimeout(searchTimeout);
+  searchTimeout = setTimeout(() => {
+    if (searchInput.value.trim()) {
+      router.push({ path: `/${shopSlug}/search`, query: { q: searchInput.value.trim() } });
+    }
+  }, 400);
+}
 
 const authStore = useAuthStore();
 const cartStore = useCartStore();

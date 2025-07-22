@@ -36,7 +36,7 @@ api.interceptors.response.use(
       isRefreshing = true
       const authStore = useAuthStore()
       try {
-        await authStore.refreshToken()
+        await authStore.refreshSession()
         processQueue(null)
         isRefreshing = false
         return api(originalRequest)
@@ -45,7 +45,7 @@ api.interceptors.response.use(
         processQueue(refreshError)
         isRefreshing = false
         // Optionally redirect to login if on protected route
-        const protectedRoutes = ['/account', '/orders', '/checkout']
+        const protectedRoutes = ['/account', '/orders', '/checkout', '/cart', '/wishlist']
         const currentPath = router.currentRoute.value.path
         if (protectedRoutes.some(route => currentPath.startsWith(route))) {
           const shopSlug = getCurrentShopSlug()

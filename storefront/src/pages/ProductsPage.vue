@@ -44,13 +44,39 @@
     <div v-if="!isLoading && filteredProducts.length === 0" class="text-center py-10 text-gray-500">
       No products found in this collection.
     </div>
+
+    <div v-if="totalPages > 1" class="flex justify-center mt-8">
+      <button
+        class="px-4 py-2 mx-1 rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
+        :disabled="currentPage === 1"
+        @click="goToPage(currentPage - 1)"
+      >
+        Prev
+      </button>
+      <button
+        v-for="page in totalPages"
+        :key="page"
+        class="px-4 py-2 mx-1 rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
+        :class="{ 'bg-black text-white': page === currentPage }"
+        @click="goToPage(page)"
+      >
+        {{ page }}
+      </button>
+      <button
+        class="px-4 py-2 mx-1 rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
+        :disabled="currentPage === totalPages"
+        @click="goToPage(currentPage + 1)"
+      >
+        Next
+      </button>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import ProductCard from '@/components/ProductCard.vue';
-import { fetchAllProducts } from '@/services/product';
+import { fetchAllProducts, fetchProductsPaginated } from '@/services/product';
 import { fetchCollections, fetchCollectionDetail } from '@/services/collections';
 import { getCurrentShopSlug } from '@/services/shop';
 import type { Product } from '@/services/product';
@@ -62,36 +88,41 @@ const collections = ref<Collection[]>([]);
 const selectedCollection = ref<string | null>(null);
 const collectionProducts = ref<Record<string, string[]>>({});
 const isLoading = ref(true);
+const currentPage = ref(1);
+const pageSize = 20;
+const totalProducts = ref(0);
 
-onMounted(async () => {
+async function loadProducts(page = 1) {
+  isLoading.value = true;
   try {
     const shopSlug = getCurrentShopSlug();
     if (!shopSlug) return;
-    // Fetch products and collections concurrently for better performance
-    const [fetchedProducts, fetchedCollections] = await Promise.all([
-      fetchAllProducts(shopSlug),
-      fetchCollections(shopSlug)
-    ]);
-    
+    const { products: fetchedProducts, total, page: backendPage, limit: backendLimit } = await fetchProductsPaginated(shopSlug, page, pageSize);
     products.value = fetchedProducts;
-    collections.value = fetchedCollections;
-
-    // Fetch product IDs for each collection
-    for (const col of collections.value) {
-      // Use fetchCollectionDetail (not fetchCollectionDetails)
-      const detail = await fetchCollectionDetail(shopSlug, col.handle);
-      collectionProducts.value[col.id] = (detail.products || []).map((p: any) => p.id);
-    }
+    totalProducts.value = total;
+    currentPage.value = backendPage;
   } catch (error) {
-    console.error("Failed to load products or collections:", error);
+    console.error('Failed to load products:', error);
   } finally {
     isLoading.value = false;
   }
+}
+
+onMounted(() => {
+  loadProducts(currentPage.value);
 });
 
 function selectCollection(id: string | null) {
   selectedCollection.value = id;
 }
+
+function goToPage(page: number) {
+  if (page < 1 || page > totalPages.value) return;
+  currentPage.value = page;
+  loadProducts(page);
+}
+
+const totalPages = computed(() => Math.ceil(totalProducts.value / pageSize));
 
 // Dynamic title based on the selected collection
 const pageTitle = computed(() => {

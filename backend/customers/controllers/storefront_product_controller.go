@@ -4,6 +4,10 @@ package controllers
 import (
 	"net/http"
 
+	"strconv"
+
+	"strings"
+
 	"github.com/Endale2/DRPS/shared/models"
 	"github.com/Endale2/DRPS/shared/services"
 	"github.com/gin-gonic/gin"
@@ -26,24 +30,54 @@ func GetProductsByShop(c *gin.Context) {
 		return
 	}
 
-	// 2) Fetch products by shop slug (service filters by shop_id internally)
+	// 2) Parse pagination params
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 20
+	}
+	skip := (page - 1) * limit
+
+	// 3) Fetch products by shop slug (service filters by shop_id internally)
 	products, err := services.GetProductsByShopSlugService(shopSlug)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch products"})
 		return
 	}
+
+	total := len(products)
+	// Paginate in-memory (for now; ideally, do this in the DB query)
+	end := skip + limit
+	if end > total {
+		end = total
+	}
+	pagedProducts := products
+	if skip < total {
+		pagedProducts = products[skip:end]
+	} else {
+		pagedProducts = []models.Product{}
+	}
+
 	// Patch: Ensure variant options is never null
-	apiProducts := make([]map[string]interface{}, 0, len(products))
-	for i := range products {
-		for j := range products[i].Variants {
-			if products[i].Variants[j].Options == nil {
-				products[i].Variants[j].Options = []models.Option{}
+	apiProducts := make([]map[string]interface{}, 0, len(pagedProducts))
+	for i := range pagedProducts {
+		for j := range pagedProducts[i].Variants {
+			if pagedProducts[i].Variants[j].Options == nil {
+				pagedProducts[i].Variants[j].Options = []models.Option{}
 			}
 		}
-		apiProducts = append(apiProducts, services.ProductToAPIResponseWithDiscounts(&products[i]))
+		apiProducts = append(apiProducts, services.ProductToAPIResponseWithDiscounts(&pagedProducts[i]))
 	}
-	// It's valid for a shop to have zero products; return empty array
-	c.JSON(http.StatusOK, apiProducts)
+
+	c.JSON(http.StatusOK, gin.H{
+		"products": apiProducts,
+		"total":    total,
+		"page":     page,
+		"limit":    limit,
+	})
 }
 
 // GetProductDetail returns one product by its slug, verifying it belongs to this shop.
@@ -107,4 +141,79 @@ func GetProductDetailByID(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, product)
+}
+
+// SearchProductsByShop returns paginated products matching a search query for a shop
+// GET /shops/:shopSlug/products/search?q=...&page=1&limit=20
+func SearchProductsByShop(c *gin.Context) {
+	shopSlug := c.Param("shopSlug")
+	q := strings.ToLower(c.DefaultQuery("q", ""))
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "20"))
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 20
+	}
+	skip := (page - 1) * limit
+
+	// 1) Verify shop exists
+	shop, err := services.GetShopBySlugService(shopSlug)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to retrieve shop"})
+		return
+	}
+	if shop == nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "shop not found"})
+		return
+	}
+
+	// 2) Fetch all products for the shop
+	products, err := services.GetProductsByShopSlugService(shopSlug)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch products"})
+		return
+	}
+
+	// 3) Filter by search query (name or description, case-insensitive)
+	var filtered []models.Product
+	if q != "" {
+		for _, p := range products {
+			if strings.Contains(strings.ToLower(p.Name), q) || strings.Contains(strings.ToLower(p.Description), q) {
+				filtered = append(filtered, p)
+			}
+		}
+	} else {
+		filtered = products
+	}
+
+	total := len(filtered)
+	end := skip + limit
+	if end > total {
+		end = total
+	}
+	pagedProducts := filtered
+	if skip < total {
+		pagedProducts = filtered[skip:end]
+	} else {
+		pagedProducts = []models.Product{}
+	}
+
+	apiProducts := make([]map[string]interface{}, 0, len(pagedProducts))
+	for i := range pagedProducts {
+		for j := range pagedProducts[i].Variants {
+			if pagedProducts[i].Variants[j].Options == nil {
+				pagedProducts[i].Variants[j].Options = []models.Option{}
+			}
+		}
+		apiProducts = append(apiProducts, services.ProductToAPIResponseWithDiscounts(&pagedProducts[i]))
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"products": apiProducts,
+		"total":    total,
+		"page":     page,
+		"limit":    limit,
+	})
 }

@@ -16,13 +16,13 @@ app.mount('#app')
 
 // Restore user on every full-page load (like sellersDashboard)
 const authStore = useAuthStore()
-authStore.fetchProfile().catch(() => {})
+authStore.verifySession().catch(() => {})
 
 // Optionally, keep periodic refresh if desired
 setInterval(async () => {
   if (authStore.user) {
     try {
-      await authStore.refreshToken()
+      await authStore.refreshSession()
     } catch {
       authStore.user = null
     }

@@ -66,3 +66,27 @@ export async function fetchProductDetailById(shopSlug: string, productId: string
   if (!slug) return Promise.reject('No shop slug');
   return api.get(`/shops/${slug}/products/id/${productId}`);
 }
+
+export async function fetchProductsPaginated(shopSlug?: string, page = 1, limit = 20): Promise<{ products: Product[]; total: number; page: number; limit: number; }> {
+  const slug = shopSlug || getCurrentShopSlug();
+  if (!slug) return { products: [], total: 0, page: 1, limit };
+  try {
+    const response = await api.get(getShopUrl(slug, `/products?page=${page}&limit=${limit}`));
+    // Expect backend returns { products, total, page, limit }
+    return response.data;
+  } catch (error) {
+    console.error('Failed to fetch paginated products:', error);
+    return { products: [], total: 0, page: 1, limit };
+  }
+}
+
+export async function fetchProductsSearchPaginated(shopSlug: string, q: string, page = 1, limit = 20): Promise<{ products: Product[]; total: number; page: number; limit: number; }> {
+  if (!shopSlug || !q) return { products: [], total: 0, page: 1, limit };
+  try {
+    const response = await api.get(getShopUrl(shopSlug, `/products/search?q=${encodeURIComponent(q)}&page=${page}&limit=${limit}`));
+    return response.data;
+  } catch (error) {
+    console.error('Failed to search products:', error);
+    return { products: [], total: 0, page: 1, limit };
+  }
+}

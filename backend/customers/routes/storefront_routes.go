@@ -26,6 +26,7 @@ func StorefrontRoutes(r *gin.Engine) {
 		products := shops.Group("/:shopSlug/products")
 		{
 			products.GET("", controllers.GetProductsByShop)
+			products.GET("search", controllers.SearchProductsByShop)
 			products.GET("/:productSlug", controllers.GetProductDetail)
 			products.GET("id/:productId", controllers.GetProductDetailByID)
 		}

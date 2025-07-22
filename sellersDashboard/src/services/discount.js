@@ -53,15 +53,8 @@ export const discountService = {
    * @returns {Promise<Array<Object>>}
    */
   async fetchAllByShop(shopId) {
-    if (!shopId) return [];
-    try {
-      const res = await api.get(`/seller/shops/${shopId}/discounts`);
-      if (!Array.isArray(res.data)) return [];
-      return res.data.map(this._mapDiscount);
-    } catch (err) {
-      // Optionally log error
-      return [];
-    }
+    const res = await api.get(`/seller/shops/${shopId}/discounts`);
+    return res.data.map(this._mapDiscount);
   },
 
   /**
