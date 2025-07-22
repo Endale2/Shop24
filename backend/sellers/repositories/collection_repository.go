@@ -74,23 +74,8 @@ func DeleteCollection(id primitive.ObjectID) (*mongo.DeleteResult, error) {
 	return collectionColl.DeleteOne(context.Background(), bson.M{"_id": id})
 }
 
-// AddProductToCollection pushes a productID into the collection's product_ids array.
-func AddProductToCollection(collID, prodID primitive.ObjectID) (*mongo.UpdateResult, error) {
-	return collectionColl.UpdateOne(
-		context.Background(),
-		bson.M{"_id": collID},
-		bson.M{"$addToSet": bson.M{"product_ids": prodID}},
-	)
-}
-
-// RemoveProductFromCollection pulls a productID out of the collection's product_ids array.
-func RemoveProductFromCollection(collID, prodID primitive.ObjectID) (*mongo.UpdateResult, error) {
-	return collectionColl.UpdateOne(
-		context.Background(),
-		bson.M{"_id": collID},
-		bson.M{"$pull": bson.M{"product_ids": prodID}},
-	)
-}
+// Remove AddProductToCollection, RemoveProductFromCollection, and all logic related to product_ids in collections.
+// All product-to-collection relationships are now determined by querying products with collection_id = this collection's id.
 
 // GetCollectionByHandle looks up a collection by its unique handle and shop ID.
 func GetCollectionByHandle(shopID primitive.ObjectID, handle string) (*models.Collection, error) {

@@ -6,6 +6,7 @@ import (
 	"strconv"
 	"time"
 
+	sellerRepositories "github.com/Endale2/DRPS/sellers/repositories"
 	"github.com/Endale2/DRPS/shared/models"
 	"github.com/Endale2/DRPS/shared/repositories"
 	"github.com/Endale2/DRPS/shared/services"
@@ -196,10 +197,17 @@ func GetShopTopProducts(c *gin.Context) {
 	}
 	var stats []prodStat
 	for _, p := range products {
+		collTitle := ""
+		if !p.CollectionID.IsZero() {
+			coll, _ := sellerRepositories.GetCollectionByID(p.CollectionID)
+			if coll != nil {
+				collTitle = coll.Title
+			}
+		}
 		stats = append(stats, prodStat{
 			ID:           p.ID,
 			Name:         p.Name,
-			Category:     p.Category,
+			Category:     collTitle,
 			MainImage:    p.MainImage,
 			TotalSold:    productSales[p.ID],
 			TotalRevenue: productRevenue[p.ID],
@@ -351,7 +359,14 @@ func GetShopCategorySales(c *gin.Context) {
 	products, _ := services.GetProductsByShopIDService(shopID)
 	productCategory := make(map[primitive.ObjectID]string)
 	for _, p := range products {
-		productCategory[p.ID] = p.Category
+		collTitle := ""
+		if !p.CollectionID.IsZero() {
+			coll, _ := sellerRepositories.GetCollectionByID(p.CollectionID)
+			if coll != nil {
+				collTitle = coll.Title
+			}
+		}
+		productCategory[p.ID] = collTitle
 	}
 	categoryRevenue := make(map[string]float64)
 	now := time.Now()
@@ -490,10 +505,17 @@ func GetShopDashboardAnalytics(c *gin.Context) {
 			}
 			price = minPrice
 		}
+		collTitle := ""
+		if !p.CollectionID.IsZero() {
+			coll, _ := sellerRepositories.GetCollectionByID(p.CollectionID)
+			if coll != nil {
+				collTitle = coll.Title
+			}
+		}
 		recentProducts = append(recentProducts, gin.H{
 			"id":        p.ID.Hex(),
 			"name":      p.Name,
-			"category":  p.Category,
+			"category":  collTitle,
 			"mainImage": p.MainImage,
 			"stock":     p.Stock,
 			"createdAt": p.CreatedAt,
@@ -587,10 +609,17 @@ func GetShopDashboardAnalytics(c *gin.Context) {
 		"weekly_sales":        weeklySales,
 	}
 	if topProduct != nil {
+		collTitle := ""
+		if !topProduct.CollectionID.IsZero() {
+			coll, _ := sellerRepositories.GetCollectionByID(topProduct.CollectionID)
+			if coll != nil {
+				collTitle = coll.Title
+			}
+		}
 		resp["top_product"] = gin.H{
 			"id":        topProduct.ID.Hex(),
 			"name":      topProduct.Name,
-			"category":  topProduct.Category,
+			"category":  collTitle,
 			"mainImage": topProduct.MainImage,
 			"totalSold": topProductQty,
 		}

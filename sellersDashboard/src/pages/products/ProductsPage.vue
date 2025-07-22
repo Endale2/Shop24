@@ -60,7 +60,7 @@
             <tr>
               <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Image</th>
               <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
-              <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Category</th>
+              <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Collection</th>
               <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Price</th>
               <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Stock</th>
               <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
@@ -136,7 +136,7 @@
               <tr>
                 <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Image</th>
                 <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
-                <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Category</th>
+                <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Collection</th>
                 <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Price</th>
                 <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Stock</th>
                 <th class="py-4 px-6 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
@@ -167,7 +167,7 @@
                     {{ prod.variants.length }} variant{{ prod.variants.length !== 1 ? 's' : '' }}
                   </div>
                 </td>
-                <td class="py-3 px-6 text-sm text-gray-700">{{ prod.category || 'Uncategorized' }}</td>
+                <td class="py-3 px-6 text-sm text-gray-700">{{ collectionMap[prod.collection_id] || 'Uncategorized' }}</td>
                 <td class="py-3 px-6 text-sm text-green-600 font-semibold">
                   <template v-if="prod.starting_price != null">
                     <span class="italic text-gray-700">from</span> {{ formatPrice(prod.starting_price) }}
@@ -239,7 +239,7 @@
             
             <div class="p-5 flex-grow flex flex-col">
               <h3 class="text-lg font-semibold text-gray-900 mb-2 truncate">{{ prod.name }}</h3>
-              <p class="text-sm text-gray-600 mb-2">{{ prod.category || 'Uncategorized' }}</p>
+              <p class="text-sm text-gray-600 mb-2">{{ collectionMap[prod.collection_id] || 'Uncategorized' }}</p>
               
               <div v-if="prod.variants && prod.variants.length > 0" class="text-xs text-gray-500 mb-3">
                 {{ prod.variants.length }} variant{{ prod.variants.length !== 1 ? 's' : '' }}
@@ -311,6 +311,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useShopStore } from '@/store/shops'
 import { productService } from '@/services/product'
+import { collectionService } from '@/services/collection'
 import {
   ViewListIcon as ListIcon,
   ViewGridIcon as GridIcon,
@@ -525,10 +526,25 @@ function getStockTabColor(val) {
   }
 }
 
+const collections = ref([])
+const collectionMap = computed(() => {
+  const map = {}
+  for (const coll of collections.value) {
+    map[coll.id] = coll.title
+  }
+  return map
+})
+
+async function fetchCollections() {
+  if (!activeShop.value?.id) return
+  collections.value = await collectionService.fetchAllByShop(activeShop.value.id)
+}
+
 // Initial data fetch on component mount
 onMounted(() => {
   fetchProducts()
   fetchTabCounts()
+  fetchCollections()
 })
 
 // Watch for changes in activeShop to refetch products if the shop changes
@@ -537,6 +553,7 @@ watch(activeShop, (newShop, oldShop) => {
     currentPage.value = 1
     fetchProducts()
     fetchTabCounts()
+    fetchCollections()
   }
 })
 </script>

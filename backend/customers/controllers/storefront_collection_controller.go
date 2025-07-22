@@ -76,14 +76,13 @@ func GetCollection(c *gin.Context) {
 		return
 	}
 
-	// Build richer product summaries
+	// Build richer product summaries by querying products with collection_id == coll.ID
+	allProducts, _ := services.GetProductsByShopIDService(shop.ID)
 	var products []map[string]interface{}
-	for _, pid := range coll.ProductIDs {
-		p, _ := services.GetProductByIDWithDiscountsService(pid.Hex(), nil)
-		if p == nil {
-			continue
+	for _, p := range allProducts {
+		if p.CollectionID == coll.ID {
+			products = append(products, services.ProductToAPIResponseWithDiscounts(&p))
 		}
-		products = append(products, services.ProductToAPIResponseWithDiscounts(p))
 	}
 
 	c.JSON(http.StatusOK, gin.H{

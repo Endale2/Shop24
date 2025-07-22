@@ -193,11 +193,6 @@ func CountProductsService(filter bson.M) (int64, error) {
 	return repositories.CountProducts(filter)
 }
 
-// CountByCategoryService returns a map[category]count by aggregating in MongoDB.
-func CountByCategoryService() (map[string]int64, error) {
-	return repositories.CountByCategory()
-}
-
 // GetProductsByShopIDService fetches all products whose "shop_id" equals shopOID.
 // Each product is normalized before returning.
 func GetProductsByShopIDService(shopOID primitive.ObjectID) ([]models.Product, error) {
@@ -468,16 +463,16 @@ func GetActiveDiscountsForProductAPI(shopID, productID primitive.ObjectID, varia
 
 func ProductToAPIResponse(p *models.Product) map[string]interface{} {
 	resp := map[string]interface{}{
-		"id":          p.ID.Hex(),
-		"name":        p.Name,
-		"slug":        p.Slug,
-		"description": p.Description,
-		"main_image":  p.MainImage,
-		"images":      p.Images,
-		"category":    p.Category,
-		"createdBy":   p.CreatedBy.Hex(),
-		"createdAt":   p.CreatedAt,
-		"updatedAt":   p.UpdatedAt,
+		"id":            p.ID.Hex(),
+		"name":          p.Name,
+		"slug":          p.Slug,
+		"description":   p.Description,
+		"main_image":    p.MainImage,
+		"images":        p.Images,
+		"collection_id": p.CollectionID.Hex(),
+		"createdBy":     p.CreatedBy.Hex(),
+		"createdAt":     p.CreatedAt,
+		"updatedAt":     p.UpdatedAt,
 		// Add SEO fields
 		"meta_title":       p.MetaTitle,
 		"meta_description": p.MetaDescription,
@@ -569,18 +564,20 @@ func ProductToAPIResponseWithDiscounts(p *models.Product) map[string]interface{}
 }
 
 // ListProductsByShopPaginatedService returns paginated, filterable products for a shop.
-func ListProductsByShopPaginatedService(shopID primitive.ObjectID, page, limit int, search, category, stockStatus string) ([]models.Product, int64, error) {
+func ListProductsByShopPaginatedService(shopID primitive.ObjectID, page, limit int, search, collectionID, stockStatus string) ([]models.Product, int64, error) {
 	filter := bson.M{"shop_id": shopID}
 
 	if search != "" {
 		searchRegex := primitive.Regex{Pattern: search, Options: "i"}
 		filter["$or"] = []bson.M{
 			{"name": searchRegex},
-			{"category": searchRegex},
 		}
 	}
-	if category != "" {
-		filter["category"] = category
+	if collectionID != "" {
+		collOID, err := primitive.ObjectIDFromHex(collectionID)
+		if err == nil {
+			filter["collection_id"] = collOID
+		}
 	}
 	if stockStatus != "" {
 		switch stockStatus {

@@ -72,16 +72,13 @@
             </div>
 
             <div>
-              <label for="product-category" class="block text-sm font-medium text-gray-700 mb-2">
-                Category
+              <label for="product-collection" class="block text-sm font-medium text-gray-700 mb-2">
+                Collection <span class="text-red-500">*</span>
               </label>
-              <input
-                id="product-category"
-                v-model="form.category"
-                type="text"
-                class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-150 shadow-sm"
-                placeholder="e.g., Home Goods"
-              />
+              <select id="product-collection" v-model="form.collection_id" required class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-150 shadow-sm">
+                <option value="" disabled>Select a collection</option>
+                <option v-for="coll in collections" :key="coll.id" :value="coll.id">{{ coll.title }}</option>
+              </select>
             </div>
 
             <div v-if="!hasVariants">
@@ -373,6 +370,7 @@ import { ref, reactive, onMounted, computed } from 'vue'
 import { useRouter } from 'vue-router'
 import { useShopStore } from '@/store/shops'
 import { productService } from '@/services/product'
+import { collectionService } from '@/services/collection'
 import {
   ChevronLeftIcon,
   RefreshIcon as SpinnerIcon,
@@ -398,7 +396,7 @@ const form = reactive({
   description: '',
   main_image: '',
   images: [],
-  category: '',
+  collection_id: '',
   price: null,
   stock: null,
   variants: [],
@@ -416,11 +414,14 @@ const hasVariants = computed(() => form.variants.length > 0)
 form.meta_title = ''
 form.meta_description = ''
 
+const collections = ref([])
+
 function goBack() {
   router.push({ name: 'Products' })
 }
 
-onMounted(() => {
+onMounted(async () => {
+  collections.value = await collectionService.fetchAllByShop(shopStore.activeShop.id)
   setTimeout(() => {
     loading.value = false
   }, 500)
@@ -472,6 +473,11 @@ async function submitForm() {
       return
     }
 
+    if (!form.collection_id) {
+      error.value = 'Product collection is required.'
+      return
+    }
+
     if (!hasVariants.value && (!form.price || form.price <= 0)) {
       error.value = 'Product price is required and must be positive if no variants are provided.'
       return
@@ -505,7 +511,7 @@ async function submitForm() {
       description: form.description.trim(),
       main_image: form.main_image.trim() || '',
       images: form.images.filter(img => img.trim()),
-      category: form.category.trim(),
+      collection_id: form.collection_id,
       meta_title: form.meta_title,
       meta_description: form.meta_description,
     }

@@ -55,9 +55,9 @@ type Product struct {
 	Images    []string `bson:"images,omitempty"          json:"images,omitempty"`
 
 	// Pricing & inventory
-	Category string  `bson:"category"                  json:"category"`
-	Price    float64 `bson:"price"                     json:"price"`
-	Stock    int     `bson:"stock"                     json:"stock"`
+	CollectionID primitive.ObjectID `bson:"collection_id,omitempty" json:"collection_id,omitempty"`
+	Price        float64            `bson:"price"                     json:"price"`
+	Stock        int                `bson:"stock"                     json:"stock"`
 
 	// Discount display fields (not stored in DB)
 	DisplayPrice      *float64 `bson:"-" json:"display_price,omitempty"`

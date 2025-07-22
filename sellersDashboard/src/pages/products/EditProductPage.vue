@@ -89,13 +89,27 @@
         </div>
 
         <div>
-          <label for="category" class="block text-sm font-medium text-gray-700 mb-1">Category</label>
-          <input
-            type="text"
-            id="category"
-            v-model="productToEdit.category"
-            class="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-green-500 focus:border-green-500 sm:text-sm"
-          />
+          <label for="product-collection" class="block text-sm font-medium text-gray-700 mb-1">Collection</label>
+          <div class="relative">
+            <select
+              id="product-collection"
+              v-model="productToEdit.collection_id"
+              required
+              class="mt-1 block w-full border border-green-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 sm:text-sm bg-white transition-all duration-150"
+            >
+              <option value="" disabled>Select a collection</option>
+              <option v-for="coll in collections" :key="coll.id" :value="coll.id">
+                {{ coll.title }}
+              </option>
+            </select>
+            <div v-if="productToEdit.collection_id" class="mt-3 flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg shadow-sm animate-fade-in">
+              <img v-if="selectedCollection && selectedCollection.image" :src="selectedCollection.image" alt="Collection image" class="w-12 h-12 object-cover rounded-md border border-green-200" />
+              <div>
+                <div class="font-semibold text-green-800 text-lg">{{ selectedCollection?.title }}</div>
+                <div class="text-gray-600 text-sm">{{ selectedCollection?.description || 'No description' }}</div>
+              </div>
+            </div>
+          </div>
         </div>
 
         <div>
@@ -246,6 +260,7 @@ import { ref, computed, onMounted, watch } from 'vue';
 import { useRouter, useRoute } from 'vue-router';
 import { useShopStore } from '@/store/shops';
 import { productService } from '@/services/product';
+import { collectionService } from '@/services/collection'
 import {
   ChevronLeftIcon,
   RefreshIcon as SpinnerIcon,
@@ -278,8 +293,10 @@ const saving = ref(false);
 const error = ref(null);
 const variantOptionError = ref(null);
 const showAdvanced = ref(false);
+const collections = ref([])
 
 const activeShop = computed(() => shopStore.activeShop);
+const selectedCollection = computed(() => collections.value.find(c => c.id === productToEdit.value.collection_id));
 
 const computedPrice = computed(() => {
   if (!productToEdit.value.variants || productToEdit.value.variants.length === 0) return productToEdit.value.price;
@@ -388,7 +405,7 @@ async function submitChanges() {
   let dataToSend = {
     name: productToEdit.value.name,
     description: productToEdit.value.description,
-    category: productToEdit.value.category,
+    collection_id: productToEdit.value.collection_id,
     images: productToEdit.value.images.filter(img => img),
     main_image: productToEdit.value.main_image || null,
     meta_title: productToEdit.value.meta_title,
@@ -431,7 +448,8 @@ async function submitChanges() {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  collections.value = await collectionService.fetchAllByShop(shopStore.activeShop.id)
   fetchProductDetails();
 });
 

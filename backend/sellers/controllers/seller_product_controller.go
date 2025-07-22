@@ -31,14 +31,14 @@ type variantInput struct {
 
 // createProductInput represents the payload for creating a product.
 type createProductInput struct {
-	Name        string         `json:"name" binding:"required"`
-	Description string         `json:"description" binding:"required"`
-	MainImage   string         `json:"main_image"` // <-- Added
-	Images      []string       `json:"images" binding:"required"`
-	Category    string         `json:"category" binding:"required"`
-	Price       *float64       `json:"price"`
-	Stock       *int           `json:"stock"` // <-- Added
-	Variants    []variantInput `json:"variants"`
+	Name         string         `json:"name" binding:"required"`
+	Description  string         `json:"description" binding:"required"`
+	MainImage    string         `json:"main_image"` // <-- Added
+	Images       []string       `json:"images" binding:"required"`
+	CollectionID string         `json:"collection_id" binding:"required"`
+	Price        *float64       `json:"price"`
+	Stock        *int           `json:"stock"` // <-- Added
+	Variants     []variantInput `json:"variants"`
 	// SEO fields
 	MetaTitle       string `json:"meta_title"`
 	MetaDescription string `json:"meta_description"`
@@ -131,17 +131,22 @@ func CreateProduct(c *gin.Context) {
 	}
 
 	slug := slugifyUnique(in.Name, shopID)
+	// Validate and convert collection_id
+	collectionOID, err := primitive.ObjectIDFromHex(in.CollectionID)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid collection_id"})
+		return
+	}
 	p := &models.Product{
-		ShopID:      shopID,
-		UserID:      sellerID,
-		Name:        in.Name,
-		Slug:        slug,
-		Description: in.Description,
-		Images:      in.Images,
-		Category:    in.Category,
-		Price:       0,
-		CreatedBy:   sellerID,
-		// SEO fields
+		ShopID:          shopID,
+		UserID:          sellerID,
+		Name:            in.Name,
+		Slug:            slug,
+		Description:     in.Description,
+		Images:          in.Images,
+		CollectionID:    collectionOID,
+		Price:           0,
+		CreatedBy:       sellerID,
 		MetaTitle:       in.MetaTitle,
 		MetaDescription: in.MetaDescription,
 	}
@@ -213,10 +218,10 @@ func GetProducts(c *gin.Context) {
 		}
 	}
 	search := c.Query("search")
-	category := c.Query("category")
+	collectionID := c.Query("collection_id")
 	stockStatus := c.Query("stock_status")
 
-	products, total, err := services.ListProductsByShopPaginatedService(shopID, page, limit, search, category, stockStatus)
+	products, total, err := services.ListProductsByShopPaginatedService(shopID, page, limit, search, collectionID, stockStatus)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "fetch failed"})
 		return

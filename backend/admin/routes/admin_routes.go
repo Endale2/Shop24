@@ -19,8 +19,6 @@ func AdminRoutes(r *gin.Engine) {
 		productGroup.PATCH("/update/:id", controllers.UpdateProduct)
 		productGroup.DELETE("/delete/:id", controllers.DeleteProduct)
 		productGroup.GET("/count", controllers.GetProductCount)
-		productGroup.GET("/count-by-category", controllers.GetProductsByCategoryCount)
-
 	}
 
 	//  Customers sub-group

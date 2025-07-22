@@ -1,5 +1,6 @@
 // src/services/collection.js
 import api from './api'
+import { productService } from './product'
 
 export const collectionService = {
   /**
@@ -123,10 +124,8 @@ export const collectionService = {
    * @returns {Promise<void>}
    */
   async addProduct(shopId, collectionId, productId) {
-    await api.post(
-      `/seller/shops/${shopId}/collections/${collectionId}/products`,
-      { productId }
-    )
+    // Update the product's collection_id to the new collection
+    await productService.patch(shopId, productId, { collection_id: collectionId })
   },
 
   /**
@@ -137,8 +136,7 @@ export const collectionService = {
    * @returns {Promise<void>}
    */
   async removeProduct(shopId, collectionId, productId) {
-    await api.delete(
-      `/seller/shops/${shopId}/collections/${collectionId}/products/${productId}`
-    )
+    // Update the product's collection_id to null (remove from collection)
+    await productService.patch(shopId, productId, { collection_id: null })
   }
 }

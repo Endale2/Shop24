@@ -61,7 +61,7 @@
         <div class="lg:sticky lg:top-8 self-start space-y-6">
           <div>
             <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight">{{ product.name }}</h1>
-            <p class="text-lg text-gray-600 mt-2">{{ product.category || 'Uncategorized' }}</p>
+            <p class="text-lg text-gray-600 mt-2">{{ collectionMap[product.collection_id] || 'Uncategorized' }}</p>
           </div>
 
           <div class="space-y-4">
@@ -178,6 +178,7 @@
           <div>
             <p><strong>Created:</strong> {{ formatDate(product.createdAt) }}</p>
             <p><strong>Last Updated:</strong> {{ formatDate(product.updatedAt) }}</p>
+            <p><strong>Collection:</strong> {{ collectionMap[product.collection_id] || 'Uncategorized' }}</p>
           </div>
           <div>
             <p><strong>Product ID:</strong> {{ product.id }}</p>
@@ -211,6 +212,7 @@ import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useShopStore } from '@/store/shops'
 import { productService } from '@/services/product'
+import { collectionService } from '@/services/collection'
 import {
   ChevronLeftIcon,
   RefreshIcon as SpinnerIcon,
@@ -228,6 +230,14 @@ const product = ref({ images: [], variants: [] })
 const loading = ref(true)
 const error = ref(null)
 const mainImage = ref(null)
+const collections = ref([])
+const collectionMap = computed(() => {
+  const map = {}
+  for (const coll of collections.value) {
+    map[coll.id] = coll.title
+  }
+  return map
+})
 
 const activeShop = computed(() => shopStore.activeShop)
 
@@ -337,7 +347,7 @@ async function fetchProductDetails() {
       slug: fetchedProduct.slug,
       images: fetchedProduct.images || [],
       main_image: fetchedProduct.main_image,
-      category: fetchedProduct.category,
+      collection_id: fetchedProduct.collection_id,
       price: fetchedProduct.price,
       stock: fetchedProduct.stock,
       starting_price: fetchedProduct.starting_price,
@@ -369,8 +379,9 @@ async function fetchProductDetails() {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
   fetchProductDetails()
+  collections.value = await collectionService.fetchAllByShop(shopStore.activeShop.id)
 })
 
 watch([() => activeShop.value?.id, () => route.params.productId], () => {

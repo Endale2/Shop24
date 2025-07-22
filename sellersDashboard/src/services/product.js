@@ -10,7 +10,7 @@ export const productService = {
       description: p.description || p.Description,
       images: p.images || p.Images || [],
       main_image: p.main_image || p.MainImage || '',
-      category: p.category || p.Category,
+      collection_id: p.collection_id || p.CollectionID || '',
       price: Number(p.price || p.Price) || 0,
       stock: p.stock || p.Stock || 0,
       starting_price: p.starting_price,
@@ -32,13 +32,12 @@ export const productService = {
   },
 
   // New paginated version for ProductsPage.vue
-  async fetchAllByShopPaginated(shopId, { page = 1, limit = 10, search = '', category = '', stockStatus = '' } = {}) {
+  async fetchAllByShopPaginated(shopId, { page = 1, limit = 10, search = '', stockStatus = '' } = {}) {
     const params = new URLSearchParams({
       page: page.toString(),
       limit: limit.toString(),
     })
     if (search) params.append('search', search)
-    if (category) params.append('category', category)
     if (stockStatus) params.append('stock_status', stockStatus)
 
     const res = await api.get(`/seller/shops/${shopId}/products?${params}`)
@@ -51,7 +50,7 @@ export const productService = {
           description: p.description || p.Description,
           images: p.images || p.Images || [],
           main_image: p.main_image || p.MainImage || '',
-          category: p.category || p.Category,
+          collection_id: p.collection_id || p.CollectionID || '',
           price: Number(p.price || p.Price) || 0,
           stock: p.stock || p.Stock || 0,
           starting_price: p.starting_price,
@@ -83,7 +82,7 @@ export const productService = {
         description: p.description || p.Description,
         images: p.images || p.Images || [],
         main_image: p.main_image || p.MainImage || '',
-        category: p.category || p.Category,
+        collection_id: p.collection_id || p.CollectionID || '',
         price: Number(p.price || p.Price) || 0,
         stock: p.stock || p.Stock || 0,
         starting_price: p.starting_price,
@@ -107,6 +106,51 @@ export const productService = {
     }
   },
 
+  /**
+   * Fetch all products for a shop, with optional filter for collection_id.
+   * @param {string} shopId
+   * @param {Object} filter - e.g. { collection_id: null } or { collection_id: 'someId' }
+   * @returns {Promise<Array<Object>>}
+   */
+  async fetchAllByShopWithFilter(shopId, filter = {}) {
+    const params = new URLSearchParams()
+    if (filter.collection_id === null) {
+      params.append('collection_id', 'null')
+    } else if (filter.collection_id) {
+      params.append('collection_id', filter.collection_id)
+    }
+    const url = params.toString()
+      ? `/seller/shops/${shopId}/products?${params}`
+      : `/seller/shops/${shopId}/products`
+    const res = await api.get(url)
+    return res.data.map(p => ({
+      id: p.id || p._id || p.ID,
+      shopId: p.shop_id || p.shopId || p.ShopID,
+      name: p.name || p.Name,
+      description: p.description || p.Description,
+      images: p.images || p.Images || [],
+      main_image: p.main_image || p.MainImage || '',
+      collection_id: p.collection_id || p.CollectionID || '',
+      price: Number(p.price || p.Price) || 0,
+      stock: p.stock || p.Stock || 0,
+      starting_price: p.starting_price,
+      total_stock: p.total_stock,
+      variants: (p.variants || p.Variants || []).map(v => ({
+        id: v.id || v.variant_id || v.VariantID,
+        options: v.options || v.Options || [],
+        price: Number(v.price || v.Price) || 0,
+        stock: v.stock || v.Stock || 0,
+        image: v.image || v.Image || '',
+        createdAt: v.createdAt || v.CreatedAt,
+        updatedAt: v.updatedAt || v.UpdatedAt,
+      })),
+      createdAt: p.createdAt || p.CreatedAt,
+      updatedAt: p.updatedAt || p.UpdatedAt,
+      meta_title: p.meta_title || '',
+      meta_description: p.meta_description || '',
+    }))
+  },
+
   async fetchById(shopId, productId) {
     const res = await api.get(`/seller/shops/${shopId}/products/${productId}`)
     const p = res.data
@@ -117,7 +161,7 @@ export const productService = {
       description: p.description || p.Description,
       images: p.images || p.Images || [],
       main_image: p.main_image || p.MainImage || '',
-      category: p.category || p.Category,
+      collection_id: p.collection_id || p.CollectionID || '',
       price: Number(p.price || p.Price) || 0,
       stock: p.stock || p.Stock || 0,
       starting_price: p.starting_price,

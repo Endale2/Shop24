@@ -76,13 +76,6 @@
       <div>
         <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-3">
           <h2 class="text-2xl font-semibold text-gray-800">Products in this Collection ({{ collection.products.length }})</h2>
-          <button
-            @click="showAddProductModal = true"
-            class="inline-flex items-center px-4 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-150 ease-in-out"
-          >
-            <PlusIcon class="h-4 w-4 mr-2" />
-            Add Products
-          </button>
         </div>
         <div v-if="collection.products.length">
           <!-- List/Table view for products -->
@@ -92,7 +85,7 @@
                 <tr>
                   <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
                   <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Name</th>
-                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                  <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Collection</th>
                   <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
                   <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
                   <th class="px-4 py-3"></th>
@@ -105,7 +98,7 @@
                     <PlaceholderIcon v-else class="w-10 h-10 text-gray-400 mx-auto" />
                   </td>
                   <td class="px-4 py-3 font-medium text-gray-900">{{ prod.name }}</td>
-                  <td class="px-4 py-3 text-gray-700">{{ prod.category }}</td>
+                  <td class="px-4 py-3 text-gray-700">{{ collection.title || 'Uncategorized' }}</td>
                   <td class="px-4 py-3 text-gray-700">
                     <template v-if="prod.starting_price !== null">
                       <span class="text-green-600 font-semibold">from</span>
@@ -133,69 +126,6 @@
         <div v-else class="text-center py-16 text-gray-500">
           <p class="text-lg font-semibold">No products are linked to this collection yet.</p>
           <p class="mt-2 text-sm">Click "Add Products" to start building your collection.</p>
-        </div>
-      </div>
-    </div>
-
-    <!-- Add Product Modal -->
-    <div v-if="showAddProductModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div class="bg-white rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div class="p-6 border-b border-gray-200">
-          <h3 class="text-xl font-semibold text-gray-900">Add Products to Collection</h3>
-        </div>
-        
-        <div class="p-6">
-          <div class="mb-4">
-            <input
-              v-model="productSearchQuery"
-              type="text"
-              placeholder="Search products..."
-              class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-150 ease-in-out"
-            />
-          </div>
-          
-          <div class="space-y-2 max-h-96 overflow-y-auto">
-            <div
-              v-for="product in filteredProducts"
-              :key="product.id"
-              class="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
-            >
-              <div class="flex items-center space-x-3">
-                <div class="w-12 h-12 bg-gray-200 rounded-lg overflow-hidden flex-shrink-0">
-                  <img
-                    v-if="product.main_image"
-                    :src="product.main_image"
-                    alt="Product"
-                    class="w-full h-full object-cover"
-                  />
-                  <PlaceholderIcon v-else class="w-full h-full text-gray-400" />
-                </div>
-                <div>
-                  <h4 class="font-medium text-gray-900">{{ product.name }}</h4>
-                  <p class="text-sm text-gray-600">{{ product.description }}</p>
-                </div>
-              </div>
-              <button
-                @click="addProduct(product.id)"
-                :disabled="isProductInCollection(product.id)"
-                class="px-3 py-1 text-sm rounded-lg transition duration-150 ease-in-out"
-                :class="isProductInCollection(product.id) 
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                  : 'bg-green-600 text-white hover:bg-green-700'"
-              >
-                {{ isProductInCollection(product.id) ? 'Added' : 'Add' }}
-              </button>
-            </div>
-          </div>
-          
-          <div class="flex justify-end pt-6 border-t border-gray-200 mt-6">
-            <button
-              @click="showAddProductModal = false"
-              class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-150 ease-in-out"
-            >
-              Done
-            </button>
-          </div>
         </div>
       </div>
     </div>
@@ -243,7 +173,6 @@ const error = ref(null)
 
 // Modal states
 const showEditModal = ref(false)
-const showAddProductModal = ref(false)
 
 // Edit form
 const editForm = ref({
@@ -255,23 +184,8 @@ const editForm = ref({
 const editErrors = ref({})
 const editLoading = ref(false)
 
-// Product management
-const allProducts = ref([])
-const productSearchQuery = ref('')
-
 // Active shop from pinia
 const activeShop = computed(() => shopStore.activeShop)
-
-// Computed
-const filteredProducts = computed(() => {
-  if (!productSearchQuery.value) return allProducts.value
-  
-  const query = productSearchQuery.value.toLowerCase()
-  return allProducts.value.filter(product =>
-    product.name.toLowerCase().includes(query) ||
-    product.description?.toLowerCase().includes(query)
-  )
-})
 
 onMounted(async () => {
   if (!activeShop.value?.id) {
@@ -330,7 +244,7 @@ async function loadCollection(collectionId) {
  */
 async function loadProducts() {
   try {
-    allProducts.value = await productService.fetchAllByShop(activeShop.value.id)
+    // allProducts.value = await productService.fetchAllByShop(activeShop.value.id) // This line is removed
   } catch (e) {
     console.error('Failed to load products:', e)
   }
@@ -403,20 +317,6 @@ async function confirmDelete() {
 }
 
 /**
- * Adds a product to the collection.
- */
-async function addProduct(productId) {
-  try {
-    await collectionService.addProduct(activeShop.value.id, collection.value.id, productId)
-    // Reload collection to get updated product list
-    await loadCollection(collection.value.id)
-  } catch (error) {
-    console.error('Failed to add product to collection:', error)
-    alert('Failed to add product to collection. Please try again.')
-  }
-}
-
-/**
  * Removes a product from the collection.
  */
 async function removeProduct(productId) {
@@ -430,13 +330,6 @@ async function removeProduct(productId) {
       alert('Failed to remove product from collection. Please try again.')
     }
   }
-}
-
-/**
- * Checks if a product is already in the collection.
- */
-function isProductInCollection(productId) {
-  return collection.value.products.some(p => p.id === productId)
 }
 
 /**
@@ -480,6 +373,31 @@ watch(showEditModal, (newVal) => {
     editErrors.value = {}
   }
 })
+
+// On modal open, load only products with no collection using the new method
+// watch(showAddProductModal, async (val) => { // This line is removed
+//   if (val) {
+//     isSearching.value = false
+//     allProducts.value = await productService.fetchAllByShopWithFilter(activeShop.value.id, { collection_id: null })
+//     productSearchQuery.value = ''
+//   }
+// })
+
+// When searching, use backend search for fast results
+// watch(productSearchQuery, async (query) => { // This line is removed
+//   if (searchTimeout) clearTimeout(searchTimeout)
+//   if (query) {
+//     isSearching.value = true
+//     // Debounce to avoid too many requests
+//     searchTimeout = setTimeout(async () => {
+//       allProducts.value = await productService.fetchAllByShop(activeShop.value.id, { search: query })
+//     }, 250)
+//   } else if (isSearching.value) {
+//     // If search is cleared, reload only products with no collection
+//     isSearching.value = false
+//     allProducts.value = await productService.fetchAllByShopWithFilter(activeShop.value.id, { collection_id: null })
+//   }
+// })
 </script>
 
 <style scoped>
