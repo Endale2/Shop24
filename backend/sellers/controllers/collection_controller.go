@@ -327,6 +327,8 @@ func DeleteCollection(c *gin.Context) {
 }
 
 // Helper function to format collection response for frontend
+// Products in the collection are now ordered by most recently updated (newest first)
+// due to the change in GetProductsByFilter in the repository layer.
 func formatCollectionResponse(coll *models.Collection, shopID primitive.ObjectID) gin.H {
 	// Build a list of product summaries (id, name, main_image, category, price, stock, starting_price)
 	type ProductSummary struct {

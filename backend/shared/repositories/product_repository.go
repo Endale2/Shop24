@@ -95,7 +95,9 @@ func CountProducts(filter bson.M) (int64, error) {
 
 // GetProductsByFilter retrieves products matching an arbitrary filter.
 func GetProductsByFilter(filter bson.M) ([]models.Product, error) {
-	cursor, err := productCollection.Find(context.Background(), filter)
+	findOptions := options.Find()
+	findOptions.SetSort(bson.D{{"updatedAt", -1}}) // newest updated first
+	cursor, err := productCollection.Find(context.Background(), filter, findOptions)
 	if err != nil {
 		return nil, err
 	}

@@ -76,6 +76,13 @@
       <div>
         <div class="flex flex-col sm:flex-row justify-between items-center mb-6 gap-3">
           <h2 class="text-2xl font-semibold text-gray-800">Products in this Collection ({{ collection.products.length }})</h2>
+          <button
+            @click="showAddProductModal = true"
+            class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-150 ease-in-out"
+          >
+            <PlusIcon class="h-5 w-5 mr-2" />
+            Add Products
+          </button>
         </div>
         <div v-if="collection.products.length">
           <!-- List/Table view for products -->
@@ -92,7 +99,7 @@
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-100">
-                <tr v-for="prod in collection.products" :key="prod.id" class="hover:bg-green-50 cursor-pointer group" @click="goToProduct(prod.id)">
+                <tr v-for="prod in reversedProducts" :key="prod.id" class="hover:bg-green-50 cursor-pointer group" @click="goToProduct(prod.id)">
                   <td class="px-4 py-3 w-20">
                     <img v-if="prod.image" :src="prod.image" alt="Product image" class="w-14 h-14 object-cover rounded-md border border-gray-200" />
                     <PlaceholderIcon v-else class="w-10 h-10 text-gray-400 mx-auto" />
@@ -126,6 +133,93 @@
         <div v-else class="text-center py-16 text-gray-500">
           <p class="text-lg font-semibold">No products are linked to this collection yet.</p>
           <p class="mt-2 text-sm">Click "Add Products" to start building your collection.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Product Modal -->
+  <div v-if="showAddProductModal" class="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-none transition-opacity" style="backdrop-filter: blur(1px);">
+    <div class="bg-white rounded-xl shadow-2xl max-w-lg w-full p-6 relative border border-gray-200">
+      <button @click="showAddProductModal = false" class="absolute top-3 right-3 text-gray-400 hover:text-gray-700">
+        <XIcon class="h-6 w-6" />
+      </button>
+      <h3 class="text-xl font-bold mb-4">Add Products to Collection</h3>
+      <div class="mb-4">
+        <input
+          v-model="addProductSearchQuery"
+          @input="debouncedAddProductSearch"
+          type="text"
+          placeholder="Search products by name..."
+          class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500"
+        />
+      </div>
+      <div v-if="addProductLoading" class="flex justify-center py-6">
+        <SpinnerIcon class="animate-spin h-8 w-8 text-green-500" />
+      </div>
+      <div v-else-if="addProductError" class="text-red-600 text-center py-4">{{ addProductError }}</div>
+      <div v-else>
+        <div v-if="addProductList.length === 0" class="text-gray-500 text-center py-4">No products found.</div>
+        <ul v-else class="divide-y divide-gray-100 max-h-64 overflow-y-auto">
+          <li v-for="prod in addProductList" :key="prod.id" class="flex items-center justify-between py-3 px-1 hover:bg-gray-50 rounded-lg transition">
+            <div class="flex items-center gap-3">
+              <img v-if="prod.main_image" :src="prod.main_image" class="w-12 h-12 object-cover rounded-md border" />
+              <PlaceholderIcon v-else class="w-10 h-10 text-gray-400" />
+              <div>
+                <div class="font-medium text-gray-900">{{ prod.name }}</div>
+                <div class="text-xs text-gray-500 mt-0.5">
+                  {{ prod.collection_id === collection.id
+                    ? 'Already in this collection'
+                    : (collectionMap[prod.collection_id] || 'Uncategorized')
+                  }}
+                </div>
+                <div class="text-sm text-gray-500">
+                  <template v-if="prod.starting_price != null">
+                    <span class="italic text-gray-700">from</span> ${{ prod.starting_price.toFixed(2) }}
+                  </template>
+                  <template v-else-if="prod.price != null">
+                    ${{ prod.price.toFixed(2) }}
+                  </template>
+                  <template v-else>
+                    -
+                  </template>
+                </div>
+              </div>
+            </div>
+            <button
+              v-if="prod.collection_id === collection.id"
+              class="inline-flex items-center px-3 py-1.5 bg-gray-200 text-gray-500 text-sm font-medium rounded-lg shadow-sm cursor-not-allowed border border-gray-300"
+              disabled
+            >
+              <CheckIcon class="h-4 w-4 mr-1" /> Added
+            </button>
+            <button
+              v-else
+              @click="handleAddProduct(prod.id)"
+              class="inline-flex items-center px-3 py-1.5 bg-green-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition"
+              :disabled="addProductLoading"
+            >
+              <PlusIcon class="h-4 w-4 mr-1" /> Add
+            </button>
+          </li>
+        </ul>
+        <!-- Pagination Controls -->
+        <div class="flex justify-center items-center space-x-2 mt-4">
+          <button
+            @click="addProductPrevPage"
+            :disabled="addProductCurrentPage === 1"
+            class="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition"
+          >
+            Previous
+          </button>
+          <span class="text-gray-700 text-sm font-medium">Page {{ addProductCurrentPage }} of {{ addProductPagination.total_pages }}</span>
+          <button
+            @click="addProductNextPage"
+            :disabled="addProductCurrentPage === addProductPagination.total_pages"
+            class="px-3 py-1 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 disabled:opacity-50 disabled:cursor-not-allowed transition"
+          >
+            Next
+          </button>
         </div>
       </div>
     </div>
@@ -168,11 +262,26 @@ const collection = ref({
   createdAt: null,
   updatedAt: null
 })
+
+// Computed property for reversed products (newest first)
+const reversedProducts = computed(() => {
+  return [...(collection.value.products || [])].reverse()
+})
 const loading = ref(true)
 const error = ref(null)
 
 // Modal states
 const showEditModal = ref(false)
+const showAddProductModal = ref(false)
+
+// Add Product modal state
+const addProductSearchQuery = ref('')
+const addProductLoading = ref(false)
+const addProductList = ref([])
+const addProductPagination = ref({ page: 1, limit: 10, total: 0, total_pages: 1 })
+const addProductCurrentPage = ref(1)
+const addProductSearchTimeout = ref(null)
+const addProductError = ref(null)
 
 // Edit form
 const editForm = ref({
@@ -186,6 +295,16 @@ const editLoading = ref(false)
 
 // Active shop from pinia
 const activeShop = computed(() => shopStore.activeShop)
+
+// For showing collection names in the modal
+const allCollections = ref([])
+const collectionMap = computed(() => {
+  const map = {}
+  for (const coll of allCollections.value) {
+    map[coll.id] = coll.title
+  }
+  return map
+})
 
 onMounted(async () => {
   if (!activeShop.value?.id) {
@@ -247,6 +366,68 @@ async function loadProducts() {
     // allProducts.value = await productService.fetchAllByShop(activeShop.value.id) // This line is removed
   } catch (e) {
     console.error('Failed to load products:', e)
+  }
+}
+
+/**
+ * Loads products not in any collection, with optional search and pagination.
+ */
+async function loadAddableProducts() {
+  if (!activeShop.value?.id) return
+  addProductLoading.value = true
+  addProductError.value = null
+  try {
+    const { products, pagination } = await productService.fetchAllByShopPaginated(
+      activeShop.value.id,
+      {
+        page: addProductCurrentPage.value,
+        limit: addProductPagination.value.limit,
+        search: addProductSearchQuery.value,
+        collection_id: null
+      }
+    )
+    addProductList.value = products
+    addProductPagination.value = pagination || { page: 1, limit: 10, total: products.length, total_pages: 1 }
+  } catch (e) {
+    addProductError.value = 'Failed to load products. Please try again.'
+  } finally {
+    addProductLoading.value = false
+  }
+}
+
+function debouncedAddProductSearch() {
+  if (addProductSearchTimeout.value) clearTimeout(addProductSearchTimeout.value)
+  addProductSearchTimeout.value = setTimeout(() => {
+    addProductCurrentPage.value = 1
+    loadAddableProducts()
+  }, 300)
+}
+
+function addProductPrevPage() {
+  if (addProductCurrentPage.value > 1) {
+    addProductCurrentPage.value--
+    loadAddableProducts()
+  }
+}
+
+function addProductNextPage() {
+  if (addProductCurrentPage.value < addProductPagination.value.total_pages) {
+    addProductCurrentPage.value++
+    loadAddableProducts()
+  }
+}
+
+async function handleAddProduct(productId) {
+  if (!activeShop.value?.id || !collection.value.id) return
+  addProductLoading.value = true
+  try {
+    await collectionService.addProduct(activeShop.value.id, collection.value.id, productId)
+    await loadCollection(collection.value.id)
+    await loadAddableProducts()
+  } catch (e) {
+    alert('Failed to add product to collection. Please try again.')
+  } finally {
+    addProductLoading.value = false
   }
 }
 
@@ -360,6 +541,17 @@ function formatDate(dateString) {
   });
 }
 
+// Load collections on mount and when modal opens
+async function loadAllCollections() {
+  if (!activeShop.value?.id) return
+  allCollections.value = await collectionService.fetchAllByShop(activeShop.value.id)
+}
+
+// Load collections on mount and when modal opens
+onMounted(() => {
+  loadAllCollections()
+})
+
 // Watch for modal state changes
 watch(showEditModal, (newVal) => {
   if (newVal) {
@@ -374,14 +566,15 @@ watch(showEditModal, (newVal) => {
   }
 })
 
-// On modal open, load only products with no collection using the new method
-// watch(showAddProductModal, async (val) => { // This line is removed
-//   if (val) {
-//     isSearching.value = false
-//     allProducts.value = await productService.fetchAllByShopWithFilter(activeShop.value.id, { collection_id: null })
-//     productSearchQuery.value = ''
-//   }
-// })
+// Watch modal open to load products
+watch(showAddProductModal, (val) => {
+  if (val) {
+    addProductSearchQuery.value = ''
+    addProductCurrentPage.value = 1
+    loadAddableProducts()
+    loadAllCollections()
+  }
+})
 
 // When searching, use backend search for fast results
 // watch(productSearchQuery, async (query) => { // This line is removed
