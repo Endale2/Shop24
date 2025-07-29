@@ -1,4 +1,9 @@
 <template>
+  <Breadcrumbs :items="[
+    { back: true },
+    { label: 'Home', to: `/${shopSlug}/` },
+    { label: 'Search Results' }
+  ]" />
   <div class="max-w-7xl mx-auto px-4 py-8">
     <h1 class="text-2xl font-bold mb-6">Search Results for "{{ searchQuery }}"</h1>
     <Loader v-if="isLoading" text="Searching products..." />
@@ -37,11 +42,12 @@ import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import Loader from '@/components/Loader.vue';
 import ProductCard from '@/components/ProductCard.vue';
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import { fetchProductsSearchPaginated } from '@/services/product';
-import { getCurrentShopSlug } from '@/services/shop';
 
 const route = useRoute();
 const router = useRouter();
+const shopSlug = route.params.shopSlug as string;
 const searchQuery = ref(route.query.q ? String(route.query.q) : '');
 const currentPage = ref(Number(route.query.page) || 1);
 const pageSize = 20;
@@ -52,7 +58,6 @@ const isLoading = ref(false);
 async function loadResults(page = 1) {
   isLoading.value = true;
   try {
-    const shopSlug = getCurrentShopSlug();
     if (!shopSlug || !searchQuery.value) return;
     const { products: fetched, total, page: backendPage } = await fetchProductsSearchPaginated(shopSlug, searchQuery.value, page, pageSize);
     products.value = fetched;

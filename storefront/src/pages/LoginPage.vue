@@ -46,15 +46,16 @@
 </template>
 <script setup lang="ts">
 import { ref, watch, onMounted } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { useCartStore } from '../stores/cart';
-import { useRouter } from 'vue-router';
-import { getCurrentShopSlug } from '../services/shop';
-const authStore = useAuthStore();
+
+const route = useRoute();
 const router = useRouter();
+const authStore = useAuthStore();
+const shopSlug = route.params.shopSlug as string;
 const email = ref('');
 const otp = ref('');
-const shopSlug = getCurrentShopSlug();
 
 onMounted(async () => {
   localStorage.clear();
@@ -79,22 +80,13 @@ async function onVerifyOTP() {
     await authStore.verifyOTP(otp.value);
     email.value = '';
     otp.value = '';
-    if (authStore.user) {
-      if (!authStore.profileComplete) {
-        router.push({ path: `/${shopSlug}/account` }); // Profile completion page
-      } else {
-        router.push({ path: `/${shopSlug}/` }); // Home or intended page
-      }
-    }
+    // Redirect is now handled in the auth store
   } catch (error) {
     console.error('Failed to verify OTP:', error);
   }
 }
-watch(() => authStore.user, (user) => {
-  if (user && authStore.profileComplete) {
-    router.push({ path: `/${shopSlug}/` });
-  }
-});
+
+// Remove the watch since redirect is handled in auth store
 </script>
 
 <style scoped>

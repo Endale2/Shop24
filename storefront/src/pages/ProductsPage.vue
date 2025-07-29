@@ -1,17 +1,10 @@
 <template>
   <div>
-    <!-- Breadcrumb and Back Button -->
-    <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-6">
-      <button @click="$router.back()" class="text-gray-700 hover:text-black flex items-center gap-1 font-medium text-xs mr-2">
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-        Back
-      </button>
-      <router-link :to="`/${shopSlug}/`" class="hover:underline">Home</router-link>
-      <span>/</span>
-      <span v-if="selectedCollection === null">Products</span>
-      <span v-else>{{ pageTitle }}</span>
-    </nav>
-    <!-- End Breadcrumb and Back Button -->
+    <Breadcrumbs :items="[
+      { back: true },
+      { label: 'Home', to: `/${shopSlug}/` },
+      { label: selectedCollection === null ? 'Products' : pageTitle }
+    ]" />
 
     <div v-if="collections.length > 0" class="flex space-x-2 overflow-x-auto mb-8 pb-2 border-b border-gray-200">
       <button
@@ -75,14 +68,17 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
+import { useRoute } from 'vue-router';
 import ProductCard from '@/components/ProductCard.vue';
 import { fetchAllProducts, fetchProductsPaginated } from '@/services/product';
 import { fetchCollections, fetchCollectionDetail } from '@/services/collections';
-import { getCurrentShopSlug } from '@/services/shop';
 import type { Product } from '@/services/product';
 import type { Collection } from '@/services/collections';
 import Loader from '@/components/Loader.vue';
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
 
+const route = useRoute();
+const shopSlug = route.params.shopSlug as string;
 const products = ref<Product[]>([]);
 const collections = ref<Collection[]>([]);
 const selectedCollection = ref<string | null>(null);
@@ -95,7 +91,6 @@ const totalProducts = ref(0);
 async function loadProducts(page = 1) {
   isLoading.value = true;
   try {
-    const shopSlug = getCurrentShopSlug();
     if (!shopSlug) return;
     const { products: fetchedProducts, total, page: backendPage, limit: backendLimit } = await fetchProductsPaginated(shopSlug, page, pageSize);
     products.value = fetchedProducts;
@@ -108,7 +103,15 @@ async function loadProducts(page = 1) {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  if (!shopSlug) return;
+  // Load collections first
+  try {
+    collections.value = await fetchCollections(shopSlug);
+  } catch (error) {
+    console.error('Failed to load collections:', error);
+  }
+  // Then load products
   loadProducts(currentPage.value);
 });
 

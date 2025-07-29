@@ -24,7 +24,23 @@ api.interceptors.response.use(
   response => response,
   async error => {
     const originalRequest = error.config
+    
+    // Handle 401 errors
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
+      console.log('[API Interceptor] 401 error detected, attempting refresh...')
+      
+      // Don't retry auth endpoints to avoid infinite loops
+      if (originalRequest.url && (
+        originalRequest.url.includes('/auth/customer/me') ||
+        originalRequest.url.includes('/auth/customer/refresh')
+      )) {
+        console.log('[API Interceptor] Auth endpoint failed, not retrying')
+        const authStore = useAuthStore()
+        authStore.user = null
+        authStore.sessionLoading = false
+        return Promise.reject(error)
+      }
+      
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject })
@@ -32,25 +48,37 @@ api.interceptors.response.use(
           .then(() => api(originalRequest))
           .catch(err => Promise.reject(err))
       }
+      
       originalRequest._retry = true
       isRefreshing = true
       const authStore = useAuthStore()
+      
       try {
         await authStore.refreshSession()
         processQueue(null)
         isRefreshing = false
+        console.log('[API Interceptor] Token refresh successful, retrying original request')
         return api(originalRequest)
       } catch (refreshError) {
+        console.log('[API Interceptor] Token refresh failed, setting user as unauthenticated')
+        // Set user as unauthenticated and clear session loading
         authStore.user = null
+        authStore.sessionLoading = false
         processQueue(refreshError)
         isRefreshing = false
-        // Optionally redirect to login if on protected route
+        
+        // Redirect to login if on protected route
         const protectedRoutes = ['/account', '/orders', '/checkout', '/cart', '/wishlist']
         const currentPath = router.currentRoute.value.path
-        if (protectedRoutes.some(route => currentPath.startsWith(route))) {
+        if (protectedRoutes.some(route => currentPath.includes(route))) {
           const shopSlug = getCurrentShopSlug()
-          if (shopSlug) router.push(`/${shopSlug}/login`)
-          else router.push('/select-shop')
+          if (shopSlug) {
+            console.log('[API Interceptor] Redirecting to login:', `/${shopSlug}/login`)
+            router.push(`/${shopSlug}/login`)
+          } else {
+            console.log('[API Interceptor] Redirecting to shop selection')
+            router.push('/select-shop')
+          }
         }
         return Promise.reject(refreshError)
       }

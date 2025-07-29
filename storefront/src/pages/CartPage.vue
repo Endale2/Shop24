@@ -7,9 +7,20 @@
         <p class="text-gray-600 mt-2">Review your items and proceed to checkout</p>
       </div>
 
+      <!-- Session Loading State -->
+      <div v-if="authStore.sessionLoading" class="flex items-center justify-center min-h-[60vh]">
+        <div class="flex flex-col items-center">
+          <svg class="animate-spin h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <p class="text-gray-500">Checking authentication…</p>
+        </div>
+      </div>
+
       <!-- Not Logged In State -->
       <LoginPrompt
-        v-if="!authStore.user"
+        v-else-if="!authStore.user"
         title="Sign in to view your cart"
         message="Create an account or sign in to view and manage your shopping cart."
       >
@@ -409,29 +420,46 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, computed } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue';
+import { useRoute, useRouter } from 'vue-router';
 import { useCartStore } from '@/stores/cart';
-import { useRouter } from 'vue-router';
 import { placeOrder } from '@/services/order';
 import type { CartItem, ItemDiscountDetail, OrderDiscountDetail } from '@/services/cart';
 import { ShoppingCartIcon } from '@heroicons/vue/24/outline';
 import { formatDiscountValue, getDiscountDescription } from '@/utils/discount';
-import { getCurrentShopSlug } from '@/services/shop';
 import Loader from '@/components/Loader.vue';
 import LoginPrompt from '@/components/LoginPrompt.vue';
 import { useAuthStore } from '@/stores/auth';
 
+const route = useRoute();
 const cartStore = useCartStore();
 const router = useRouter();
 const authStore = useAuthStore();
+const shopSlug = route.params.shopSlug as string;
 const checkoutLoading = ref(false);
 
-onMounted(() => {
-  const shopSlug = getCurrentShopSlug();
+// Only fetch cart when user is authenticated and session loading is complete
+function fetchCartIfAuthenticated() {
   if (!shopSlug) return;
-  cartStore.setShopSlug(shopSlug);
-  cartStore.fetchCart();
+  if (!authStore.sessionLoading && authStore.user) {
+    cartStore.setShopSlug(shopSlug);
+    cartStore.fetchCart();
+  }
+}
+
+onMounted(() => {
+  fetchCartIfAuthenticated();
 });
+
+// Watch for authentication state changes
+watch(
+  () => [authStore.sessionLoading, authStore.user],
+  ([sessionLoading, user]) => {
+    if (!sessionLoading && user) {
+      fetchCartIfAuthenticated();
+    }
+  }
+);
 
 // Computed properties for discount display - READ ONLY from backend data
 const hasItemDiscounts = computed(() => {

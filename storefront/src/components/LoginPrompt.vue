@@ -15,8 +15,7 @@
 </template>
 
 <script setup lang="ts">
-import { useRouter } from 'vue-router';
-import { getCurrentShopSlug } from '@/services/shop';
+import { useRouter, useRoute } from 'vue-router';
 
 defineProps({
   title: {
@@ -30,9 +29,10 @@ defineProps({
 });
 
 const router = useRouter();
+const route = useRoute();
 
 function goToLogin() {
-  const shopSlug = getCurrentShopSlug();
+  const shopSlug = route.params.shopSlug as string;
   if (shopSlug) {
     router.push({ path: `/${shopSlug}/login` });
   } else {

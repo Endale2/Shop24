@@ -1,14 +1,9 @@
 <template>
-  <!-- Breadcrumb and Back Button -->
-  <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-6">
-    <button @click="$router.back()" class="text-gray-700 hover:text-black flex items-center gap-1 font-medium text-xs mr-2">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-      Back
-    </button>
-    <router-link to="/" class="hover:underline">Home</router-link>
-    <span>/</span>
-    <span>Order Confirmation</span>
-  </nav>
+  <Breadcrumbs :items="[
+    { back: true },
+    { label: 'Home', to: `/${shopSlug}/` },
+    { label: 'Order Confirmation' }
+  ]" />
   <div class="min-h-screen bg-gray-50 py-8">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
       <!-- Header -->
@@ -21,13 +16,15 @@
         <h1 class="text-3xl font-bold text-gray-900 mb-2">Order Confirmed!</h1>
         <p class="text-lg text-gray-600">Thank you for your purchase. Your order has been successfully placed.</p>
       </div>
-
-      <!-- Loading State -->
       <div v-if="loading" class="text-center py-12">
         <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900 mx-auto mb-4"></div>
         <p class="text-gray-600">Loading order details...</p>
       </div>
-
+      <LoginPrompt
+        v-else-if="!authStore.user"
+        :title="'Sign in to view your order'"
+        :message="'Please log in to access your order details.'"
+      />
       <!-- Error State -->
       <div v-else-if="error" class="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
         <svg class="w-12 h-12 text-red-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -150,15 +147,17 @@ import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { getOrderDetail } from '@/services/order';
 import { useCartStore } from '@/stores/cart';
-import { getCurrentShopSlug } from '@/services/shop';
+import { useAuthStore } from '@/stores/auth';
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import LoginPrompt from '@/components/LoginPrompt.vue';
 
 const route = useRoute();
 const cartStore = useCartStore();
+const authStore = useAuthStore();
+const shopSlug = route.params.shopSlug as string;
 const order = ref<any>(null);
 const loading = ref(true);
 const error = ref('');
-
-const shopSlug = getCurrentShopSlug();
 
 onMounted(async () => {
   if (!shopSlug) return;

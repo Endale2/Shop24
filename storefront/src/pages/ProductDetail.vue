@@ -1,16 +1,10 @@
 <template>
-  <!-- Breadcrumb and Back Button -->
-  <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-6">
-    <button @click="$router.back()" class="text-gray-700 hover:text-black flex items-center gap-1 font-medium text-xs mr-2">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-      Back
-    </button>
-    <router-link to="/" class="hover:underline">Home</router-link>
-    <span>/</span>
-    <router-link to="/products" class="hover:underline">Products</router-link>
-    <span>/</span>
-    <span>{{ product?.name || 'Product Detail' }}</span>
-  </nav>
+  <Breadcrumbs :items="[
+    { back: true },
+    { label: 'Home', to: `/${shopSlug}/` },
+    { label: 'Products', to: `/${shopSlug}/products` },
+    { label: product?.name || 'Product Detail' }
+  ]" />
   <Loader v-if="isLoading" text="Loading product..." />
   <div v-else-if="product" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -233,6 +227,7 @@ import Header from '../components/Header.vue'
 import { formatDiscountValue } from '@/utils/discount'
 import { getCurrentShopSlug } from '@/services/shop';
 import Loader from '@/components/Loader.vue';
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
 
 // Define interfaces to match your data structure for better type safety
 interface ProductOption {
@@ -251,6 +246,7 @@ interface Variant {
 const route = useRoute()
 const router = useRouter()
 const handle = route.params.handle as string
+const shopSlug = route.params.shopSlug as string
 const product = ref<Product | null>(null)
 const selectedVariant = ref<Variant | null>(null)
 const currentImage = ref<string>('')
@@ -263,7 +259,6 @@ const authStore = useAuthStore()
 const wishlistStore = useWishlistStore()
 
 onMounted(async () => {
-  const shopSlug = getCurrentShopSlug();
   if (!shopSlug || !handle) return;
   isLoading.value = true
   product.value = await fetchProductDetail(shopSlug, handle);
@@ -478,7 +473,7 @@ async function addToCart() {
 }
 
 function goToLogin() {
-  router.push({ name: 'Login', params: { shopSlug: getCurrentShopSlug() } });
+  router.push({ name: 'Login', params: { shopSlug: shopSlug } });
 }
 
 function getDiscountTypeDescription() {

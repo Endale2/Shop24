@@ -1,14 +1,9 @@
 <template>
-  <!-- Breadcrumb and Back Button -->
-  <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-6">
-    <button @click="$router.back()" class="text-gray-700 hover:text-black flex items-center gap-1 font-medium text-xs mr-2">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-      Back
-    </button>
-    <router-link to="/" class="hover:underline">Home</router-link>
-    <span>/</span>
-    <span>My Orders</span>
-  </nav>
+  <Breadcrumbs :items="[
+    { back: true },
+    { label: 'Home', to: `/${shopSlug}/` },
+    { label: 'My Orders' }
+  ]" />
   <div class="orders-container">
     <div class="max-w-6xl mx-auto px-2 sm:px-4">
       <!-- Header Section -->
@@ -111,7 +106,7 @@
         <h3 class="text-lg font-semibold text-gray-900 mb-2">No orders yet</h3>
         <p class="text-gray-600 mb-6">Start shopping to see your orders here</p>
         <router-link 
-          :to="'/products'" 
+          :to="`/${shopSlug}/products`" 
           class="inline-block bg-black text-white py-3 px-6 rounded-md font-bold uppercase tracking-wide hover:bg-gray-800 transition-colors"
         >
           Browse Products
@@ -122,12 +117,13 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { getCustomerOrders } from '@/services/order';
 import { PhotoIcon } from '@heroicons/vue/24/outline'
 import LoginPrompt from '@/components/LoginPrompt.vue';
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
 
 const route = useRoute();
 const authStore = useAuthStore();
@@ -192,9 +188,27 @@ async function fetchOrders() {
   }
 }
 
+// Only fetch orders when user is authenticated and session loading is complete
+function fetchOrdersIfAuthenticated() {
+  if (!shopSlug) return;
+  if (!authStore.sessionLoading && authStore.user) {
+    fetchOrders();
+  }
+}
+
 onMounted(() => {
-  fetchOrders();
+  fetchOrdersIfAuthenticated();
 });
+
+// Watch for authentication state changes
+watch(
+  () => [authStore.sessionLoading, authStore.user],
+  ([sessionLoading, user]) => {
+    if (!sessionLoading && user) {
+      fetchOrdersIfAuthenticated();
+    }
+  }
+);
 </script>
 
 <style scoped>

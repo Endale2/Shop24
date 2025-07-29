@@ -1,16 +1,10 @@
 <template>
-  <!-- Breadcrumb and Back Button -->
-  <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-6">
-    <button @click="$router.back()" class="text-gray-700 hover:text-black flex items-center gap-1 font-medium text-xs mr-2">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-      Back
-    </button>
-    <router-link to="/" class="hover:underline">Home</router-link>
-    <span>/</span>
-    <router-link to="/collections" class="hover:underline">Collections</router-link>
-    <span>/</span>
-    <span>{{ collection?.title || '' }}</span>
-  </nav>
+  <Breadcrumbs :items="[
+    { back: true },
+    { label: 'Home', to: `/${shopSlug}/` },
+    { label: 'Collections', to: `/${shopSlug}/collections` },
+    { label: collection?.title || '' }
+  ]" />
   <Loader v-if="isLoading" text="Loading collection..." />
   <div v-else-if="collection" class="space-y-10">
     <div class="relative h-64 md:h-80 bg-cover bg-center rounded-lg border border-gray-200 overflow-hidden" :style="{ backgroundImage: collection.image ? `url(${collection.image})` : '' }">
@@ -46,6 +40,7 @@ import { useRoute } from 'vue-router'
 import { fetchCollectionDetail, CollectionDetail } from '@/services/collections'
 import ProductCard from '@/components/ProductCard.vue'
 import Loader from '@/components/Loader.vue';
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
 
 const route = useRoute()
 const handle = route.params.handle as string

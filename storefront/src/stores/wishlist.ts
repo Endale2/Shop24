@@ -36,6 +36,10 @@ export const useWishlistStore = defineStore('wishlist', {
         }
       } catch (e: any) {
         this.error = e.response?.data?.error || 'Failed to fetch wishlist';
+        // Clear wishlist if unauthorized (user not logged in)
+        if (e.response?.status === 401) {
+          this.clearWishlistState();
+        }
       } finally {
         this.loading = false;
       }
@@ -49,6 +53,10 @@ export const useWishlistStore = defineStore('wishlist', {
         await this.fetchWishlist();
       } catch (e: any) {
         this.error = e.response?.data?.error || 'Failed to add to wishlist';
+        // Clear wishlist if unauthorized (user not logged in)
+        if (e.response?.status === 401) {
+          this.clearWishlistState();
+        }
       } finally {
         this.loading = false;
       }
@@ -62,6 +70,10 @@ export const useWishlistStore = defineStore('wishlist', {
         await this.fetchWishlist();
       } catch (e: any) {
         this.error = e.response?.data?.error || 'Failed to remove from wishlist';
+        // Clear wishlist if unauthorized (user not logged in)
+        if (e.response?.status === 401) {
+          this.clearWishlistState();
+        }
       } finally {
         this.loading = false;
       }

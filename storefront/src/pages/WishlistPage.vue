@@ -1,14 +1,9 @@
 <template>
-  <!-- Breadcrumb and Back Button -->
-  <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-6">
-    <button @click="$router.back()" class="text-gray-700 hover:text-black flex items-center gap-1 font-medium text-xs mr-2">
-      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-      Back
-    </button>
-    <router-link :to="{ path: `/${getShopSlug()}/` }" class="hover:underline">Home</router-link>
-    <span>/</span>
-    <span>Wishlist</span>
-  </nav>
+  <Breadcrumbs :items="[
+    { back: true },
+    { label: 'Home', to: `/${shopSlug}/` },
+    { label: 'Wishlist' }
+  ]" />
   <div class="wishlist-container">
     <div class="max-w-6xl mx-auto">
       <!-- Header Section -->
@@ -17,9 +12,20 @@
         <p class="text-gray-600">Save your favorite products for later</p>
       </div>
 
+      <!-- Session Loading State -->
+      <div v-if="authStore.sessionLoading" class="flex items-center justify-center min-h-[60vh]">
+        <div class="flex flex-col items-center">
+          <svg class="animate-spin h-12 w-12 text-gray-400 mb-4" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          <p class="text-gray-500">Checking authentication…</p>
+        </div>
+      </div>
+
       <!-- Not Logged In State -->
       <LoginPrompt
-        v-if="!authStore.user"
+        v-else-if="!authStore.user"
         title="Sign in to view your wishlist"
         message="Create an account or sign in to save and track your favorite products."
       >
@@ -90,29 +96,30 @@ import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { useWishlistStore } from '../stores/wishlist';
 import { useCartStore } from '../stores/cart';
-import { getCurrentShopSlug } from '../services/shop';
 import LoginPrompt from '@/components/LoginPrompt.vue';
+import Breadcrumbs from '@/components/Breadcrumbs.vue';
 
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 const wishlistStore = useWishlistStore();
 const cartStore = useCartStore();
+const shopSlug = route.params.shopSlug as string;
 
 function getShopSlug() {
-  return (route.params.shopSlug as string) || getCurrentShopSlug() || '';
+  return shopSlug || '';
 }
 
 function goToLogin() {
-  router.push({ path: `/${getShopSlug()}/login` });
+  router.push({ path: `/${shopSlug}/login` });
 }
 
 function goToRegister() {
-  router.push({ path: `/${getShopSlug()}/register` });
+  router.push({ path: `/${shopSlug}/register` });
 }
 
 function goToProducts() {
-  router.push({ path: `/${getShopSlug()}/products` });
+  router.push({ path: `/${shopSlug}/products` });
 }
 
 function removeFromWishlist(productId: string) {
@@ -123,18 +130,32 @@ async function addToCart(product: any) {
   await cartStore.addToCart(product, 1);
 }
 
-onMounted(() => {
-  const shopSlug = getShopSlug();
-  wishlistStore.setShopSlug(shopSlug);
-  if (authStore.user) {
+// Only fetch wishlist when user is authenticated and session loading is complete
+function fetchWishlistIfAuthenticated() {
+  if (!shopSlug) return;
+  if (!authStore.sessionLoading && authStore.user) {
+    wishlistStore.setShopSlug(shopSlug);
     wishlistStore.fetchWishlist();
   }
+}
+
+onMounted(() => {
+  fetchWishlistIfAuthenticated();
 });
+
+// Watch for authentication state changes
+watch(
+  () => [authStore.sessionLoading, authStore.user],
+  ([sessionLoading, user]) => {
+    if (!sessionLoading && user) {
+      fetchWishlistIfAuthenticated();
+    }
+  }
+);
 
 watch(() => route.params.shopSlug, (newSlug) => {
   if (newSlug) {
-    wishlistStore.setShopSlug(newSlug as string);
-    if (authStore.user) wishlistStore.fetchWishlist();
+    fetchWishlistIfAuthenticated();
   }
 });
 </script>
