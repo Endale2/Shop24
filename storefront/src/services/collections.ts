@@ -36,7 +36,7 @@ export async function fetchCollections(shopSlug?: string): Promise<Collection[]>
   const slug = shopSlug || getCurrentShopSlug();
   if (!slug) return [];
   try {
-    const response = await api.get(`/shops/${slug}/collections`)
+    const response = await api.get(getShopUrl(slug, '/collections'))
     return response.data
   } catch (error) {
     console.error('Failed to fetch collections:', error)
@@ -48,7 +48,7 @@ export async function fetchCollectionDetail(shopSlug: string, handle: string): P
   const slug = shopSlug || getCurrentShopSlug();
   if (!slug) return null;
   try {
-    const response = await api.get(`/shops/${slug}/collections/${encodeURIComponent(handle)}`)
+    const response = await api.get(getShopUrl(slug, `/collections/${encodeURIComponent(handle)}`))
     return response.data
   } catch (error) {
     console.error('Failed to fetch collection detail:', error)

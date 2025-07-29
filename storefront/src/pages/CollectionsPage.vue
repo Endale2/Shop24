@@ -31,13 +31,14 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { fetchCollections } from '../services/collections'
 import type { Collection } from '../services/collections'
-import { getCurrentShopSlug } from '../services/shop';
 import Loader from '@/components/Loader.vue';
 
 const router = useRouter()
+const route = useRoute()
+const shopSlug = route.params.shopSlug as string
 
 const collections = ref<Collection[]>([])
 const isLoading = ref(true)
@@ -47,7 +48,6 @@ function goBack() {
 }
 
 onMounted(async () => {
-  const shopSlug = getCurrentShopSlug();
   if (!shopSlug) return;
   isLoading.value = true
   collections.value = await fetchCollections(shopSlug)
