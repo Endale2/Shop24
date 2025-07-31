@@ -1,294 +1,342 @@
 <template>
-  <div class="p-4 sm:p-6 max-w-7xl mx-auto font-sans">
-    <!-- Header & Period Selector -->
-    <div class="flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0 mb-8">
-      <div>
-        <h1 class="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">
-          Analytics Dashboard
-        </h1>
-        <p class="text-lg text-gray-600 mt-2">
-          Deep insights into your shop's performance
-        </p>
-      </div>
-      <div class="inline-flex bg-white p-1 rounded-lg shadow-sm border border-gray-200">
-        <button
-          v-for="period in periods"
-          :key="period.id"
-          @click="changePeriod(period.id)"
-          :class="[
-            'px-4 py-2 text-sm font-medium rounded-md transition-all duration-200',
-            selectedPeriod === period.id
-              ? 'bg-green-600 text-white shadow-md'
-              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-          ]"
-        >
-          {{ period.label }}
-        </button>
-      </div>
-    </div>
-
-    <!-- Loading State -->
-    <div v-if="loading" class="text-center py-16 text-gray-600 text-lg">
-      <div class="flex flex-col items-center justify-center">
-        <div class="animate-spin h-10 w-10 text-green-500 mb-4 border-4 border-green-200 border-t-green-500 rounded-full"></div>
-        <p>Loading analytics data...</p>
-      </div>
-    </div>
-
-    <!-- Analytics Content -->
-    <div v-else class="space-y-8">
-      <!-- Stats Cards -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-        <div
-          v-for="stat in analyticsStats"
-          :key="stat.title"
-          class="bg-white p-6 rounded-xl shadow-md border border-gray-200 hover:shadow-lg transition-shadow duration-200 border-l-4"
-          :class="stat.borderColor"
-        >
-          <div class="flex items-center space-x-4">
-            <div class="p-3 rounded-lg" :class="stat.iconBg">
-              <component :is="stat.icon" class="h-6 w-6" :class="stat.iconColor" />
+  <div class="min-h-full bg-gray-50">
+    <div class="p-4 sm:p-6 lg:p-8">
+      
+      <!-- Header Section -->
+      <div class="mb-6 sm:mb-8">
+        <div class="flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0">
+          <div class="flex items-center mb-3 md:mb-0">
+            <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center mr-3 shadow-sm">
+              <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
             </div>
-            <div class="flex-1">
-              <p class="text-sm font-medium text-gray-600">{{ stat.title }}</p>
-              <p class="text-2xl font-bold text-gray-900">{{ stat.value }}</p>
-              <p
-                class="text-sm font-medium"
-                :class="stat.change >= 0 ? 'text-green-600' : 'text-red-600'"
-              >
-                <component :is="stat.change >= 0 ? TrendingUpIcon : TrendingDownIcon" class="w-4 h-4 inline mr-1" />
-                {{ stat.change >= 0 ? '+' : '' }}{{ stat.change }}% vs last period
+            <div>
+              <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
+                Analytics Dashboard
+              </h1>
+              <p class="text-sm text-gray-600 mt-1">
+                Deep insights into your shop's performance
               </p>
             </div>
           </div>
-        </div>
-      </div>
-
-      <!-- Charts Section -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Revenue Over Time -->
-        <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-md border border-gray-200">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-semibold text-gray-900">Revenue Over Time</h2>
-            <div class="text-sm text-gray-600">
-              {{ getPeriodLabel(selectedPeriod) }}
-            </div>
-          </div>
-          <div class="h-80">
-            <Line
-              v-if="revenueChartData && Array.isArray(revenueChartData.labels) && revenueChartData.labels.length"
-              :data="revenueChartData"
-              :options="lineChartOptions"
-            />
-            <div v-else class="h-full bg-gray-100 animate-pulse rounded-lg flex items-center justify-center">
-              <p class="text-gray-500">No revenue data available</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Sales by Category -->
-        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-          <h2 class="text-xl font-semibold text-gray-900 mb-6">Sales by Category</h2>
-          <div class="h-80">
-            <Doughnut
-              v-if="categoryChartData"
-              :data="categoryChartData"
-              :options="doughnutChartOptions"
-            />
-            <div v-else class="h-full bg-gray-100 animate-pulse rounded-lg flex items-center justify-center">
-              <p class="text-gray-500">No category data available</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Additional Charts -->
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- Orders Over Time -->
-        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-          <h2 class="text-xl font-semibold text-gray-900 mb-6">Orders Over Time</h2>
-          <div class="h-64">
-            <Line
-              v-if="ordersChartData && Array.isArray(ordersChartData.labels) && ordersChartData.labels.length"
-              :data="ordersChartData"
-              :options="lineChartOptions"
-            />
-            <div v-else class="h-full bg-gray-100 animate-pulse rounded-lg flex items-center justify-center">
-              <p class="text-gray-500">No order data available</p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Customer Growth -->
-        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-          <h2 class="text-xl font-semibold text-gray-900 mb-6">Customer Growth</h2>
-          <div class="h-64">
-            <Line
-              v-if="customersChartData"
-              :data="customersChartData"
-              :options="lineChartOptions"
-            />
-            <div v-else class="h-full bg-gray-100 animate-pulse rounded-lg flex items-center justify-center">
-              <p class="text-gray-500">No customer data available</p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Top Products & Recent Orders -->
-      <div class="grid grid-cols-1 lg:grid-cols-5 gap-8">
-        <!-- Top Selling Products -->
-        <div class="lg:col-span-2 bg-white p-6 rounded-xl shadow-md border border-gray-200">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-semibold text-gray-900 flex items-center">Top Selling Products
-              <span class="ml-2 text-xs text-gray-400" title="Only paid, shipped, or delivered orders are counted as sold.">(sold = paid/shipped/delivered)</span>
-            </h2>
-            <router-link 
-              to="/dashboard/products" 
-              class="text-sm text-green-600 hover:text-green-700 font-medium"
+          <div class="inline-flex bg-white p-1 rounded-lg shadow-sm border border-gray-200">
+            <button
+              v-for="period in periods"
+              :key="period.id"
+              @click="changePeriod(period.id)"
+              :class="[
+                'px-3 py-2 text-xs font-medium rounded-md transition-all duration-200',
+                selectedPeriod === period.id
+                  ? 'bg-green-600 text-white shadow-sm'
+                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+              ]"
             >
-              View all products
-            </router-link>
+              {{ period.label }}
+            </button>
           </div>
-          <div v-if="Array.isArray(topProductsList) && topProductsList.length === 0" class="text-center py-8 text-gray-500">
-            <CubeIcon class="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <p>No products yet</p>
-            <p class="text-sm">Add products to see analytics</p>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div v-if="loading" class="text-center py-16 text-gray-500">
+        <div class="flex flex-col items-center justify-center">
+          <div class="animate-spin h-8 w-8 text-green-500 mb-3 border-3 border-green-200 border-t-green-500 rounded-full"></div>
+          <p class="text-sm font-medium">Loading analytics data...</p>
+        </div>
+      </div>
+
+      <!-- Analytics Content -->
+      <div v-else class="space-y-6">
+        <!-- Stats Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div
+            v-for="stat in analyticsStats"
+            :key="stat.title"
+            class="bg-white p-4 rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-all duration-200 border-l-4 group"
+            :class="stat.borderColor"
+          >
+            <div class="flex items-center space-x-3">
+              <div class="p-2 rounded-lg" :class="stat.iconBg">
+                <component :is="stat.icon" class="h-5 w-5" :class="stat.iconColor" />
+              </div>
+              <div class="flex-1">
+                <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">{{ stat.title }}</p>
+                <p class="text-2xl font-bold text-gray-900 mb-1">{{ stat.value }}</p>
+                <p
+                  class="text-xs font-medium"
+                  :class="stat.change >= 0 ? 'text-green-600' : 'text-red-600'"
+                >
+                  <component :is="stat.change >= 0 ? TrendingUpIcon : TrendingDownIcon" class="w-3 h-3 inline mr-1" />
+                  {{ stat.change >= 0 ? '+' : '' }}{{ stat.change }}% vs last period
+                </p>
+              </div>
+            </div>
           </div>
-          <div v-else class="space-y-4">
-            <div
-              v-for="(product, index) in (Array.isArray(topProductsList) ? topProductsList : [])"
-              :key="product.id"
-              class="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors duration-200 cursor-pointer"
-              @click="goToProduct(product.id)"
-            >
-              <div class="flex-shrink-0">
-                <div class="w-12 h-12 bg-gray-200 rounded-lg overflow-hidden">
-                  <img 
-                    v-if="product.mainImage"
-                    :src="product.mainImage"
-                    :alt="product.name"
-                    class="w-full h-full object-cover"
-                  />
-                  <div v-else class="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">
-                    <span class="text-xs">No Image</span>
+        </div>
+
+        <!-- Charts Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Revenue Over Time -->
+          <div class="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-100 bg-gray-50">
+              <div class="flex items-center justify-between">
+                <h2 class="text-sm font-semibold text-gray-900">Revenue Over Time</h2>
+                <div class="text-xs text-gray-500">
+                  {{ getPeriodLabel(selectedPeriod) }}
+                </div>
+              </div>
+            </div>
+            <div class="p-4">
+              <div class="h-64">
+                <Line
+                  v-if="revenueChartData && Array.isArray(revenueChartData.labels) && revenueChartData.labels.length"
+                  :data="revenueChartData"
+                  :options="lineChartOptions"
+                />
+                <div v-else class="h-full bg-gray-100 animate-pulse rounded-lg flex items-center justify-center">
+                  <p class="text-sm text-gray-500">No revenue data available</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Sales by Category -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-100 bg-gray-50">
+              <h2 class="text-sm font-semibold text-gray-900">Sales by Category</h2>
+            </div>
+            <div class="p-4">
+              <div class="h-64">
+                <Doughnut
+                  v-if="categoryChartData"
+                  :data="categoryChartData"
+                  :options="doughnutChartOptions"
+                />
+                <div v-else class="h-full bg-gray-100 animate-pulse rounded-lg flex items-center justify-center">
+                  <p class="text-sm text-gray-500">No category data available</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Additional Charts -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <!-- Orders Over Time -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-100 bg-gray-50">
+              <h2 class="text-sm font-semibold text-gray-900">Orders Over Time</h2>
+            </div>
+            <div class="p-4">
+              <div class="h-48">
+                <Line
+                  v-if="ordersChartData && Array.isArray(ordersChartData.labels) && ordersChartData.labels.length"
+                  :data="ordersChartData"
+                  :options="lineChartOptions"
+                />
+                <div v-else class="h-full bg-gray-100 animate-pulse rounded-lg flex items-center justify-center">
+                  <p class="text-sm text-gray-500">No order data available</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Customer Growth -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-100 bg-gray-50">
+              <h2 class="text-sm font-semibold text-gray-900">Customer Growth</h2>
+            </div>
+            <div class="p-4">
+              <div class="h-48">
+                <Line
+                  v-if="customersChartData"
+                  :data="customersChartData"
+                  :options="lineChartOptions"
+                />
+                <div v-else class="h-full bg-gray-100 animate-pulse rounded-lg flex items-center justify-center">
+                  <p class="text-sm text-gray-500">No customer data available</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Top Products & Recent Orders -->
+        <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+          <!-- Top Selling Products -->
+          <div class="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-100 bg-gray-50">
+              <div class="flex items-center justify-between">
+                <h2 class="text-sm font-semibold text-gray-900 flex items-center">Top Selling Products
+                  <span class="ml-2 text-xs text-gray-400" title="Only paid, shipped, or delivered orders are counted as sold.">(sold = paid/shipped/delivered)</span>
+                </h2>
+                <router-link 
+                  to="/dashboard/products" 
+                  class="text-xs text-green-600 hover:text-green-700 font-medium transition-colors duration-200"
+                >
+                  View all →
+                </router-link>
+              </div>
+            </div>
+            <div class="p-4">
+              <div v-if="Array.isArray(topProductsList) && topProductsList.length === 0" class="text-center py-6 text-gray-400">
+                <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <CubeIcon class="w-6 h-6 text-gray-300" />
+                </div>
+                <p class="text-sm font-medium text-gray-600 mb-1">No products yet</p>
+                <p class="text-xs">Add products to see analytics</p>
+              </div>
+              <div v-else class="space-y-3">
+                <div
+                  v-for="(product, index) in (Array.isArray(topProductsList) ? topProductsList : [])"
+                  :key="product.id"
+                  class="flex items-center space-x-3 p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors duration-200 cursor-pointer group"
+                  @click="goToProduct(product.id)"
+                >
+                  <div class="flex-shrink-0">
+                    <div class="w-10 h-10 bg-gray-200 rounded-md overflow-hidden">
+                      <img 
+                        v-if="product.mainImage"
+                        :src="product.mainImage"
+                        :alt="product.name"
+                        class="w-full h-full object-cover"
+                      />
+                      <div v-else class="w-full h-full bg-gray-200 flex items-center justify-center text-gray-400">
+                        <span class="text-xs">No Image</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-medium text-gray-900 truncate">{{ product.name }}</p>
+                    <p class="text-xs text-gray-500">{{ product.category }}</p>
+                  </div>
+                  <div class="text-right">
+                    <p class="text-sm font-semibold text-gray-900">${{ formatCurrency(product.totalRevenue) }}</p>
+                    <p class="text-xs text-gray-500">{{ product.totalSold }} sold</p>
+                  </div>
+                  <div class="flex-shrink-0">
+                    <div class="w-6 h-6 bg-green-100 rounded-full flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
+                      <span class="text-xs font-bold text-green-600">#{{ index + 1 }}</span>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div class="flex-1 min-w-0">
-                <p class="font-medium text-gray-900 truncate">{{ product.name }}</p>
-                <p class="text-sm text-gray-500">{{ product.category }}</p>
+            </div>
+          </div>
+
+          <!-- Recent Orders Table -->
+          <div class="lg:col-span-3 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-100 bg-gray-50">
+              <div class="flex items-center justify-between">
+                <h2 class="text-sm font-semibold text-gray-900">Recent Orders</h2>
+                <router-link 
+                  to="/orders" 
+                  class="text-xs text-green-600 hover:text-green-700 font-medium transition-colors duration-200"
+                >
+                  View all →
+                </router-link>
               </div>
-              <div class="text-right">
-                <p class="font-semibold text-gray-900">${{ formatCurrency(product.totalRevenue) }}</p>
-                <p class="text-sm text-gray-500">{{ product.totalSold }} sold</p>
-              </div>
-              <div class="flex-shrink-0">
-                <div class="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                  <span class="text-sm font-bold text-green-600">#{{ index + 1 }}</span>
+            </div>
+            <div class="p-4">
+              <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                  <thead class="bg-gray-50">
+                    <tr>
+                      <th class="p-3 text-left font-medium text-gray-600 text-xs">Order ID</th>
+                      <th class="p-3 text-left font-medium text-gray-600 text-xs">Customer</th>
+                      <th class="p-3 text-left font-medium text-gray-600 text-xs">Amount</th>
+                      <th class="p-3 text-left font-medium text-gray-600 text-xs">Status</th>
+                      <th class="p-3 text-left font-medium text-gray-600 text-xs">Date</th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-gray-100">
+                    <tr
+                      v-for="order in (Array.isArray(recentOrders) ? recentOrders : [])"
+                      :key="order.id"
+                      class="hover:bg-gray-50 cursor-pointer transition-colors duration-200"
+                      @click="goToOrder(order.id)"
+                    >
+                      <td class="p-3 font-mono text-gray-500 text-xs">#{{ order.order_number }}</td>
+                      <td class="p-3 text-gray-800 text-xs">{{ order.customer_id }}</td>
+                      <td class="p-3 font-semibold text-gray-900 text-xs">${{ formatCurrency(order.total) }}</td>
+                      <td class="p-3">
+                        <span
+                          class="px-2 py-0.5 text-xs font-medium rounded-full"
+                          :class="getStatusClass(order.status)"
+                        >
+                          {{ formatStatus(order.status) }}
+                        </span>
+                      </td>
+                      <td class="p-3 text-gray-600 text-xs">{{ formatDate(order.created_at) }}</td>
+                    </tr>
+                  </tbody>
+                </table>
+                <div v-if="Array.isArray(recentOrders) && recentOrders.length === 0" class="text-center py-6 text-gray-400">
+                  <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                    <ShoppingBagIcon class="w-6 h-6 text-gray-300" />
+                  </div>
+                  <p class="text-sm font-medium text-gray-600 mb-1">No orders yet</p>
+                  <p class="text-xs">Orders will appear here once customers start shopping</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Recent Orders Table -->
-        <div class="lg:col-span-3 bg-white p-6 rounded-xl shadow-md border border-gray-200">
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-semibold text-gray-900">Recent Orders</h2>
-            <router-link 
-              to="/orders" 
-              class="text-sm text-green-600 hover:text-green-700 font-medium"
-            >
-              View all orders
-            </router-link>
-          </div>
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <thead class="bg-gray-50">
-                <tr>
-                  <th class="p-3 text-left font-medium text-gray-600">Order ID</th>
-                  <th class="p-3 text-left font-medium text-gray-600">Customer</th>
-                  <th class="p-3 text-left font-medium text-gray-600">Amount</th>
-                  <th class="p-3 text-left font-medium text-gray-600">Status</th>
-                  <th class="p-3 text-left font-medium text-gray-600">Date</th>
-                </tr>
-              </thead>
-              <tbody class="divide-y divide-gray-200">
-                <tr
-                  v-for="order in (Array.isArray(recentOrders) ? recentOrders : [])"
-                  :key="order.id"
-                  class="hover:bg-gray-50 cursor-pointer transition-colors duration-200"
-                  @click="goToOrder(order.id)"
-                >
-                  <td class="p-3 font-mono text-gray-500">#{{ order.order_number }}</td>
-                  <td class="p-3 text-gray-800">{{ order.customer_id }}</td>
-                  <td class="p-3 font-semibold text-gray-900">${{ formatCurrency(order.total) }}</td>
-                  <td class="p-3">
-                    <span
-                      class="px-2 py-1 text-xs font-semibold rounded-full"
-                      :class="getStatusClass(order.status)"
-                    >
-                      {{ formatStatus(order.status) }}
-                    </span>
-                  </td>
-                  <td class="p-3 text-gray-600">{{ formatDate(order.created_at) }}</td>
-                </tr>
-              </tbody>
-            </table>
-            <div v-if="Array.isArray(recentOrders) && recentOrders.length === 0" class="text-center py-8 text-gray-500">
-              <ShoppingBagIcon class="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <p>No orders yet</p>
-              <p class="text-sm">Orders will appear here once customers start shopping</p>
+        <!-- Performance Metrics -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <!-- Customer Insights -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-100 bg-gray-50">
+              <h2 class="text-sm font-semibold text-gray-900">Customer Insights</h2>
+            </div>
+            <div class="p-4">
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs text-gray-600">New Customers</span>
+                  <span class="font-semibold text-green-600 text-sm">+{{ customerInsights?.newCustomers ?? 0 }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-xs text-gray-600">Returning Customers</span>
+                  <span class="font-semibold text-blue-600 text-sm">{{ customerInsights?.returningCustomers ?? 0 }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-xs text-gray-600">Avg Order Value</span>
+                  <span class="font-semibold text-gray-900 text-sm">${{ formatCurrency(customerInsights?.avgOrderValue ?? 0) }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-xs text-gray-600">Customer Lifetime Value</span>
+                  <span class="font-semibold text-purple-600 text-sm">${{ formatCurrency(customerInsights?.lifetimeValue ?? 0) }}</span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      <!-- Performance Metrics -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <!-- Customer Insights -->
-        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-          <h2 class="text-xl font-semibold text-gray-900 mb-6">Customer Insights</h2>
-          <div class="space-y-4">
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-600">New Customers</span>
-              <span class="font-semibold text-green-600">+{{ customerInsights?.newCustomers ?? 0 }}</span>
+          <!-- Inventory Status -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-100 bg-gray-50">
+              <h2 class="text-sm font-semibold text-gray-900">Inventory Status</h2>
             </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-600">Returning Customers</span>
-              <span class="font-semibold text-blue-600">{{ customerInsights?.returningCustomers ?? 0 }}</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-600">Avg Order Value</span>
-              <span class="font-semibold text-gray-900">${{ formatCurrency(customerInsights?.avgOrderValue ?? 0) }}</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-600">Customer Lifetime Value</span>
-              <span class="font-semibold text-purple-600">${{ formatCurrency(customerInsights?.lifetimeValue ?? 0) }}</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- Inventory Status -->
-        <div class="bg-white p-6 rounded-xl shadow-md border border-gray-200">
-          <h2 class="text-xl font-semibold text-gray-900 mb-6">Inventory Status</h2>
-          <div class="space-y-4">
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-600">Total Products</span>
-              <span class="font-semibold text-gray-900">{{ inventory.total_products }}</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-600">In Stock</span>
-              <span class="font-semibold text-green-600">{{ inventory.in_stock }}</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-600">Low Stock</span>
-              <span class="font-semibold text-yellow-600">{{ inventory.low_stock }}</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-600">Out of Stock</span>
-              <span class="font-semibold text-red-600">{{ inventory.out_of_stock }}</span>
+            <div class="p-4">
+              <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                  <span class="text-xs text-gray-600">Total Products</span>
+                  <span class="font-semibold text-gray-900 text-sm">{{ inventory.total_products }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-xs text-gray-600">In Stock</span>
+                  <span class="font-semibold text-green-600 text-sm">{{ inventory.in_stock }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-xs text-gray-600">Low Stock</span>
+                  <span class="font-semibold text-yellow-600 text-sm">{{ inventory.low_stock }}</span>
+                </div>
+                <div class="flex items-center justify-between">
+                  <span class="text-xs text-gray-600">Out of Stock</span>
+                  <span class="font-semibold text-red-600 text-sm">{{ inventory.out_of_stock }}</span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -723,5 +771,38 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Custom styles if needed */
+/* Custom styles for enhanced design */
+@media (max-width: 640px) {
+  .min-w-0 { min-width: 0 !important; }
+}
+
+/* Enhanced hover effects */
+.group:hover .group-hover\:scale-105 {
+  transform: scale(1.05);
+}
+
+/* Smooth transitions */
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Custom scrollbar for better UX */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
 </style>

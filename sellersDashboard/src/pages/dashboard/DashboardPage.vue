@@ -1,140 +1,157 @@
 
 <template>
-  <div class="bg-slate-50 font-sans min-h-screen">
-    <div class="p-2 sm:p-4 lg:p-8 max-w-7xl mx-auto">
+  <div class="min-h-full bg-gray-50">
+    <div class="p-4 sm:p-6 lg:p-8">
       
-      <div class="mb-8 sm:mb-10">
-        <h1 class="text-2xl sm:text-3xl lg:text-4xl font-black text-slate-800 tracking-tight">
-          Dashboard
-        </h1>
-        <p class="text-base sm:text-lg text-slate-500 mt-1">
-          Welcome back! Here's a snapshot of your shop's performance. 🚀
-        </p>
+      <!-- Header Section -->
+      <div class="mb-6 sm:mb-8">
+        <div class="flex items-center mb-3">
+          <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center mr-3 shadow-sm">
+            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+            </svg>
+          </div>
+          <div>
+            <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
+              Dashboard
+            </h1>
+            <p class="text-sm text-gray-600 mt-1">
+              Welcome back! Here's a snapshot of your shop's performance.
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div v-if="loading" class="text-center py-24 text-slate-500">
+      <!-- Loading State -->
+      <div v-if="loading" class="text-center py-16 text-gray-500">
         <div class="flex flex-col items-center justify-center">
-          <div class="animate-spin h-12 w-12 text-green-500 mb-4 border-4 border-green-200 border-t-green-500 rounded-full"></div>
-          <p class="text-lg font-medium">Summoning the latest data...</p>
+          <div class="animate-spin h-8 w-8 text-green-500 mb-3 border-3 border-green-200 border-t-green-500 rounded-full"></div>
+          <p class="text-sm font-medium">Loading dashboard data...</p>
         </div>
       </div>
 
-      <div v-else class="space-y-8">
+      <div v-else class="space-y-6">
         
-        <!-- Responsive Stat Cards -->
-        <div class="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4 sm:gap-6">
-          <div class="bg-white rounded-2xl shadow-sm p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+        <!-- Stat Cards Grid -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <!-- Total Products Card -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 group">
             <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm font-medium text-slate-500">Total Products</p>
-                <p class="text-3xl font-bold text-slate-800">{{ stats.products }}</p>
-                <p class="text-sm text-sky-600 mt-2 flex items-center font-semibold">
-                  <CubeIcon class="w-4 h-4 inline mr-1.5" />
+              <div class="flex-1">
+                <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Total Products</p>
+                <p class="text-2xl font-bold text-gray-900 mb-1">{{ stats.products }}</p>
+                <div class="flex items-center text-xs text-blue-600 font-medium">
+                  <CubeIcon class="w-3 h-3 mr-1" />
                   {{ stats.lowStockProducts }} low stock
-                </p>
+                </div>
               </div>
-              <div class="w-12 h-12 bg-sky-50 rounded-xl flex items-center justify-center">
-                <CubeIcon class="w-6 h-6 text-sky-500" />
+              <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
+                <CubeIcon class="w-5 h-5 text-blue-600" />
               </div>
             </div>
           </div>
 
-          <!-- Total Orders (with clarification) -->
-          <div class="bg-white rounded-2xl shadow-sm p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+          <!-- Total Orders Card -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 group">
             <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm font-medium text-emerald-600 flex items-center">
-                  Total Orders
-                  <span class="ml-2 text-xs text-slate-400 font-normal">(paid, shipped, delivered)</span>
-                </p>
-                <p class="text-3xl font-black text-emerald-700">{{ stats.orders }}</p>
-                <p class="text-sm text-emerald-600 mt-2 flex items-center font-semibold">
-                  <TrendingUpIcon class="w-4 h-4 inline mr-1.5" />
+              <div class="flex-1">
+                <div class="flex items-center mb-1">
+                  <p class="text-xs font-medium text-green-600 uppercase tracking-wide">Total Orders</p>
+                  <span class="ml-1 text-xs text-gray-400">(paid, shipped, delivered)</span>
+                </div>
+                <p class="text-2xl font-bold text-green-700 mb-1">{{ stats.orders }}</p>
+                <div class="flex items-center text-xs text-green-600 font-medium">
+                  <TrendingUpIcon class="w-3 h-3 mr-1" />
                   +{{ stats.newOrdersToday }} today
-                </p>
+                </div>
               </div>
-              <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
-                <ShoppingBagIcon class="w-6 h-6 text-emerald-500" />
-              </div>
-            </div>
-          </div>
-
-          <div class="bg-white rounded-2xl shadow-sm p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
-            <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm font-medium text-slate-500">Pending Orders</p>
-                <p class="text-3xl font-bold text-amber-500">{{ pendingOrdersCount }}</p>
-                 <p class="text-sm text-amber-600 mt-2 flex items-center font-semibold">
-                  <TrendingUpIcon class="w-4 h-4 inline mr-1.5" />
-                   Awaiting action
-                </p>
-              </div>
-              <div class="w-12 h-12 bg-amber-50 rounded-xl flex items-center justify-center">
-                <ShoppingBagIcon class="w-6 h-6 text-amber-500" />
+              <div class="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
+                <ShoppingBagIcon class="w-5 h-5 text-green-600" />
               </div>
             </div>
           </div>
 
-          <div class="bg-white rounded-2xl shadow-sm p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+          <!-- Pending Orders Card -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 group">
             <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm font-medium text-slate-500">Total Customers</p>
-                <p class="text-3xl font-bold text-slate-800">{{ stats.customers }}</p>
-                <p class="text-sm text-emerald-600 mt-2 flex items-center font-semibold">
-                  <UserAddIcon class="w-4 h-4 inline mr-1.5" />
+              <div class="flex-1">
+                <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Pending Orders</p>
+                <p class="text-2xl font-bold text-amber-600 mb-1">{{ pendingOrdersCount }}</p>
+                <div class="flex items-center text-xs text-amber-600 font-medium">
+                  <TrendingUpIcon class="w-3 h-3 mr-1" />
+                  Awaiting action
+                </div>
+              </div>
+              <div class="w-10 h-10 bg-amber-50 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
+                <ShoppingBagIcon class="w-5 h-5 text-amber-600" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Total Customers Card -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 group">
+            <div class="flex items-center justify-between">
+              <div class="flex-1">
+                <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Total Customers</p>
+                <p class="text-2xl font-bold text-gray-900 mb-1">{{ stats.customers }}</p>
+                <div class="flex items-center text-xs text-green-600 font-medium">
+                  <UserAddIcon class="w-3 h-3 mr-1" />
                   +{{ stats.newCustomersToday }} today
-                </p>
+                </div>
               </div>
-              <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
-                <UsersIcon class="w-6 h-6 text-emerald-500" />
+              <div class="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
+                <UsersIcon class="w-5 h-5 text-green-600" />
               </div>
             </div>
           </div>
 
-          <!-- Total Sales (Green) -->
-          <div class="bg-white rounded-2xl shadow-sm p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
+          <!-- Total Revenue Card -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 group">
             <div class="flex items-center justify-between">
-              <div>
-                <p class="text-sm font-medium text-emerald-600 flex items-center">
-                  Total Revenue
-                  <span class="ml-2 text-xs text-slate-400 font-normal">(all paid, shipped, delivered)</span>
-                </p>
-                <p class="text-3xl font-black text-emerald-700">${{ formatCurrency(stats.totalRevenue) }}</p>
-                <p class="text-sm text-emerald-600 mt-2 flex items-center font-semibold">
-                  <TrendingUpIcon class="w-4 h-4 inline mr-1.5" />
+              <div class="flex-1">
+                <div class="flex items-center mb-1">
+                  <p class="text-xs font-medium text-green-600 uppercase tracking-wide">Total Revenue</p>
+                  <span class="ml-1 text-xs text-gray-400">(all paid, shipped, delivered)</span>
+                </div>
+                <p class="text-2xl font-bold text-green-700 mb-1">${{ formatCurrency(stats.totalRevenue) }}</p>
+                <div class="flex items-center text-xs text-green-600 font-medium">
+                  <TrendingUpIcon class="w-3 h-3 mr-1" />
                   +${{ formatCurrency(stats.revenueToday) }} today
-                </p>
+                </div>
               </div>
-              <div class="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
-                <CurrencyDollarIcon class="w-6 h-6 text-emerald-500" />
+              <div class="w-10 h-10 bg-green-50 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
+                <CurrencyDollarIcon class="w-5 h-5 text-green-600" />
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Responsive Main Content Grids -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:gap-8">
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
           
-          <div class="lg:col-span-2 bg-white rounded-2xl shadow-sm">
-            <div class="p-6 border-b border-slate-100">
-              <h2 class="text-xl font-bold text-slate-800">Sales Performance</h2>
-              <p class="text-sm text-slate-500 mt-1">Last 7 days revenue trend</p>
+          <!-- Sales Performance Chart -->
+          <div class="lg:col-span-2 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-100 bg-gray-50">
+              <h2 class="text-sm font-semibold text-gray-900">Sales Performance</h2>
+              <p class="text-xs text-gray-500 mt-0.5">Last 7 days revenue trend</p>
             </div>
-            <div class="p-6">
-              <div class="h-64 flex items-end justify-center">
+            <div class="p-4">
+              <div class="h-48 flex items-end justify-center">
                 <div class="w-full">
-                  <div class="grid grid-cols-7 gap-4">
+                  <div class="grid grid-cols-7 gap-2 h-full">
                     <div 
                       v-for="(day, index) in weeklySales" 
                       :key="index"
-                      class="text-center flex flex-col items-center justify-end"
+                      class="text-center flex flex-col items-center justify-end relative group"
                     >
-                      <div class="text-sm font-semibold text-slate-700 mb-1">${{ formatCurrency(day.amount) }}</div>
+                      <div class="absolute -top-6 left-1/2 transform -translate-x-1/2 bg-gray-900 text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity duration-200 whitespace-nowrap z-10">
+                        ${{ formatCurrency(day.amount) }}
+                      </div>
                       <div 
-                        class="bg-gradient-to-t from-green-400 to-green-500 w-full rounded-t-lg transition-all duration-300"
-                        :style="{ height: `${Math.max(day.amount / maxWeeklySales * 150, 4)}px` }"
+                        class="bg-gradient-to-t from-green-500 to-green-600 w-full rounded-t-sm transition-all duration-200 hover:from-green-600 hover:to-green-700 cursor-pointer"
+                        :style="{ height: `${Math.max(day.amount / maxWeeklySales * 120, 2)}px` }"
                       ></div>
-                      <div class="text-xs text-slate-400 font-medium uppercase tracking-wider mt-2">{{ day.day }}</div>
+                      <div class="text-xs text-gray-500 font-medium uppercase tracking-wider mt-2">{{ day.day }}</div>
                     </div>
                   </div>
                 </div>
@@ -142,83 +159,91 @@
             </div>
           </div>
 
-          <div class="bg-white rounded-2xl shadow-sm">
-            <div class="p-6 border-b border-slate-100">
-              <h2 class="text-xl font-bold text-slate-800">Quick Stats</h2>
+          <!-- Quick Stats Panel -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-100 bg-gray-50">
+              <h2 class="text-sm font-semibold text-gray-900">Quick Stats</h2>
             </div>
-            <div class="p-6 divide-y divide-slate-100">
-              <div class="flex items-center justify-between py-3">
+            <div class="p-4 space-y-3">
+              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors duration-200">
                 <div>
-                  <p class="text-sm text-slate-500">Avg Order Value</p>
-                  <p class="text-2xl font-bold text-slate-800">${{ formatCurrency(stats.averageOrderValue) }}</p>
+                  <p class="text-xs text-gray-500 font-medium">Avg Order Value</p>
+                  <p class="text-lg font-bold text-gray-900">${{ formatCurrency(stats.averageOrderValue) }}</p>
                 </div>
-                <div class="w-10 h-10 bg-sky-50 rounded-lg flex items-center justify-center">
-                  <ShoppingCartIcon class="w-5 h-5 text-sky-500" />
+                <div class="w-8 h-8 bg-blue-100 rounded-md flex items-center justify-center">
+                  <ShoppingCartIcon class="w-4 h-4 text-blue-600" />
                 </div>
               </div>
-              <div class="flex items-center justify-between py-3">
+              
+              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors duration-200">
                 <div>
-                  <p class="text-sm text-slate-500">Conversion Rate</p>
-                  <p class="text-2xl font-bold text-slate-800">{{ stats.conversionRate }}%</p>
+                  <p class="text-xs text-gray-500 font-medium">Conversion Rate</p>
+                  <p class="text-lg font-bold text-gray-900">{{ stats.conversionRate }}%</p>
                 </div>
-                <div class="w-10 h-10 bg-emerald-50 rounded-lg flex items-center justify-center">
-                  <ChartBarIcon class="w-5 h-5 text-emerald-500" />
+                <div class="w-8 h-8 bg-green-100 rounded-md flex items-center justify-center">
+                  <ChartBarIcon class="w-4 h-4 text-green-600" />
                 </div>
               </div>
-              <div class="flex items-center justify-between py-3">
-                <div>
-                  <p class="text-sm text-slate-500">Top Seller</p>
-                  <p class="text-lg font-semibold text-slate-800 truncate max-w-40">{{ stats.topProduct?.name || 'N/A' }}</p>
+              
+              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-md hover:bg-gray-100 transition-colors duration-200">
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs text-gray-500 font-medium">Top Seller</p>
+                  <p class="text-sm font-semibold text-gray-900 truncate">{{ stats.topProduct?.name || 'N/A' }}</p>
                 </div>
-                <div class="w-10 h-10 bg-violet-50 rounded-lg flex items-center justify-center">
-                  <StarIcon class="w-5 h-5 text-violet-500" />
+                <div class="w-8 h-8 bg-purple-100 rounded-md flex items-center justify-center ml-2">
+                  <StarIcon class="w-4 h-4 text-purple-600" />
                 </div>
               </div>
-              <div class="flex items-center justify-between pt-3 cursor-pointer hover:bg-rose-50/50 rounded-lg transition" @click="goToDiscounts">
+              
+              <div class="flex items-center justify-between p-3 bg-gray-50 rounded-md hover:bg-red-50 transition-colors duration-200 cursor-pointer" @click="goToDiscounts">
                 <div>
-                  <p class="text-sm text-slate-500">Active Discounts</p>
-                  <p class="text-2xl font-bold text-slate-800">{{ stats.activeDiscounts }}</p>
+                  <p class="text-xs text-gray-500 font-medium">Active Discounts</p>
+                  <p class="text-lg font-bold text-gray-900">{{ stats.activeDiscounts }}</p>
                 </div>
-                <div class="w-10 h-10 bg-rose-50 rounded-lg flex items-center justify-center">
-                  <TagIcon class="w-5 h-5 text-rose-500" />
+                <div class="w-8 h-8 bg-red-100 rounded-md flex items-center justify-center">
+                  <TagIcon class="w-4 h-4 text-red-600" />
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+        <!-- Recent Activity Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
           
-          <div class="bg-white rounded-2xl shadow-sm">
-            <div class="p-6 border-b border-slate-100">
+          <!-- Recent Orders -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-100 bg-gray-50">
               <div class="flex items-center justify-between">
-                <h2 class="text-xl font-bold text-slate-800">Recent Orders</h2>
-                <router-link to="/dashboard/orders" class="text-sm text-green-600 hover:text-green-700 font-semibold">
-                  View all
+                <h2 class="text-sm font-semibold text-gray-900">Recent Orders</h2>
+                <router-link to="/dashboard/orders" class="text-xs text-green-600 hover:text-green-700 font-medium transition-colors duration-200">
+                  View all →
                 </router-link>
               </div>
             </div>
             <div v-if="recentOrders.length === 0" class="p-6">
-              <div class="text-center py-8 text-slate-400">
-                <ShoppingBagIcon class="w-12 h-12 mx-auto mb-4 text-slate-300" />
-                <p class="font-semibold text-slate-600">No orders yet</p>
-                <p class="text-sm">New orders will appear here once placed.</p>
+              <div class="text-center text-gray-400">
+                <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <ShoppingBagIcon class="w-6 h-6 text-gray-300" />
+                </div>
+                <p class="text-sm font-medium text-gray-600 mb-1">No orders yet</p>
+                <p class="text-xs">New orders will appear here once placed.</p>
               </div>
             </div>
-            <div v-else class="divide-y divide-slate-100">
-              <div v-for="order in recentOrders.slice(0, 5)" :key="order.id" class="flex items-center justify-between p-4 transition-colors duration-200 hover:bg-slate-50/75 cursor-pointer" @click="goToOrder(order.id)">
-                <div class="flex items-center space-x-4">
-                  <div class="w-10 h-10 bg-emerald-50 rounded-lg flex-shrink-0 flex items-center justify-center">
-                    <ShoppingBagIcon class="w-5 h-5 text-emerald-500" />
+            <div v-else class="divide-y divide-gray-100">
+              <div v-for="order in recentOrders.slice(0, 5)" :key="order.id" class="flex items-center justify-between p-3 transition-colors duration-200 hover:bg-gray-50 cursor-pointer group" @click="goToOrder(order.id)">
+                <div class="flex items-center space-x-3">
+                  <div class="w-8 h-8 bg-green-50 rounded-md flex-shrink-0 flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
+                    <ShoppingBagIcon class="w-4 h-4 text-green-600" />
                   </div>
                   <div>
-                    <p class="font-semibold text-slate-800">#{{ order.orderNumber }}</p>
-                    <p class="text-sm text-slate-500">{{ formatDateTime(order.createdAt) }}</p>
+                    <p class="text-sm font-medium text-gray-900">#{{ order.orderNumber }}</p>
+                    <p class="text-xs text-gray-500">{{ formatDateTime(order.createdAt) }}</p>
                   </div>
                 </div>
                 <div class="text-right">
-                  <p class="font-semibold text-slate-800">${{ formatCurrency(order.total) }}</p>
-                  <span :class="getStatusClass(order.status)" class="inline-flex px-2.5 py-1 rounded-full text-xs font-semibold leading-none">
+                  <p class="text-sm font-medium text-gray-900">${{ formatCurrency(order.total) }}</p>
+                  <span :class="getStatusClass(order.status)" class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium leading-none mt-1">
                     {{ formatStatus(order.status) }}
                   </span>
                 </div>
@@ -226,58 +251,64 @@
             </div>
           </div>
 
-          <div class="bg-white rounded-2xl shadow-sm">
-            <div class="p-6 border-b border-slate-100">
+          <!-- Recent Products -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-100 bg-gray-50">
               <div class="flex items-center justify-between">
-                <h2 class="text-xl font-bold text-slate-800">Recent Products</h2>
-                <router-link to="/dashboard/products" class="text-sm text-green-600 hover:text-green-700 font-semibold">
-                  View all
+                <h2 class="text-sm font-semibold text-gray-900">Recent Products</h2>
+                <router-link to="/dashboard/products" class="text-xs text-green-600 hover:text-green-700 font-medium transition-colors duration-200">
+                  View all →
                 </router-link>
               </div>
             </div>
-             <div v-if="recentProducts.length === 0" class="p-6">
-               <div class="text-center py-8 text-slate-400">
-                 <CubeIcon class="w-12 h-12 mx-auto mb-4 text-slate-300" />
-                 <p class="font-semibold text-slate-600">No products yet</p>
-                 <p class="text-sm">Add your first product to get started.</p>
-               </div>
-             </div>
-            <div v-else class="divide-y divide-slate-100">
-              <div v-for="product in recentProducts" :key="product.id" class="flex items-center space-x-4 p-3 transition-colors duration-200 hover:bg-slate-50/75 cursor-pointer group" @click="goToProduct(product.id)">
-                <img :src="getProductImage(product)" :alt="product.name" class="w-14 h-14 rounded-lg object-cover border border-slate-100 group-hover:ring-2 group-hover:ring-green-300 transition" @error="$event.target.src='/placeholder-product.jpg'" />
+            <div v-if="recentProducts.length === 0" class="p-6">
+              <div class="text-center text-gray-400">
+                <div class="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                  <CubeIcon class="w-6 h-6 text-gray-300" />
+                </div>
+                <p class="text-sm font-medium text-gray-600 mb-1">No products yet</p>
+                <p class="text-xs">Add your first product to get started.</p>
+              </div>
+            </div>
+            <div v-else class="divide-y divide-gray-100">
+              <div v-for="product in recentProducts" :key="product.id" class="flex items-center space-x-3 p-3 transition-colors duration-200 hover:bg-gray-50 cursor-pointer group" @click="goToProduct(product.id)">
+                <img :src="getProductImage(product)" :alt="product.name" class="w-12 h-12 rounded-md object-cover border border-gray-200 group-hover:ring-2 group-hover:ring-green-300 transition-all duration-200" @error="$event.target.src='/placeholder-product.jpg'" />
                 <div class="flex-1 min-w-0">
-                  <p class="font-semibold text-slate-800 truncate">{{ product.name }}</p>
-                  <p class="text-sm text-slate-500">${{ formatCurrency(product.price) }}</p>
-                  <span v-if="getProductStock(product) === 0" class="inline-block mt-1 px-2 py-0.5 bg-rose-100 text-rose-700 text-xs rounded-full font-semibold">Out of Stock</span>
+                  <p class="text-sm font-medium text-gray-900 truncate">{{ product.name }}</p>
+                  <p class="text-xs text-gray-500">${{ formatCurrency(product.price) }}</p>
+                  <span v-if="getProductStock(product) === 0" class="inline-block mt-1 px-1.5 py-0.5 bg-red-100 text-red-700 text-xs rounded-full font-medium">Out of Stock</span>
                 </div>
                 <div class="text-right flex-shrink-0">
-                  <p class="text-sm font-medium text-slate-600">Stock: {{ getProductStock(product) }}</p>
-                  <p class="text-xs text-slate-400">{{ formatDate(product.createdAt) }}</p>
+                  <p class="text-xs font-medium text-gray-600">Stock: {{ getProductStock(product) }}</p>
+                  <p class="text-xs text-gray-400">{{ formatDate(product.createdAt) }}</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <div class="bg-white rounded-2xl shadow-sm">
-          <div class="p-6 border-b border-slate-100">
-            <h2 class="text-xl font-bold text-slate-800">Alerts & Notifications</h2>
+        <!-- Alerts Section -->
+        <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div class="px-4 py-3 border-b border-gray-100 bg-gray-50">
+            <h2 class="text-sm font-semibold text-gray-900">Alerts & Notifications</h2>
           </div>
-          <div class="p-6">
-            <div v-if="alerts.length === 0" class="text-center py-8 text-slate-400">
-              <CheckCircleIcon class="w-12 h-12 mx-auto mb-4 text-emerald-400" />
-              <p class="font-semibold text-slate-600">All good!</p>
-              <p class="text-sm">No new alerts to show right now.</p>
+          <div class="p-4">
+            <div v-if="alerts.length === 0" class="text-center py-6 text-gray-400">
+              <div class="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <CheckCircleIcon class="w-6 h-6 text-green-500" />
+              </div>
+              <p class="text-sm font-medium text-gray-600 mb-1">All good!</p>
+              <p class="text-xs">No new alerts to show right now.</p>
             </div>
-            <div v-else class="space-y-4">
-              <div v-for="alert in alerts" :key="alert.id" :class="getAlertClass(alert.type)" class="flex items-start p-4 rounded-lg">
-                <component :is="getAlertIcon(alert.type)" class="w-6 h-6 mr-3 flex-shrink-0 mt-0.5" />
+            <div v-else class="space-y-3">
+              <div v-for="alert in alerts" :key="alert.id" :class="getAlertClass(alert.type)" class="flex items-start p-3 rounded-md border">
+                <component :is="getAlertIcon(alert.type)" class="w-4 h-4 mr-2 flex-shrink-0 mt-0.5" />
                 <div class="flex-1">
-                  <p class="font-semibold">{{ alert.title }}</p>
-                  <p class="text-sm opacity-90">{{ alert.message }}</p>
+                  <p class="text-sm font-medium">{{ alert.title }}</p>
+                  <p class="text-xs opacity-90 mt-0.5">{{ alert.message }}</p>
                 </div>
-                <button @click="dismissAlert(alert.id)" class="ml-4 p-1 rounded-full hover:bg-black/10 transition-colors">
-                   <XIcon class="w-4 h-4" />
+                <button @click="dismissAlert(alert.id)" class="ml-3 p-1 rounded-full hover:bg-black/10 transition-colors duration-200">
+                   <XIcon class="w-3 h-3" />
                 </button>
               </div>
             </div>
@@ -308,7 +339,8 @@ import {
   TagIcon,
   CheckCircleIcon,
   ExclamationIcon,
-  XCircleIcon
+  XCircleIcon,
+  XIcon
 } from '@heroicons/vue/outline'
 
 const router = useRouter()
@@ -420,16 +452,16 @@ function getStatusClass(status) {
     'delivered': 'bg-emerald-100 text-emerald-700',
     'cancelled': 'bg-rose-100 text-rose-700'
   }
-  return classMap[status] || 'bg-slate-100 text-slate-700'
+  return classMap[status] || 'bg-gray-100 text-gray-700'
 }
 
 
 function getAlertClass(type) {
   const classMap = {
-    'warning': 'bg-amber-50 text-amber-800',
-    'error': 'bg-rose-50 text-rose-800',
-    'info': 'bg-sky-50 text-sky-800',
-    'success': 'bg-emerald-50 text-emerald-800'
+    'warning': 'bg-amber-50 text-amber-800 border-amber-200',
+    'error': 'bg-rose-50 text-rose-800 border-rose-200',
+    'info': 'bg-sky-50 text-sky-800 border-sky-200',
+    'success': 'bg-emerald-50 text-emerald-800 border-emerald-200'
   }
   return classMap[type] || classMap.info
 }
@@ -575,12 +607,38 @@ onMounted(() => {
 </script>
 
 <style scoped>
-/* Custom styles if needed */
+/* Custom styles for enhanced design */
 @media (max-width: 640px) {
   .min-w-0 { min-width: 0 !important; }
-  .min-w-3rem { min-width: 3rem !important; }
-  .max-w-3rem { max-width: 3rem !important; }
-  .min-h-3rem { min-height: 3rem !important; }
-  .max-h-3rem { max-height: 3rem !important; }
+}
+
+/* Enhanced hover effects */
+.group:hover .group-hover\:scale-105 {
+  transform: scale(1.05);
+}
+
+/* Smooth transitions */
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Custom scrollbar for better UX */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
 }
 </style>

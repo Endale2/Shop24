@@ -1,253 +1,263 @@
 <template>
-  <div class="p-4 sm:p-6 max-w-7xl mx-auto font-sans">
-    <!-- Header -->
-    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
-      <div>
-        <h2 class="text-3xl sm:text-4xl font-extrabold text-gray-900 leading-tight">
-          Discounts
-        </h2>
-        <p class="text-gray-600 mt-2">Manage your promotional offers</p>
-      </div>
+  <div class="min-h-full bg-gray-50">
+    <div class="p-4 sm:p-6 lg:p-8">
       
-      <div class="flex flex-col sm:flex-row gap-3 mt-4 sm:mt-0">
-        <button
-          @click="refreshDiscounts"
-          :disabled="loading"
-          class="inline-flex items-center px-4 py-2.5 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-150 ease-in-out"
-        >
-          <RefreshIcon class="w-5 h-5 mr-2" :class="{ 'animate-spin': loading }" />
-          Refresh
-        </button>
-        <button
-          @click="goToAddPage"
-          class="inline-flex items-center px-4 py-2.5 bg-green-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-150 ease-in-out"
-        >
-          <PlusIcon class="w-5 h-5 mr-2 -ml-1" />
-          Create Discount
-        </button>
-      </div>
-    </div>
-
-    <!-- Search and Filter Section -->
-    <div class="mb-6">
-      <div class="flex flex-col lg:flex-row gap-4">
-        <!-- Search Bar -->
-        <div class="relative max-w-md">
-          <input
-            type="text"
-            v-model="searchQuery"
-            @input="debouncedSearch"
-            placeholder="Search discounts by name, description, or coupon code..."
-            class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-150 ease-in-out shadow-sm"
-          />
-          <SearchIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-        </div>
-
-        <!-- Filters -->
-        <div class="flex flex-wrap gap-3">
-          <select
-            v-model="statusFilter"
-            class="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-150 ease-in-out shadow-sm bg-white"
-          >
-            <option value="">All Status</option>
-            <option value="active">Active</option>
-            <option value="inactive">Inactive</option>
-            <option value="expired">Expired</option>
-            <option value="upcoming">Upcoming</option>
-          </select>
-
-          <select
-            v-model="typeFilter"
-            class="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-150 ease-in-out shadow-sm bg-white"
-          >
-            <option value="">All Types</option>
-            <option value="percentage">Percentage</option>
-            <option value="fixed">Fixed Amount</option>
-          </select>
-
-          <select
-            v-model="eligibilityFilter"
-            class="px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-150 ease-in-out shadow-sm bg-white"
-          >
-            <option value="">All Eligibility</option>
-            <option value="all">Everyone</option>
-            <option value="specific">Specific Customers</option>
-            <option value="segment">Customer Segments</option>
-          </select>
+      <!-- Header Section -->
+      <div class="mb-6 sm:mb-8">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center">
+          <div class="flex items-center mb-3 sm:mb-0">
+            <div class="w-10 h-10 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center mr-3 shadow-sm">
+              <TagIcon class="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 tracking-tight">
+                Discounts
+              </h1>
+              <p class="text-sm text-gray-600 mt-1">Manage your promotional offers</p>
+            </div>
+          </div>
+          
+          <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 sm:mt-0">
+            <button
+              @click="refreshDiscounts"
+              :disabled="loading"
+              class="inline-flex items-center px-3 py-2 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg shadow-sm hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-150 ease-in-out"
+            >
+              <RefreshIcon class="w-4 h-4 mr-1.5" :class="{ 'animate-spin': loading }" />
+              Refresh
+            </button>
+            <button
+              @click="goToAddPage"
+              class="inline-flex items-center px-3 py-2 bg-green-600 text-white text-xs font-medium rounded-lg shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-150 ease-in-out"
+            >
+              <PlusIcon class="w-4 h-4 mr-1.5" />
+              Create Discount
+            </button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Loading State -->
-    <div v-if="loading" class="space-y-4">
-      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
-        <div v-for="n in 6" :key="n" class="bg-white rounded-xl shadow-lg overflow-hidden">
-          <div class="p-6 space-y-4">
-            <div class="flex justify-between items-start">
-              <div class="space-y-2 flex-1">
-                <div class="h-5 bg-gray-200 rounded w-3/4"></div>
-                <div class="h-4 bg-gray-200 rounded w-1/2"></div>
+      <!-- Search and Filter Section -->
+      <div class="mb-6">
+        <div class="flex flex-col lg:flex-row gap-4">
+          <!-- Search Bar -->
+          <div class="relative max-w-md">
+            <input
+              type="text"
+              v-model="searchQuery"
+              @input="debouncedSearch"
+              placeholder="Search discounts by name, description, or coupon code..."
+              class="w-full pl-9 pr-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-150 ease-in-out shadow-sm text-sm"
+            />
+            <SearchIcon class="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+          </div>
+
+          <!-- Filters -->
+          <div class="flex flex-wrap gap-2">
+            <select
+              v-model="statusFilter"
+              class="px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-150 ease-in-out shadow-sm bg-white text-sm"
+            >
+              <option value="">All Status</option>
+              <option value="active">Active</option>
+              <option value="inactive">Inactive</option>
+              <option value="expired">Expired</option>
+              <option value="upcoming">Upcoming</option>
+            </select>
+
+            <select
+              v-model="typeFilter"
+              class="px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-150 ease-in-out shadow-sm bg-white text-sm"
+            >
+              <option value="">All Types</option>
+              <option value="percentage">Percentage</option>
+              <option value="fixed">Fixed Amount</option>
+            </select>
+
+            <select
+              v-model="eligibilityFilter"
+              class="px-3 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent transition duration-150 ease-in-out shadow-sm bg-white text-sm"
+            >
+              <option value="">All Eligibility</option>
+              <option value="all">Everyone</option>
+              <option value="specific">Specific Customers</option>
+              <option value="segment">Customer Segments</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <!-- Loading State -->
+      <div v-if="loading" class="space-y-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 animate-pulse">
+          <div v-for="n in 6" :key="n" class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="p-4 space-y-3">
+              <div class="flex justify-between items-start">
+                <div class="space-y-2 flex-1">
+                  <div class="h-4 bg-gray-200 rounded w-3/4"></div>
+                  <div class="h-3 bg-gray-200 rounded w-1/2"></div>
+                </div>
+                <div class="h-5 bg-gray-200 rounded w-14"></div>
               </div>
-              <div class="h-6 bg-gray-200 rounded w-16"></div>
-            </div>
-            <div class="h-8 bg-gray-200 rounded w-1/3"></div>
-            <div class="space-y-2">
-              <div class="h-4 bg-gray-200 rounded w-1/2"></div>
-              <div class="h-4 bg-gray-200 rounded w-2/3"></div>
+              <div class="h-6 bg-gray-200 rounded w-1/3"></div>
+              <div class="space-y-2">
+                <div class="h-3 bg-gray-200 rounded w-1/2"></div>
+                <div class="h-3 bg-gray-200 rounded w-2/3"></div>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Empty State -->
-    <div v-else-if="filteredDiscounts.length === 0" class="text-center py-16">
-      <div class="max-w-md mx-auto">
-        <div class="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-          <TagIcon class="w-10 h-10 text-green-600" />
-        </div>
-        <h3 class="text-xl font-semibold text-gray-900 mb-3">
-          {{ searchQuery || statusFilter || typeFilter || eligibilityFilter ? 'No discounts found' : 'No discounts created yet' }}
-        </h3>
-        <p class="text-gray-600 mb-6">
-          {{ searchQuery || statusFilter || typeFilter || eligibilityFilter 
-            ? 'Try adjusting your search criteria or filters to find what you\'re looking for.' 
-            : 'Create your first discount to start offering promotions to your customers!' }}
-        </p>
-        <div class="flex flex-col sm:flex-row gap-3 justify-center">
-          <button
-            v-if="searchQuery || statusFilter || typeFilter || eligibilityFilter"
-            @click="clearFilters"
-            class="inline-flex items-center px-4 py-2 bg-gray-100 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-200 transition duration-150 ease-in-out"
-          >
-            <XIcon class="w-4 h-4 mr-2" />
-            Clear Filters
-          </button>
-          <button
-            v-if="!searchQuery && !statusFilter && !typeFilter && !eligibilityFilter"
-            @click="goToAddPage"
-            class="inline-flex items-center px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700 transition duration-150 ease-in-out"
-          >
-            <PlusIcon class="w-4 h-4 mr-2" />
-            Create First Discount
-          </button>
+      <!-- Empty State -->
+      <div v-else-if="filteredDiscounts.length === 0" class="text-center py-12">
+        <div class="max-w-md mx-auto">
+          <div class="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <TagIcon class="w-8 h-8 text-green-600" />
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 mb-2">
+            {{ searchQuery || statusFilter || typeFilter || eligibilityFilter ? 'No discounts found' : 'No discounts created yet' }}
+          </h3>
+          <p class="text-sm text-gray-600 mb-4">
+            {{ searchQuery || statusFilter || typeFilter || eligibilityFilter 
+              ? 'Try adjusting your search criteria or filters to find what you\'re looking for.' 
+              : 'Create your first discount to start offering promotions to your customers!' }}
+          </p>
+          <div class="flex flex-col sm:flex-row gap-2 justify-center">
+            <button
+              v-if="searchQuery || statusFilter || typeFilter || eligibilityFilter"
+              @click="clearFilters"
+              class="inline-flex items-center px-3 py-2 bg-gray-100 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-200 transition duration-150 ease-in-out"
+            >
+              <XIcon class="w-3 h-3 mr-1.5" />
+              Clear Filters
+            </button>
+            <button
+              v-if="!searchQuery && !statusFilter && !typeFilter && !eligibilityFilter"
+              @click="goToAddPage"
+              class="inline-flex items-center px-3 py-2 bg-green-600 text-white text-xs font-medium rounded-lg hover:bg-green-700 transition duration-150 ease-in-out"
+            >
+              <PlusIcon class="w-3 h-3 mr-1.5" />
+              Create First Discount
+            </button>
+          </div>
         </div>
       </div>
-    </div>
 
-    <!-- Discounts Grid -->
-    <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-      <div
-        v-for="discount in filteredDiscounts"
-        :key="discount.id || discount._id"
-        @click="discount.id || discount._id ? goToDiscountDetail(discount.id || discount._id) : null"
-        :class="[
-          'bg-white rounded-xl shadow-lg border border-gray-200 transition-all duration-200 ease-in-out transform overflow-hidden',
-          (discount.id || discount._id) ? 'hover:shadow-xl cursor-pointer hover:scale-[1.02]' : 'opacity-50 cursor-not-allowed'
-        ]"
-      >
-        <!-- Discount Header -->
-        <div class="p-6 border-b border-gray-100">
-          <div class="flex items-start justify-between mb-4">
-            <div class="flex-1">
-              <h3 class="text-lg font-semibold text-gray-900 hover:text-green-700 transition-colors duration-150">
-                {{ discount.name }}
-              </h3>
-              <p class="text-sm text-gray-500 mt-1 line-clamp-2">{{ discount.description || 'No description' }}</p>
+      <!-- Discounts Grid -->
+      <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div
+          v-for="discount in filteredDiscounts"
+          :key="discount.id || discount._id"
+          @click="discount.id || discount._id ? goToDiscountDetail(discount.id || discount._id) : null"
+          :class="[
+            'bg-white rounded-lg shadow-sm border border-gray-200 transition-all duration-200 ease-in-out transform overflow-hidden group',
+            (discount.id || discount._id) ? 'hover:shadow-md cursor-pointer hover:-translate-y-0.5' : 'opacity-50 cursor-not-allowed'
+          ]"
+        >
+          <!-- Discount Header -->
+          <div class="p-4 border-b border-gray-100">
+            <div class="flex items-start justify-between mb-3">
+              <div class="flex-1">
+                <h3 class="text-sm font-semibold text-gray-900 group-hover:text-green-700 transition-colors duration-150">
+                  {{ discount.name }}
+                </h3>
+                <p class="text-xs text-gray-500 mt-1 line-clamp-2">{{ discount.description || 'No description' }}</p>
+              </div>
+              <div class="flex items-center space-x-1.5">
+                <span
+                  :class="getStatusClass(discount)"
+                  class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium"
+                >
+                  <CheckCircleIcon v-if="isActive(discount)" class="w-3 h-3 mr-1" />
+                  <XCircleIcon v-else-if="!discount.active" class="w-3 h-3 mr-1" />
+                  <ClockIcon v-else-if="isUpcoming(discount)" class="w-3 h-3 mr-1" />
+                  <ExclamationIcon v-else class="w-3 h-3 mr-1" />
+                  {{ getStatusText(discount) }}
+                </span>
+                <span v-if="!(discount.id || discount._id)" class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                  <ExclamationIcon class="w-3 h-3 mr-1" />
+                  No ID
+                </span>
+              </div>
             </div>
-            <div class="flex items-center space-x-2">
-              <span
-                :class="getStatusClass(discount)"
-                class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
-              >
-                <CheckCircleIcon v-if="isActive(discount)" class="w-3 h-3 mr-1" />
-                <XCircleIcon v-else-if="!discount.active" class="w-3 h-3 mr-1" />
-                <ClockIcon v-else-if="isUpcoming(discount)" class="w-3 h-3 mr-1" />
-                <ExclamationIcon v-else class="w-3 h-3 mr-1" />
-                {{ getStatusText(discount) }}
+
+            <!-- Coupon Code -->
+            <div v-if="discount.couponCode" class="mb-3">
+              <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-blue-100 text-blue-800 border border-blue-200">
+                <CodeIcon class="w-3 h-3 mr-1.5" />
+                {{ discount.couponCode }}
               </span>
-              <span v-if="!(discount.id || discount._id)" class="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-red-100 text-red-800">
-                <ExclamationIcon class="w-3 h-3 mr-1" />
-                No ID
-              </span>
+            </div>
+
+            <!-- Discount Value -->
+            <div class="flex items-center justify-between">
+              <div class="flex items-center space-x-2">
+                <span :class="{
+                  'bg-green-100 text-green-800': discount.type === 'percentage',
+                  'bg-purple-100 text-purple-800': discount.type === 'fixed'
+                }" class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium">
+                  {{ formatType(discount.type) }}
+                </span>
+                <span class="text-xl font-bold text-green-700">
+                  <span v-if="discount.type === 'percentage'">{{ discount.value }}%</span>
+                  <span v-else>${{ discount.value?.toFixed(2) }}</span>
+                </span>
+              </div>
             </div>
           </div>
 
-          <!-- Coupon Code -->
-          <div v-if="discount.couponCode" class="mb-4">
-            <span class="inline-flex items-center px-3 py-1.5 rounded-lg text-sm font-medium bg-blue-100 text-blue-800 border border-blue-200">
-              <CodeIcon class="w-4 h-4 mr-2" />
-              {{ discount.couponCode }}
-            </span>
-          </div>
-
-          <!-- Discount Value -->
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-3">
+          <!-- Discount Details -->
+          <div class="p-4 space-y-3">
+            <!-- Eligibility -->
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-gray-600">Eligibility:</span>
               <span :class="{
-                'bg-green-100 text-green-800': discount.type === 'percentage',
-                'bg-purple-100 text-purple-800': discount.type === 'fixed'
-              }" class="inline-flex px-2.5 py-1 rounded-full text-xs font-medium">
-                {{ formatType(discount.type) }}
-              </span>
-              <span class="text-2xl font-bold text-green-700">
-                <span v-if="discount.type === 'percentage'">{{ discount.value }}%</span>
-                <span v-else>${{ discount.value?.toFixed(2) }}</span>
+                'bg-green-100 text-green-800': discount.eligibilityType === 'all',
+                'bg-blue-100 text-blue-800': discount.eligibilityType === 'specific',
+                'bg-purple-100 text-purple-800': discount.eligibilityType === 'segment'
+              }" class="inline-flex px-2 py-0.5 rounded-full text-xs font-medium">
+                {{ formatEligibility(discount.eligibilityType) }}
               </span>
             </div>
-          </div>
-        </div>
 
-        <!-- Discount Details -->
-        <div class="p-6 space-y-4">
-          <!-- Eligibility -->
-          <div class="flex items-center justify-between">
-            <span class="text-sm text-gray-600">Eligibility:</span>
-            <span :class="{
-              'bg-green-100 text-green-800': discount.eligibilityType === 'all',
-              'bg-blue-100 text-blue-800': discount.eligibilityType === 'specific',
-              'bg-purple-100 text-purple-800': discount.eligibilityType === 'segment'
-            }" class="inline-flex px-2 py-1 rounded-full text-xs font-medium">
-              {{ formatEligibility(discount.eligibilityType) }}
-            </span>
-          </div>
-
-          <!-- Usage -->
-          <div class="flex items-center justify-between">
-            <span class="text-sm text-gray-600">Usage:</span>
-            <span class="text-sm font-medium text-gray-900">
-              {{ discount.currentUsage || 0 }}
-              <span v-if="discount.usageLimit" class="text-gray-500">/ {{ discount.usageLimit }}</span>
-            </span>
-          </div>
-
-          <!-- Validity -->
-          <div class="space-y-2">
+            <!-- Usage -->
             <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-600">Start:</span>
-              <span class="text-sm text-gray-900">{{ formatDate(discount.startAt) }}</span>
+              <span class="text-xs text-gray-600">Usage:</span>
+              <span class="text-xs font-medium text-gray-900">
+                {{ discount.currentUsage || 0 }}
+                <span v-if="discount.usageLimit" class="text-gray-500">/ {{ discount.usageLimit }}</span>
+              </span>
             </div>
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-600">End:</span>
-              <span class="text-sm text-gray-900">{{ formatDate(discount.endAt) }}</span>
-            </div>
-          </div>
 
-          <!-- Products Applied -->
-          <div v-if="discount.appliesToProducts?.length" class="pt-2 border-t border-gray-100">
-            <div class="flex items-center justify-between">
-              <span class="text-sm text-gray-600">Products:</span>
-              <span class="text-sm font-medium text-gray-900">{{ discount.appliesToProducts.length }} selected</span>
+            <!-- Validity -->
+            <div class="space-y-1.5">
+              <div class="flex items-center justify-between">
+                <span class="text-xs text-gray-600">Start:</span>
+                <span class="text-xs text-gray-900">{{ formatDate(discount.startAt) }}</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="text-xs text-gray-600">End:</span>
+                <span class="text-xs text-gray-900">{{ formatDate(discount.endAt) }}</span>
+              </div>
+            </div>
+
+            <!-- Products Applied -->
+            <div v-if="discount.appliesToProducts?.length" class="pt-2 border-t border-gray-100">
+              <div class="flex items-center justify-between">
+                <span class="text-xs text-gray-600">Products:</span>
+                <span class="text-xs font-medium text-gray-900">{{ discount.appliesToProducts.length }} selected</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <!-- Results Summary -->
-    <div v-if="filteredDiscounts.length > 0" class="mt-8 text-center">
-      <div class="text-sm text-gray-500">
-        Showing {{ filteredDiscounts.length }} of {{ discounts.length }} discounts
+      <!-- Results Summary -->
+      <div v-if="filteredDiscounts.length > 0" class="mt-6 text-center">
+        <div class="text-xs text-gray-500">
+          Showing {{ filteredDiscounts.length }} of {{ discounts.length }} discounts
+        </div>
       </div>
     </div>
   </div>
@@ -490,5 +500,40 @@ onMounted(() => {
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
+}
+
+/* Custom styles for enhanced design */
+@media (max-width: 640px) {
+  .min-w-0 { min-width: 0 !important; }
+}
+
+/* Enhanced hover effects */
+.group:hover .group-hover\:scale-105 {
+  transform: scale(1.05);
+}
+
+/* Smooth transitions */
+* {
+  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
+  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
+  transition-duration: 150ms;
+}
+
+/* Custom scrollbar for better UX */
+::-webkit-scrollbar {
+  width: 4px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 2px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
 }
 </style>

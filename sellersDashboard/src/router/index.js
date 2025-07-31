@@ -7,6 +7,7 @@ import LandingPage        from '@/pages/LandingPage.vue'
 import AuthPage           from '@/pages/AuthPage.vue'
 import ProfileCompletion  from '@/pages/ProfileCompletion.vue'
 import ShopSelectionPage  from '@/pages/ShopSelectionPage.vue'
+import CreateShopPage     from '@/pages/CreateShopPage.vue'
 import DashboardLayout    from '@/layouts/AppLayout.vue'
 import DashboardPage      from '@/pages/dashboard/DashboardPage.vue'
 import NotFound           from '@/pages/NotFound.vue'
@@ -25,6 +26,12 @@ const routes = [
     path: '/shops',
     name: 'ShopSelection',
     component: ShopSelectionPage,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/create-shop',
+    name: 'CreateShop',
+    component: CreateShopPage,
     meta: { requiresAuth: true }
   },
   {

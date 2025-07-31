@@ -51,36 +51,6 @@
         </div>
       </div>
 
-      <!-- Quick Actions -->
-      <div class="mb-4">
-        <p class="text-xs font-semibold uppercase text-gray-400 tracking-wider px-3 mb-2">
-          Quick Actions
-        </p>
-        <div class="space-y-1">
-          <SidebarLink
-            to="/dashboard/products/add"
-            :icon="PlusIcon"
-            label="Add Product"
-            compact
-            variant="success"
-          />
-          <SidebarLink
-            to="/dashboard/discounts/create"
-            :icon="GiftIcon"
-            label="Create Discount"
-            compact
-            variant="warning"
-          />
-          <SidebarLink
-            to="/dashboard/media"
-            :icon="PhotographIcon"
-            label="Media Library"
-            compact
-            variant="info"
-          />
-        </div>
-      </div>
-
       <!-- Collections Section -->
       <div
         v-if="collections.length"
@@ -148,9 +118,7 @@ import {
   GlobeAltIcon,
   ShoppingBagIcon as ShopIcon,
   CollectionIcon,
-  PlusIcon,
-  ViewListIcon,
-  PhotographIcon
+  ViewListIcon
 } from '@heroicons/vue/outline'
 
 const shopStore = useShopStore()
