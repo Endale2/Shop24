@@ -89,24 +89,30 @@
         </div>
 
         <div>
-          <label for="product-collection" class="block text-sm font-medium text-gray-700 mb-1">Collection</label>
-          <div class="relative">
-            <select
-              id="product-collection"
-              v-model="productToEdit.collection_id"
-              required
-              class="mt-1 block w-full border border-green-300 rounded-lg shadow-sm py-2 px-3 focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500 sm:text-sm bg-white transition-all duration-150"
-            >
-              <option value="" disabled>Select a collection</option>
-              <option v-for="coll in collections" :key="coll.id" :value="coll.id">
+          <label class="block text-sm font-medium text-gray-700 mb-1">Collections</label>
+          <div class="space-y-3">
+            <div v-for="coll in collections" :key="coll.id" class="flex items-center">
+              <input
+                :id="'collection-' + coll.id"
+                type="checkbox"
+                :value="coll.id"
+                v-model="productToEdit.collection_ids"
+                class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+              />
+              <label :for="'collection-' + coll.id" class="ml-3 text-sm font-medium text-gray-700">
                 {{ coll.title }}
-              </option>
-            </select>
-            <div v-if="productToEdit.collection_id" class="mt-3 flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg shadow-sm animate-fade-in">
-              <img v-if="selectedCollection && selectedCollection.image" :src="selectedCollection.image" alt="Collection image" class="w-12 h-12 object-cover rounded-md border border-green-200" />
+              </label>
+            </div>
+            <div v-if="collections.length === 0" class="text-sm text-gray-500 italic">
+              No collections available.
+            </div>
+          </div>
+          <div v-if="productToEdit.collection_ids && productToEdit.collection_ids.length > 0" class="mt-3 space-y-2">
+            <div v-for="collectionId in productToEdit.collection_ids" :key="collectionId" class="flex items-center gap-3 p-3 bg-green-50 border border-green-200 rounded-lg shadow-sm animate-fade-in">
+              <img v-if="getCollectionById(collectionId)?.image" :src="getCollectionById(collectionId).image" alt="Collection image" class="w-12 h-12 object-cover rounded-md border border-green-200" />
               <div>
-                <div class="font-semibold text-green-800 text-lg">{{ selectedCollection?.title }}</div>
-                <div class="text-gray-600 text-sm">{{ selectedCollection?.description || 'No description' }}</div>
+                <div class="font-semibold text-green-800 text-lg">{{ getCollectionById(collectionId)?.title }}</div>
+                <div class="text-gray-600 text-sm">{{ getCollectionById(collectionId)?.description || 'No description' }}</div>
               </div>
             </div>
           </div>
@@ -296,7 +302,7 @@ const showAdvanced = ref(false);
 const collections = ref([])
 
 const activeShop = computed(() => shopStore.activeShop);
-const selectedCollection = computed(() => collections.value.find(c => c.id === productToEdit.value.collection_id));
+const getCollectionById = (id) => collections.value.find(c => c.id === id);
 
 const computedPrice = computed(() => {
   if (!productToEdit.value.variants || productToEdit.value.variants.length === 0) return productToEdit.value.price;
@@ -371,6 +377,7 @@ async function fetchProductDetails() {
       images: fetchedProduct.images || [],
       main_image: fetchedProduct.main_image,
       category: fetchedProduct.category,
+      collection_ids: fetchedProduct.collection_ids || [],
       price: (typeof fetchedProduct.price === 'number' && !isNaN(fetchedProduct.price)) ? fetchedProduct.price : 0,
       stock: (typeof fetchedProduct.stock === 'number' && !isNaN(fetchedProduct.stock)) ? fetchedProduct.stock : 0,
       description: fetchedProduct.description,
@@ -405,7 +412,7 @@ async function submitChanges() {
   let dataToSend = {
     name: productToEdit.value.name,
     description: productToEdit.value.description,
-    collection_id: productToEdit.value.collection_id,
+    collection_ids: productToEdit.value.collection_ids,
     images: productToEdit.value.images.filter(img => img),
     main_image: productToEdit.value.main_image || null,
     meta_title: productToEdit.value.meta_title,

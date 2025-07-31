@@ -61,7 +61,14 @@
         <div class="lg:sticky lg:top-8 self-start space-y-6">
           <div>
             <h1 class="text-4xl sm:text-5xl font-extrabold text-gray-900 leading-tight">{{ product.name }}</h1>
-            <p class="text-lg text-gray-600 mt-2">{{ collectionMap[product.collection_id] || 'Uncategorized' }}</p>
+            <div class="text-lg text-gray-600 mt-2">
+              <div v-if="product.collection_ids && product.collection_ids.length > 0" class="space-y-1">
+                <div v-for="collectionId in product.collection_ids" :key="collectionId" class="inline-block bg-gray-100 px-3 py-1 rounded-full text-sm mr-2 mb-1">
+                  {{ collectionMap[collectionId] || 'Unknown Collection' }}
+                </div>
+              </div>
+              <div v-else class="text-gray-500 italic">Uncategorized</div>
+            </div>
           </div>
 
           <div class="space-y-4">
@@ -178,7 +185,14 @@
           <div>
             <p><strong>Created:</strong> {{ formatDate(product.createdAt) }}</p>
             <p><strong>Last Updated:</strong> {{ formatDate(product.updatedAt) }}</p>
-            <p><strong>Collection:</strong> {{ collectionMap[product.collection_id] || 'Uncategorized' }}</p>
+            <p><strong>Collections:</strong> 
+              <span v-if="product.collection_ids && product.collection_ids.length > 0">
+                <span v-for="(collectionId, index) in product.collection_ids" :key="collectionId">
+                  {{ collectionMap[collectionId] || 'Unknown Collection' }}{{ index < product.collection_ids.length - 1 ? ', ' : '' }}
+                </span>
+              </span>
+              <span v-else class="text-gray-500 italic">Uncategorized</span>
+            </p>
           </div>
           <div>
             <p><strong>Product ID:</strong> {{ product.id }}</p>
@@ -340,30 +354,30 @@ async function fetchProductDetails() {
   try {
     const fetchedProduct = await productService.fetchById(activeShop.value.id, productId)
     
-    // Map backend fields to frontend
-    product.value = {
-      id: fetchedProduct.id || fetchedProduct._id,
-      name: fetchedProduct.name,
-      slug: fetchedProduct.slug,
-      images: fetchedProduct.images || [],
-      main_image: fetchedProduct.main_image,
-      collection_id: fetchedProduct.collection_id,
-      price: fetchedProduct.price,
-      stock: fetchedProduct.stock,
-      starting_price: fetchedProduct.starting_price,
-      total_stock: fetchedProduct.total_stock,
-      description: fetchedProduct.description,
-      createdAt: fetchedProduct.createdAt,
-      updatedAt: fetchedProduct.updatedAt,
-      shop_id: fetchedProduct.shopId,
-      variants: (fetchedProduct.variants || []).map(v => ({
-        ...v,
-        options: v.options || [],
-        price: v.price,
-        stock: v.stock,
-        image: v.image
-      }))
-    }
+         // Map backend fields to frontend
+     product.value = {
+       id: fetchedProduct.id || fetchedProduct._id,
+       name: fetchedProduct.name,
+       slug: fetchedProduct.slug,
+       images: fetchedProduct.images || [],
+       main_image: fetchedProduct.main_image,
+       collection_ids: fetchedProduct.collection_ids || [],
+       price: fetchedProduct.price,
+       stock: fetchedProduct.stock,
+       starting_price: fetchedProduct.starting_price,
+       total_stock: fetchedProduct.total_stock,
+       description: fetchedProduct.description,
+       createdAt: fetchedProduct.createdAt,
+       updatedAt: fetchedProduct.updatedAt,
+       shop_id: fetchedProduct.shopId,
+       variants: (fetchedProduct.variants || []).map(v => ({
+         ...v,
+         options: v.options || [],
+         price: v.price,
+         stock: v.stock,
+         image: v.image
+       }))
+     }
     
     // Set the main image
     if (allImages.value.length > 0) {

@@ -72,8 +72,8 @@ func SellerRoute(r *gin.Engine) {
 			collGroup.DELETE("/:collId", controllers.DeleteCollection)
 
 			// Add/remove products in a given collection
-			//collGroup.POST("/:collId/products", controllers.AddProductToCollection)
-			// collGroup.DELETE("/:collId/products/:productId", controllers.RemoveProductFromCollection)
+			collGroup.POST("/:collId/products", controllers.AddProductsToCollection)
+			collGroup.DELETE("/:collId/products", controllers.RemoveProductsFromCollection)
 		}
 
 		// ─────  nested Discount  routes ─────

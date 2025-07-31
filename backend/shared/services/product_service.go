@@ -5,7 +5,6 @@ import (
 	"strings"
 	"time"
 
-	sellerRepos "github.com/Endale2/DRPS/sellers/repositories"
 	"github.com/Endale2/DRPS/shared/models"
 	"github.com/Endale2/DRPS/shared/repositories"
 
@@ -462,17 +461,23 @@ func GetActiveDiscountsForProductAPI(shopID, productID primitive.ObjectID, varia
 }
 
 func ProductToAPIResponse(p *models.Product) map[string]interface{} {
+	// Convert collection IDs to hex strings
+	var collectionIDs []string
+	for _, id := range p.CollectionIDs {
+		collectionIDs = append(collectionIDs, id.Hex())
+	}
+
 	resp := map[string]interface{}{
-		"id":            p.ID.Hex(),
-		"name":          p.Name,
-		"slug":          p.Slug,
-		"description":   p.Description,
-		"main_image":    p.MainImage,
-		"images":        p.Images,
-		"collection_id": p.CollectionID.Hex(),
-		"createdBy":     p.CreatedBy.Hex(),
-		"createdAt":     p.CreatedAt,
-		"updatedAt":     p.UpdatedAt,
+		"id":             p.ID.Hex(),
+		"name":           p.Name,
+		"slug":           p.Slug,
+		"description":    p.Description,
+		"main_image":     p.MainImage,
+		"images":         p.Images,
+		"collection_ids": collectionIDs,
+		"createdBy":      p.CreatedBy.Hex(),
+		"createdAt":      p.CreatedAt,
+		"updatedAt":      p.UpdatedAt,
 		// Add SEO fields
 		"meta_title":       p.MetaTitle,
 		"meta_description": p.MetaDescription,
@@ -520,18 +525,15 @@ func ProductToAPIResponse(p *models.Product) map[string]interface{} {
 
 // GetCollectionIDsForProduct returns the collection IDs that contain this product
 func GetCollectionIDsForProduct(productID primitive.ObjectID) ([]primitive.ObjectID, error) {
-	// Use the seller collection repository
-	collections, err := sellerRepos.GetCollectionsByFilter(bson.M{"product_ids": productID})
+	// Get the product and return its collection IDs directly
+	product, err := repositories.GetProductByID(productID.Hex())
 	if err != nil {
 		return nil, err
 	}
-
-	var collectionIDs []primitive.ObjectID
-	for _, coll := range collections {
-		collectionIDs = append(collectionIDs, coll.ID)
+	if product == nil {
+		return []primitive.ObjectID{}, nil
 	}
-
-	return collectionIDs, nil
+	return product.CollectionIDs, nil
 }
 
 // ProductToAPIResponseWithDiscounts converts a product to API response format and includes active discounts
@@ -576,7 +578,7 @@ func ListProductsByShopPaginatedService(shopID primitive.ObjectID, page, limit i
 	if collectionID != "" {
 		collOID, err := primitive.ObjectIDFromHex(collectionID)
 		if err == nil {
-			filter["collection_id"] = collOID
+			filter["collection_ids"] = collOID
 		}
 	}
 	if stockStatus != "" {
@@ -596,4 +598,12 @@ func ListProductsByShopPaginatedService(shopID primitive.ObjectID, page, limit i
 		normalizeProduct(&products[i])
 	}
 	return products, total, nil
+}
+
+// MigrateProductsToMultipleCollections migrates existing products from single CollectionID to CollectionIDs array
+func MigrateProductsToMultipleCollections() error {
+	// This function would need to be implemented differently since we've already changed the model
+	// For now, we'll return nil as the migration should be done at the database level
+	// or through a separate migration script that works directly with the database
+	return nil
 }

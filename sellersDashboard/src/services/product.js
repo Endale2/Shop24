@@ -10,7 +10,7 @@ export const productService = {
       description: p.description || p.Description,
       images: p.images || p.Images || [],
       main_image: p.main_image || p.MainImage || '',
-      collection_id: p.collection_id || p.CollectionID || '',
+      collection_ids: p.collection_ids || p.CollectionIDs || [],
       price: Number(p.price || p.Price) || 0,
       stock: p.stock || p.Stock || 0,
       starting_price: p.starting_price,
@@ -50,7 +50,7 @@ export const productService = {
           description: p.description || p.Description,
           images: p.images || p.Images || [],
           main_image: p.main_image || p.MainImage || '',
-          collection_id: p.collection_id || p.CollectionID || '',
+          collection_ids: p.collection_ids || p.CollectionIDs || [],
           price: Number(p.price || p.Price) || 0,
           stock: p.stock || p.Stock || 0,
           starting_price: p.starting_price,
@@ -82,7 +82,7 @@ export const productService = {
         description: p.description || p.Description,
         images: p.images || p.Images || [],
         main_image: p.main_image || p.MainImage || '',
-        collection_id: p.collection_id || p.CollectionID || '',
+        collection_ids: p.collection_ids || p.CollectionIDs || [],
         price: Number(p.price || p.Price) || 0,
         stock: p.stock || p.Stock || 0,
         starting_price: p.starting_price,
@@ -130,7 +130,7 @@ export const productService = {
       description: p.description || p.Description,
       images: p.images || p.Images || [],
       main_image: p.main_image || p.MainImage || '',
-      collection_id: p.collection_id || p.CollectionID || '',
+      collection_ids: p.collection_ids || p.CollectionIDs || [],
       price: Number(p.price || p.Price) || 0,
       stock: p.stock || p.Stock || 0,
       starting_price: p.starting_price,
@@ -161,7 +161,7 @@ export const productService = {
       description: p.description || p.Description,
       images: p.images || p.Images || [],
       main_image: p.main_image || p.MainImage || '',
-      collection_id: p.collection_id || p.CollectionID || '',
+      collection_ids: p.collection_ids || p.CollectionIDs || [],
       price: Number(p.price || p.Price) || 0,
       stock: p.stock || p.Stock || 0,
       starting_price: p.starting_price,
@@ -204,5 +204,31 @@ export const productService = {
 
   async delete(shopId, productId) {
     await api.delete(`/seller/shops/${shopId}/products/${productId}`)
+  },
+
+  /**
+   * Add products to a collection using the new API endpoint
+   * @param {string} shopId
+   * @param {string} collectionId
+   * @param {Array<string>} productIds
+   * @returns {Promise<void>}
+   */
+  async addToCollection(shopId, collectionId, productIds) {
+    await api.post(`/seller/shops/${shopId}/collections/${collectionId}/products`, {
+      product_ids: productIds
+    })
+  },
+
+  /**
+   * Remove products from a collection using the new API endpoint
+   * @param {string} shopId
+   * @param {string} collectionId
+   * @param {Array<string>} productIds
+   * @returns {Promise<void>}
+   */
+  async removeFromCollection(shopId, collectionId, productIds) {
+    await api.delete(`/seller/shops/${shopId}/collections/${collectionId}/products`, {
+      data: { product_ids: productIds }
+    })
   }
 }

@@ -31,14 +31,14 @@ type variantInput struct {
 
 // createProductInput represents the payload for creating a product.
 type createProductInput struct {
-	Name         string         `json:"name" binding:"required"`
-	Description  string         `json:"description" binding:"required"`
-	MainImage    string         `json:"main_image"` // <-- Added
-	Images       []string       `json:"images" binding:"required"`
-	CollectionID string         `json:"collection_id" binding:"required"`
-	Price        *float64       `json:"price"`
-	Stock        *int           `json:"stock"` // <-- Added
-	Variants     []variantInput `json:"variants"`
+	Name          string         `json:"name" binding:"required"`
+	Description   string         `json:"description" binding:"required"`
+	MainImage     string         `json:"main_image"` // <-- Added
+	Images        []string       `json:"images" binding:"required"`
+	CollectionIDs []string       `json:"collection_ids" binding:"required"`
+	Price         *float64       `json:"price"`
+	Stock         *int           `json:"stock"` // <-- Added
+	Variants      []variantInput `json:"variants"`
 	// SEO fields
 	MetaTitle       string `json:"meta_title"`
 	MetaDescription string `json:"meta_description"`
@@ -131,12 +131,17 @@ func CreateProduct(c *gin.Context) {
 	}
 
 	slug := slugifyUnique(in.Name, shopID)
-	// Validate and convert collection_id
-	collectionOID, err := primitive.ObjectIDFromHex(in.CollectionID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid collection_id"})
-		return
+	// Validate and convert collection_ids
+	var collectionOIDs []primitive.ObjectID
+	for _, collectionIDStr := range in.CollectionIDs {
+		collectionOID, err := primitive.ObjectIDFromHex(collectionIDStr)
+		if err != nil {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid collection_id: " + collectionIDStr})
+			return
+		}
+		collectionOIDs = append(collectionOIDs, collectionOID)
 	}
+
 	p := &models.Product{
 		ShopID:          shopID,
 		UserID:          sellerID,
@@ -144,7 +149,7 @@ func CreateProduct(c *gin.Context) {
 		Slug:            slug,
 		Description:     in.Description,
 		Images:          in.Images,
-		CollectionID:    collectionOID,
+		CollectionIDs:   collectionOIDs,
 		Price:           0,
 		CreatedBy:       sellerID,
 		MetaTitle:       in.MetaTitle,

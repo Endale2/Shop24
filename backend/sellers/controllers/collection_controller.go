@@ -81,25 +81,22 @@ func CreateCollection(c *gin.Context) {
 			// Verify product belongs to this shop
 			product, err := sharedSvc.GetProductByIDService(productID.Hex())
 			if err == nil && product != nil && product.ShopID == shopID {
-				// The product already belongs to the shop, so we just need to update its collection_id
-				// This part of the logic needs to be re-evaluated based on the new product model
-				// For now, we'll assume the product is already linked or this logic is redundant
-				// If the product model has a collection_id field, this would be the place to set it.
-				// For now, we'll just log a message or remove this block if it's not needed.
-				// The original code had AddProductToCollectionService, which is removed.
-				// This block is now effectively a no-op or requires a different approach.
-				// Given the new product model, products are linked via ShopID and CollectionID.
-				// If a product is added to a collection, its CollectionID should be set.
-				// If a product is removed from a collection, its CollectionID should be cleared.
-				// This logic needs to be re-evaluated based on the new product model.
-				// For now, we'll remove this block as it's no longer directly applicable.
-				// The original code had AddProductToCollectionService, which is removed.
-				// This block is now effectively a no-op or requires a different approach.
-				// Given the new product model, products are linked via ShopID and CollectionID.
-				// If a product is added to a collection, its CollectionID should be set.
-				// If a product is removed from a collection, its CollectionID should be cleared.
-				// This logic needs to be re-evaluated based on the new product model.
-				// For now, we'll remove this block as it's no longer directly applicable.
+				// Check if product is already in this collection
+				alreadyInCollection := false
+				for _, existingCollectionID := range product.CollectionIDs {
+					if existingCollectionID == newColl.ID {
+						alreadyInCollection = true
+						break
+					}
+				}
+
+				if !alreadyInCollection {
+					// Add collection ID to product's collection IDs
+					newCollectionIDs := append(product.CollectionIDs, newColl.ID)
+					_, err = sharedSvc.UpdateProductService(productID.Hex(), bson.M{
+						"collection_ids": newCollectionIDs,
+					})
+				}
 			}
 		}
 	}
@@ -267,16 +264,62 @@ func UpdateCollection(c *gin.Context) {
 
 	// Update product IDs if provided
 	if in.ProductIDs != nil {
-		// Clear existing products and add new ones
-		// This logic needs to be re-evaluated based on the new product model.
-		// For now, we'll remove this block as it's no longer directly applicable.
-		// The original code had ReplaceCollectionProductsService, which is removed.
-		// This block is now effectively a no-op or requires a different approach.
-		// Given the new product model, products are linked via ShopID and CollectionID.
-		// If a product is added to a collection, its CollectionID should be set.
-		// If a product is removed from a collection, its CollectionID should be cleared.
-		// This logic needs to be re-evaluated based on the new product model.
-		// For now, we'll remove this block as it's no longer directly applicable.
+		// Get all products in this shop
+		allProducts, _ := sharedSvc.GetProductsByShopIDService(shopID)
+
+		// First, remove this collection from all products that currently have it
+		for _, product := range allProducts {
+			hasCollection := false
+			for _, collectionID := range product.CollectionIDs {
+				if collectionID == collID {
+					hasCollection = true
+					break
+				}
+			}
+
+			if hasCollection {
+				// Remove this collection from the product
+				var newCollectionIDs []primitive.ObjectID
+				for _, existingCollectionID := range product.CollectionIDs {
+					if existingCollectionID != collID {
+						newCollectionIDs = append(newCollectionIDs, existingCollectionID)
+					}
+				}
+
+				_, err = sharedSvc.UpdateProductService(product.ID.Hex(), bson.M{
+					"collection_ids": newCollectionIDs,
+				})
+			}
+		}
+
+		// Then, add the new products to this collection
+		for _, productIDStr := range *in.ProductIDs {
+			productID, err := primitive.ObjectIDFromHex(productIDStr)
+			if err != nil {
+				continue // skip invalid product IDs
+			}
+
+			// Verify product belongs to this shop
+			product, err := sharedSvc.GetProductByIDService(productID.Hex())
+			if err == nil && product != nil && product.ShopID == shopID {
+				// Check if product is already in this collection
+				alreadyInCollection := false
+				for _, existingCollectionID := range product.CollectionIDs {
+					if existingCollectionID == collID {
+						alreadyInCollection = true
+						break
+					}
+				}
+
+				if !alreadyInCollection {
+					// Add collection ID to product's collection IDs
+					newCollectionIDs := append(product.CollectionIDs, collID)
+					_, err = sharedSvc.UpdateProductService(productID.Hex(), bson.M{
+						"collection_ids": newCollectionIDs,
+					})
+				}
+			}
+		}
 	}
 
 	// Return updated collection
@@ -318,6 +361,32 @@ func DeleteCollection(c *gin.Context) {
 		return
 	}
 
+	// First, remove this collection from all products that have it
+	allProducts, _ := sharedSvc.GetProductsByShopIDService(shop.ID)
+	for _, product := range allProducts {
+		hasCollection := false
+		for _, collectionID := range product.CollectionIDs {
+			if collectionID == collID {
+				hasCollection = true
+				break
+			}
+		}
+
+		if hasCollection {
+			// Remove this collection from the product
+			var newCollectionIDs []primitive.ObjectID
+			for _, existingCollectionID := range product.CollectionIDs {
+				if existingCollectionID != collID {
+					newCollectionIDs = append(newCollectionIDs, existingCollectionID)
+				}
+			}
+
+			_, err = sharedSvc.UpdateProductService(product.ID.Hex(), bson.M{
+				"collection_ids": newCollectionIDs,
+			})
+		}
+	}
+
 	err = collSvc.DeleteCollectionService(collID, sellerID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to delete collection: " + err.Error()})
@@ -341,10 +410,18 @@ func formatCollectionResponse(coll *models.Collection, shopID primitive.ObjectID
 		StartingPrice *float64           `json:"starting_price,omitempty"`
 	}
 	var summaries []ProductSummary
-	// Fetch all products with collection_id = coll.ID
+	// Fetch all products that belong to this collection
 	products, _ := sharedSvc.GetProductsByShopIDService(shopID)
 	for _, p := range products {
-		if p.CollectionID != coll.ID {
+		// Check if this product belongs to the current collection
+		belongsToCollection := false
+		for _, collectionID := range p.CollectionIDs {
+			if collectionID == coll.ID {
+				belongsToCollection = true
+				break
+			}
+		}
+		if !belongsToCollection {
 			continue
 		}
 		var startingPrice *float64
@@ -380,6 +457,180 @@ func formatCollectionResponse(coll *models.Collection, shopID primitive.ObjectID
 		"created_at":  coll.CreatedAt,
 		"updated_at":  coll.UpdatedAt,
 	}
+}
+
+// AddProductsToCollectionInput is the JSON body for adding products to a collection
+type AddProductsToCollectionInput struct {
+	ProductIDs []string `json:"product_ids" binding:"required"`
+}
+
+// AddProductsToCollection handles POST /seller/shops/:shopId/collections/:collId/products
+func AddProductsToCollection(c *gin.Context) {
+	userHex, _ := c.Get("user_id")
+	sellerID, _ := primitive.ObjectIDFromHex(userHex.(string))
+
+	shopHex := c.Param("shopId")
+	shopID, err := primitive.ObjectIDFromHex(shopHex)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid shop ID"})
+		return
+	}
+	shop, err := sharedSvc.GetShopByIDService(shopHex)
+	if err != nil || shop.OwnerID != sellerID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "not authorized"})
+		return
+	}
+
+	collHex := c.Param("collId")
+	collID, err := primitive.ObjectIDFromHex(collHex)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid collection ID"})
+		return
+	}
+
+	// Verify collection exists and belongs to this shop
+	coll, err := repositories.GetCollectionByID(collID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "error retrieving collection"})
+		return
+	}
+	if coll == nil || coll.ShopID != shopID {
+		c.JSON(http.StatusNotFound, gin.H{"error": "collection not found"})
+		return
+	}
+
+	var in AddProductsToCollectionInput
+	if err := c.ShouldBindJSON(&in); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload: " + err.Error()})
+		return
+	}
+
+	// Add products to collection
+	successCount := 0
+	for _, productIDStr := range in.ProductIDs {
+		productID, err := primitive.ObjectIDFromHex(productIDStr)
+		if err != nil {
+			continue // skip invalid product IDs
+		}
+
+		// Get the product and verify it belongs to this shop
+		product, err := sharedSvc.GetProductByIDService(productID.Hex())
+		if err != nil || product == nil || product.ShopID != shopID {
+			continue // skip if product doesn't exist or doesn't belong to shop
+		}
+
+		// Check if product is already in this collection
+		alreadyInCollection := false
+		for _, existingCollectionID := range product.CollectionIDs {
+			if existingCollectionID == collID {
+				alreadyInCollection = true
+				break
+			}
+		}
+
+		if !alreadyInCollection {
+			// Add collection ID to product's collection IDs
+			newCollectionIDs := append(product.CollectionIDs, collID)
+			_, err = sharedSvc.UpdateProductService(productID.Hex(), bson.M{
+				"collection_ids": newCollectionIDs,
+			})
+			if err == nil {
+				successCount++
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":         "products added to collection",
+		"success_count":   successCount,
+		"total_requested": len(in.ProductIDs),
+	})
+}
+
+// RemoveProductsFromCollectionInput is the JSON body for removing products from a collection
+type RemoveProductsFromCollectionInput struct {
+	ProductIDs []string `json:"product_ids" binding:"required"`
+}
+
+// RemoveProductsFromCollection handles DELETE /seller/shops/:shopId/collections/:collId/products
+func RemoveProductsFromCollection(c *gin.Context) {
+	userHex, _ := c.Get("user_id")
+	sellerID, _ := primitive.ObjectIDFromHex(userHex.(string))
+
+	shopHex := c.Param("shopId")
+	shopID, err := primitive.ObjectIDFromHex(shopHex)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid shop ID"})
+		return
+	}
+	shop, err := sharedSvc.GetShopByIDService(shopHex)
+	if err != nil || shop.OwnerID != sellerID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "not authorized"})
+		return
+	}
+
+	collHex := c.Param("collId")
+	collID, err := primitive.ObjectIDFromHex(collHex)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid collection ID"})
+		return
+	}
+
+	// Verify collection exists and belongs to this shop
+	coll, err := repositories.GetCollectionByID(collID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "error retrieving collection"})
+		return
+	}
+	if coll == nil || coll.ShopID != shopID {
+		c.JSON(http.StatusNotFound, gin.H{"error": "collection not found"})
+		return
+	}
+
+	var in RemoveProductsFromCollectionInput
+	if err := c.ShouldBindJSON(&in); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload: " + err.Error()})
+		return
+	}
+
+	// Remove products from collection
+	successCount := 0
+	for _, productIDStr := range in.ProductIDs {
+		productID, err := primitive.ObjectIDFromHex(productIDStr)
+		if err != nil {
+			continue // skip invalid product IDs
+		}
+
+		// Get the product and verify it belongs to this shop
+		product, err := sharedSvc.GetProductByIDService(productID.Hex())
+		if err != nil || product == nil || product.ShopID != shopID {
+			continue // skip if product doesn't exist or doesn't belong to shop
+		}
+
+		// Remove collection ID from product's collection IDs
+		var newCollectionIDs []primitive.ObjectID
+		for _, existingCollectionID := range product.CollectionIDs {
+			if existingCollectionID != collID {
+				newCollectionIDs = append(newCollectionIDs, existingCollectionID)
+			}
+		}
+
+		// Only update if the collection was actually removed
+		if len(newCollectionIDs) != len(product.CollectionIDs) {
+			_, err = sharedSvc.UpdateProductService(productID.Hex(), bson.M{
+				"collection_ids": newCollectionIDs,
+			})
+			if err == nil {
+				successCount++
+			}
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":         "products removed from collection",
+		"success_count":   successCount,
+		"total_requested": len(in.ProductIDs),
+	})
 }
 
 // Helper function to check if handle is unique within a shop

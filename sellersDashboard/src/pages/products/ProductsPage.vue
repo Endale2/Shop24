@@ -167,7 +167,14 @@
                     {{ prod.variants.length }} variant{{ prod.variants.length !== 1 ? 's' : '' }}
                   </div>
                 </td>
-                <td class="py-3 px-6 text-sm text-gray-700">{{ collectionMap[prod.collection_id] || 'Uncategorized' }}</td>
+                <td class="py-3 px-6 text-sm text-gray-700">
+                  <div v-if="prod.collection_ids && prod.collection_ids.length > 0" class="space-y-1">
+                    <div v-for="collectionId in prod.collection_ids" :key="collectionId" class="text-xs bg-gray-100 px-2 py-1 rounded">
+                      {{ collectionMap[collectionId] || 'Unknown Collection' }}
+                    </div>
+                  </div>
+                  <div v-else class="text-gray-500 italic">Uncategorized</div>
+                </td>
                 <td class="py-3 px-6 text-sm text-green-600 font-semibold">
                   <template v-if="prod.starting_price != null">
                     <span class="italic text-gray-700">from</span> {{ formatPrice(prod.starting_price) }}
@@ -239,7 +246,14 @@
             
             <div class="p-5 flex-grow flex flex-col">
               <h3 class="text-lg font-semibold text-gray-900 mb-2 truncate">{{ prod.name }}</h3>
-              <p class="text-sm text-gray-600 mb-2">{{ collectionMap[prod.collection_id] || 'Uncategorized' }}</p>
+              <div class="text-sm text-gray-600 mb-2">
+                <div v-if="prod.collection_ids && prod.collection_ids.length > 0" class="space-y-1">
+                  <div v-for="collectionId in prod.collection_ids" :key="collectionId" class="text-xs bg-gray-100 px-2 py-1 rounded">
+                    {{ collectionMap[collectionId] || 'Unknown Collection' }}
+                  </div>
+                </div>
+                <div v-else class="text-gray-500 italic">Uncategorized</div>
+              </div>
               
               <div v-if="prod.variants && prod.variants.length > 0" class="text-xs text-gray-500 mb-3">
                 {{ prod.variants.length }} variant{{ prod.variants.length !== 1 ? 's' : '' }}

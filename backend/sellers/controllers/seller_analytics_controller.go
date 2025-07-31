@@ -198,8 +198,9 @@ func GetShopTopProducts(c *gin.Context) {
 	var stats []prodStat
 	for _, p := range products {
 		collTitle := ""
-		if !p.CollectionID.IsZero() {
-			coll, _ := sellerRepositories.GetCollectionByID(p.CollectionID)
+		// Get the first collection title if the product has collections
+		if len(p.CollectionIDs) > 0 {
+			coll, _ := sellerRepositories.GetCollectionByID(p.CollectionIDs[0])
 			if coll != nil {
 				collTitle = coll.Title
 			}
@@ -360,8 +361,9 @@ func GetShopCategorySales(c *gin.Context) {
 	productCategory := make(map[primitive.ObjectID]string)
 	for _, p := range products {
 		collTitle := ""
-		if !p.CollectionID.IsZero() {
-			coll, _ := sellerRepositories.GetCollectionByID(p.CollectionID)
+		// Get the first collection title if the product has collections
+		if len(p.CollectionIDs) > 0 {
+			coll, _ := sellerRepositories.GetCollectionByID(p.CollectionIDs[0])
 			if coll != nil {
 				collTitle = coll.Title
 			}
@@ -506,8 +508,9 @@ func GetShopDashboardAnalytics(c *gin.Context) {
 			price = minPrice
 		}
 		collTitle := ""
-		if !p.CollectionID.IsZero() {
-			coll, _ := sellerRepositories.GetCollectionByID(p.CollectionID)
+		// Get the first collection title if the product has collections
+		if len(p.CollectionIDs) > 0 {
+			coll, _ := sellerRepositories.GetCollectionByID(p.CollectionIDs[0])
 			if coll != nil {
 				collTitle = coll.Title
 			}
@@ -610,8 +613,9 @@ func GetShopDashboardAnalytics(c *gin.Context) {
 	}
 	if topProduct != nil {
 		collTitle := ""
-		if !topProduct.CollectionID.IsZero() {
-			coll, _ := sellerRepositories.GetCollectionByID(topProduct.CollectionID)
+		// Get the first collection title if the product has collections
+		if len(topProduct.CollectionIDs) > 0 {
+			coll, _ := sellerRepositories.GetCollectionByID(topProduct.CollectionIDs[0])
 			if coll != nil {
 				collTitle = coll.Title
 			}

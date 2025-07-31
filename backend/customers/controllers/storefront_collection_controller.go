@@ -76,11 +76,19 @@ func GetCollection(c *gin.Context) {
 		return
 	}
 
-	// Build richer product summaries by querying products with collection_id == coll.ID
+	// Build richer product summaries by querying products that belong to this collection
 	allProducts, _ := services.GetProductsByShopIDService(shop.ID)
 	var products []map[string]interface{}
 	for _, p := range allProducts {
-		if p.CollectionID == coll.ID {
+		// Check if this product belongs to the current collection
+		belongsToCollection := false
+		for _, collectionID := range p.CollectionIDs {
+			if collectionID == coll.ID {
+				belongsToCollection = true
+				break
+			}
+		}
+		if belongsToCollection {
 			products = append(products, services.ProductToAPIResponseWithDiscounts(&p))
 		}
 	}

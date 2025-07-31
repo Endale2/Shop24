@@ -168,9 +168,9 @@
               <div>
                 <div class="font-medium text-gray-900">{{ prod.name }}</div>
                 <div class="text-xs text-gray-500 mt-0.5">
-                  {{ prod.collection_id === collection.id
+                  {{ isProductInCollection(prod, collection.id)
                     ? 'Already in this collection'
-                    : (collectionMap[prod.collection_id] || 'Uncategorized')
+                    : (getProductCollections(prod).length > 0 ? getProductCollections(prod).join(', ') : 'Uncategorized')
                   }}
                 </div>
                 <div class="text-sm text-gray-500">
@@ -187,7 +187,7 @@
               </div>
             </div>
             <button
-              v-if="prod.collection_id === collection.id"
+              v-if="isProductInCollection(prod, collection.id)"
               class="inline-flex items-center px-3 py-1.5 bg-gray-200 text-gray-500 text-sm font-medium rounded-lg shadow-sm cursor-not-allowed border border-gray-300"
               disabled
             >
@@ -545,6 +545,21 @@ function formatDate(dateString) {
 async function loadAllCollections() {
   if (!activeShop.value?.id) return
   allCollections.value = await collectionService.fetchAllByShop(activeShop.value.id)
+}
+
+/**
+ * Check if a product is in a specific collection
+ */
+function isProductInCollection(product, collectionId) {
+  return product.collection_ids && product.collection_ids.includes(collectionId)
+}
+
+/**
+ * Get collection names for a product
+ */
+function getProductCollections(product) {
+  if (!product.collection_ids || product.collection_ids.length === 0) return []
+  return product.collection_ids.map(id => collectionMap.value[id]).filter(Boolean)
 }
 
 // Load collections on mount and when modal opens

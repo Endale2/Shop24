@@ -117,26 +117,50 @@ export const collectionService = {
   },
 
   /**
-   * Add a product to a collection.
+   * Add products to a collection using the new API endpoint.
+   * @param {string} shopId
+   * @param {string} collectionId
+   * @param {Array<string>} productIds
+   * @returns {Promise<void>}
+   */
+  async addProducts(shopId, collectionId, productIds) {
+    await api.post(`/seller/shops/${shopId}/collections/${collectionId}/products`, {
+      product_ids: productIds
+    })
+  },
+
+  /**
+   * Remove products from a collection using the new API endpoint.
+   * @param {string} shopId
+   * @param {string} collectionId
+   * @param {Array<string>} productIds
+   * @returns {Promise<void>}
+   */
+  async removeProducts(shopId, collectionId, productIds) {
+    await api.delete(`/seller/shops/${shopId}/collections/${collectionId}/products`, {
+      data: { product_ids: productIds }
+    })
+  },
+
+  /**
+   * Add a single product to a collection (convenience method).
    * @param {string} shopId
    * @param {string} collectionId
    * @param {string} productId
    * @returns {Promise<void>}
    */
   async addProduct(shopId, collectionId, productId) {
-    // Update the product's collection_id to the new collection
-    await productService.patch(shopId, productId, { collection_id: collectionId })
+    await this.addProducts(shopId, collectionId, [productId])
   },
 
   /**
-   * Remove a product from a collection.
+   * Remove a single product from a collection (convenience method).
    * @param {string} shopId
    * @param {string} collectionId
    * @param {string} productId
    * @returns {Promise<void>}
    */
   async removeProduct(shopId, collectionId, productId) {
-    // Update the product's collection_id to null (remove from collection)
-    await productService.patch(shopId, productId, { collection_id: null })
+    await this.removeProducts(shopId, collectionId, [productId])
   }
 }

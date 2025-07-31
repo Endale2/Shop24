@@ -71,14 +71,27 @@
               ></textarea>
             </div>
 
-            <div>
-              <label for="product-collection" class="block text-sm font-medium text-gray-700 mb-2">
-                Collection <span class="text-red-500">*</span>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-gray-700 mb-2">
+                Collections <span class="text-red-500">*</span>
               </label>
-              <select id="product-collection" v-model="form.collection_id" required class="w-full border border-gray-300 rounded-lg px-4 py-3 focus:ring-2 focus:ring-green-500 focus:border-green-500 transition duration-150 shadow-sm">
-                <option value="" disabled>Select a collection</option>
-                <option v-for="coll in collections" :key="coll.id" :value="coll.id">{{ coll.title }}</option>
-              </select>
+              <div class="space-y-3">
+                <div v-for="coll in collections" :key="coll.id" class="flex items-center">
+                  <input
+                    :id="'collection-' + coll.id"
+                    type="checkbox"
+                    :value="coll.id"
+                    v-model="form.collection_ids"
+                    class="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                  />
+                  <label :for="'collection-' + coll.id" class="ml-3 text-sm font-medium text-gray-700">
+                    {{ coll.title }}
+                  </label>
+                </div>
+                <div v-if="collections.length === 0" class="text-sm text-gray-500 italic">
+                  No collections available. Please create a collection first.
+                </div>
+              </div>
             </div>
 
             <div v-if="!hasVariants">
@@ -396,7 +409,7 @@ const form = reactive({
   description: '',
   main_image: '',
   images: [],
-  collection_id: '',
+  collection_ids: [],
   price: null,
   stock: null,
   variants: [],
@@ -473,8 +486,8 @@ async function submitForm() {
       return
     }
 
-    if (!form.collection_id) {
-      error.value = 'Product collection is required.'
+    if (!form.collection_ids || form.collection_ids.length === 0) {
+      error.value = 'At least one collection must be selected.'
       return
     }
 
@@ -511,7 +524,7 @@ async function submitForm() {
       description: form.description.trim(),
       main_image: form.main_image.trim() || '',
       images: form.images.filter(img => img.trim()),
-      collection_id: form.collection_id,
+      collection_ids: form.collection_ids,
       meta_title: form.meta_title,
       meta_description: form.meta_description,
     }
