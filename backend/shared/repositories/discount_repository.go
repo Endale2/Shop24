@@ -9,6 +9,7 @@ import (
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 	"go.mongodb.org/mongo-driver/mongo"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 var discountColl *mongo.Collection = config.GetCollection("DRPS", "discounts")
@@ -53,6 +54,37 @@ func ListDiscountsByShop(shopID primitive.ObjectID) ([]models.Discount, error) {
 		list = append(list, d)
 	}
 	return list, nil
+}
+
+// ListDiscountsByShopPaginated retrieves discounts for a shop with pagination support
+func ListDiscountsByShopPaginated(shopID primitive.ObjectID, page, limit int) ([]models.Discount, int64, error) {
+	skip := (page - 1) * limit
+
+	total, err := discountColl.CountDocuments(context.Background(), bson.M{"shop_id": shopID})
+	if err != nil {
+		return nil, 0, err
+	}
+
+	findOptions := options.Find()
+	findOptions.SetSort(bson.D{{"created_at", -1}}) // newest first
+	findOptions.SetSkip(int64(skip))
+	findOptions.SetLimit(int64(limit))
+
+	cursor, err := discountColl.Find(context.Background(), bson.M{"shop_id": shopID}, findOptions)
+	if err != nil {
+		return nil, 0, err
+	}
+	defer cursor.Close(context.Background())
+
+	var discounts []models.Discount
+	for cursor.Next(context.Background()) {
+		var d models.Discount
+		if err := cursor.Decode(&d); err != nil {
+			return nil, 0, err
+		}
+		discounts = append(discounts, d)
+	}
+	return discounts, total, nil
 }
 
 func UpdateDiscount(id primitive.ObjectID, upd bson.M) (*mongo.UpdateResult, error) {

@@ -2,7 +2,10 @@ package controllers
 
 import (
 	"net/http"
+	"strconv"
 	"time"
+
+	"math"
 
 	"github.com/Endale2/DRPS/sellers/repositories"
 	"github.com/Endale2/DRPS/shared/models"
@@ -170,6 +173,8 @@ func ListDiscounts(c *gin.Context) {
 				"name":        p.Name,
 				"main_image":  p.MainImage,
 				"description": p.Description,
+				"price":       p.Price,
+				"stock":       p.Stock,
 			})
 		}
 
@@ -259,6 +264,8 @@ func GetDiscount(c *gin.Context) {
 			"name":        p.Name,
 			"main_image":  p.MainImage,
 			"description": p.Description,
+			"price":       p.Price,
+			"stock":       p.Stock,
 		})
 	}
 
@@ -302,6 +309,87 @@ func GetDiscount(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, resp)
+}
+
+// GetDiscountProductsPaginated GET /seller/shops/:shopId/discounts/:id/products
+func GetDiscountProductsPaginated(c *gin.Context) {
+	userHex, _ := c.Get("user_id")
+	sellerID, _ := primitive.ObjectIDFromHex(userHex.(string))
+	shopHex := c.Param("shopId")
+	shop, err := sharedSvc.GetShopByIDService(shopHex)
+	if err != nil || shop == nil || shop.OwnerID != sellerID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "not authorized"})
+		return
+	}
+
+	idHex := c.Param("id")
+	d, err := sharedSvc.GetDiscountByIDService(idHex)
+	if err != nil {
+		if err == sharedSvc.ErrDiscountNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "discount not found"})
+		} else {
+			c.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		}
+		return
+	}
+	if d.ShopID != shop.ID {
+		c.JSON(http.StatusNotFound, gin.H{"error": "discount not found"})
+		return
+	}
+
+	// Parse pagination parameters
+	page, _ := strconv.Atoi(c.DefaultQuery("page", "1"))
+	limit, _ := strconv.Atoi(c.DefaultQuery("limit", "10"))
+	if page < 1 {
+		page = 1
+	}
+	if limit < 1 || limit > 100 {
+		limit = 10
+	}
+
+	// Calculate pagination for products
+	total := int64(len(d.AppliesToProducts))
+	skip := (page - 1) * limit
+	end := skip + limit
+
+	var products []gin.H
+	if skip < int(total) {
+		// Get the paginated slice of product IDs
+		var productIDs []primitive.ObjectID
+		if end > int(total) {
+			productIDs = d.AppliesToProducts[skip:]
+		} else {
+			productIDs = d.AppliesToProducts[skip:end]
+		}
+
+		// Fetch product details for the paginated slice
+		for _, pid := range productIDs {
+			p, err := sharedSvc.GetProductByIDService(pid.Hex())
+			if err != nil {
+				// skip products we can't load
+				continue
+			}
+			if p == nil {
+				continue
+			}
+			products = append(products, gin.H{
+				"id":          p.ID.Hex(),
+				"name":        p.Name,
+				"main_image":  p.MainImage,
+				"description": p.Description,
+				"price":       p.Price,
+				"stock":       p.Stock,
+			})
+		}
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"products": products,
+		"total":    total,
+		"page":     page,
+		"limit":    limit,
+		"pages":    int(math.Ceil(float64(total) / float64(limit))),
+	})
 }
 
 // UpdateDiscount PATCH /seller/shops/:shopId/discounts/:id

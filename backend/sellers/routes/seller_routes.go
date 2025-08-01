@@ -93,6 +93,9 @@ func SellerRoute(r *gin.Engine) {
 			discGroup.GET("/:id/eligible-customers", controllers.GetEligibleCustomers)
 			discGroup.GET("/:id/usage", controllers.GetDiscountUsageStats)
 			discGroup.POST("/:id/validate", controllers.ValidateDiscountForCustomer)
+
+			// Paginated products under discount
+			discGroup.GET("/:id/products", controllers.GetDiscountProductsPaginated)
 		}
 
 		//orders

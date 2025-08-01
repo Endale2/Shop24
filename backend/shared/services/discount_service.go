@@ -84,6 +84,15 @@ func ListDiscountsByShopService(shopIDStr string) ([]models.Discount, error) {
 	return repositories.ListDiscountsByShop(shopID)
 }
 
+// ListDiscountsByShopPaginatedService returns paginated discounts for a shop
+func ListDiscountsByShopPaginatedService(shopIDStr string, page, limit int) ([]models.Discount, int64, error) {
+	shopID, err := primitive.ObjectIDFromHex(shopIDStr)
+	if err != nil {
+		return nil, 0, errors.New("invalid shop ID")
+	}
+	return repositories.ListDiscountsByShopPaginated(shopID, page, limit)
+}
+
 func UpdateDiscountService(idStr string, upd bson.M) error {
 	id, err := primitive.ObjectIDFromHex(idStr)
 	if err != nil {

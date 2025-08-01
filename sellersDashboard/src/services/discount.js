@@ -22,8 +22,15 @@ export const discountService = {
       active:             d.active,
       createdAt:          d.created_at,
       updatedAt:          d.updated_at,
-      // Product-level targets only
-      appliesToProducts:  d.applies_to_products ?? [],
+      // Product-level targets only - map hydrated products with full data
+      appliesToProducts:  (d.applies_to_products ?? []).map(p => ({
+        id: p.id,
+        name: p.name,
+        description: p.description,
+        mainImage: p.main_image,
+        price: p.price,
+        stock: p.stock,
+      })),
       appliesToVariants:  d.applies_to_variants ?? [],
       // Customer eligibility
       eligibilityType:    d.eligibility_type ?? 'all',
@@ -34,6 +41,11 @@ export const discountService = {
       perCustomerLimit:   d.per_customer_limit,
       currentUsage:       d.current_usage ?? 0,
       usageTracking:      d.usage_tracking ?? [],
+      // Buy X Get Y fields (if supported)
+      buyProductIds:      d.buy_product_ids ?? [],
+      buyQuantity:        d.buy_quantity,
+      getProductIds:      d.get_product_ids ?? [],
+      getQuantity:        d.get_quantity,
     };
   },
 
@@ -66,6 +78,36 @@ export const discountService = {
   async fetchById(shopId, discountId) {
     const res = await api.get(`/seller/shops/${shopId}/discounts/${discountId}`);
     return this._mapDiscount(res.data);
+  },
+
+  /**
+   * Fetch paginated products under a discount.
+   * @param {string} shopId
+   * @param {string} discountId
+   * @param {Object} params
+   * @param {number} params.page - Page number (default: 1)
+   * @param {number} params.limit - Items per page (default: 10)
+   * @returns {Promise<Object>}
+   */
+  async fetchProductsPaginated(shopId, discountId, params = {}) {
+    const { page = 1, limit = 10 } = params;
+    const res = await api.get(`/seller/shops/${shopId}/discounts/${discountId}/products`, {
+      params: { page, limit }
+    });
+    return {
+      products: res.data.products.map(p => ({
+        id: p.id,
+        name: p.name,
+        description: p.description,
+        mainImage: p.main_image,
+        price: p.price,
+        stock: p.stock,
+      })),
+      total: res.data.total,
+      page: res.data.page,
+      limit: res.data.limit,
+      pages: res.data.pages,
+    };
   },
 
   /**
@@ -142,7 +184,13 @@ export const discountService = {
     if (data.usageLimit !== undefined) payload.usageLimit = data.usageLimit;
     if (data.perCustomerLimit !== undefined) payload.perCustomerLimit = data.perCustomerLimit;
 
+    console.log('API call - update discount:', {
+      url: `/seller/shops/${shopId}/discounts/${discountId}`,
+      payload
+    });
+
     await api.patch(`/seller/shops/${shopId}/discounts/${discountId}`, payload);
+    console.log('API response - update discount: success');
     return this.fetchById(shopId, discountId);
   },
 
@@ -193,10 +241,16 @@ export const discountService = {
    * @returns {Promise<Object>}
    */
   async addMixedEligibility(shopId, discountId, customerIds = [], segmentIds = []) {
+    console.log('API call - addMixedEligibility:', {
+      url: `/seller/shops/${shopId}/discounts/${discountId}/mixed-eligibility`,
+      payload: { customerIds, segmentIds }
+    });
+    
     const res = await api.post(`/seller/shops/${shopId}/discounts/${discountId}/mixed-eligibility`, {
       customerIds: customerIds,
       segmentIds: segmentIds
     });
+    console.log('API response - addMixedEligibility:', res.data);
     return res.data;
   },
 
