@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+	"strings"
 
 	"github.com/Endale2/DRPS/shared/models"
 	shopService "github.com/Endale2/DRPS/shared/services"
@@ -26,9 +27,44 @@ func CreateShop(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
 		return
 	}
+
+	// 3) Set owner and validate required fields
 	shop.OwnerID = sellerID
 
-	// 3) Delegate to service
+	// Validate required fields
+	if strings.TrimSpace(shop.Name) == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "shop name is required"})
+		return
+	}
+
+	if strings.TrimSpace(shop.Category) == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "shop category is required"})
+		return
+	}
+
+	if strings.TrimSpace(shop.Email) == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "contact email is required"})
+		return
+	}
+
+	// Set default values
+	if shop.Currency == "" {
+		shop.Currency = "USD"
+	}
+
+	if shop.Status == "" {
+		shop.Status = "active"
+	}
+
+	// Initialize analytics fields
+	shop.CustomerCount = 0
+	shop.ProductCount = 0
+	shop.Revenue = 0
+	shop.Rating = 0
+	shop.ReviewCount = 0
+	shop.IsVerified = false
+
+	// 4) Delegate to service
 	res, err := shopService.CreateShopService(&shop)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "could not create shop"})
@@ -52,6 +88,10 @@ func GetShops(c *gin.Context) {
 	var mine []models.Shop
 	for _, s := range all {
 		if s.OwnerID == sellerID {
+			// Add some default metadata for frontend display
+			if s.Image == "" {
+				s.Image = "" // Keep empty for frontend to show placeholder
+			}
 			mine = append(mine, s)
 		}
 	}
@@ -61,30 +101,29 @@ func GetShops(c *gin.Context) {
 // GetShop returns one shop if owned by the seller.
 // GET /seller/shops/:shopId
 func GetShop(c *gin.Context) {
-    sellerHex, _ := c.Get("user_id")
-    sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
+	sellerHex, _ := c.Get("user_id")
+	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
 
-    // use lowercase "shopId" exactly as in your route
-    shopID := c.Param("shopId")
-    if shopID == "" {
-        c.JSON(http.StatusBadRequest, gin.H{"error": "shopId is required"})
-        return
-    }
+	// use lowercase "shopId" exactly as in your route
+	shopID := c.Param("shopId")
+	if shopID == "" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "shopId is required"})
+		return
+	}
 
-    shop, err := shopService.GetShopByIDService(shopID)
-    if err != nil {
-        c.JSON(http.StatusNotFound, gin.H{"error": "shop not found"})
-        return
-    }
+	shop, err := shopService.GetShopByIDService(shopID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "shop not found"})
+		return
+	}
 
-    if shop.OwnerID != sellerID {
-        c.JSON(http.StatusForbidden, gin.H{"error": "not your shop"})
-        return
-    }
+	if shop.OwnerID != sellerID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "not your shop"})
+		return
+	}
 
-    c.JSON(http.StatusOK, shop)
+	c.JSON(http.StatusOK, shop)
 }
-
 
 // UpdateShop allows a seller to update their own shop.
 // PATCH /seller/shops/:shopId
@@ -103,6 +142,28 @@ func UpdateShop(c *gin.Context) {
 	if err := c.ShouldBindJSON(&updates); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
 		return
+	}
+
+	// Validate updates if they contain required fields
+	if name, exists := updates["name"]; exists {
+		if strings.TrimSpace(name.(string)) == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "shop name cannot be empty"})
+			return
+		}
+	}
+
+	if category, exists := updates["category"]; exists {
+		if strings.TrimSpace(category.(string)) == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "shop category cannot be empty"})
+			return
+		}
+	}
+
+	if email, exists := updates["email"]; exists {
+		if strings.TrimSpace(email.(string)) == "" {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "contact email cannot be empty"})
+			return
+		}
 	}
 
 	res, err := shopService.UpdateShopService(shopID, updates)
