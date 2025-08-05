@@ -24,24 +24,6 @@
               <PlusIcon class="w-4 h-4 mr-1.5" />
               Add Collection
             </button>
-            <div class="inline-flex rounded-lg shadow-sm overflow-hidden" role="group">
-              <button
-                @click="currentView = 'list'"
-                :class="viewButtonClass('list')"
-                class="px-3 py-2 text-xs font-medium border border-gray-300 focus:z-10 focus:ring-2 focus:ring-green-500 focus:outline-none transition-colors duration-200 ease-in-out"
-              >
-                <ListIcon class="w-4 h-4 inline-block mr-1" />
-                List
-              </button>
-              <button
-                @click="currentView = 'grid'"
-                :class="viewButtonClass('grid')"
-                class="px-3 py-2 text-xs font-medium border border-gray-300 focus:z-10 focus:ring-2 focus:ring-green-500 focus:outline-none transition-colors duration-200 ease-in-out"
-              >
-                <GridIcon class="w-4 h-4 inline-block mr-1" />
-                Grid
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -83,20 +65,18 @@
       <!-- Content -->
       <div v-else>
         <div v-if="Array.isArray(paginatedCollections) && paginatedCollections.length">
-          <!-- List View -->
-          <div v-if="currentView === 'list'" class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div class="overflow-x-auto">
               <table class="min-w-full divide-y divide-gray-200">
-                <thead class="bg-gray-50">
-                  <tr>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Image</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Title</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Handle</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Products</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Created</th>
-                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Actions</th>
-                  </tr>
-                </thead>
+                                 <thead class="bg-gray-50">
+                   <tr>
+                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Image</th>
+                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Title</th>
+                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Handle</th>
+                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Products</th>
+                     <th class="px-4 py-3 text-left text-xs font-semibold text-gray-900 uppercase tracking-wider">Created</th>
+                   </tr>
+                 </thead>
                 <tbody class="divide-y divide-gray-200">
                   <tr
                     v-for="(col, i) in paginatedCollections"
@@ -121,49 +101,10 @@
                     </td>
                     <td class="py-3 px-4 text-sm text-gray-700 font-mono">{{ col.handle }}</td>
                     <td class="py-3 px-4 text-sm text-gray-700">{{ Array.isArray(col.products) ? col.products.length : 0 }}</td>
-                    <td class="py-3 px-4 text-sm text-gray-700">{{ col.created_at ? formatDate(col.created_at) : (col.createdAt ? formatDate(col.createdAt) : 'N/A') }}</td>
-                    <td class="py-3 px-4">
-                      <button
-                        @click.stop="goToDetail(col.id)"
-                        class="text-green-600 hover:text-green-800 font-medium text-xs px-2 py-1 rounded transition-colors"
-                      >
-                        View
-                      </button>
-                    </td>
+                                         <td class="py-3 px-4 text-sm text-gray-700">{{ col.created_at ? formatDate(col.created_at) : (col.createdAt ? formatDate(col.createdAt) : 'N/A') }}</td>
                   </tr>
                 </tbody>
               </table>
-            </div>
-          </div>
-
-          <!-- Grid View -->
-          <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <div
-              v-for="col in paginatedCollections"
-              :key="col.id"
-              @click="goToDetail(col.id)"
-              class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden cursor-pointer transform hover:scale-105 hover:shadow-md transition duration-200 ease-in-out flex flex-col group"
-            >
-              <div class="w-full h-40 bg-gray-200 flex items-center justify-center text-gray-400 relative overflow-hidden rounded-t-lg">
-                <img
-                  v-if="col.image"
-                  :src="col.image"
-                  alt="collection"
-                  class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-300 ease-in-out"
-                />
-                <PlaceholderIcon v-else class="w-8 h-8 text-gray-300" />
-              </div>
-              <div class="p-4 flex-grow flex flex-col">
-                <div class="text-sm font-semibold text-gray-800 mb-1">{{ col.title }}</div>
-                <div class="text-xs text-gray-500 mb-2">{{ col.handle }}</div>
-                <div class="flex items-center text-xs text-gray-600 mt-auto">
-                  <CubeIcon class="w-3 h-3 mr-1" />
-                  {{ Array.isArray(col.products) ? col.products.length : 0 }} Products
-                </div>
-                <div class="text-xs text-gray-400 mt-1">
-                  Created: {{ col.created_at ? formatDate(col.created_at) : (col.createdAt ? formatDate(col.createdAt) : 'N/A') }}
-                </div>
-              </div>
             </div>
           </div>
 
@@ -222,19 +163,10 @@ import { useRouter } from 'vue-router'
 import { useShopStore } from '@/store/shops'
 import { collectionService } from '@/services/collection'
 import {
-  ViewListIcon as ListIcon,
-  ViewGridIcon as GridIcon,
-  RefreshIcon as SpinnerIcon,
   PhotographIcon as PlaceholderIcon,
   SearchIcon,
   PlusIcon,
   CollectionIcon,
-  CubeIcon,
-  StarIcon,
-  ClockIcon,
-  EyeIcon,
-  PencilIcon,
-  TrashIcon,
   ExclamationCircleIcon
 } from '@heroicons/vue/outline'
 
@@ -246,7 +178,6 @@ const allCollections = ref([]) // Holds all fetched collections
 const collections = ref([]) // Collections filtered by search, before pagination
 const loading     = ref(false)
 const error       = ref(null)
-const currentView = ref('list')
 
 // Search state
 const searchQuery = ref('')
@@ -267,32 +198,7 @@ const paginatedCollections = computed(() => {
   return collections.value.slice(start, end)
 })
 
-// Statistics computed properties
-const totalProducts = computed(() => {
-  return allCollections.value.reduce((total, col) => total + (col.productIds?.length || 0), 0)
-})
 
-const averageProductsPerCollection = computed(() => {
-  if (allCollections.value.length === 0) return 0
-  return Math.round(totalProducts.value / allCollections.value.length)
-})
-
-const recentlyUpdatedCount = computed(() => {
-  const oneWeekAgo = new Date()
-  oneWeekAgo.setDate(oneWeekAgo.getDate() - 7)
-  
-  return allCollections.value.filter(col => {
-    if (!col.updatedAt) return false
-    return new Date(col.updatedAt) > oneWeekAgo
-  }).length
-})
-
-// Helper for toggle buttons
-function viewButtonClass(view) {
-  return view === currentView.value
-    ? 'bg-green-600 text-white hover:bg-green-700 shadow-inner'
-    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-}
 
 /**
  * Fetches collections from the service.
@@ -374,27 +280,7 @@ function goToAddCollection() {
   router.push({ name: 'AddCollection' })
 }
 
-// Edit collection (navigate to detail page with edit mode)
-function editCollection(collectionId) {
-  router.push({
-    name: 'CollectionDetail',
-    params: { collectionId }
-  })
-}
 
-// Delete collection
-async function deleteCollection(collectionId, collectionTitle) {
-  if (confirm(`Are you sure you want to delete "${collectionTitle}"? This action cannot be undone.`)) {
-    try {
-      await collectionService.delete(activeShop.value.id, collectionId)
-      // Refresh the collections list
-      await fetchCollections()
-    } catch (error) {
-      console.error('Failed to delete collection:', error)
-      alert('Failed to delete collection. Please try again.')
-    }
-  }
-}
 
 // Format helpers
 function formatDate(dt) {
