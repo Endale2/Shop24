@@ -20,24 +20,6 @@
           </div>
           
           <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 sm:mt-0">
-            <div class="inline-flex rounded-lg shadow-sm overflow-hidden" role="group">
-              <button
-                @click="currentView = 'list'"
-                :class="viewButtonClass('list')"
-                class="px-3 py-2 text-xs font-medium border border-gray-300 focus:z-10 focus:ring-2 focus:ring-green-500 focus:outline-none transition-colors duration-200 ease-in-out"
-              >
-                <ListIcon class="w-4 h-4 inline-block mr-1" />
-                List
-              </button>
-              <button
-                @click="currentView = 'grid'"
-                :class="viewButtonClass('grid')"
-                class="px-3 py-2 text-xs font-medium border border-gray-300 focus:z-10 focus:ring-2 focus:ring-green-500 focus:outline-none transition-colors duration-200 ease-in-out"
-              >
-                <GridIcon class="w-4 h-4 inline-block mr-1" />
-                Grid
-              </button>
-            </div>
             <button
               @click="goToAddProduct"
               class="inline-flex items-center px-4 py-2.5 bg-green-600 text-white text-xs font-medium rounded-lg shadow-sm hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-150 ease-in-out"
@@ -109,8 +91,7 @@
         </div>
 
         <div v-if="paginatedProducts.length">
-          <!-- List View -->
-          <div v-if="currentView === 'list'" class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div class="px-4 py-3 border-b border-gray-100 bg-gray-50">
               <h2 class="text-sm font-semibold text-gray-900">Product List</h2>
             </div>
@@ -198,72 +179,6 @@
             </div>
           </div>
 
-          <!-- Grid View -->
-          <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <div
-              v-for="prod in paginatedProducts"
-              :key="prod.id"
-              @click="goToDetail(prod.id)"
-              class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden cursor-pointer transform hover:scale-105 hover:shadow-md transition duration-200 ease-in-out flex flex-col group"
-            >
-              <div class="w-full h-40 bg-gray-200 flex items-center justify-center text-gray-400 relative overflow-hidden">
-                <img
-                  v-if="getProductImage(prod)"
-                  :src="getProductImage(prod)"
-                  alt="product"
-                  class="w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-300 ease-in-out"
-                />
-                <PlaceholderIcon v-else class="w-12 h-12" />
-                
-                <!-- Stock Status Badge -->
-                <div class="absolute top-2 right-2">
-                  <span
-                    :class="{
-                      'px-2 py-0.5 text-xs font-medium rounded-full whitespace-nowrap w-max': true,
-                      'bg-green-100 text-green-800': getProductStock(prod) > 0,
-                      'bg-red-100 text-red-800': getProductStock(prod) <= 0
-                    }"
-                  >
-                    {{ getProductStock(prod) > 0 ? 'In Stock' : 'Out of Stock' }}
-                  </span>
-                </div>
-              </div>
-              
-              <div class="p-4 flex-grow flex flex-col">
-                <h3 class="text-sm font-semibold text-gray-900 mb-2 truncate">{{ prod.name }}</h3>
-                <div class="text-xs text-gray-600 mb-2">
-                  <div v-if="prod.collection_ids && prod.collection_ids.length > 0" class="space-y-1">
-                    <div v-for="collectionId in prod.collection_ids" :key="collectionId" class="text-xs bg-gray-100 px-2 py-1 rounded">
-                      {{ collectionMap[collectionId] || 'Unknown Collection' }}
-                    </div>
-                  </div>
-                  <div v-else class="text-gray-500 italic">Uncategorized</div>
-                </div>
-                
-                <div v-if="prod.variants && prod.variants.length > 0" class="text-xs text-gray-500 mb-3">
-                  {{ prod.variants.length }} variant{{ prod.variants.length !== 1 ? 's' : '' }}
-                </div>
-                
-                <div class="mt-auto">
-                  <p class="text-lg font-bold text-green-700">
-                    <template v-if="prod.starting_price != null">
-                      <span class="italic text-gray-700">from</span> {{ formatPrice(prod.starting_price) }}
-                    </template>
-                    <template v-else-if="prod.price != null">
-                      {{ formatPrice(prod.price) }}
-                    </template>
-                    <template v-else>
-                      N/A
-                    </template>
-                  </p>
-                  <p class="text-xs text-gray-500 mt-1">
-                    Stock: {{ getProductStock(prod) }}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
           <!-- Pagination -->
           <div class="flex justify-center items-center space-x-2 mt-8">
             <button
@@ -313,9 +228,6 @@ import { useShopStore } from '@/store/shops'
 import { productService } from '@/services/product'
 import { collectionService } from '@/services/collection'
 import {
-  ViewListIcon as ListIcon,
-  ViewGridIcon as GridIcon,
-  RefreshIcon as SpinnerIcon,
   PhotographIcon as PlaceholderIcon,
   SearchIcon,
   PlusIcon,
@@ -330,7 +242,6 @@ const allProducts = ref([]) // not used anymore, but kept for compatibility
 const products = ref([])
 const loading = ref(false)
 const error = ref(null)
-const currentView = ref('list')
 
 // Search/filter state
 const searchQuery = ref('')
@@ -351,14 +262,7 @@ const activeShop = computed(() => shopStore.activeShop)
 const totalPages = computed(() => pagination.value.total_pages || 1)
 const paginatedProducts = computed(() => products.value)
 
-/**
- * Dynamically applies classes to view toggle buttons based on the current view.
- */
-function viewButtonClass(view) {
-  return view === currentView.value
-    ? 'bg-green-600 text-white hover:bg-green-700 shadow-inner'
-    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-}
+
 
 /**
  * Gets the appropriate image for a product
