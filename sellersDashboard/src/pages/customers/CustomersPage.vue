@@ -33,25 +33,6 @@
               <FolderIcon class="w-4 h-4 mr-1.5" />
               Manage Segments
             </button>
-
-            <div class="inline-flex rounded-lg shadow-sm overflow-hidden" role="group">
-              <button
-                @click="currentView = 'list'"
-                :class="viewButtonClass('list')"
-                class="px-3 py-2 text-xs font-medium border border-gray-300 focus:z-10 focus:ring-2 focus:ring-green-500 focus:outline-none transition-colors duration-200 ease-in-out"
-              >
-                <ViewListIcon class="w-4 h-4 inline-block mr-1" />
-                List
-              </button>
-              <button
-                @click="currentView = 'cards'"
-                :class="viewButtonClass('cards')"
-                class="px-3 py-2 text-xs font-medium border border-gray-300 focus:z-10 focus:ring-2 focus:ring-green-500 focus:outline-none transition-colors duration-200 ease-in-out"
-              >
-                <ViewGridIcon class="w-4 h-4 inline-block mr-1" />
-                Cards
-              </button>
-            </div>
           </div>
         </div>
       </div>
@@ -178,9 +159,8 @@
       <!-- Content -->
       <div v-else>
         <div v-if="customers.length">
-          <!-- List View -->
-          <div v-if="currentView === 'list'" class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
-            <div class="overflow-x-auto">
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="overflow-x-auto table-container">
               <table class="min-w-full divide-y divide-gray-200">
                 <thead class="bg-gray-50">
                   <tr>
@@ -195,16 +175,24 @@
                   <tr
                     v-for="(cust, i) in customers"
                     :key="cust.id"
-                    class="transition duration-150 ease-in-out transform hover:scale-[1.005] hover:bg-green-50 cursor-pointer group"
+                    class="table-row transform hover:scale-[1.005] hover:bg-green-50 cursor-pointer group"
                     :class="{ 'bg-gray-50': i % 2 === 1 }"
                     @click="goToCustomerDetail(cust.id)"
                   >
                     <td class="py-3 px-4 text-sm text-gray-800 font-medium">
                       <div class="flex items-center">
                         <div
-                          class="h-10 w-10 rounded-full flex items-center justify-center mr-3 overflow-hidden bg-green-100"
+                          class="h-10 w-10 rounded-full flex items-center justify-center mr-3 overflow-hidden bg-green-100 customer-avatar"
                         >
-                          <img v-if="cust.profile_image" :src="cust.profile_image" alt="Profile" class="h-10 w-10 object-cover rounded-full" />
+                          <img 
+                            v-if="cust.profile_image" 
+                            :src="cust.profile_image" 
+                            :alt="`${cust.firstName} ${cust.lastName} profile`"
+                            class="h-10 w-10 object-cover rounded-full"
+                            loading="lazy"
+                            @error="handleImageError"
+                            @load="handleImageLoad"
+                          />
                           <span v-else class="text-green-700 text-sm font-semibold">{{ getInitials(cust.firstName, cust.lastName) }}</span>
                         </div>
                         <div>
@@ -237,13 +225,6 @@
                     <td class="py-3 px-4 text-sm text-gray-700" @click.stop>
                       <div class="flex space-x-2">
                         <button
-                          @click="goToCustomerDetail(cust.id)"
-                          class="text-green-600 hover:text-green-800 transition-colors"
-                          title="View Details"
-                        >
-                          <EyeIcon class="w-4 h-4" />
-                        </button>
-                        <button
                           @click="showSegmentModal = true; selectedCustomer = cust"
                           class="text-blue-600 hover:text-blue-800 transition-colors"
                           title="Manage Segments"
@@ -264,74 +245,6 @@
               </table>
             </div>
           </div>
-
-          <!-- Card View -->
-          <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            <div
-              v-for="cust in customers"
-              :key="cust.id"
-              class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden cursor-pointer transform hover:scale-105 hover:shadow-md transition duration-200 ease-in-out flex flex-col group"
-            >
-              <div class="flex flex-col items-center p-4 text-center space-y-3">
-                <div
-                  class="h-16 w-16 rounded-full flex items-center justify-center shadow-sm cursor-pointer overflow-hidden bg-gradient-to-br from-green-400 to-teal-500"
-                  @click="goToCustomerDetail(cust.id)"
-                >
-                  <img v-if="cust.profile_image" :src="cust.profile_image" alt="Profile" class="h-16 w-16 object-cover rounded-full" />
-                  <span v-else class="text-white text-lg font-bold">{{ getInitials(cust.firstName, cust.lastName) }}</span>
-                </div>
-                <div class="space-y-1">
-                  <h3 class="text-sm font-semibold text-gray-800 cursor-pointer" @click="goToCustomerDetail(cust.id)">
-                    {{ cust.firstName }} {{ cust.lastName }}
-                  </h3>
-                  <p class="text-xs text-gray-600 truncate">{{ cust.email }}</p>
-                  <p class="text-xs text-gray-600">{{ cust.phone || 'N/A' }}</p>
-                </div>
-                
-                <!-- Segments -->
-                <div class="flex flex-wrap gap-1 justify-center">
-                  <span
-                    v-for="segment in getCustomerSegments(cust.id)"
-                    :key="segment.id"
-                    class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium"
-                    :style="{ backgroundColor: segment.color + '20', color: segment.color }"
-                  >
-                    {{ segment.name }}
-                  </span>
-                </div>
-              </div>
-              
-              <div class="px-4 py-2 bg-gray-50 border-t border-gray-100 flex items-center justify-between text-xs text-gray-500">
-                <span class="text-gray-700 font-mono">@{{ cust.username }}</span>
-                <span>{{ formatDate(cust.createdAt) }}</span>
-              </div>
-              
-              <!-- Action buttons -->
-              <div class="px-4 py-2 bg-gray-50 border-t border-gray-100 flex justify-center space-x-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-                <button
-                  @click="goToCustomerDetail(cust.id)"
-                  class="text-green-600 hover:text-green-800 transition-colors"
-                  title="View Details"
-                >
-                  <EyeIcon class="w-4 h-4" />
-                </button>
-                <button
-                  @click="showSegmentModal = true; selectedCustomer = cust"
-                  class="text-blue-600 hover:text-blue-800 transition-colors"
-                  title="Manage Segments"
-                >
-                  <FolderAddIcon class="w-4 h-4" />
-                </button>
-                <button
-                  @click="unlinkCustomer(cust.linkId)"
-                  class="text-red-600 hover:text-red-800 transition-colors"
-                  title="Remove from Shop"
-                >
-                  <UserRemoveIcon class="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          </div>
         </div>
 
         <!-- Empty State -->
@@ -348,122 +261,122 @@
             </p>
           </div>
         </div>
-      </div>
 
-      <!-- Pagination Controls -->
-      <div v-if="total > pageSize && customers.length" class="flex justify-center mt-6">
-        <button
-          :disabled="page === 1"
-          @click="handlePageChange(page - 1)"
-          class="px-4 py-2 mx-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50 text-sm"
-        >Prev</button>
-        <span class="px-4 py-2 mx-1 text-sm">Page {{ page }} of {{ Math.ceil(total / pageSize) }}</span>
-        <button
-          :disabled="page >= Math.ceil(total / pageSize)"
-          @click="handlePageChange(page + 1)"
-          class="px-4 py-2 mx-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50 text-sm"
-        >Next</button>
-      </div>
+        <!-- Pagination Controls -->
+        <div v-if="total > pageSize && customers.length" class="flex justify-center mt-6">
+          <button
+            :disabled="page === 1"
+            @click="handlePageChange(page - 1)"
+            class="px-4 py-2 mx-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50 text-sm"
+          >Prev</button>
+          <span class="px-4 py-2 mx-1 text-sm">Page {{ page }} of {{ Math.ceil(total / pageSize) }}</span>
+          <button
+            :disabled="page >= Math.ceil(total / pageSize)"
+            @click="handlePageChange(page + 1)"
+            class="px-4 py-2 mx-1 rounded bg-gray-200 hover:bg-gray-300 disabled:opacity-50 text-sm"
+          >Next</button>
+        </div>
 
-      <!-- Create Segment Modal -->
-      <div v-if="showCreateSegmentModal" class="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-none transition-opacity">
-        <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 border border-gray-200 relative">
-          <button @click="showCreateSegmentModal = false" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-xl focus:outline-none">&times;</button>
-          <div class="p-6">
-            <h3 class="text-lg font-bold text-gray-900 mb-4 text-center">Create New Segment</h3>
-            <form @submit.prevent="createSegment" class="space-y-4">
-              <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Segment Name</label>
-                <input
-                  v-model="newSegment.name"
-                  type="text"
-                  required
-                  class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 text-gray-900 text-sm"
-                  placeholder="e.g., VIP Customers"
-                />
-              </div>
-              <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Description</label>
-                <textarea
-                  v-model="newSegment.description"
-                  rows="3"
-                  class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 text-gray-900 text-sm"
-                  placeholder="Optional description..."
-                ></textarea>
-              </div>
-              <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-1">Color</label>
-                <input
-                  v-model="newSegment.color"
-                  type="color"
-                  class="w-16 h-10 border border-gray-300 rounded-lg cursor-pointer bg-gray-50"
-                />
-              </div>
-              <div class="flex justify-end space-x-3 mt-6">
-                <button
-                  type="button"
-                  @click="showCreateSegmentModal = false"
-                  class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 font-medium transition-colors shadow-sm text-sm"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  :disabled="creatingSegment"
-                  class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 font-semibold transition-colors shadow-sm text-sm"
-                >
-                  {{ creatingSegment ? 'Creating...' : 'Create Segment' }}
-                </button>
-              </div>
-            </form>
+        <!-- Create Segment Modal -->
+        <div v-if="showCreateSegmentModal" class="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-none transition-opacity">
+          <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 border border-gray-200 relative">
+            <button @click="showCreateSegmentModal = false" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-xl focus:outline-none">&times;</button>
+            <div class="p-6">
+              <h3 class="text-lg font-bold text-gray-900 mb-4 text-center">Create New Segment</h3>
+              <form @submit.prevent="createSegment" class="space-y-4">
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-1">Segment Name</label>
+                  <input
+                    v-model="newSegment.name"
+                    type="text"
+                    required
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 text-gray-900 text-sm"
+                    placeholder="e.g., VIP Customers"
+                  />
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-1">Description</label>
+                  <textarea
+                    v-model="newSegment.description"
+                    rows="3"
+                    class="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-transparent bg-gray-50 text-gray-900 text-sm"
+                    placeholder="Optional description..."
+                  ></textarea>
+                </div>
+                <div>
+                  <label class="block text-sm font-semibold text-gray-700 mb-1">Color</label>
+                  <input
+                    v-model="newSegment.color"
+                    type="color"
+                    class="w-16 h-10 border border-gray-300 rounded-lg cursor-pointer bg-gray-50"
+                  />
+                </div>
+                <div class="flex justify-end space-x-3 mt-6">
+                  <button
+                    type="button"
+                    @click="showCreateSegmentModal = false"
+                    class="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 font-medium transition-colors shadow-sm text-sm"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    :disabled="creatingSegment"
+                    class="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 font-semibold transition-colors shadow-sm text-sm"
+                  >
+                    {{ creatingSegment ? 'Creating...' : 'Create Segment' }}
+                  </button>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Manage Customer Segments Modal -->
-      <div v-if="showSegmentModal && selectedCustomer" class="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-none transition-opacity">
-        <div class="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 border border-gray-200 relative">
-          <button @click="showSegmentModal = false; selectedCustomer = null" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-xl focus:outline-none">&times;</button>
-          <div class="p-6">
-            <h3 class="text-lg font-bold text-gray-900 mb-4 text-center">
-              Manage Segments for {{ selectedCustomer.firstName }} {{ selectedCustomer.lastName }}
-            </h3>
-            <div class="space-y-3">
-              <div v-for="segment in segments" :key="segment.id" class="flex items-center justify-between p-3 border border-gray-100 rounded-lg bg-gray-50">
-                <div class="flex items-center">
-                  <div
-                    v-if="segment.color"
-                    class="w-3 h-3 rounded-full mr-3"
-                    :style="{ backgroundColor: segment.color }"
-                  ></div>
-                  <div>
-                    <div class="font-semibold text-gray-900 text-sm">{{ segment.name }}</div>
-                    <div class="text-xs text-gray-500">{{ segment.description || 'No description' }}</div>
+        <!-- Manage Customer Segments Modal -->
+        <div v-if="showSegmentModal && selectedCustomer" class="fixed inset-0 z-50 flex items-center justify-center bg-white/30 backdrop-blur-none transition-opacity">
+          <div class="bg-white rounded-lg shadow-xl max-w-lg w-full mx-4 border border-gray-200 relative">
+            <button @click="showSegmentModal = false; selectedCustomer = null" class="absolute top-3 right-3 text-gray-400 hover:text-gray-600 text-xl focus:outline-none">&times;</button>
+            <div class="p-6">
+              <h3 class="text-lg font-bold text-gray-900 mb-4 text-center">
+                Manage Segments for {{ selectedCustomer.firstName }} {{ selectedCustomer.lastName }}
+              </h3>
+              <div class="space-y-3">
+                <div v-for="segment in segments" :key="segment.id" class="flex items-center justify-between p-3 border border-gray-100 rounded-lg bg-gray-50">
+                  <div class="flex items-center">
+                    <div
+                      v-if="segment.color"
+                      class="w-3 h-3 rounded-full mr-3"
+                      :style="{ backgroundColor: segment.color }"
+                    ></div>
+                    <div>
+                      <div class="font-semibold text-gray-900 text-sm">{{ segment.name }}</div>
+                      <div class="text-xs text-gray-500">{{ segment.description || 'No description' }}</div>
+                    </div>
                   </div>
+                  <button
+                    v-if="isCustomerInSegment(selectedCustomer.id, segment.id)"
+                    @click="removeCustomerFromSegment(selectedCustomer.id, segment.id)"
+                    class="px-3 py-1 text-xs rounded-lg bg-red-50 text-red-600 hover:bg-red-100 font-medium transition-colors shadow-sm"
+                  >
+                    Remove
+                  </button>
+                  <button
+                    v-else
+                    @click="addCustomerToSegment(selectedCustomer.id, segment.id)"
+                    class="px-3 py-1 text-xs rounded-lg bg-green-50 text-green-700 hover:bg-green-100 font-medium transition-colors shadow-sm"
+                  >
+                    Add
+                  </button>
                 </div>
+              </div>
+              <div class="flex justify-end mt-6">
                 <button
-                  v-if="isCustomerInSegment(selectedCustomer.id, segment.id)"
-                  @click="removeCustomerFromSegment(selectedCustomer.id, segment.id)"
-                  class="px-3 py-1 text-xs rounded-lg bg-red-50 text-red-600 hover:bg-red-100 font-medium transition-colors shadow-sm"
+                  @click="showSegmentModal = false; selectedCustomer = null"
+                  class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors shadow-sm text-sm"
                 >
-                  Remove
-                </button>
-                <button
-                  v-else
-                  @click="addCustomerToSegment(selectedCustomer.id, segment.id)"
-                  class="px-3 py-1 text-xs rounded-lg bg-green-50 text-green-700 hover:bg-green-100 font-medium transition-colors shadow-sm"
-                >
-                  Add
+                  Close
                 </button>
               </div>
-            </div>
-            <div class="flex justify-end mt-6">
-              <button
-                @click="showSegmentModal = false; selectedCustomer = null"
-                class="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 font-medium transition-colors shadow-sm text-sm"
-              >
-                Close
-              </button>
             </div>
           </div>
         </div>
@@ -479,9 +392,6 @@ import { useShopStore } from '@/store/shops'
 import { customerService } from '@/services/customer'
 import { customerSegmentService } from '@/services/customerSegment'
 import {
-  ViewListIcon,
-  ViewGridIcon,
-  RefreshIcon,
   SearchIcon,
   PlusIcon,
   UsersIcon,
@@ -489,7 +399,6 @@ import {
   UserAddIcon,
   UserGroupIcon,
   FolderAddIcon,
-  EyeIcon,
   UserRemoveIcon,
   ExclamationCircleIcon
 } from '@heroicons/vue/outline'
@@ -503,7 +412,6 @@ const segments = ref([])
 const loading = ref(false)
 const error = ref(null)
 const search = ref('')
-const currentView = ref('list')
 const selectedSegment = ref(null)
 const showCreateSegmentModal = ref(false)
 const showSegmentModal = ref(false)
@@ -524,10 +432,19 @@ const newSegment = ref({
 // Computed
 const activeShop = computed(() => shopStore.activeShop)
 
-const filteredCustomers = computed(() => customers.value) // No local filtering
+// Memoized customer segments for better performance
+const customerSegmentsMap = computed(() => {
+  const map = new Map()
+  customers.value.forEach(customer => {
+    const customerSegments = segments.value.filter(segment =>
+      segment.customer_ids && segment.customer_ids.includes(customer.id)
+    )
+    map.set(customer.id, customerSegments)
+  })
+  return map
+})
 
-const newCustomersThisMonth = computed(() => stats.value.thisMonth)
-const segmentedCustomersCount = computed(() => stats.value.segmented)
+
 
 // Fetch data
 onMounted(async () => {
@@ -633,11 +550,7 @@ async function fetchStats() {
   }
 }
 
-function viewButtonClass(view) {
-  return view === currentView.value
-    ? 'bg-green-600 text-white hover:bg-green-700 shadow-inner'
-    : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-}
+
 
 function formatDate(dt) {
   return dt
@@ -655,9 +568,25 @@ function getInitials(firstName, lastName) {
   return fi + li || '?'
 }
 
-function goToAddCustomer() {
-  router.push({ name: 'AddCustomer' })
+// Image optimization functions
+function handleImageError(event) {
+  // Hide the image and show initials instead
+  event.target.style.display = 'none'
+  const initialsSpan = event.target.nextElementSibling
+  if (initialsSpan) {
+    initialsSpan.style.display = 'flex'
+  }
 }
+
+function handleImageLoad(event) {
+  // Image loaded successfully, ensure initials are hidden
+  const initialsSpan = event.target.nextElementSibling
+  if (initialsSpan) {
+    initialsSpan.style.display = 'none'
+  }
+}
+
+
 
 function goToCustomerDetail(customerId) {
   router.push({
@@ -667,9 +596,7 @@ function goToCustomerDetail(customerId) {
 }
 
 function getCustomerSegments(customerId) {
-  return segments.value.filter(segment =>
-    segment.customer_ids && segment.customer_ids.includes(customerId)
-  )
+  return customerSegmentsMap.value.get(customerId) || []
 }
 
 function isCustomerInSegment(customerId, segmentId) {
@@ -677,11 +604,7 @@ function isCustomerInSegment(customerId, segmentId) {
   return segment?.customer_ids && segment.customer_ids.includes(customerId)
 }
 
-function getCustomersInSegment(segmentId) {
-  const segment = segments.value.find(s => s.id === segmentId)
-  if (!segment || !segment.customer_ids) return []
-  return customers.value.filter(c => segment.customer_ids.includes(c.id))
-}
+
 
 async function createSegment() {
   if (!newSegment.value.name.trim()) return
@@ -763,11 +686,20 @@ watch(search, () => {
   transform: scale(1.05);
 }
 
-/* Smooth transitions */
-* {
-  transition-property: color, background-color, border-color, text-decoration-color, fill, stroke, opacity, box-shadow, transform, filter, backdrop-filter;
-  transition-timing-function: cubic-bezier(0.4, 0, 0.2, 1);
-  transition-duration: 150ms;
+/* Optimized transitions - only animate necessary properties */
+.table-row {
+  transition: background-color 150ms ease-in-out, transform 150ms ease-in-out;
+}
+
+/* Image optimization */
+.customer-avatar {
+  will-change: transform;
+  backface-visibility: hidden;
+}
+
+/* Performance optimizations */
+.table-container {
+  contain: layout style paint;
 }
 
 /* Custom scrollbar for better UX */
@@ -786,5 +718,16 @@ watch(search, () => {
 
 ::-webkit-scrollbar-thumb:hover {
   background: #9ca3af;
+}
+
+/* Reduce motion for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .table-row {
+    transition: none;
+  }
+  
+  .group:hover .group-hover\:scale-105 {
+    transform: none;
+  }
 }
 </style>
