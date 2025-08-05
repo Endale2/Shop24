@@ -23,7 +23,7 @@ function mapShopData(s) {
     updatedAt:   s.UpdatedAt ?? s.updatedAt ?? new Date().toISOString(),
     
     // Business Information
-    category:    s.category ?? s.Category ?? '',
+    categoryId:  s.categoryId ?? s.category_id ?? s.CategoryID ?? '',
     email:       s.email ?? s.Email ?? '',
     phone:       s.phone ?? s.Phone ?? '',
     address:     s.address ?? s.Address ?? '',
@@ -42,7 +42,33 @@ function mapShopData(s) {
   }
 }
 
+// Helper function to map category data
+function mapCategoryData(c) {
+  return {
+    id:          c._id ?? c.id ?? c.ID,
+    name:        c.Name ?? c.name ?? '',
+    slug:        c.Slug ?? c.slug ?? '',
+    description: c.Description ?? c.description ?? '',
+    image:       c.Image ?? c.image ?? null,
+    createdAt:   c.CreatedAt ?? c.createdAt ?? new Date().toISOString(),
+    updatedAt:   c.UpdatedAt ?? c.updatedAt ?? new Date().toISOString(),
+  }
+}
+
 export const shopService = {
+  /**
+   * Fetch all shop categories for dropdown selection
+   */
+  async fetchCategories() {
+    try {
+      const res = await api.get('/seller/categories')
+      return res.data.map(mapCategoryData)
+    } catch (error) {
+      console.error('Error fetching categories:', error)
+      throw error
+    }
+  },
+
   /**
    * Fetch all shops for the current seller.
    * Returns complete shop data with all fields
@@ -58,21 +84,29 @@ export const shopService = {
   },
 
   /**
-   * Create a new shop with all the required fields.
-   * Payload includes all business information fields
+   * Create a new shop with simplified required fields.
+   * Payload includes only essential business information
    */
-  async createShop({ name, description, category, logo, email, phone, address, currency }) {
+  async createShop({ name, description, categoryId, email, currency }) {
     try {
+      // Validate required fields
+      if (!name || !name.trim()) {
+        throw new Error('Shop name is required')
+      }
+      if (!categoryId || !categoryId.trim()) {
+        throw new Error('Shop category is required')
+      }
+      if (!email || !email.trim()) {
+        throw new Error('Contact email is required')
+      }
+
       const payload = {
-        name,
+        name: name.trim(),
         slug: slugify(name),
-        description,
-        image: logo, // Map logo to image field
-        category,
-        email,
-        phone,
-        address,
-        currency,
+        description: description ? description.trim() : '',
+        categoryId: categoryId.trim(),
+        email: email.trim(),
+        currency: currency || 'USD',
       }
       
       const res = await api.post('/seller/shops', payload)
@@ -82,16 +116,16 @@ export const shopService = {
       
       return {
         id:          newId,
-        name,
+        name:        payload.name,
         slug:        payload.slug,
-        image:       logo,
-        description,
-        category,
-        email,
-        phone,
-        address,
-        currency,
-        status:      'active',
+        image:       null,
+        description: payload.description,
+        categoryId:  payload.categoryId,
+        email:       payload.email,
+        phone:       '',
+        address:     '',
+        currency:    payload.currency,
+        status:      'inactive',
         isVerified:  false,
         ownerId:     null,
         createdAt:   new Date().toISOString(),

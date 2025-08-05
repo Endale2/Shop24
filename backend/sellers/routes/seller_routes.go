@@ -15,6 +15,9 @@ func SellerRoute(r *gin.Engine) {
 	sellerGroup.POST("/shops", controllers.CreateShop)
 	sellerGroup.GET("/shops", controllers.GetShops)
 
+	// 3) /seller/categories — get all categories
+	sellerGroup.GET("/categories", controllers.GetShopCategories)
+
 	// 3) /seller/shops/:shopId
 	shopGroup := sellerGroup.Group("/shops/:shopId")
 	{

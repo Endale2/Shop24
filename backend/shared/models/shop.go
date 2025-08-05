@@ -17,11 +17,11 @@ type Shop struct {
 	Description string             `bson:"description" json:"description"`
 
 	// Business Information
-	Category string `bson:"category,omitempty" json:"category,omitempty"` // Shop category (fashion, electronics, etc.)
-	Email    string `bson:"email,omitempty" json:"email,omitempty"`       // Contact email
-	Phone    string `bson:"phone,omitempty" json:"phone,omitempty"`       // Contact phone
-	Address  string `bson:"address,omitempty" json:"address,omitempty"`   // Business address
-	Currency string `bson:"currency,omitempty" json:"currency,omitempty"` // Default currency (USD, EUR, etc.)
+	CategoryID primitive.ObjectID `bson:"categoryId" json:"categoryId"`                 // Reference to ShopCategory
+	Email      string             `bson:"email,omitempty" json:"email,omitempty"`       // Contact email
+	Phone      string             `bson:"phone,omitempty" json:"phone,omitempty"`       // Contact phone
+	Address    string             `bson:"address,omitempty" json:"address,omitempty"`   // Business address
+	Currency   string             `bson:"currency,omitempty" json:"currency,omitempty"` // Default currency (USD, EUR, etc.)
 
 	// Business Status
 	Status     string `bson:"status,omitempty" json:"status,omitempty"`         // Shop status (active, inactive, suspended)

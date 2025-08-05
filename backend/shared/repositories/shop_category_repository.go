@@ -14,18 +14,22 @@ import (
 
 var shopCategoryCollection *mongo.Collection = config.GetCollection("DRPS", "shop_categories")
 
+// CreateShopCategory inserts a new shop category into the collection.
 func CreateShopCategory(category *models.ShopCategory) (*mongo.InsertOneResult, error) {
 	category.ID = primitive.NewObjectID()
 	category.CreatedAt = time.Now()
 	category.UpdatedAt = time.Now()
+
 	return shopCategoryCollection.InsertOne(context.Background(), category)
 }
 
+// GetShopCategoryByID retrieves a shop category by its ID.
 func GetShopCategoryByID(id string) (*models.ShopCategory, error) {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, errors.New("invalid category ID")
 	}
+
 	var category models.ShopCategory
 	err = shopCategoryCollection.FindOne(context.Background(), bson.M{"_id": objID}).Decode(&category)
 	if err != nil {
@@ -34,12 +38,14 @@ func GetShopCategoryByID(id string) (*models.ShopCategory, error) {
 	return &category, nil
 }
 
+// GetAllShopCategories returns all shop categories in the collection.
 func GetAllShopCategories() ([]models.ShopCategory, error) {
 	cursor, err := shopCategoryCollection.Find(context.Background(), bson.M{})
 	if err != nil {
 		return nil, err
 	}
 	defer cursor.Close(context.Background())
+
 	var categories []models.ShopCategory
 	for cursor.Next(context.Background()) {
 		var category models.ShopCategory
@@ -51,12 +57,29 @@ func GetAllShopCategories() ([]models.ShopCategory, error) {
 	return categories, nil
 }
 
+// GetShopCategoryBySlug retrieves a shop category by its slug.
+func GetShopCategoryBySlug(slug string) (*models.ShopCategory, error) {
+	var category models.ShopCategory
+	err := shopCategoryCollection.FindOne(context.Background(), bson.M{"slug": slug}).Decode(&category)
+	if err != nil {
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &category, nil
+}
+
+// UpdateShopCategory updates fields of a shop category identified by its ID.
 func UpdateShopCategory(id string, updatedData bson.M) (*mongo.UpdateResult, error) {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, errors.New("invalid category ID")
 	}
+
 	updatedData["updatedAt"] = time.Now()
+
 	return shopCategoryCollection.UpdateOne(
 		context.Background(),
 		bson.M{"_id": objID},
@@ -64,11 +87,13 @@ func UpdateShopCategory(id string, updatedData bson.M) (*mongo.UpdateResult, err
 	)
 }
 
+// DeleteShopCategory removes a shop category from the collection.
 func DeleteShopCategory(id string) (*mongo.DeleteResult, error) {
 	objID, err := primitive.ObjectIDFromHex(id)
 	if err != nil {
 		return nil, errors.New("invalid category ID")
 	}
+
 	return shopCategoryCollection.DeleteOne(context.Background(), bson.M{"_id": objID})
 }
 

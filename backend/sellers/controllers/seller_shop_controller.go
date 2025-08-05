@@ -2,9 +2,11 @@ package controllers
 
 import (
 	"net/http"
+	"regexp"
 	"strings"
 
 	"github.com/Endale2/DRPS/shared/models"
+	categoryService "github.com/Endale2/DRPS/shared/services"
 	shopService "github.com/Endale2/DRPS/shared/services"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -31,19 +33,52 @@ func CreateShop(c *gin.Context) {
 	// 3) Set owner and validate required fields
 	shop.OwnerID = sellerID
 
-	// Validate required fields
+	// Validate and sanitize shop name
 	if strings.TrimSpace(shop.Name) == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "shop name is required"})
 		return
 	}
+	shop.Name = strings.TrimSpace(shop.Name)
+	if len(shop.Name) < 3 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "shop name must be at least 3 characters"})
+		return
+	}
+	if len(shop.Name) > 50 {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "shop name must be less than 50 characters"})
+		return
+	}
 
-	if strings.TrimSpace(shop.Category) == "" {
+	// Validate and sanitize description
+	if shop.Description != "" {
+		shop.Description = strings.TrimSpace(shop.Description)
+		if len(shop.Description) > 200 {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "description must be less than 200 characters"})
+			return
+		}
+	}
+
+	// Validate category ID
+	if shop.CategoryID.IsZero() {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "shop category is required"})
 		return
 	}
 
+	// Verify that the category exists
+	category, err := categoryService.GetShopCategoryByIDService(shop.CategoryID.Hex())
+	if err != nil || category == nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid shop category"})
+		return
+	}
+
+	// Validate and sanitize email
 	if strings.TrimSpace(shop.Email) == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "contact email is required"})
+		return
+	}
+	shop.Email = strings.TrimSpace(shop.Email)
+	emailRegex := regexp.MustCompile(`^[^\s@]+@[^\s@]+\.[^\s@]+$`)
+	if !emailRegex.MatchString(shop.Email) {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "please enter a valid email address"})
 		return
 	}
 
@@ -53,7 +88,7 @@ func CreateShop(c *gin.Context) {
 	}
 
 	if shop.Status == "" {
-		shop.Status = "active"
+		shop.Status = "inactive"
 	}
 
 	// Initialize analytics fields
@@ -193,4 +228,15 @@ func DeleteShop(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, res)
+}
+
+// GetShopCategories returns all available shop categories.
+// GET /seller/categories
+func GetShopCategories(c *gin.Context) {
+	categories, err := categoryService.GetAllShopCategoriesService()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch categories"})
+		return
+	}
+	c.JSON(http.StatusOK, categories)
 }

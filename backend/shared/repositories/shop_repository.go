@@ -85,28 +85,14 @@ func DeleteShop(id string) (*mongo.DeleteResult, error) {
 
 // GetShopBySlug retrieves a shop by its slug.
 func GetShopBySlug(slug string) (*models.Shop, error) {
-	// First, get the raw document to see what's actually in MongoDB
-	var rawDoc bson.M
-	err := shopCollection.FindOne(context.Background(), bson.M{"slug": slug}).Decode(&rawDoc)
-	if err != nil {
-		if err == mongo.ErrNoDocuments {
-			return nil, nil
-		}
-		return nil, err
-	}
-	
-	
-	
 	var shop models.Shop
-	err = shopCollection.FindOne(context.Background(), bson.M{"slug": slug}).Decode(&shop)
+	err := shopCollection.FindOne(context.Background(), bson.M{"slug": slug}).Decode(&shop)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
 			return nil, nil
 		}
 		return nil, err
 	}
-	
 
-	
 	return &shop, nil
 }
