@@ -39,11 +39,10 @@
             <p class="text-xs font-semibold text-gray-500 uppercase tracking-wide">Your Shops</p>
           </li>
           <li
-            v-for="shop in shops"
+            v-for="shop in otherShops"
             :key="shop.id"
             @click="selectShop(shop)"
             class="px-4 py-2 hover:bg-gray-50 cursor-pointer text-gray-800 transition-all duration-200 flex items-center group"
-            :class="{ 'bg-green-50 border-r-4 border-green-500': shop.id === activeShop?.id }"
           >
             <template v-if="shop.image">
               <img
@@ -60,15 +59,14 @@
             <div class="flex-1">
               <span class="text-sm font-medium">{{ shop.name }}</span>
             </div>
-            <CheckIcon v-if="shop.id === activeShop?.id" class="h-4 w-4 text-green-500 ml-2" />
           </li>
           <li class="border-t border-gray-100">
             <button
               @click="goToShopSelection"
               class="w-full text-left px-4 py-2 hover:bg-green-50 text-green-600 font-medium transition-all duration-200 flex items-center group"
             >
-              <PlusIcon class="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-200" />
-              <span class="text-sm">Manage Shops…</span>
+              <ShopIcon class="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-200" />
+              <span class="text-sm">All Shops</span>
             </button>
           </li>
         </ul>
@@ -192,13 +190,11 @@ import {
   BellIcon,
   ChevronDownIcon,
   ShoppingBagIcon as ShopIcon,
-  CheckIcon,
   SearchIcon,
   QuestionMarkCircleIcon,
   UserIcon,
   CogIcon,
-  LogoutIcon,
-  PlusIcon
+  LogoutIcon
 } from '@heroicons/vue/outline'
 
 const router = useRouter()
@@ -216,6 +212,11 @@ const userDropdownRef = ref(null)
 const shops = computed(() => shopStore.list)
 const activeShop = computed(() => shopStore.active)
 const user = computed(() => auth.user || {})
+
+// Filter out the current active shop from the dropdown list
+const otherShops = computed(() => {
+  return shops.value.filter(shop => shop.id !== activeShop.value?.id)
+})
 
 // derive initials
 const userInitials = computed(() => {
