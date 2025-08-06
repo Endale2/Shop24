@@ -1,6 +1,6 @@
 <template>
   <Breadcrumbs :items="[
-    { back: true },
+    { back: true, label: 'Back' },
     { label: 'Home', to: `/${shopSlug}/` },
     { label: 'Wishlist' }
   ]" />
@@ -106,18 +106,6 @@ const wishlistStore = useWishlistStore();
 const cartStore = useCartStore();
 const shopSlug = route.params.shopSlug as string;
 
-function getShopSlug() {
-  return shopSlug || '';
-}
-
-function goToLogin() {
-  router.push({ path: `/${shopSlug}/login` });
-}
-
-function goToRegister() {
-  router.push({ path: `/${shopSlug}/register` });
-}
-
 function goToProducts() {
   router.push({ path: `/${shopSlug}/products` });
 }
@@ -127,7 +115,7 @@ function removeFromWishlist(productId: string) {
 }
 
 async function addToCart(product: any) {
-  await cartStore.addToCart(product, 1);
+  await cartStore.addToCart(product, '', 1);
 }
 
 // Only fetch wishlist when user is authenticated and session loading is complete

@@ -52,7 +52,7 @@ export const router = createRouter({
 })
 
 // Global navigation guard: enforce shop slug presence in path
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, _from, next) => {
   // Allow /select-shop and root
   if (to.path === '/select-shop' || to.path === '/') return next();
   const shopSlug = getCurrentShopSlug();

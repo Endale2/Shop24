@@ -1,6 +1,6 @@
 <template>
   <Breadcrumbs :items="[
-    { back: true },
+    { back: true, label: 'Back' },
     { label: 'Home', to: `/${shopSlug}/` },
     { label: 'My Orders' }
   ]" />

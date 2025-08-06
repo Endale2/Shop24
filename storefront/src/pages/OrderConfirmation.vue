@@ -1,6 +1,6 @@
 <template>
   <Breadcrumbs :items="[
-    { back: true },
+    { back: true, label: 'Back' },
     { label: 'Home', to: `/${shopSlug}/` },
     { label: 'Order Confirmation' }
   ]" />
@@ -146,13 +146,11 @@
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
 import { getOrderDetail } from '@/services/order';
-import { useCartStore } from '@/stores/cart';
 import { useAuthStore } from '@/stores/auth';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import LoginPrompt from '@/components/LoginPrompt.vue';
 
 const route = useRoute();
-const cartStore = useCartStore();
 const authStore = useAuthStore();
 const shopSlug = route.params.shopSlug as string;
 const order = ref<any>(null);

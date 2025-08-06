@@ -1,6 +1,6 @@
 <template>
   <Breadcrumbs :items="[
-    { back: true },
+    { back: true, label: 'Back' },
     { label: 'Home', to: `/${shopSlug}/` },
     { label: 'Products', to: `/${shopSlug}/products` },
     { label: product?.name || 'Product Detail' }
@@ -79,7 +79,7 @@
         <div class="space-y-2">
           <p class="text-3xl font-bold text-gray-900">
             <template v-if="selectedVariant">
-              <span v-if="selectedVariant.discount_amount > 0" class="text-lg text-gray-400 line-through mr-2">
+              <span v-if="(selectedVariant?.discount_amount ?? 0) > 0" class="text-lg text-gray-400 line-through mr-2">
                 ${{ (selectedVariant.price * quantity).toFixed(2) }}
               </span>
               ${{ currentPrice.toFixed(2) }}
@@ -223,11 +223,9 @@ import { useCartStore } from '@/stores/cart'
 import { useAuthStore } from '@/stores/auth'
 import { useWishlistStore } from '@/stores/wishlist'
 import type { Product } from '@/services/product'
-import Header from '../components/Header.vue'
-import { formatDiscountValue } from '@/utils/discount'
-import { getCurrentShopSlug } from '@/services/shop';
 import Loader from '@/components/Loader.vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
+import { formatDiscountValue } from '@/utils/discount';
 
 // Define interfaces to match your data structure for better type safety
 interface ProductOption {
@@ -241,6 +239,8 @@ interface Variant {
   price: number;
   stock: number;
   image?: string;
+  discount_amount?: number;
+  discount_type?: 'fixed' | 'percentage';
 }
 
 const route = useRoute()
@@ -278,7 +278,7 @@ const galleryImages = computed<string[]>(() => {
     product.value.images.forEach(img => img && imgs.add(img));
   }
   if (Array.isArray(product.value.variants)) {
-    for (const v of product.value.variants) {
+    for (const v of product.value.variants ?? []) {
       if (v.image) imgs.add(v.image);
     }
   }
@@ -299,7 +299,7 @@ const maxQuantity = computed<number>(() => {
 function selectThumbnail(img: string) {
   currentImage.value = img;
   // Optional: Find a variant that matches this image and select it
-  const matchingVariant = product.value?.variants.find(v => v.image === img);
+  const matchingVariant = (product.value?.variants ?? []).find(v => v.image === img);
   if (matchingVariant) {
     selectedVariant.value = matchingVariant;
     validateQuantity();
@@ -346,7 +346,7 @@ const canAddToCart = computed<boolean>(() => {
 })
 
 // --- Fix discount logic for variants ---
-const getVariantDiscount = (variant) => {
+const getVariantDiscount = (variant: Variant) => {
   // If variant has its own discount fields, use them
   if (variant && (variant.discount_amount || variant.discount_type)) {
     return {
@@ -368,7 +368,7 @@ const hasDiscount = computed(() => {
   if (!product.value) return false;
   if (selectedVariant.value) {
     const d = getVariantDiscount(selectedVariant.value)
-    return d.amount > 0
+    return (d.amount ?? 0) > 0
   }
   if (product.value.discounts && product.value.discounts.length > 0) {
     return true
@@ -392,7 +392,7 @@ const savings = computed(() => {
       return (discount * quantity.value);
     }
   } else if (product.value.discounts && product.value.discounts.length > 0) {
-    price = product.value.price;
+    price = product.value.price ?? 0;
     discount = product.value.discounts[0].value;
     type = product.value.discounts[0].type;
     if (type === 'percentage') {
@@ -420,7 +420,7 @@ const currentPrice = computed(() => {
       return (price - discount) * quantity.value;
     }
   } else if (product.value.discounts && product.value.discounts.length > 0) {
-    price = product.value.price;
+    price = product.value.price ?? 0;
     discount = product.value.discounts[0].value;
     type = product.value.discounts[0].type;
     if (type === 'percentage') {
@@ -480,10 +480,12 @@ function getDiscountTypeDescription() {
   if (!product.value) return '';
   if (selectedVariant.value) {
     const d = getVariantDiscount(selectedVariant.value);
-    return formatDiscountValue({ type: d.type, value: d.amount });
+    const type: 'fixed' | 'percentage' = d.type === 'fixed' || d.type === 'percentage' ? d.type : 'fixed';
+    return formatDiscountValue({ type, value: d.amount ?? 0 });
   } else if (product.value.discounts && product.value.discounts.length > 0) {
     const d = product.value.discounts[0];
-    return formatDiscountValue({ type: d.type, value: d.value });
+    const type: 'fixed' | 'percentage' = d.type === 'fixed' || d.type === 'percentage' ? d.type : 'fixed';
+    return formatDiscountValue({ type, value: d.value });
   }
   return '';
 }

@@ -3,6 +3,16 @@ import { register, login, requestOTP, verifyOTP, getProfile, logout, refreshToke
 import { useCartStore } from './cart'
 import router from '../router'
 import { getCurrentShopSlug } from '@/services/shop'
+import type { RegisterPayload, LoginPayload } from '@/services/auth';
+
+interface User {
+  id?: string;
+  _id?: string;
+  email?: string;
+  firstName?: string;
+  lastName?: string;
+  [key: string]: any;
+}
 
 let refreshTimeout: ReturnType<typeof setTimeout> | null = null;
 let proactiveRefreshInterval: ReturnType<typeof setInterval> | null = null;

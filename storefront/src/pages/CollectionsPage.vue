@@ -1,7 +1,7 @@
 <template>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 py-10">
     <Breadcrumbs :items="[
-      { back: true },
+      { back: true, label: 'Back' },
       { label: 'Home', to: `/${shopSlug}/` },
       { label: 'Collections' }
     ]" />
@@ -27,22 +27,17 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRouter, useRoute } from 'vue-router'
+import { useRoute } from 'vue-router'
 import { fetchCollections } from '../services/collections'
 import type { Collection } from '../services/collections'
 import Loader from '@/components/Loader.vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 
-const router = useRouter()
 const route = useRoute()
 const shopSlug = route.params.shopSlug as string
 
 const collections = ref<Collection[]>([])
 const isLoading = ref(true)
-
-function goBack() {
-  router.back()
-}
 
 onMounted(async () => {
   if (!shopSlug) return;

@@ -1,6 +1,6 @@
 <template>
   <Breadcrumbs :items="[
-    { back: true },
+    { back: true, label: 'Back' },
     { label: 'Home', to: `/${shopSlug}/` },
     { label: 'Search Results' }
   ]" />
@@ -44,6 +44,7 @@ import Loader from '@/components/Loader.vue';
 import ProductCard from '@/components/ProductCard.vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 import { fetchProductsSearchPaginated } from '@/services/product';
+import type { Product } from '@/services/product';
 
 const route = useRoute();
 const router = useRouter();
@@ -51,7 +52,7 @@ const shopSlug = route.params.shopSlug as string;
 const searchQuery = ref(route.query.q ? String(route.query.q) : '');
 const currentPage = ref(Number(route.query.page) || 1);
 const pageSize = 20;
-const products = ref([]);
+const products = ref<Product[]>([]);
 const totalProducts = ref(0);
 const isLoading = ref(false);
 

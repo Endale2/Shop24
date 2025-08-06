@@ -423,10 +423,9 @@
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import { useCartStore } from '@/stores/cart';
-import { placeOrder } from '@/services/order';
 import type { CartItem, ItemDiscountDetail, OrderDiscountDetail } from '@/services/cart';
 import { ShoppingCartIcon } from '@heroicons/vue/24/outline';
-import { formatDiscountValue, getDiscountDescription } from '@/utils/discount';
+import { formatDiscountValue } from '@/utils/discount';
 import Loader from '@/components/Loader.vue';
 import LoginPrompt from '@/components/LoginPrompt.vue';
 import { useAuthStore } from '@/stores/auth';
@@ -518,15 +517,6 @@ function getItemDiscountDetails(item: CartItem): ItemDiscountDetail[] {
     discount.product_id === item.product_id && 
     discount.variant_id === (item.variant_id || '')
   );
-}
-
-// Helper function to get discount description - READ ONLY
-function getDiscountDescription(discount: ItemDiscountDetail | OrderDiscountDetail): string {
-  if (discount.type === 'percentage') {
-    return `${discount.value}% discount applied`;
-  } else {
-    return `$${discount.value.toFixed(2)} discount applied`;
-  }
 }
 
 // Helper function to get discount application text

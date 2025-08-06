@@ -15,11 +15,12 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import type { Shop } from '@/services/shop'
 import { fetchShop, getCurrentShopSlug } from '@/services/shop'
 import Header from '@/components/Header.vue'
 import Footer from '@/components/Footer.vue'
 
-const shop = ref(null)
+const shop = ref<Shop|null>(null)
 const error = ref(false)
 const shopSlug = getCurrentShopSlug()
 

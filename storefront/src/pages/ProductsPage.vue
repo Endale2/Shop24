@@ -1,7 +1,7 @@
 <template>
   <div>
     <Breadcrumbs :items="[
-      { back: true },
+      { back: true, label: 'Back' },
       { label: 'Home', to: `/${shopSlug}/` },
       { label: selectedCollection === null ? 'Products' : pageTitle }
     ]" />
@@ -70,8 +70,8 @@
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
 import ProductCard from '@/components/ProductCard.vue';
-import { fetchAllProducts, fetchProductsPaginated } from '@/services/product';
-import { fetchCollections, fetchCollectionDetail } from '@/services/collections';
+import { fetchProductsPaginated } from '@/services/product';
+import { fetchCollections } from '@/services/collections';
 import type { Product } from '@/services/product';
 import type { Collection } from '@/services/collections';
 import Loader from '@/components/Loader.vue';
@@ -92,7 +92,7 @@ async function loadProducts(page = 1) {
   isLoading.value = true;
   try {
     if (!shopSlug) return;
-    const { products: fetchedProducts, total, page: backendPage, limit: backendLimit } = await fetchProductsPaginated(shopSlug, page, pageSize);
+    const { products: fetchedProducts, total, page: backendPage } = await fetchProductsPaginated(shopSlug, page, pageSize);
     products.value = fetchedProducts;
     totalProducts.value = total;
     currentPage.value = backendPage;

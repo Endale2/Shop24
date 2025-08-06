@@ -38,10 +38,8 @@ export const useCartStore = defineStore('cart', {
       if (!slug) return;
       this.loading = true;
       this.error = null;
-
       // Ensure product ID is a string, not an object
       const productId = typeof productData === 'object' && productData !== null ? productData.id : productData;
-
       try {
         const { data } = await cartApi.addToCart(slug, productId, variantId, quantity);
         this.cart = data;
@@ -121,32 +119,19 @@ export const useCartStore = defineStore('cart', {
         this.loading = false;
       }
     },
-    // Method to place order from cart - sends only minimal data to backend
     async placeOrder() {
       const slug = this.shopSlug || getCurrentShopSlug();
       if (!slug || !this.cart?.items || this.cart.items.length === 0) {
         throw new Error('No items in cart to place order');
       }
-      
       this.loading = true;
       this.error = null;
       try {
-        // Send only minimal data to backend - NO pricing information
-        // Backend will calculate all pricing, discounts, and totals securely
         const orderItems = this.cart.items.map(item => ({
           product_id: item.product_id,
           variant_id: item.variant_id || '',
           quantity: item.quantity
-          // Note: NO pricing data sent - backend calculates everything
         }));
-        
-        // Call the order service to place the order
-        // Backend will:
-        // 1. Fetch product prices from database
-        // 2. Calculate all discounts server-side
-        // 3. Apply the best eligible discounts
-        // 4. Calculate final totals
-        // 5. Return the order with server-calculated pricing
         const response = await orderApi.placeOrder(slug, orderItems);
         return response.data;
       } catch (e: any) {
@@ -156,20 +141,15 @@ export const useCartStore = defineStore('cart', {
         this.loading = false;
       }
     },
-    // Method to refresh cart when user logs in
     async refreshCart() {
       const slug = this.shopSlug || getCurrentShopSlug();
       if (slug) {
         await this.fetchCart();
       }
     },
-    // Method to clear cart state when user logs out
     clearCartState() {
       this.cart = null;
       this.error = null;
     },
-  },
-  persist: {
-    paths: ['cart', 'shopSlug'],
   },
 }); 

@@ -45,15 +45,11 @@
   </div>
 </template>
 <script setup lang="ts">
-import { ref, watch, onMounted } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { ref, onMounted } from 'vue';
 import { useAuthStore } from '../stores/auth';
 import { useCartStore } from '../stores/cart';
 
-const route = useRoute();
-const router = useRouter();
 const authStore = useAuthStore();
-const shopSlug = route.params.shopSlug as string;
 const email = ref('');
 const otp = ref('');
 

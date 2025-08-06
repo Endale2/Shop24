@@ -28,7 +28,6 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
-import Header from '../components/Header.vue'
 import Hero from '../components/Hero.vue'
 import ProductCard from '../components/ProductCard.vue'
 import { fetchShop } from '../services/shop'
