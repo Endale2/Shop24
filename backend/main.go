@@ -24,8 +24,6 @@ func main() {
 		log.Println("⚠️  No .env file found, using system env")
 	}
 
-
-
 	// Check for required JWT secret
 	jwtSecret := os.Getenv("JWT_SECRET")
 	if jwtSecret == "" {
@@ -53,19 +51,19 @@ func main() {
 			port := u.Port()
 
 			// 1) Admin Dashboard
-			if host == "localhost" && port == "5173" {
+			if (host == "localhost" && port == "5173") || host == "admin.shop24.sbs" {
 				return true
 			}
 			// 2) Seller root app
-			if host == "localhost" && port == "5174" {
+			if (host == "localhost" && port == "5174") || host == "shop24.sbs" {
 				return true
 			}
 			// 3) Storefront root
-			if (host == "localhost" || host == "127.0.0.1") && port == "5175" {
+			if ((host == "localhost" || host == "127.0.0.1") && port == "5175") || host == "shop24.sbs" {
 				return true
 			}
-			// 4) Any storefront subdomain on 5175, e.g. shop123.localhost:5175 or shop123.127.0.0.1:5175
-			if port == "5175" && (strings.HasSuffix(host, ".localhost") || strings.HasSuffix(host, ".127.0.0.1")) {
+			// 4) Any storefront subdomain on 5175 (dev) or *.shop24.sbs (prod)
+			if (port == "5175" && (strings.HasSuffix(host, ".localhost") || strings.HasSuffix(host, ".127.0.0.1"))) || (strings.HasSuffix(host, ".shop24.sbs") && host != "shop24.sbs" && host != "admin.shop24.sbs") {
 				return true
 			}
 			return false

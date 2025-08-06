@@ -3,6 +3,9 @@ import axios from 'axios';
 // directly within the interceptor on refresh failure, though handling in AdminLayout is fine.
 // import router from '../router';
 
+// Set axios baseURL from Vite env variable
+axios.defaults.baseURL = import.meta.env.VITE_API_BASE_URL || '';
+
 let isRefreshing = false;
 let refreshSubscribers = [];
 

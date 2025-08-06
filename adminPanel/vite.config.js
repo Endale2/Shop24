@@ -12,6 +12,23 @@ export default defineConfig({
     vueDevTools(),
     tailwindcss()
   ],
+  server: {
+    host: 'localhost', // or '0.0.0.0' if you want LAN access
+    port: 5173,
+    proxy: {
+      // Proxy API requests during development to backend
+      '/auth': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false,
+      },
+      '/api': {
+        target: 'http://localhost:8080',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
+  },
   resolve: {
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
