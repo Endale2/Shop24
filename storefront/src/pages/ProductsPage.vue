@@ -2,7 +2,7 @@
   <div>
     <Breadcrumbs :items="[
       { back: true, label: 'Back' },
-      { label: 'Home', to: `/${shopSlug}/` },
+      { label: 'Home', to: `/` },
       { label: selectedCollection === null ? 'Products' : pageTitle }
     ]" />
 
@@ -69,6 +69,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
+import { getCurrentShopSlug } from '@/services/shop';
 import ProductCard from '@/components/ProductCard.vue';
 import { fetchProductsPaginated } from '@/services/product';
 import { fetchCollections } from '@/services/collections';
@@ -78,7 +79,7 @@ import Loader from '@/components/Loader.vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 
 const route = useRoute();
-const shopSlug = route.params.shopSlug as string;
+const shopSlug = getCurrentShopSlug() as string;
 const products = ref<Product[]>([]);
 const collections = ref<Collection[]>([]);
 const selectedCollection = ref<string | null>(null);

@@ -19,7 +19,7 @@
     </div>
   </section>
   <div class="text-center mt-8">
-    <router-link :to="`/${shopSlug}/products`" class="inline-block bg-black text-white py-3 px-8 rounded font-semibold uppercase tracking-wide hover:bg-gray-800 transition-colors">
+    <router-link :to="`/products`" class="inline-block bg-black text-white py-3 px-8 rounded font-semibold uppercase tracking-wide hover:bg-gray-800 transition-colors">
       See All Products
     </router-link>
   </div>
@@ -27,7 +27,6 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
 import Hero from '../components/Hero.vue'
 import ProductCard from '../components/ProductCard.vue'
 import { fetchShop } from '../services/shop'
@@ -35,19 +34,19 @@ import { fetchAllProducts } from '../services/product'
 import type { Shop } from '../services/shop'
 import type { Product } from '../services/product'
 import Loader from '@/components/Loader.vue'
+import { getCurrentShopSlug } from '@/services/shop'
 
-const route = useRoute()
-const shopSlug = route.params.shopSlug as string
 const shop = ref<Shop | null>(null)
 const featured = ref<Product[]>([])
 const isLoading = ref(true)
 
 onMounted(async () => {
   try {
-    if (!shopSlug) return;
-    shop.value = await fetchShop(shopSlug)
+    const slug = getCurrentShopSlug()
+    if (!slug) return
+    shop.value = await fetchShop(slug)
     if (shop.value) {
-      const all = await fetchAllProducts(shopSlug)
+      const all = await fetchAllProducts(slug)
       featured.value = all.slice(0, 4)
     }
   } catch (error) {

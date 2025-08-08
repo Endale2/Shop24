@@ -1,7 +1,7 @@
 <template>
   <Breadcrumbs :items="[
     { back: true, label: 'Back' },
-    { label: 'Home', to: `/${shopSlug}/` },
+    { label: 'Home', to: `/` },
     { label: 'Account' }
   ]" />
   
@@ -137,7 +137,7 @@
             <h3 class="text-lg font-semibold text-gray-900 mb-4 uppercase">Quick Actions</h3>
             <div class="space-y-3">
               <router-link 
-                :to="`/${shopSlug}/orders`" 
+               :to="`/orders`" 
                 class="flex items-center p-3 text-gray-700 hover:bg-gray-50 transition-colors rounded-lg"
               >
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -146,7 +146,7 @@
                 My Orders
               </router-link>
               <router-link 
-                :to="`/${shopSlug}/wishlist`" 
+               :to="`/wishlist`" 
                 class="flex items-center p-3 text-gray-700 hover:bg-gray-50 transition-colors rounded-lg"
               >
                 <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -190,6 +190,7 @@
 <script setup lang="ts">
 import { ref, computed, reactive, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { getCurrentShopSlug } from '@/services/shop';
 import { useAuthStore } from '../stores/auth';
 import { updateCustomerProfile } from '../services/auth';
 import LoginPrompt from '../components/LoginPrompt.vue';
@@ -198,7 +199,7 @@ import Breadcrumbs from '../components/Breadcrumbs.vue';
 const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
-const shopSlug = route.params.shopSlug as string;
+const shopSlug = getCurrentShopSlug() as string;
 const user = computed(() => authStore.user);
 const profileComplete = computed(() => authStore.profileComplete);
 const loading = ref(false);
@@ -236,7 +237,7 @@ async function onCompleteProfile() {
     await updateCustomerProfile(form);
     await authStore.fetchProfile();
     // Redirect to homepage after profile completion
-    router.push({ path: `/${shopSlug}/` });
+    router.push({ path: `/` });
   } catch (e: any) {
     error.value = e.response?.data?.error || 'Failed to update profile';
   } finally {

@@ -2,7 +2,7 @@
   <div class="max-w-7xl mx-auto px-4 sm:px-6 py-10">
     <Breadcrumbs :items="[
       { back: true, label: 'Back' },
-      { label: 'Home', to: `/${shopSlug}/` },
+      { label: 'Home', to: `/` },
       { label: 'Collections' }
     ]" />
     <h1 class="text-3xl font-bold mb-8 text-gray-900 tracking-tight uppercase">Collections</h1>
@@ -12,7 +12,7 @@
         <router-link
           v-for="c in collections"
           :key="c.id"
-          :to="`/${shopSlug}/collections/${c.handle}`"
+          :to="`/collections/${c.handle}`"
           class="bg-white border border-gray-200 rounded-none overflow-hidden group transition-colors hover:border-black cursor-pointer focus:outline-none focus:ring-2 focus:ring-black flex flex-col h-full"
         >
           <img :src="c.image" class="w-full h-56 object-contain bg-gray-50" alt="" />
@@ -28,13 +28,14 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { getCurrentShopSlug } from '@/services/shop'
 import { fetchCollections } from '../services/collections'
 import type { Collection } from '../services/collections'
 import Loader from '@/components/Loader.vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 
 const route = useRoute()
-const shopSlug = route.params.shopSlug as string
+const shopSlug = getCurrentShopSlug() as string
 
 const collections = ref<Collection[]>([])
 const isLoading = ref(true)

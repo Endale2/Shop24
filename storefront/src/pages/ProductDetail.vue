@@ -1,7 +1,7 @@
 <template>
   <Breadcrumbs :items="[
     { back: true, label: 'Back' },
-    { label: 'Home', to: `/${shopSlug}/` },
+    { label: 'Home', to: `/` },
     { label: 'Products', to: `/${shopSlug}/products` },
     { label: product?.name || 'Product Detail' }
   ]" />
@@ -218,6 +218,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
+import { getCurrentShopSlug } from '@/services/shop'
 import { fetchProductDetail } from '@/services/product'
 import { useCartStore } from '@/stores/cart'
 import { useAuthStore } from '@/stores/auth'
@@ -246,7 +247,7 @@ interface Variant {
 const route = useRoute()
 const router = useRouter()
 const handle = route.params.handle as string
-const shopSlug = route.params.shopSlug as string
+const shopSlug = getCurrentShopSlug() as string
 const product = ref<Product | null>(null)
 const selectedVariant = ref<Variant | null>(null)
 const currentImage = ref<string>('')

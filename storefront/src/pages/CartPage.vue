@@ -422,6 +422,7 @@
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { getCurrentShopSlug } from '@/services/shop';
 import { useCartStore } from '@/stores/cart';
 import type { CartItem, ItemDiscountDetail, OrderDiscountDetail } from '@/services/cart';
 import { ShoppingCartIcon } from '@heroicons/vue/24/outline';
@@ -434,7 +435,7 @@ const route = useRoute();
 const cartStore = useCartStore();
 const router = useRouter();
 const authStore = useAuthStore();
-const shopSlug = route.params.shopSlug as string;
+const shopSlug = getCurrentShopSlug() as string;
 const checkoutLoading = ref(false);
 
 // Only fetch cart when user is authenticated and session loading is complete
@@ -582,13 +583,7 @@ async function checkout() {
     await cartStore.clearCart();
     
     // Redirect to order confirmation page
-    router.push({
-      name: 'OrderConfirmation',
-      params: { 
-        shopSlug: cartStore.shopSlug,
-        orderId: order.order?.id || order.order?._id || order.order?.ID
-      }
-    });
+  router.push({ name: 'OrderConfirmation', params: { orderId: order.order?.id || order.order?._id || order.order?.ID } });
   } catch (error: any) {
     console.error('Checkout failed:', error);
     // Show error message, do not clear the cart

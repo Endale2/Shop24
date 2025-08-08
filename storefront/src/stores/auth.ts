@@ -106,9 +106,9 @@ function handlePostLoginRedirect(profileComplete: boolean) {
       router.push(`/${shopSlug}/account`);
     }
   } else {
-    // Fallback to shop selection
-    console.log('[AuthStore] No shop slug, redirecting to shop selection');
-    router.push('/select-shop');
+    // Fallback to root
+    console.log('[AuthStore] No shop slug, redirecting to root');
+    router.push('/');
   }
 }
 
@@ -365,8 +365,8 @@ export const useAuthStore = defineStore('auth', {
         console.log('[AuthStore] Redirecting to login page');
         router.push(`/${shopSlug}/login`);
       } else {
-        console.log('[AuthStore] Redirecting to shop selection');
-        router.push('/select-shop');
+        console.log('[AuthStore] Redirecting to root');
+        router.push('/');
       }
     },
   },

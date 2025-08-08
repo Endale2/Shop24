@@ -1,7 +1,7 @@
 <template>
   <Breadcrumbs :items="[
     { back: true, label: 'Back' },
-    { label: 'Home', to: `/${shopSlug}/` },
+    { label: 'Home', to: `/` },
     { label: 'Wishlist' }
   ]" />
   <div class="wishlist-container">
@@ -93,6 +93,7 @@
 <script setup lang="ts">
 import { onMounted, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { getCurrentShopSlug } from '@/services/shop';
 import { useAuthStore } from '../stores/auth';
 import { useWishlistStore } from '../stores/wishlist';
 import { useCartStore } from '../stores/cart';
@@ -104,10 +105,10 @@ const router = useRouter();
 const authStore = useAuthStore();
 const wishlistStore = useWishlistStore();
 const cartStore = useCartStore();
-const shopSlug = route.params.shopSlug as string;
+const shopSlug = getCurrentShopSlug() as string;
 
 function goToProducts() {
-  router.push({ path: `/${shopSlug}/products` });
+  router.push({ path: `/products` });
 }
 
 function removeFromWishlist(productId: string) {
@@ -141,7 +142,7 @@ watch(
   }
 );
 
-watch(() => route.params.shopSlug, (newSlug) => {
+watch(() => getCurrentShopSlug(), (newSlug) => {
   if (newSlug) {
     fetchWishlistIfAuthenticated();
   }

@@ -1,7 +1,7 @@
 <template>
   <Breadcrumbs :items="[
     { back: true, label: 'Back' },
-    { label: 'Home', to: `/${shopSlug}/` },
+    { label: 'Home', to: `/` },
     { label: 'My Orders' }
   ]" />
   <div class="orders-container">
@@ -106,7 +106,7 @@
         <h3 class="text-lg font-semibold text-gray-900 mb-2">No orders yet</h3>
         <p class="text-gray-600 mb-6">Start shopping to see your orders here</p>
         <router-link 
-          :to="`/${shopSlug}/products`" 
+          :to="`/products`" 
           class="inline-block bg-black text-white py-3 px-6 rounded-md font-bold uppercase tracking-wide hover:bg-gray-800 transition-colors"
         >
           Browse Products
@@ -119,6 +119,7 @@
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
 import { useRoute } from 'vue-router';
+import { getCurrentShopSlug } from '@/services/shop';
 import { useAuthStore } from '../stores/auth';
 import { getCustomerOrders } from '@/services/order';
 import { PhotoIcon } from '@heroicons/vue/24/outline'
@@ -127,7 +128,7 @@ import Breadcrumbs from '@/components/Breadcrumbs.vue';
 
 const route = useRoute();
 const authStore = useAuthStore();
-const shopSlug = route.params.shopSlug as string;
+const shopSlug = getCurrentShopSlug() as string;
 
 const orders = ref<any[]>([]);
 const loading = ref(true);

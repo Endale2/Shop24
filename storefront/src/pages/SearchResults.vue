@@ -1,7 +1,7 @@
 <template>
   <Breadcrumbs :items="[
     { back: true, label: 'Back' },
-    { label: 'Home', to: `/${shopSlug}/` },
+    { label: 'Home', to: `/` },
     { label: 'Search Results' }
   ]" />
   <div class="max-w-7xl mx-auto px-4 py-8">
@@ -40,6 +40,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
+import { getCurrentShopSlug } from '@/services/shop';
 import Loader from '@/components/Loader.vue';
 import ProductCard from '@/components/ProductCard.vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
@@ -48,7 +49,7 @@ import type { Product } from '@/services/product';
 
 const route = useRoute();
 const router = useRouter();
-const shopSlug = route.params.shopSlug as string;
+const shopSlug = getCurrentShopSlug() as string;
 const searchQuery = ref(route.query.q ? String(route.query.q) : '');
 const currentPage = ref(Number(route.query.page) || 1);
 const pageSize = 20;

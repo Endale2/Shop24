@@ -6,23 +6,17 @@ import ProductDetail from '../pages/ProductDetail.vue'
 import CollectionsPage from '../pages/CollectionsPage.vue'
 import CollectionDetail from '../pages/CollectionDetail.vue'
 import AccountPage from '../pages/AccountPage.vue'
-import ShopSelection from '../pages/ShopSelection.vue'
 import LoginPage from '../pages/LoginPage.vue'
 
 import CartPage from '../pages/CartPage.vue'
 import OrderConfirmation from '../pages/OrderConfirmation.vue'
 import WishlistPage from '../pages/WishlistPage.vue'
 import MyOrdersPage from '../pages/MyOrdersPage.vue'
-import { useAuthStore } from '../stores/auth'
-import { useCartStore } from '../stores/cart'
-import { useWishlistStore } from '../stores/wishlist'
-import api from '../services/api'
-
-import { getCurrentShopSlug, clearPersistedShop, setCurrentShopSlug } from '../services/shop'
+import { getShopSlugFromSubdomain } from '../services/api'
 
 const routes = [
   {
-    path: '/:shopSlug',
+    path: '/',
     component: StoreLayout,
     children: [
       { path: '', name: 'Home', component: HomePage },
@@ -39,44 +33,23 @@ const routes = [
       { path: 'search', name: 'SearchResults', component: () => import('../pages/SearchResults.vue') },
     ],
   },
-  // Shop selection page is now the root
-  {
-    path: '/',
-    component: ShopSelection
-  },
 ];
 
 export const router = createRouter({
   history: createWebHistory(),
   routes,
 })
-
-// Global navigation guard: enforce shop slug presence in path
-router.beforeEach(async (to, _from, next) => {
-  // Allow /select-shop and root
-  if (to.path === '/select-shop' || to.path === '/') return next();
-  const shopSlug = getCurrentShopSlug();
-  const toShopSlug = to.params.shopSlug as string | undefined;
-  if (toShopSlug && toShopSlug !== shopSlug) {
-    // User is navigating to a different shop, clear previous shop context
-    clearPersistedShop();
-    setCurrentShopSlug(toShopSlug);
-
-    // Clear all localStorage
-    localStorage.clear();
-
-    // Call backend logout to clear cookies
-    try { await api.post('/auth/customer/logout'); } catch {}
-
-    // Reset Pinia stores
-    useAuthStore().$reset();
-    useCartStore().$reset();
-    useWishlistStore().$reset();
+ 
+// Ensure a valid subdomain shop is present; otherwise redirect to a friendly landing or 404
+router.beforeEach((to, _from, next) => {
+  const slug = getShopSlugFromSubdomain()
+  if (!slug) {
+    // No subdomain provided; allow only the root Home route
+    if (to.name !== 'Home') {
+      return next({ name: 'Home' })
+    }
   }
-  if (!shopSlug && !toShopSlug) {
-    return next('/select-shop');
-  }
-  next();
-});
+  next()
+})
 
 export default router

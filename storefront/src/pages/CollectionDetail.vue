@@ -1,8 +1,8 @@
 <template>
   <Breadcrumbs :items="[
     { back: true, label: 'Back' },
-    { label: 'Home', to: `/${shopSlug}/` },
-    { label: 'Collections', to: `/${shopSlug}/collections` },
+    { label: 'Home', to: `/` },
+    { label: 'Collections', to: `/collections` },
     { label: collection?.title || '' }
   ]" />
   <Loader v-if="isLoading" text="Loading collection..." />
@@ -37,6 +37,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import { useRoute } from 'vue-router'
+import { getCurrentShopSlug } from '@/services/shop'
 import { fetchCollectionDetail } from '@/services/collections'
 import type { CollectionDetail } from '@/services/collections'
 import ProductCard from '@/components/ProductCard.vue'
@@ -45,7 +46,7 @@ import Breadcrumbs from '@/components/Breadcrumbs.vue';
 
 const route = useRoute()
 const handle = route.params.handle as string
-const shopSlug = route.params.shopSlug as string
+const shopSlug = getCurrentShopSlug() as string
 const collection = ref<CollectionDetail | null>(null)
 const isLoading = ref(true)
 

@@ -1,5 +1,4 @@
 import axios from 'axios'
-import { useRoute } from 'vue-router'
 import { useAuthStore } from '../stores/auth'
 import router from '../router'
 import { getCurrentShopSlug } from './shop';
@@ -71,14 +70,8 @@ api.interceptors.response.use(
         const protectedRoutes = ['/account', '/orders', '/checkout', '/cart', '/wishlist']
         const currentPath = router.currentRoute.value.path
         if (protectedRoutes.some(route => currentPath.includes(route))) {
-          const shopSlug = getCurrentShopSlug()
-          if (shopSlug) {
-            console.log('[API Interceptor] Redirecting to login:', `/${shopSlug}/login`)
-            router.push(`/${shopSlug}/login`)
-          } else {
-            console.log('[API Interceptor] Redirecting to shop selection')
-            router.push('/select-shop')
-          }
+          console.log('[API Interceptor] Redirecting to login')
+          router.push('/login')
         }
         return Promise.reject(refreshError)
       }
@@ -90,9 +83,8 @@ api.interceptors.response.use(
 export default api
 
 export function shopUrl(path: string) {
-  const route = useRoute()
-  const shopSlug = route.params.shopSlug as string
-  return `/shops/${shopSlug}${path}`
+  const slug = getShopSlugFromSubdomain() || getCurrentShopSlug()
+  return `/shops/${slug}${path}`
 }
 
 // Alternative function that takes shopSlug as parameter

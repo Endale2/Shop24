@@ -35,17 +35,20 @@ export interface OrderResponse {
 
 export const orderService = {
   async placeOrder(orderData: PlaceOrderRequest): Promise<OrderResponse> {
-    const response = await api.post('/orders', orderData)
+    const shopSlug = getCurrentShopSlug();
+    const response = await api.post(`/shops/${shopSlug}/orders`, orderData)
     return response.data
   },
 
   async getOrders(): Promise<OrderResponse[]> {
-    const response = await api.get('/orders')
+    const shopSlug = getCurrentShopSlug();
+    const response = await api.get(`/shops/${shopSlug}/orders`)
     return response.data
   },
 
   async getOrderDetail(orderId: string): Promise<OrderResponse> {
-    const response = await api.get(`/orders/${orderId}`)
+    const shopSlug = getCurrentShopSlug();
+    const response = await api.get(`/shops/${shopSlug}/orders/${orderId}`)
     return response.data
   },
 

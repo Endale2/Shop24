@@ -1,7 +1,7 @@
 <template>
   <Breadcrumbs :items="[
     { back: true, label: 'Back' },
-    { label: 'Home', to: `/${shopSlug}/` },
+    { label: 'Home', to: `/` },
     { label: 'Order Confirmation' }
   ]" />
   <div class="min-h-screen bg-gray-50 py-8">
@@ -130,7 +130,7 @@
 
         <!-- Action Buttons -->
         <div class="flex flex-col sm:flex-row gap-4">
-          <router-link :to="{ path: `/${shopSlug}/` }" class="flex-1 py-3 px-6 bg-black text-white rounded-md font-bold uppercase tracking-wide hover:bg-gray-800 text-center transition-colors">
+          <router-link :to="{ path: `/` }" class="flex-1 py-3 px-6 bg-black text-white rounded-md font-bold uppercase tracking-wide hover:bg-gray-800 text-center transition-colors">
             Continue Shopping
           </router-link>
           <router-link :to="{ name: 'MyOrders', params: { shopSlug: shopSlug } }" class="flex-1 py-3 px-6 border border-gray-300 text-gray-700 rounded-md font-medium uppercase tracking-wide hover:bg-gray-50 text-center transition-colors">
@@ -145,6 +145,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue';
 import { useRoute } from 'vue-router';
+import { getCurrentShopSlug } from '@/services/shop';
 import { getOrderDetail } from '@/services/order';
 import { useAuthStore } from '@/stores/auth';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
@@ -152,7 +153,7 @@ import LoginPrompt from '@/components/LoginPrompt.vue';
 
 const route = useRoute();
 const authStore = useAuthStore();
-const shopSlug = route.params.shopSlug as string;
+const shopSlug = getCurrentShopSlug() as string;
 const order = ref<any>(null);
 const loading = ref(true);
 const error = ref('');

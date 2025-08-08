@@ -37,7 +37,7 @@ function goToLogin() {
     router.push({ path: `/${shopSlug}/login` });
   } else {
     // Fallback if shop slug isn't available
-    router.push('/select-shop'); 
+    router.push('/'); 
   }
 }
 </script> 

@@ -3,15 +3,12 @@
     <div class="max-w-md mx-auto text-center">
       <h1 class="text-3xl font-bold text-gray-900 tracking-tight uppercase mb-2">Sign In</h1>
       <p class="text-gray-600">Please use the Sign In page to authenticate with your email via OTP.</p>
-      <router-link :to="`/${shopSlug}/login`" class="inline-block bg-black text-white py-3 px-6 rounded-none font-semibold uppercase tracking-wide hover:bg-gray-800 transition-colors mt-8">Go to Sign In</router-link>
+      <router-link :to="`/login`" class="inline-block bg-black text-white py-3 px-6 rounded-none font-semibold uppercase tracking-wide hover:bg-gray-800 transition-colors mt-8">Go to Sign In</router-link>
     </div>
   </div>
 </template>
 <script setup lang="ts">
-import { useRoute } from 'vue-router';
-
-const route = useRoute();
-const shopSlug = route.params.shopSlug as string;
+// No need for route params in subdomain mode
 </script>
 <style scoped>
 .login-container {

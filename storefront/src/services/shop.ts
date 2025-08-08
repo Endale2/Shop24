@@ -1,5 +1,4 @@
-import api, { getShopUrl } from './api'
-import { getShopSlugFromSubdomain } from './api'
+import api, { getShopUrl, getShopSlugFromSubdomain } from './api'
 
 export interface Shop {
   id: string
@@ -33,16 +32,20 @@ export function getPersistedShopData(): Shop | null {
 }
 
 export function getCurrentShopSlug(): string | null {
-  // First check localStorage, then fallback to the first path segment
+  // Prefer subdomain when available
+  const fromSubdomain = getShopSlugFromSubdomain();
+  if (fromSubdomain) return fromSubdomain;
+  // Fallback to persisted value
   const persisted = getPersistedShopSlug();
   if (persisted) return persisted;
+  // Final fallback: first path segment (legacy)
   const path = window.location.pathname;
   const segments = path.split('/').filter(Boolean);
   return segments.length > 0 ? segments[0] : null;
 }
 
 export async function fetchShop(shopSlug?: string): Promise<Shop | null> {
-  const slug = shopSlug || getShopSlugFromSubdomain();
+  const slug = shopSlug || getShopSlugFromSubdomain() || getCurrentShopSlug();
   if (!slug) return null;
   try {
     const response = await api.get(getShopUrl(slug, ''))
