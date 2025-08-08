@@ -189,17 +189,15 @@
 
 <script setup lang="ts">
 import { ref, computed, reactive, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
-import { getCurrentShopSlug } from '@/services/shop';
+import { useRouter } from 'vue-router';
 import { useAuthStore } from '../stores/auth';
 import { updateCustomerProfile } from '../services/auth';
 import LoginPrompt from '../components/LoginPrompt.vue';
 import Breadcrumbs from '../components/Breadcrumbs.vue';
 
-const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
-const shopSlug = getCurrentShopSlug() as string;
+// No direct use; slug retrieved via services when needed
 const user = computed(() => authStore.user);
 const profileComplete = computed(() => authStore.profileComplete);
 const loading = ref(false);

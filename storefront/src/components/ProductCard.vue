@@ -44,7 +44,7 @@
 
 <script setup lang="ts">
 import { ref, computed, defineProps } from 'vue'
-import { useRoute } from 'vue-router'
+// no route import needed in subdomain mode
 
 interface Props {
   product: any
@@ -52,8 +52,7 @@ interface Props {
 const props = defineProps<Props>()
 const product = props.product
 
-const route = useRoute()
-const shopSlug = route.params.shopSlug as string
+// No need for route params in subdomain mode
 
 // Gather all images: main, images[], and variant images
 const allImages = computed(() => {

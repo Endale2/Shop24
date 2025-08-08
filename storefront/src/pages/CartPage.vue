@@ -421,7 +421,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { getCurrentShopSlug } from '@/services/shop';
 import { useCartStore } from '@/stores/cart';
 import type { CartItem, ItemDiscountDetail, OrderDiscountDetail } from '@/services/cart';
@@ -431,7 +431,6 @@ import Loader from '@/components/Loader.vue';
 import LoginPrompt from '@/components/LoginPrompt.vue';
 import { useAuthStore } from '@/stores/auth';
 
-const route = useRoute();
 const cartStore = useCartStore();
 const router = useRouter();
 const authStore = useAuthStore();

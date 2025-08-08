@@ -68,7 +68,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, computed } from 'vue';
-import { useRoute } from 'vue-router';
+// No route params needed in subdomain mode
 import { getCurrentShopSlug } from '@/services/shop';
 import ProductCard from '@/components/ProductCard.vue';
 import { fetchProductsPaginated } from '@/services/product';
@@ -78,7 +78,6 @@ import type { Collection } from '@/services/collections';
 import Loader from '@/components/Loader.vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 
-const route = useRoute();
 const shopSlug = getCurrentShopSlug() as string;
 const products = ref<Product[]>([]);
 const collections = ref<Collection[]>([]);

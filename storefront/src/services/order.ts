@@ -1,4 +1,5 @@
 import api from './api'
+import { getCurrentShopSlug } from './shop'
 
 export interface OrderItem {
   product_id: string
@@ -35,19 +36,19 @@ export interface OrderResponse {
 
 export const orderService = {
   async placeOrder(orderData: PlaceOrderRequest): Promise<OrderResponse> {
-    const shopSlug = getCurrentShopSlug();
+    const shopSlug = getCurrentShopSlug() as string;
     const response = await api.post(`/shops/${shopSlug}/orders`, orderData)
     return response.data
   },
 
   async getOrders(): Promise<OrderResponse[]> {
-    const shopSlug = getCurrentShopSlug();
+    const shopSlug = getCurrentShopSlug() as string;
     const response = await api.get(`/shops/${shopSlug}/orders`)
     return response.data
   },
 
   async getOrderDetail(orderId: string): Promise<OrderResponse> {
-    const shopSlug = getCurrentShopSlug();
+    const shopSlug = getCurrentShopSlug() as string;
     const response = await api.get(`/shops/${shopSlug}/orders/${orderId}`)
     return response.data
   },

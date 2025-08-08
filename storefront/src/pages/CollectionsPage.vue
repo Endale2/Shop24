@@ -27,14 +27,13 @@
 
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
-import { useRoute } from 'vue-router'
+// No route params needed in subdomain mode
 import { getCurrentShopSlug } from '@/services/shop'
 import { fetchCollections } from '../services/collections'
 import type { Collection } from '../services/collections'
 import Loader from '@/components/Loader.vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 
-const route = useRoute()
 const shopSlug = getCurrentShopSlug() as string
 
 const collections = ref<Collection[]>([])

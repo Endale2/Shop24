@@ -92,7 +92,7 @@
 
 <script setup lang="ts">
 import { onMounted, watch } from 'vue';
-import { useRoute, useRouter } from 'vue-router';
+import { useRouter } from 'vue-router';
 import { getCurrentShopSlug } from '@/services/shop';
 import { useAuthStore } from '../stores/auth';
 import { useWishlistStore } from '../stores/wishlist';
@@ -100,7 +100,6 @@ import { useCartStore } from '../stores/cart';
 import LoginPrompt from '@/components/LoginPrompt.vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 
-const route = useRoute();
 const router = useRouter();
 const authStore = useAuthStore();
 const wishlistStore = useWishlistStore();

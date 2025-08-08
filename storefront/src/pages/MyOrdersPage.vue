@@ -118,7 +118,7 @@
 
 <script setup lang="ts">
 import { ref, onMounted, watch } from 'vue';
-import { useRoute } from 'vue-router';
+// No route params needed in subdomain mode
 import { getCurrentShopSlug } from '@/services/shop';
 import { useAuthStore } from '../stores/auth';
 import { getCustomerOrders } from '@/services/order';
@@ -126,7 +126,6 @@ import { PhotoIcon } from '@heroicons/vue/24/outline'
 import LoginPrompt from '@/components/LoginPrompt.vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
 
-const route = useRoute();
 const authStore = useAuthStore();
 const shopSlug = getCurrentShopSlug() as string;
 
