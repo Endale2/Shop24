@@ -18,7 +18,7 @@
             Seller's <span class="text-amber-600 group-hover:text-amber-700">Dash</span>
           </span>
           <span class="text-xs text-gray-500 font-medium -mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-            Power your business  -Ethiopia
+            Power your business  - Ethiopia
           </span>
         </div>
       </router-link>
