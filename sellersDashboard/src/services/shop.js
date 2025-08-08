@@ -62,7 +62,11 @@ export const shopService = {
   async fetchCategories() {
     try {
       const res = await api.get('/seller/categories')
-      return res.data.map(mapCategoryData)
+      if (res.status === 204) {
+        return []
+      }
+      const data = Array.isArray(res.data) ? res.data : []
+      return data.map(mapCategoryData)
     } catch (error) {
       console.error('Error fetching categories:', error)
       throw error

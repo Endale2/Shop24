@@ -234,10 +234,14 @@ func DeleteShop(c *gin.Context) {
 // GetShopCategories returns all available shop categories.
 // GET /seller/categories
 func GetShopCategories(c *gin.Context) {
-	categories, err := categoryService.GetAllShopCategoriesService()
+    categories, err := categoryService.GetAllShopCategoriesService()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch categories"})
 		return
 	}
-	c.JSON(http.StatusOK, categories)
+    // Ensure empty array [] instead of null when there are no categories
+    if categories == nil {
+        categories = make([]models.ShopCategory, 0)
+    }
+    c.JSON(http.StatusOK, categories)
 }
