@@ -76,7 +76,12 @@ export const shopService = {
   async fetchShops() {
     try {
       const res = await api.get('/seller/shops')
-      return res.data.map(mapShopData)
+      // Gracefully handle empty or unexpected responses
+      if (res.status === 204) {
+        return []
+      }
+      const data = Array.isArray(res.data) ? res.data : []
+      return data.map(mapShopData)
     } catch (error) {
       console.error('Error fetching shops:', error)
       throw error

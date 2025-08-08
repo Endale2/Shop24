@@ -120,7 +120,8 @@ func GetShops(c *gin.Context) {
 		return
 	}
 
-	var mine []models.Shop
+    // Ensure we return an empty array [] instead of null when no shops exist
+    mine := make([]models.Shop, 0)
 	for _, s := range all {
 		if s.OwnerID == sellerID {
 			// Add some default metadata for frontend display
