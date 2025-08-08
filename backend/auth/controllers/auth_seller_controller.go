@@ -1,20 +1,79 @@
 package controllers
 
 import (
-	"fmt"
-	"net/http"
-	"os"
-	"time"
+    "fmt"
+    "net/http"
+    "os"
+    "strings"
+    "time"
 
-	"github.com/Endale2/DRPS/auth/services"
-	"github.com/Endale2/DRPS/auth/utils"
-	sellerRepo "github.com/Endale2/DRPS/sellers/repositories"
-	sellerSvc "github.com/Endale2/DRPS/sellers/services"
-	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	"golang.org/x/oauth2"
+    "github.com/Endale2/DRPS/auth/services"
+    "github.com/Endale2/DRPS/auth/utils"
+    sellerRepo "github.com/Endale2/DRPS/sellers/repositories"
+    sellerSvc "github.com/Endale2/DRPS/sellers/services"
+    "github.com/gin-gonic/gin"
+    "go.mongodb.org/mongo-driver/bson"
+    "go.mongodb.org/mongo-driver/bson/primitive"
+    "golang.org/x/oauth2"
 )
+
+// cookieDomainForRequest determines the cookie Domain attribute for the current request.
+// - Local (localhost/127.0.0.1): return empty string to create a host-only cookie (best for localhost)
+// - Production: default to "api.shop24.sbs" unless SELLER_COOKIE_DOMAIN is set
+func cookieDomainForRequest(c *gin.Context) string {
+    if env := os.Getenv("SELLER_COOKIE_DOMAIN"); env != "" {
+        return env
+    }
+    host := c.Request.Host // may include port
+    // strip port
+    if idx := strings.Index(host, ":"); idx >= 0 {
+        host = host[:idx]
+    }
+    if host == "localhost" || host == "127.0.0.1" {
+        return "" // host-only cookie for localhost
+    }
+    // default production API host
+    return "api.shop24.sbs"
+}
+
+// setSellerCookie sets an HTTP-only cookie with SameSite=Lax and Secure=false (HTTP environments),
+// working for both local and production (given both are served over HTTP).
+func setSellerCookie(c *gin.Context, name, value string, maxAge time.Duration) {
+    domain := cookieDomainForRequest(c)
+    cookie := &http.Cookie{
+        Name:     name,
+        Value:    value,
+        Path:     "/",
+        HttpOnly: true,
+        Secure:   false, // HTTP environments; set to true when migrating to HTTPS
+        SameSite: http.SameSiteLaxMode,
+        Expires:  time.Now().Add(maxAge),
+        MaxAge:   int(maxAge.Seconds()),
+    }
+    if domain != "" {
+        cookie.Domain = domain
+    }
+    http.SetCookie(c.Writer, cookie)
+}
+
+// clearSellerCookie clears a cookie by setting MaxAge to -1 with matching attributes
+func clearSellerCookie(c *gin.Context, name string) {
+    domain := cookieDomainForRequest(c)
+    cookie := &http.Cookie{
+        Name:     name,
+        Value:    "",
+        Path:     "/",
+        HttpOnly: true,
+        Secure:   false,
+        SameSite: http.SameSiteLaxMode,
+        Expires:  time.Now().Add(-time.Hour),
+        MaxAge:   -1,
+    }
+    if domain != "" {
+        cookie.Domain = domain
+    }
+    http.SetCookie(c.Writer, cookie)
+}
 
 // SellerOAuthRedirect redirects to Google’s OAuth consent page.
 func SellerOAuthRedirect(c *gin.Context) {
@@ -41,9 +100,9 @@ func SellerOAuthCallback(c *gin.Context) {
 		return
 	}
 
-	// 3. Set HTTP‐only cookies so the browser will send them automatically
-	c.SetCookie("access_token", at, int((5 * time.Minute).Seconds()), "/", "", false, true)
-	c.SetCookie("refresh_token", rt, int((7 * 24 * time.Hour).Seconds()), "/", "", false, true)
+    // 3. Set HTTP-only cookies (SameSite=Lax, Secure=false for HTTP), domain varies by env
+    setSellerCookie(c, "access_token", at, 5*time.Minute)
+    setSellerCookie(c, "refresh_token", rt, 7*24*time.Hour)
 
 	// 4. Redirect into your SPA:
 	//    replace `http://localhost:5174/shops` with your real front-end URL
@@ -75,7 +134,7 @@ func SellerRefresh(c *gin.Context) {
 		return
 	}
 
-	c.SetCookie("access_token", at, int((5 * time.Minute).Seconds()), "/", "", false, true)
+    setSellerCookie(c, "access_token", at, 5*time.Minute)
 	c.JSON(http.StatusOK, gin.H{"message": "access token refreshed"})
 }
 
@@ -172,7 +231,7 @@ func UpdateCurrentSeller(c *gin.Context) {
 
 // SellerLogout clears both auth cookies.
 func SellerLogout(c *gin.Context) {
-	c.SetCookie("access_token", "", -1, "/", "", false, true)
-	c.SetCookie("refresh_token", "", -1, "/", "", false, true)
+    clearSellerCookie(c, "access_token")
+    clearSellerCookie(c, "refresh_token")
 	c.JSON(http.StatusOK, gin.H{"message": "seller logged out"})
 }
