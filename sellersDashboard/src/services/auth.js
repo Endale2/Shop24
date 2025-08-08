@@ -63,7 +63,7 @@ export const authService = {
     const redirectUri = encodeURIComponent(returnTo)
 
     // Hit your backend's OAuth redirect endpoint:
-    const apiBase =  'http://api.shop24.sbs'   // import.meta.env.VITE_API_BASE // || 'http://api.shop24.sbs'
+    const apiBase = import.meta?.env?.VITE_API_BASE || (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://localhost:8080' : 'http://api.shop24.sbs')
     window.location.href =
       `${apiBase}/auth/seller/oauth/google?redirect_uri=${redirectUri}`
   },

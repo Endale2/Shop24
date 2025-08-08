@@ -1,7 +1,19 @@
 import axios from 'axios'
 
+// Determine API base dynamically for local vs production
+function resolveApiBase() {
+  const envBase = import.meta?.env?.VITE_API_BASE
+  if (envBase) return envBase
+  const host = window.location.hostname
+  if (host === 'localhost' || host === '127.0.0.1') {
+    // mirror the current dev host to avoid cookie host mismatches
+    return `http://${host}:8080`
+  }
+  return 'http://api.shop24.sbs'
+}
+
 const api = axios.create({
-  baseURL: 'http://api.shop24.sbs',
+  baseURL: resolveApiBase(),
   withCredentials: true,
 })
 
