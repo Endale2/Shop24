@@ -34,7 +34,7 @@ const route = useRoute();
 function goToLogin() {
   const shopSlug = route.params.shopSlug as string;
   if (shopSlug) {
-    router.push({ path: `/${shopSlug}/login` });
+    router.push({ path: `/login` });
   } else {
     // Fallback if shop slug isn't available
     router.push('/'); 

@@ -1,7 +1,7 @@
 <template>
   <header class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
     <div class="flex items-center justify-between max-w-7xl mx-auto px-4 sm:px-6 py-4">
-      <router-link :to="{ path: `/${shopSlug}/` }" class="flex items-center space-x-4" aria-label="Home">
+      <router-link :to="{ path: `/` }" class="flex items-center space-x-4" aria-label="Home">
         <img
           v-if="shop?.image"
           :src="shop.image"
@@ -30,7 +30,7 @@
 
         <nav class="flex items-center space-x-4 lg:space-x-6 text-base font-light">
           <router-link
-            :to="{ path: `/${shopSlug}/products` }"
+            :to="{ path: `/products` }"
             class="text-gray-600 hover:text-black transition flex items-center"
             :class="{ 'font-semibold text-black': isActive('/products') }"
             aria-label="Products"
@@ -38,7 +38,7 @@
             <span>Products</span>
           </router-link>
           <router-link
-            :to="{ path: `/${shopSlug}/collections` }"
+            :to="{ path: `/collections` }"
             class="text-gray-600 hover:text-black transition flex items-center"
             :class="{ 'font-semibold text-black': isActive('/collections') }"
             aria-label="Collections"
@@ -49,7 +49,7 @@
 
         <div class="flex items-center space-x-3 lg:space-x-5">
           <!-- Wishlist -->
-          <router-link :to="{ path: `/${shopSlug}/wishlist` }" class="relative group" title="Wishlist" aria-label="Wishlist">
+          <router-link :to="{ path: `/wishlist` }" class="relative group" title="Wishlist" aria-label="Wishlist">
             <component :is="isActive('/wishlist') ? HeartIconSolid : HeartIcon" class="w-6 h-6 transition-colors" :class="isActive('/wishlist') ? 'text-red-500' : 'text-gray-600 group-hover:text-red-500'" />
             <span 
               v-if="authStore.user && wishlistCount > 0"
@@ -59,7 +59,7 @@
             </span>
           </router-link>
           <!-- Cart -->
-          <router-link :to="{ path: `/${shopSlug}/cart` }" class="relative group" title="Cart" aria-label="Cart">
+          <router-link :to="{ path: `/cart` }" class="relative group" title="Cart" aria-label="Cart">
             <component :is="isActive('/cart') ? ShoppingBagIconSolid : ShoppingBagIcon" class="w-6 h-6 transition-colors" :class="isActive('/cart') ? 'text-black' : 'text-gray-600 group-hover:text-black'" />
             <span 
               v-if="cartItemCount > 0"
@@ -86,9 +86,9 @@
                   <p class="text-xs text-gray-500 truncate">{{ user.email }}</p>
                 </div>
                 <div class="py-1">
-                  <router-link :to="{ path: `/${shopSlug}/account` }" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">My Account</router-link>
-                  <router-link :to="{ path: `/${shopSlug}/orders` }" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">My Orders</router-link>
-                  <router-link :to="{ path: `/${shopSlug}/wishlist` }" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">Wishlist</router-link>
+                  <router-link :to="{ path: `/account` }" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">My Account</router-link>
+                  <router-link :to="{ path: `/orders` }" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">My Orders</router-link>
+                  <router-link :to="{ path: `/wishlist` }" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 transition-colors">Wishlist</router-link>
                 </div>
                 <div class="border-t border-gray-100 py-1">
                   <button @click="logout" class="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">Logout</button>
@@ -96,7 +96,7 @@
               </div>
             </transition>
           </div>
-          <router-link v-else :to="{ path: `/${shopSlug}/login` }" class="group" title="Login" aria-label="Login">
+          <router-link v-else :to="{ path: `/login` }" class="group" title="Login" aria-label="Login">
             <UserIcon class="w-6 h-6 text-gray-600 group-hover:text-black transition-colors" />
           </router-link>
         </div>
@@ -120,14 +120,14 @@
           <button @click="isMobileMenuOpen = false" class="self-end mb-4 text-gray-400 hover:text-black" aria-label="Close menu">
             <XMarkIcon class="w-6 h-6" />
           </button>
-          <router-link :to="{ path: `/${shopSlug}/products` }" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded">Products</router-link>
-          <router-link :to="{ path: `/${shopSlug}/collections` }" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded">Collections</router-link>
-          <router-link :to="{ path: `/${shopSlug}/wishlist` }" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded">Wishlist</router-link>
-          <router-link :to="{ path: `/${shopSlug}/cart` }" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded">Cart</router-link>
-          <router-link v-if="user" :to="{ path: `/${shopSlug}/account` }" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded">My Account</router-link>
-          <router-link v-if="user" :to="{ path: `/${shopSlug}/orders` }" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded">My Orders</router-link>
+          <router-link :to="{ path: `/products` }" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded">Products</router-link>
+          <router-link :to="{ path: `/collections` }" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded">Collections</router-link>
+          <router-link :to="{ path: `/wishlist` }" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded">Wishlist</router-link>
+          <router-link :to="{ path: `/cart` }" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded">Cart</router-link>
+          <router-link v-if="user" :to="{ path: `/account` }" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded">My Account</router-link>
+          <router-link v-if="user" :to="{ path: `/orders` }" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded">My Orders</router-link>
           <button v-if="user" @click="logout" class="block w-full text-left px-4 py-2 text-red-600 hover:bg-red-50 rounded">Logout</button>
-          <router-link v-else :to="{ path: `/${shopSlug}/login` }" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded">Login</router-link>
+          <router-link v-else :to="{ path: `/login` }" class="block px-4 py-2 text-gray-700 hover:bg-gray-50 rounded">Login</router-link>
         </div>
       </div>
     </transition>
@@ -202,7 +202,7 @@ function onSearchInput() {
   if (searchTimeout) clearTimeout(searchTimeout);
   searchTimeout = setTimeout(() => {
     if (searchInput.value.trim()) {
-      router.push({ path: `/${shopSlug}/search`, query: { q: searchInput.value.trim() } });
+      router.push({ path: `/search`, query: { q: searchInput.value.trim() } });
     }
   }, 400);
 }
@@ -259,9 +259,7 @@ function closeDropdown() {
 async function logout() {
   await authStore.logout();
   closeDropdown();
-  if (shopSlug) {
-    router.push({ path: `/${shopSlug}/login` });
-  }
+  router.push({ path: `/login` });
 }
 </script>
 

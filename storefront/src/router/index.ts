@@ -12,7 +12,7 @@ import CartPage from '../pages/CartPage.vue'
 import OrderConfirmation from '../pages/OrderConfirmation.vue'
 import WishlistPage from '../pages/WishlistPage.vue'
 import MyOrdersPage from '../pages/MyOrdersPage.vue'
-import { getShopSlugFromSubdomain } from '../services/api'
+import { getCurrentShopSlug } from '../services/shop'
 
 const routes = [
   {
@@ -42,12 +42,11 @@ export const router = createRouter({
  
 // Ensure a valid subdomain shop is present; otherwise redirect to a friendly landing or 404
 router.beforeEach((to, _from, next) => {
-  const slug = getShopSlugFromSubdomain()
-  if (!slug) {
-    // No subdomain provided; allow only the root Home route
-    if (to.name !== 'Home') {
-      return next({ name: 'Home' })
-    }
+  const slug = getCurrentShopSlug()
+  // If there is no slug at all (no subdomain and no configured default),
+  // only allow Home and Login to render a friendly experience
+  if (!slug && to.name !== 'Home' && to.name !== 'Login') {
+    return next({ name: 'Home' })
   }
   next()
 })

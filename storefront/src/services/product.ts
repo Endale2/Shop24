@@ -86,6 +86,17 @@ export async function fetchProductsSearchPaginated(shopSlug: string, q: string, 
     const response = await api.get(getShopUrl(shopSlug, `/products/search?q=${encodeURIComponent(q)}&page=${page}&limit=${limit}`));
     return response.data;
   } catch (error) {
+    // Fallback for possible backend route without slash: /productssearch
+    const status = (error as any)?.response?.status;
+    if (status === 404) {
+      try {
+        const response = await api.get(getShopUrl(shopSlug, `/productssearch?q=${encodeURIComponent(q)}&page=${page}&limit=${limit}`));
+        return response.data;
+      } catch (e2) {
+        console.error('Failed to search products (including fallback):', e2);
+        return { products: [], total: 0, page: 1, limit };
+      }
+    }
     console.error('Failed to search products:', error);
     return { products: [], total: 0, page: 1, limit };
   }

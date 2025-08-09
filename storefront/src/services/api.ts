@@ -3,8 +3,12 @@ import { useAuthStore } from '../stores/auth'
 import router from '../router'
 import { getCurrentShopSlug } from './shop';
 
+const host = window.location.hostname
+const isLocalHost = host === 'localhost' || host === '127.0.0.1' || host.endsWith('.localhost')
+const resolvedBaseURL = isLocalHost ? 'http://localhost:8080' : 'http://api.shop24.sbs'
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080',
+  baseURL: resolvedBaseURL,
   withCredentials: true,
 })
 

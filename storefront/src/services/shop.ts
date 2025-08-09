@@ -38,10 +38,10 @@ export function getCurrentShopSlug(): string | null {
   // Fallback to persisted value
   const persisted = getPersistedShopSlug();
   if (persisted) return persisted;
-  // Final fallback: first path segment (legacy)
-  const path = window.location.pathname;
-  const segments = path.split('/').filter(Boolean);
-  return segments.length > 0 ? segments[0] : null;
+  // Dev convenience: allow an env-provided default when running without subdomain
+  const envDefault = (import.meta as any).env?.VITE_DEFAULT_SHOP_SLUG as string | undefined
+  if (envDefault) return envDefault;
+  return null;
 }
 
 export async function fetchShop(shopSlug?: string): Promise<Shop | null> {

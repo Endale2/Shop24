@@ -2,7 +2,7 @@
   <Breadcrumbs :items="[
     { back: true, label: 'Back' },
     { label: 'Home', to: `/` },
-    { label: 'Products', to: `/${shopSlug}/products` },
+    { label: 'Products', to: `/products` },
     { label: product?.name || 'Product Detail' }
   ]" />
   <Loader v-if="isLoading" text="Loading product..." />
@@ -474,7 +474,7 @@ async function addToCart() {
 }
 
 function goToLogin() {
-  router.push({ name: 'Login', params: { shopSlug: shopSlug } });
+  router.push({ name: 'Login' });
 }
 
 function getDiscountTypeDescription() {

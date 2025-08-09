@@ -99,11 +99,11 @@ function handlePostLoginRedirect(profileComplete: boolean) {
     if (profileComplete) {
       // Redirect to homepage if profile is complete
       console.log('[AuthStore] Profile complete, redirecting to homepage');
-      router.push(`/${shopSlug}/`);
+      router.push(`/`);
     } else {
       // Redirect to account page if profile is incomplete
       console.log('[AuthStore] Profile incomplete, redirecting to account page');
-      router.push(`/${shopSlug}/account`);
+      router.push(`/account`);
     }
   } else {
     // Fallback to root
@@ -363,7 +363,7 @@ export const useAuthStore = defineStore('auth', {
       const shopSlug = getCurrentShopSlug();
       if (shopSlug) {
         console.log('[AuthStore] Redirecting to login page');
-        router.push(`/${shopSlug}/login`);
+        router.push(`/login`);
       } else {
         console.log('[AuthStore] Redirecting to root');
         router.push('/');
