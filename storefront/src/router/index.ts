@@ -48,6 +48,13 @@ router.beforeEach((to, _from, next) => {
   if (!slug && to.name !== 'Home' && to.name !== 'Login') {
     return next({ name: 'Home' })
   }
+  // If route requires auth and user is not authenticated (based on cookie absence), push to login
+  if (to.meta?.requiresAuth) {
+    const hasAccessCookie = /(?:^|; )access_token=/.test(document.cookie)
+    if (!hasAccessCookie) {
+      return next({ name: 'Login' })
+    }
+  }
   next()
 })
 

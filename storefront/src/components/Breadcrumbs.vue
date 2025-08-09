@@ -1,27 +1,29 @@
 <template>
-  <nav class="flex items-center space-x-2 text-sm text-gray-500 mb-6">
-    <template v-for="(item, idx) in items" :key="idx">
-      <template v-if="idx === 0">
-        <button v-if="item.back" @click="$router.back()" class="text-gray-700 hover:text-black flex items-center gap-1 font-medium text-xs mr-2">
+  <nav class="mb-6" aria-label="Breadcrumb">
+    <ol class="flex items-center text-sm text-gray-500">
+      <li v-if="showBack" class="mr-3">
+        <button @click="$router.back()" class="inline-flex items-center gap-1 text-gray-600 hover:text-black font-medium px-2 py-1 rounded transition-colors" aria-label="Go back">
           <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 19l-7-7 7-7"/></svg>
-          Back
+          <span class="uppercase tracking-wide text-xs">Back</span>
         </button>
-      </template>
-      <template v-else>
-        <span>/</span>
-      </template>
-      <template v-if="item.to && idx !== items.length - 1">
-        <router-link :to="item.to" class="hover:underline">{{ item.label }}</router-link>
-      </template>
-      <template v-else>
-        <span class="text-gray-900 font-medium">{{ item.label }}</span>
-      </template>
-    </template>
+      </li>
+      <li v-for="(item, idx) in normalizedItems" :key="idx" class="flex items-center">
+        <template v-if="idx > 0">
+          <span class="mx-2 text-gray-300">/</span>
+        </template>
+        <template v-if="item.to && idx !== normalizedItems.length - 1">
+          <router-link :to="item.to" class="text-gray-600 hover:text-black hover:underline transition-colors">{{ item.label }}</router-link>
+        </template>
+        <template v-else>
+          <span class="text-gray-900 font-semibold">{{ item.label }}</span>
+        </template>
+      </li>
+    </ol>
   </nav>
-</template>
+  </template>
 
 <script setup lang="ts">
-import { defineProps } from 'vue'
+import { defineProps, computed } from 'vue'
 
 interface BreadcrumbItem {
   label: string
@@ -29,5 +31,12 @@ interface BreadcrumbItem {
   back?: boolean // If true, renders a back button
 }
 
-defineProps<{ items: BreadcrumbItem[] }>()
+const props = defineProps<{ items: BreadcrumbItem[] }>()
+
+const showBack = computed(() => props.items.length > 0 && !!props.items[0].back)
+const normalizedItems = computed(() => {
+  // Filter out the first back item for breadcrumb trail
+  const startIdx = showBack.value ? 1 : 0
+  return props.items.slice(startIdx)
+})
 </script> 

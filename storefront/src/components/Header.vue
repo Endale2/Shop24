@@ -161,15 +161,8 @@ import { useAuthStore } from '../stores/auth';
 import { useCartStore } from '../stores/cart';
 import { useWishlistStore } from '../stores/wishlist';
 import { getCurrentShopSlug } from '../services/shop';
-import {
-  MagnifyingGlassIcon,
-  HeartIcon,
-  HeartIcon as HeartIconSolid,
-  ShoppingBagIcon,
-  ShoppingBagIcon as ShoppingBagIconSolid,
-  UserIcon,
-  XMarkIcon
-} from '@heroicons/vue/24/outline';
+import { MagnifyingGlassIcon, HeartIcon, ShoppingBagIcon, UserIcon, XMarkIcon } from '@heroicons/vue/24/outline';
+import { HeartIcon as HeartIconSolid, ShoppingBagIcon as ShoppingBagIconSolid } from '@heroicons/vue/24/solid';
 
 const vClickOutside = {
   mounted(el: any, binding: any) {

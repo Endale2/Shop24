@@ -1,17 +1,18 @@
 package controllers
 
 import (
-	"net/http" // Needed for os.Getenv
-	"time"
+    "net/http" // Needed for os.Getenv
+    "time"
+    "strings"
 
-	authServices "github.com/Endale2/DRPS/auth/services"
-	"github.com/Endale2/DRPS/auth/utils"                          // Ensure utils package has GoogleOAuthConfig and ParseToken
-	customerRepo "github.com/Endale2/DRPS/customers/repositories" // Ensure this path is correct
-	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+    authServices "github.com/Endale2/DRPS/auth/services"
+    "github.com/Endale2/DRPS/auth/utils"                          // Ensure utils package has GoogleOAuthConfig and ParseToken
+    customerRepo "github.com/Endale2/DRPS/customers/repositories" // Ensure this path is correct
+    "github.com/gin-gonic/gin"
+    "go.mongodb.org/mongo-driver/bson/primitive"
 
-	
-	"go.mongodb.org/mongo-driver/bson"
+
+    "go.mongodb.org/mongo-driver/bson"
 )
 
 // Only keep OTP and profile logic for customer authentication
@@ -43,16 +44,18 @@ func CustomerVerifyOTP(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	cust, at, rt, profileComplete, err := authServices.VerifyCustomerOTP(req.Email, req.OTP)
+    cust, at, rt, profileComplete, err := authServices.VerifyCustomerOTP(req.Email, req.OTP)
 	if err != nil {
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
-	// Set cookies for cross-path local dev: Domain=.localhost, Path=/, HttpOnly, Secure=false, SameSite=Lax
-	c.SetCookie("access_token", at, int((5 * time.Minute).Seconds()), "/", "localhost", false, true)
-	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("refresh_token", rt, int((7 * 24 * time.Hour).Seconds()), "/", "localhost", false, true)
-	c.SetSameSite(http.SameSiteLaxMode)
+    // Dynamically set cookie domain and secure flag for dev/prod
+    cookieDomain, secure := resolveCookieDomainAndSecure(c)
+    // Set cookies: Path=/, HttpOnly, SameSite=Lax (same-site across subdomains)
+    c.SetCookie("access_token", at, int((5 * time.Minute).Seconds()), "/", cookieDomain, secure, true)
+    c.SetSameSite(http.SameSiteLaxMode)
+    c.SetCookie("refresh_token", rt, int((7 * 24 * time.Hour).Seconds()), "/", cookieDomain, secure, true)
+    c.SetSameSite(http.SameSiteLaxMode)
 	c.JSON(http.StatusOK, gin.H{"profile": cust, "profileComplete": profileComplete})
 }
 
@@ -75,8 +78,9 @@ func CustomerRefresh(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create access token"})
 		return
 	}
-	c.SetCookie("access_token", at, int((5 * time.Minute).Seconds()), "/", ".localhost", false, true)
-	c.SetSameSite(http.SameSiteLaxMode)
+    cookieDomain, secure := resolveCookieDomainAndSecure(c)
+    c.SetCookie("access_token", at, int((5 * time.Minute).Seconds()), "/", cookieDomain, secure, true)
+    c.SetSameSite(http.SameSiteLaxMode)
 	c.JSON(http.StatusOK, gin.H{"message": "access token refreshed"})
 }
 
@@ -189,9 +193,33 @@ func UpdateCustomerMe(c *gin.Context) {
 
 // CustomerLogout clears auth cookies.
 func CustomerLogout(c *gin.Context) {
-	c.SetCookie("access_token", "", -1, "/", ".localhost", false, true)
-	c.SetSameSite(http.SameSiteLaxMode)
-	c.SetCookie("refresh_token", "", -1, "/", ".localhost", false, true)
-	c.SetSameSite(http.SameSiteLaxMode)
+    cookieDomain, secure := resolveCookieDomainAndSecure(c)
+    c.SetCookie("access_token", "", -1, "/", cookieDomain, secure, true)
+    c.SetSameSite(http.SameSiteLaxMode)
+    c.SetCookie("refresh_token", "", -1, "/", cookieDomain, secure, true)
+    c.SetSameSite(http.SameSiteLaxMode)
 	c.JSON(http.StatusOK, gin.H{"message": "logged out"})
+}
+
+// resolveCookieDomainAndSecure returns the cookie domain and whether the cookie should be Secure
+// Dev: any localhost/127.0.0.1 or *.localhost → domain ".localhost", secure=false
+// Prod: any *.shop24.sbs or api.shop24.sbs → domain ".shop24.sbs", secure depends on TLS/proxy
+func resolveCookieDomainAndSecure(c *gin.Context) (string, bool) {
+    host := c.Request.Host
+    hostname := host
+    if idx := strings.Index(host, ":"); idx != -1 {
+        hostname = host[:idx]
+    }
+
+    // Determine if request is over HTTPS directly or via proxy header
+    secure := c.Request.TLS != nil || strings.EqualFold(c.GetHeader("X-Forwarded-Proto"), "https")
+
+    if hostname == "localhost" || hostname == "127.0.0.1" || strings.HasSuffix(hostname, ".localhost") {
+        return ".localhost", false
+    }
+    if hostname == "api.shop24.sbs" || hostname == "shop24.sbs" || strings.HasSuffix(hostname, ".shop24.sbs") {
+        return ".shop24.sbs", secure
+    }
+    // Default: scope cookie to current host; use secure flag as detected
+    return hostname, secure
 }
