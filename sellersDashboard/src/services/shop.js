@@ -18,6 +18,7 @@ function mapShopData(s) {
     name:        s.Name ?? s.name ?? 'Unnamed Shop',
     slug:        s.Slug ?? s.slug ?? '',
     image:       s.Image ?? s.image ?? null,
+    banner:      s.Banner ?? s.banner ?? null,
     description: s.Description ?? s.description ?? '',
     createdAt:   s.CreatedAt ?? s.createdAt ?? new Date().toISOString(),
     updatedAt:   s.UpdatedAt ?? s.updatedAt ?? new Date().toISOString(),
@@ -39,6 +40,9 @@ function mapShopData(s) {
     revenue:        s.revenue ?? s.Revenue ?? 0,
     rating:         s.rating ?? s.Rating ?? 0,
     review_count:   s.reviewCount ?? s.review_count ?? 0,
+    
+    // Theme customization (for future use)
+    themeColor:  s.themeColor ?? s.theme_color ?? '#10B981',
   }
 }
 
@@ -128,6 +132,7 @@ export const shopService = {
         name:        payload.name,
         slug:        payload.slug,
         image:       null,
+        banner:      null,
         description: payload.description,
         categoryId:  payload.categoryId,
         email:       payload.email,
@@ -144,6 +149,7 @@ export const shopService = {
         revenue: 0,
         rating: 0,
         review_count: 0,
+        themeColor: '#10B981',
       }
     } catch (error) {
       console.error('Error creating shop:', error)
