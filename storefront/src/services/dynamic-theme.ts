@@ -1,5 +1,5 @@
 // Dynamic theme service for theme-driven storefront
-import { ref, reactive, watch } from 'vue'
+import { ref} from 'vue'
 import type { Ref } from 'vue'
 
 // =============== Types ===============
@@ -175,26 +175,22 @@ const CACHE_DURATION = 5 * 60 * 1000 // 5 minutes
 
 // =============== API Functions ===============
 
-const API_BASE = import.meta.env.VITE_API_BASE || 'http://localhost:8080'
+import api, { getShopUrl } from './api'
 
 // Fetch complete storefront configuration
 export async function fetchStorefrontConfig(shopSlug: string): Promise<StorefrontConfig> {
   isLoading.value = true
   error.value = null
-  
+
   try {
-    const response = await fetch(`${API_BASE}/shops/${shopSlug}/storefront`)
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch storefront config: ${response.statusText}`)
-    }
-    
-    const config: StorefrontConfig = await response.json()
-    
+    const response = await api.get(getShopUrl(shopSlug, '/storefront'))
+
+    const config: StorefrontConfig = response.data
+
     // Update global state
     currentStorefront.value = config
     currentTheme.value = config.theme
-    
+
     // Apply dynamic theme
     await applyDynamicTheme(config.theme)
     
@@ -223,13 +219,9 @@ export async function fetchThemeData(shopSlug: string, useCache = true): Promise
   }
   
   try {
-    const response = await fetch(`${API_BASE}/shops/${shopSlug}/theme`)
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch theme data: ${response.statusText}`)
-    }
-    
-    const theme: DynamicTheme = await response.json()
+    const response = await api.get(getShopUrl(shopSlug, '/theme'))
+
+    const theme: DynamicTheme = response.data
     
     // Update cache
     themeCache.set(shopSlug, { data: theme, timestamp: Date.now() })

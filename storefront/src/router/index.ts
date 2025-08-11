@@ -1,9 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import StoreLayout from '../layouts/StoreLayout.vue'
-import HomePage from '../pages/HomePage.vue'
-import ProductsPage from '../pages/ProductsPage.vue'
+import DynamicStoreLayout from '../layouts/DynamicStoreLayout.vue'
+import DynamicHomePage from '../pages/DynamicHomePage.vue'
+import DynamicProductsPage from '../pages/DynamicProductsPage.vue'
+import DynamicCollectionsPage from '../pages/DynamicCollectionsPage.vue'
 import ProductDetail from '../pages/ProductDetail.vue'
-import CollectionsPage from '../pages/CollectionsPage.vue'
 import CollectionDetail from '../pages/CollectionDetail.vue'
 import AccountPage from '../pages/AccountPage.vue'
 import LoginPage from '../pages/LoginPage.vue'
@@ -17,12 +17,12 @@ import { getCurrentShopSlug } from '../services/shop'
 const routes = [
   {
     path: '/',
-    component: StoreLayout,
+    component: DynamicStoreLayout,
     children: [
-      { path: '', name: 'Home', component: HomePage },
-      { path: 'products', name: 'Products', component: ProductsPage },
+      { path: '', name: 'Home', component: DynamicHomePage },
+      { path: 'products', name: 'Products', component: DynamicProductsPage },
       { path: 'products/:handle', name: 'ProductDetail', component: ProductDetail },
-      { path: 'collections', name: 'Collections', component: CollectionsPage },
+      { path: 'collections', name: 'Collections', component: DynamicCollectionsPage },
       { path: 'collections/:handle', name: 'CollectionDetail', component: CollectionDetail },
       { path: 'account', name: 'Account', component: AccountPage, meta: { requiresAuth: true } },
       { path: 'login', name: 'Login', component: LoginPage },

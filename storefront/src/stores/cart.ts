@@ -11,6 +11,26 @@ export const useCartStore = defineStore('cart', {
     error: null as null | string,
     shopSlug: getCurrentShopSlug() || '', // Default to subdomain
   }),
+  getters: {
+    itemCount: (state) => {
+      return state.cart?.items?.reduce((total, item) => total + item.quantity, 0) || 0;
+    },
+    totalPrice: (state) => {
+      return state.cart?.total_price || 0;
+    },
+    subtotal: (state) => {
+      return state.cart?.subtotal || 0;
+    },
+    totalDiscount: (state) => {
+      return state.cart?.total_discount || 0;
+    },
+    hasItems: (state) => {
+      return (state.cart?.items?.length || 0) > 0;
+    },
+    isEmpty: (state) => {
+      return (state.cart?.items?.length || 0) === 0;
+    }
+  },
   actions: {
     setShopSlug(slug?: string) {
       this.shopSlug = slug || getCurrentShopSlug() || '';

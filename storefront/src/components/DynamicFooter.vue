@@ -217,6 +217,7 @@ const props = defineProps<Props>()
 const newsletterEmail = ref('')
 const isSubscribing = ref(false)
 const currentYear = new Date().getFullYear()
+const subscriptionSuccess = ref(false)
 
 // =============== Footer Configuration ===============
 

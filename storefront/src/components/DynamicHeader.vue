@@ -33,8 +33,8 @@
         <div class="hidden md:flex flex-1 items-center justify-end space-x-6">
           
           <!-- Search Bar -->
-          <div class="w-full max-w-sm">
-            <div class="relative">
+          <div class="w-full max-w-sm relative">
+            <form @submit.prevent="handleSearchSubmit" class="relative">
               <span class="absolute inset-y-0 left-0 flex items-center pl-3">
                 <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
@@ -43,12 +43,23 @@
               <input
                 type="text"
                 placeholder="Search products..."
-                class="w-full pl-10 pr-4 py-2 border rounded-lg bg-opacity-80 text-sm focus:outline-none focus:ring-2 transition-all duration-300"
+                class="w-full pl-10 pr-10 py-2 border rounded-lg bg-opacity-80 text-sm focus:outline-none focus:ring-2 transition-all duration-300"
                 :style="searchInputStyle"
                 v-model="searchInput"
                 @input="onSearchInput"
+                @focus="showSearchResults = true"
               />
-            </div>
+              <button
+                v-if="searchInput"
+                type="button"
+                @click="clearSearch"
+                class="absolute inset-y-0 right-0 flex items-center pr-3"
+              >
+                <svg class="w-4 h-4 text-gray-400 hover:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+              </button>
+            </form>
           </div>
 
           <!-- Dynamic Navigation Items -->
@@ -188,8 +199,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { useCartStore } from '@/stores/cart'
 import type { ShopInfo, DynamicTheme, NavigationConfig, ComponentConfig } from '@/services/dynamic-theme'
 
 // =============== Props ===============
@@ -206,9 +218,15 @@ const props = defineProps<Props>()
 // =============== Reactive State ===============
 
 const route = useRoute()
+const router = useRouter()
+const cartStore = useCartStore()
 const searchInput = ref('')
 const showMobileMenu = ref(false)
-const cartItemCount = ref(0) // TODO: Connect to cart state
+const searchResults = ref([])
+const showSearchResults = ref(false)
+
+// Get cart item count from store
+const cartItemCount = computed(() => cartStore.itemCount)
 
 // =============== Default Navigation ===============
 
@@ -385,10 +403,68 @@ function toggleMobileMenu() {
   showMobileMenu.value = !showMobileMenu.value
 }
 
-function onSearchInput() {
-  // TODO: Implement search functionality
-  console.log('Search:', searchInput.value)
+async function onSearchInput() {
+  if (!searchInput.value.trim()) {
+    showSearchResults.value = false
+    searchResults.value = []
+    return
+  }
+
+  // Debounced search implementation
+  if (searchInput.value.length >= 2) {
+    try {
+      // TODO: Implement actual search API call
+      console.log('Searching for:', searchInput.value)
+      showSearchResults.value = true
+
+      // Simulate search results
+      searchResults.value = []
+    } catch (error) {
+      console.error('Search error:', error)
+    }
+  }
 }
+
+function handleSearchSubmit() {
+  if (searchInput.value.trim()) {
+    router.push({
+      path: '/search',
+      query: { q: searchInput.value.trim() }
+    })
+    showMobileMenu.value = false
+    showSearchResults.value = false
+  }
+}
+
+function clearSearch() {
+  searchInput.value = ''
+  showSearchResults.value = false
+  searchResults.value = []
+}
+
+// Close mobile menu when clicking outside
+function handleClickOutside(event: Event) {
+  const target = event.target as Element
+  if (!target.closest('.mobile-menu-container')) {
+    showMobileMenu.value = false
+  }
+}
+
+// =============== Watchers ===============
+
+// Close mobile menu on route change
+watch(route, () => {
+  showMobileMenu.value = false
+})
+
+// Add click outside listener for mobile menu
+watch(showMobileMenu, (isOpen) => {
+  if (isOpen) {
+    document.addEventListener('click', handleClickOutside)
+  } else {
+    document.removeEventListener('click', handleClickOutside)
+  }
+})
 </script>
 
 <style scoped>
