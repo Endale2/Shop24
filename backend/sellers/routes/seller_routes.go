@@ -18,6 +18,21 @@ func SellerRoute(r *gin.Engine) {
 	// 3) /seller/categories — get all categories
 	sellerGroup.GET("/categories", controllers.GetShopCategories)
 
+	// ═════════  Theme Management Routes ═════════
+	// Base theme operations
+	themeGroup := sellerGroup.Group("/themes")
+	{
+		themeGroup.POST("", controllers.CreateTheme)                        // Create custom theme
+		themeGroup.GET("/marketplace", controllers.GetPublicThemes)         // List marketplace themes
+		themeGroup.GET("/my-themes", controllers.GetMyThemes)               // List seller's custom themes
+		themeGroup.GET("/search", controllers.SearchThemes)                 // Search themes
+		themeGroup.GET("/:themeId", controllers.GetTheme)                   // Get specific theme
+		themeGroup.PATCH("/:themeId", controllers.UpdateTheme)              // Update theme
+		themeGroup.DELETE("/:themeId", controllers.DeleteTheme)             // Delete theme
+		themeGroup.GET("/:themeId/presets", controllers.GetThemePresets)    // Get theme presets
+		themeGroup.POST("/seed", controllers.SeedDefaultThemes)             // Seed default themes (dev/admin)
+	}
+
 	// 3) /seller/shops/:shopId
 	shopGroup := sellerGroup.Group("/shops/:shopId")
 	{
@@ -128,6 +143,25 @@ func SellerRoute(r *gin.Engine) {
 			analyticsGroup.GET("/category-sales", controllers.GetShopCategorySales)
 			analyticsGroup.GET("/recent-orders", controllers.GetShopRecentOrders)
 			analyticsGroup.GET("/dashboard", controllers.GetShopDashboardAnalytics) // NEW ENDPOINT
+		}
+
+		// ═════════  Shop Theme & Customization Routes ═════════
+		shopThemeGroup := shopGroup.Group("/themes")
+		{
+			shopThemeGroup.POST("", controllers.CreateShopTheme)                                           // Create shop theme config
+			shopThemeGroup.GET("", controllers.GetShopThemes)                                              // List shop theme configs
+			shopThemeGroup.GET("/active", controllers.GetShopActiveTheme)                                  // Get active theme
+			shopThemeGroup.PATCH("/:shopThemeId", controllers.UpdateShopTheme)                            // Update shop theme
+			shopThemeGroup.POST("/:shopThemeId/publish", controllers.PublishShopTheme)                    // Publish/activate theme
+			shopThemeGroup.DELETE("/:shopThemeId", controllers.DeleteShopTheme)                           // Delete shop theme config
+			shopThemeGroup.POST("/:shopThemeId/presets/:presetId/apply", controllers.ApplyThemePreset)    // Apply preset
+		}
+
+		// ─────  Customization API endpoints ─────
+		customizationGroup := shopGroup.Group("/customization")
+		{
+			customizationGroup.GET("", controllers.GetCustomizationData)         // Get current customization
+			customizationGroup.PATCH("", controllers.UpdateCustomization)        // Update customization
 		}
 
 	}

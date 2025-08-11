@@ -118,7 +118,8 @@ import {
   GlobeAltIcon,
   ShoppingBagIcon as ShopIcon,
   CollectionIcon,
-  ViewListIcon
+  ViewListIcon,
+  ColorSwatchIcon
 } from '@heroicons/vue/outline'
 
 const shopStore = useShopStore()
@@ -173,6 +174,12 @@ const mainLinks = [
     to: '/dashboard/analytics', 
     icon: ChartBarIcon, 
     label: 'Analytics',
+    badge: null
+  },
+  { 
+    to: '/dashboard/customization', 
+    icon: ColorSwatchIcon, 
+    label: 'Customization',
     badge: null
   },
   { 

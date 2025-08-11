@@ -27,6 +27,10 @@ type Shop struct {
 	Status     string `bson:"status,omitempty" json:"status,omitempty"`         // Shop status (active, inactive, suspended)
 	IsVerified bool   `bson:"isVerified,omitempty" json:"isVerified,omitempty"` // Shop verification status
 
+	// Theme Configuration
+	ThemeColor  string `bson:"themeColor,omitempty" json:"themeColor,omitempty"`   // Primary theme color
+	ThemeConfig string `bson:"themeConfig,omitempty" json:"themeConfig,omitempty"` // JSON string of theme configuration
+
 	// Analytics & Metrics
 	CustomerCount int     `bson:"customerCount,omitempty" json:"customerCount,omitempty"` // Number of customers
 	ProductCount  int     `bson:"productCount,omitempty" json:"productCount,omitempty"`   // Number of products

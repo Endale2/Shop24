@@ -64,6 +64,13 @@ const routes = [
       { path: 'discounts/:discountId',name: 'DiscountDetail', component: () => import('@/pages/discounts/DiscountDetailPage.vue'), props: true },
       { path: 'discounts/:discountId/edit', name: 'EditDiscount', component: () => import('@/pages/discounts/EditDiscountPage.vue'), props: true },
       { path: 'analytics',            name: 'Analytics',      component: () => import('@/pages/analytics/AnalyticsPage.vue') },
+      { path: 'customization',        name: 'Customization',  component: () => import('@/pages/customization/CustomizationPage.vue') },
+      { path: 'customization/theme',  name: 'ThemeCustomization', component: () => import('@/pages/customization/ThemePage.vue') },
+      { path: 'customization/layout', name: 'LayoutCustomization', component: () => import('@/pages/customization/LayoutPage.vue') },
+      { path: 'customization/typography', name: 'TypographyCustomization', component: () => import('@/pages/customization/TypographyPage.vue') },
+      { path: 'customization/custom-css', name: 'CustomCSSCustomization', component: () => import('@/pages/customization/CustomCSSPage.vue') },
+      { path: 'customization/mobile', name: 'MobileCustomization', component: () => import('@/pages/customization/MobilePage.vue') },
+      { path: 'customization/seo',    name: 'SEOCustomization', component: () => import('@/pages/customization/SEOPage.vue') },
       { path: 'settings',             name: 'Settings',       component: () => import('@/pages/settings/SettingsPage.vue') },
     ]
   },
