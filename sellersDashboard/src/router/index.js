@@ -4,7 +4,6 @@ import { useAuthStore } from '@/store/auth'
 import { useShopStore } from '@/store/shops'
 
 import LandingPage        from '@/pages/LandingPage.vue'
-import AuthPage           from '@/pages/AuthPage.vue'
 import ProfileCompletion  from '@/pages/ProfileCompletion.vue'
 import ShopSelectionPage  from '@/pages/ShopSelectionPage.vue'
 import CreateShopPage     from '@/pages/CreateShopPage.vue'
@@ -16,7 +15,6 @@ import AddProduct from '@/pages/products/AddProduct.vue'
 
 const routes = [
   { path: '/',              name: 'Landing',       component: LandingPage,      meta: { public: true } },
-  { path: '/auth',          name: 'Auth',          component: AuthPage,         meta: { public: true } },
   { path: '/complete-profile',
     name: 'CompleteProfile',
     component: ProfileCompletion,
@@ -100,7 +98,7 @@ router.beforeEach(async (to, from, next) => {
 
   // 2) Unauthenticated => only public
   if (requiresAuth && !isLoggedIn) {
-    return next({ name: 'Auth' })
+    return next({ name: 'Landing' })
   }
 
   // 3) Logged in users should not hit public routes
