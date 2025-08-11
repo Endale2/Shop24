@@ -25,7 +25,7 @@
       <!-- Product Count Badge -->
       <div
         v-if="collection.product_count && collection.product_count > 0"
-        class="absolute top-3 right-3 px-2 py-1 text-xs font-bold rounded-full"
+        class="absolute top-3 right-3 px-2.5 py-1 text-[11px] font-semibold rounded-full shadow-md ring-1 ring-white/30 transition-transform duration-200 group-hover:scale-105"
         :style="badgeStyle"
       >
         {{ collection.product_count }} {{ collection.product_count === 1 ? 'item' : 'items' }}
@@ -192,18 +192,22 @@ const collectionDescriptionStyle = computed(() => {
   }
 })
 
-// Badge styling
+// Badge styling (use theme primary only)
 const badgeStyle = computed(() => {
+  const primary = props.theme?.colors?.primary || '#10B981'
+  const text = props.theme?.colors?.background || '#FFFFFF'
   return {
-    backgroundColor: props.theme?.colors?.primary || '#10B981',
-    color: props.theme?.colors?.background || 'white'
+    backgroundColor: primary,
+    color: text,
+    border: `1px solid ${primary}55`,
+    boxShadow: '0 6px 12px rgba(0,0,0,0.12)'
   }
 })
 
 // Call-to-action styling
 const ctaStyle = computed(() => {
   return {
-    color: props.theme?.colors?.primary || '#10B981',
+    color: props.theme?.colors?.primary || '#6366F1',
     backgroundColor: 'rgba(255, 255, 255, 0.9)',
     padding: '0.5rem 1rem',
     borderRadius: getBorderRadiusValue(props.theme?.layout?.borderStyle || 'rounded'),

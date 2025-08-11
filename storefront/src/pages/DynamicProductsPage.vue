@@ -1,30 +1,26 @@
 <template>
-  <div class="space-y-8">
-    
-    <!-- Dynamic Breadcrumbs -->
-    <nav class="flex items-center space-x-2 text-sm" :style="breadcrumbStyle">
-      <router-link 
-        :to="{ path: '/' }" 
-        class="hover:opacity-70 transition-opacity"
-        :style="linkStyle"
+  <div class="w-full mx-auto px-4 sm:px-6 lg:px-8 max-w-[var(--container-width)] space-y-8">
+
+    <nav class="flex items-center space-x-2 text-sm font-body">
+      <router-link
+        :to="{ path: '/' }"
+        class="hover:opacity-70 transition-opacity text-primary"
       >
         Home
       </router-link>
-      <svg class="w-4 h-4" :style="separatorStyle" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="w-4 h-4 text-body" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
       </svg>
-      <span :style="currentPageStyle">
+      <span class="text-body font-medium">
         {{ selectedCollection ? getCollectionName(selectedCollection) : 'All Products' }}
       </span>
     </nav>
 
-    <!-- Collection Filter Tabs -->
     <div v-if="collections.length > 0" class="border-b" :style="{ borderBottomColor: theme?.colors?.border || '#E5E7EB' }">
-      <nav class="flex space-x-8 overflow-x-auto pb-2">
+      <nav class="flex space-x-4 overflow-x-auto pb-2 -mb-2">
         <button
           class="flex-shrink-0 py-2 px-1 border-b-2 font-medium text-sm transition-all duration-200"
-          :class="selectedCollection === null ? 'border-primary text-primary' : 'border-transparent text-body hover:text-primary hover:border-gray-300'"
-          :style="getTabStyle(selectedCollection === null)"
+          :class="selectedCollection === null ? 'border-primary text-primary' : 'border-transparent text-body hover:text-primary hover:border-default'"
           @click="selectCollection(null)"
         >
           All Products
@@ -37,8 +33,7 @@
           v-for="collection in collections"
           :key="collection.id"
           class="flex-shrink-0 flex items-center space-x-2 py-2 px-1 border-b-2 font-medium text-sm transition-all duration-200"
-          :class="selectedCollection === collection.id ? 'border-primary text-primary' : 'border-transparent text-body hover:text-primary hover:border-gray-300'"
-          :style="getTabStyle(selectedCollection === collection.id)"
+          :class="selectedCollection === collection.id ? 'border-primary text-primary' : 'border-transparent text-body hover:text-primary hover:border-default'"
           @click="selectCollection(collection.id)"
         >
           <img 
@@ -55,32 +50,27 @@
       </nav>
     </div>
 
-    <!-- Page Header -->
     <div class="text-center space-y-4">
-      <h1 
-        class="font-bold tracking-tight uppercase"
-        :style="pageHeadingStyle"
+      <h1
+        class="font-bold tracking-tight uppercase text-heading font-heading"
         :class="pageHeadingClasses"
       >
         {{ pageTitle }}
       </h1>
-      <p 
+      <p
         v-if="pageDescription"
-        class="max-w-2xl mx-auto"
-        :style="pageDescriptionStyle"
+        class="max-w-2xl mx-auto text-body font-body"
       >
         {{ pageDescription }}
       </p>
     </div>
 
-    <!-- Filters and Sorting -->
-    <div class="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
-      <!-- Filter Options -->
-      <div class="flex items-center space-x-4">
-        <label class="text-sm font-medium" :style="labelStyle">Filter by:</label>
+    <div class="flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-2">
+        <label class="text-sm font-medium whitespace-nowrap text-heading font-body">Filter by:</label>
         <select 
           v-model="selectedPriceRange"
-          class="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all"
+          class="min-w-[120px] px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all"
           :style="selectStyle"
         >
           <option value="">All Prices</option>
@@ -91,12 +81,11 @@
         </select>
       </div>
       
-      <!-- Sort Options -->
-      <div class="flex items-center space-x-4">
-        <label class="text-sm font-medium" :style="labelStyle">Sort by:</label>
+      <div class="flex items-center gap-2">
+        <label class="text-sm font-medium whitespace-nowrap text-heading font-body">Sort by:</label>
         <select 
           v-model="sortBy"
-          class="px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all"
+          class="min-w-[120px] px-3 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all"
           :style="selectStyle"
         >
           <option value="name">Name</option>
@@ -107,17 +96,14 @@
       </div>
     </div>
 
-    <!-- Loading State -->
     <div v-if="isLoading" class="text-center py-12">
       <div class="animate-spin rounded-full h-8 w-8 border-b-2 mx-auto mb-4" :style="spinnerStyle"></div>
-      <p :style="textStyle">Loading products...</p>
+      <p class="text-body font-body">Loading products...</p>
     </div>
     
-    <!-- Products Grid -->
     <div
       v-else-if="filteredProducts.length > 0"
-      class="grid grid-auto-fit gap-6 animate-fade-in-up"
-      :style="gridStyle"
+      class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 sm:gap-8 lg:gap-10 animate-fade-in-up"
     >
       <DynamicProductCard
         v-for="product in filteredProducts"
@@ -128,7 +114,6 @@
       />
     </div>
     
-    <!-- Empty State -->
     <div v-else class="text-center py-16 space-y-6">
       <div class="w-20 h-20 mx-auto rounded-full flex items-center justify-center" :style="emptyStateIconStyle">
         <svg class="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -136,8 +121,8 @@
         </svg>
       </div>
       <div class="space-y-2">
-        <h3 :style="headingStyle" class="text-xl font-semibold">No Products Found</h3>
-        <p :style="textStyle">
+        <h3 class="text-xl font-semibold text-heading font-heading">No Products Found</h3>
+        <p class="text-body font-body">
           {{ selectedCollection ? 'This collection is empty.' : 'No products available at the moment.' }}
         </p>
       </div>
@@ -150,8 +135,7 @@
       </router-link>
     </div>
 
-    <!-- Pagination -->
-    <div v-if="totalPages > 1" class="flex justify-center items-center space-x-2">
+    <div v-if="totalPages > 1" class="flex justify-center items-center gap-2 flex-wrap">
       <button
         class="px-4 py-2 font-medium rounded-lg transition-all duration-200 hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
         :style="paginationButtonStyle"
@@ -161,7 +145,7 @@
         Previous
       </button>
       
-      <div class="flex items-center space-x-1">
+      <div class="flex items-center gap-1 flex-wrap">
         <button
           v-for="page in visiblePages"
           :key="page"
@@ -187,7 +171,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, watch } from 'vue'
-import DynamicProductCard from '@/components/DynamicProductCard.vue'
+import DynamicProductCard from '../components/DynamicProductCard.vue'
 import { getCurrentShopSlug } from '@/services/shop'
 import { fetchProductsPaginated } from '@/services/product'
 import { fetchCollections } from '@/services/collections'
@@ -288,79 +272,17 @@ const filteredProducts = computed(() => {
   return filtered
 })
 
-// Removed unused productGridClasses - using grid-auto-fit instead
 
-const gridStyle = computed(() => {
-  return {
-    '--grid-columns': props.layout?.gridColumns || '3'
-  }
-})
+// Removed unused productGridClasses - using grid-auto-fit instead
 
 // =============== Computed Styles ===============
 
-// Breadcrumb styling
-const breadcrumbStyle = computed(() => {
-  return {
-    fontFamily: props.theme?.fonts?.body ? `'${props.theme.fonts.body}', sans-serif` : undefined
-  }
-})
+// Breadcrumb styles now use Tailwind token classes (font-body, text-primary, text-body).
 
-const linkStyle = computed(() => {
-  return {
-    color: props.theme?.colors?.primary || '#10B981'
-  }
-})
-
-const separatorStyle = computed(() => {
-  return {
-    color: props.theme?.colors?.bodyText || '#6B7280'
-  }
-})
-
-const currentPageStyle = computed(() => {
-  return {
-    color: props.theme?.colors?.bodyText || '#6B7280',
-    fontWeight: '500'
-  }
-})
-
-// Tab styling
-function getTabStyle(isActive: boolean) {
-  if (!props.theme) return {}
-
-  return {
-    color: isActive ? props.theme.colors?.primary : props.theme.colors?.bodyText,
-    borderBottomColor: isActive ? props.theme.colors?.primary : 'transparent',
-    fontFamily: props.theme.fonts?.body ? `'${props.theme.fonts.body}', sans-serif` : undefined
-  }
-}
-
-// Page heading styles
-const pageHeadingStyle = computed(() => {
-  return {
-    color: props.theme?.colors?.heading || '#1F2937',
-    fontFamily: props.theme?.fonts?.heading ? `'${props.theme.fonts.heading}', sans-serif` : undefined
-  }
-})
-
+// Page heading size class remains dynamic; most styling handled by Tailwind token classes
 const pageHeadingClasses = computed(() => {
   const size = props.theme?.layout?.headerStyle
   return size === 'compact' ? 'text-2xl md:text-3xl' : size === 'large' ? 'text-4xl md:text-5xl' : 'text-3xl md:text-4xl'
-})
-
-const pageDescriptionStyle = computed(() => {
-  return {
-    color: props.theme?.colors?.bodyText || '#6B7280',
-    fontFamily: props.theme?.fonts?.body ? `'${props.theme.fonts.body}', sans-serif` : undefined
-  }
-})
-
-// Form element styles
-const labelStyle = computed(() => {
-  return {
-    color: props.theme?.colors?.heading || '#1F2937',
-    fontFamily: props.theme?.fonts?.body ? `'${props.theme.fonts.body}', sans-serif` : undefined
-  }
 })
 
 const selectStyle = computed(() => {
@@ -399,20 +321,7 @@ const countBadgeStyle = computed(() => {
   }
 })
 
-// Other styles
-const textStyle = computed(() => {
-  return {
-    color: props.theme?.colors?.bodyText || '#6B7280',
-    fontFamily: props.theme?.fonts?.body ? `'${props.theme.fonts.body}', sans-serif` : undefined
-  }
-})
-
-const headingStyle = computed(() => {
-  return {
-    color: props.theme?.colors?.heading || '#1F2937',
-    fontFamily: props.theme?.fonts?.heading ? `'${props.theme.fonts.heading}', sans-serif` : undefined
-  }
-})
+// Other styles removed in favor of Tailwind token classes
 
 const spinnerStyle = computed(() => {
   return {
@@ -493,29 +402,6 @@ watch([selectedPriceRange, sortBy], () => {
 </script>
 
 <style scoped>
-/* Custom grid responsive classes */
-.grid-cols-1 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
-.sm\:grid-cols-2 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
-.lg\:grid-cols-3 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
-.xl\:grid-cols-4 { grid-template-columns: repeat(1, minmax(0, 1fr)); }
-
-@media (min-width: 640px) {
-  .sm\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-}
-
-@media (min-width: 1024px) {
-  .lg\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
-}
-
-@media (min-width: 1280px) {
-  .xl\:grid-cols-4 { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-}
-
-/* Tab hover effects */
-.tab-button:hover {
-  border-bottom-color: var(--color-primary);
-}
-
 /* Loading animation */
 @keyframes spin {
   to { transform: rotate(360deg); }
@@ -523,13 +409,6 @@ watch([selectedPriceRange, sortBy], () => {
 
 .animate-spin {
   animation: spin 1s linear infinite;
-}
-
-/* Focus states */
-select:focus,
-button:focus {
-  ring-width: 2px;
-  ring-color: var(--tw-ring-color);
 }
 
 /* Disabled states */

@@ -7,7 +7,6 @@
     <div :class="containerClasses">
       <div class="flex items-center justify-between" :style="{ height: headerHeight }">
         
-        <!-- Logo and Shop Name -->
         <router-link 
           :to="{ path: '/' }" 
           class="flex items-center space-x-3 hover:opacity-80 transition-opacity"
@@ -29,10 +28,8 @@
           </span>
         </router-link>
 
-        <!-- Desktop Navigation -->
         <div class="hidden md:flex flex-1 items-center justify-end space-x-6">
           
-          <!-- Search Bar -->
           <div class="w-full max-w-sm relative">
             <form @submit.prevent="handleSearchSubmit" class="relative">
               <span class="absolute inset-y-0 left-0 flex items-center pl-3">
@@ -62,7 +59,6 @@
             </form>
           </div>
 
-          <!-- Dynamic Navigation Items -->
           <nav class="flex items-center space-x-6 text-base font-light">
             <router-link
               v-for="item in navigation?.items || defaultNavItems"
@@ -82,10 +78,7 @@
             </router-link>
           </nav>
 
-          <!-- User Actions -->
           <div class="flex items-center space-x-4">
-            
-            <!-- Wishlist -->
             <router-link
               :to="{ path: '/wishlist' }"
               class="p-2 rounded-full transition-all duration-200 hover:scale-110"
@@ -97,7 +90,6 @@
               </svg>
             </router-link>
 
-            <!-- Cart -->
             <router-link
               :to="{ path: '/cart' }"
               class="p-2 rounded-full transition-all duration-200 hover:scale-110 relative"
@@ -107,7 +99,6 @@
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 3h2l.4 2M7 13h10l4-8H5.4m0 0L7 13m0 0l-2.5 5M7 13h10m-10 0L5.5 18M17 13l2.5 5"></path>
               </svg>
-              <!-- Cart badge (dynamic based on actual cart state) -->
               <span 
                 v-if="cartItemCount > 0"
                 class="absolute -top-1 -right-1 rounded-full text-xs font-bold min-w-[18px] h-[18px] flex items-center justify-center"
@@ -117,7 +108,6 @@
               </span>
             </router-link>
 
-            <!-- Account -->
             <router-link
               :to="{ path: '/account' }"
               class="p-2 rounded-full transition-all duration-200 hover:scale-110"
@@ -131,7 +121,6 @@
           </div>
         </div>
 
-        <!-- Mobile Menu Button -->
         <button
           @click="toggleMobileMenu"
           class="md:hidden p-2 rounded-lg transition-colors"
@@ -146,55 +135,53 @@
       </div>
     </div>
 
-    <!-- Mobile Menu -->
-    <div 
-      v-if="showMobileMenu"
-      class="md:hidden border-t transition-all duration-300"
-      :style="mobileMenuStyle"
-    >
-      <div :class="containerClasses">
-        <div class="py-4 space-y-3">
-          
-          <!-- Mobile Search -->
-          <div class="relative">
-            <span class="absolute inset-y-0 left-0 flex items-center pl-3">
-              <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
-              </svg>
-            </span>
-            <input
-              type="text"
-              placeholder="Search products..."
-              class="w-full pl-10 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all"
-              :style="searchInputStyle"
-              v-model="searchInput"
-              @input="onSearchInput"
-            />
-          </div>
+    <Transition name="mobile-menu-slide">
+      <div 
+        v-if="showMobileMenu"
+        class="md:hidden border-t"
+        :style="mobileMenuStyle"
+      >
+        <div :class="containerClasses">
+          <div class="py-4 space-y-3">
+            
+            <div class="relative">
+              <span class="absolute inset-y-0 left-0 flex items-center pl-3">
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+                </svg>
+              </span>
+              <input
+                type="text"
+                placeholder="Search products..."
+                class="w-full pl-10 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all"
+                :style="searchInputStyle"
+                v-model="searchInput"
+                @input="onSearchInput"
+              />
+            </div>
 
-          <!-- Mobile Navigation -->
-          <nav class="space-y-2">
-            <router-link
-              v-for="item in navigation?.items || defaultNavItems"
-              :key="item.path"
-              :to="{ path: item.path }"
-              class="block py-2 px-3 rounded-lg transition-colors"
-              :style="mobileNavLinkStyle"
-              @click="showMobileMenu = false"
-            >
-              {{ item.label }}
-            </router-link>
-          </nav>
+            <nav class="space-y-2">
+              <router-link
+                v-for="item in navigation?.items || defaultNavItems"
+                :key="item.path"
+                :to="{ path: item.path }"
+                class="block py-2 px-3 rounded-lg transition-colors"
+                :style="mobileNavLinkStyle"
+                @click="showMobileMenu = false"
+              >
+                {{ item.label }}
+              </router-link>
+            </nav>
 
-          <!-- Mobile User Actions -->
-          <div class="pt-3 border-t space-y-2" :style="{ borderColor: theme?.colors?.border || '#E5E7EB' }">
-            <router-link :to="{ path: '/wishlist' }" class="block py-2 px-3 rounded-lg transition-colors" :style="mobileNavLinkStyle">Wishlist</router-link>
-            <router-link :to="{ path: '/cart' }" class="block py-2 px-3 rounded-lg transition-colors" :style="mobileNavLinkStyle">Cart</router-link>
-            <router-link :to="{ path: '/account' }" class="block py-2 px-3 rounded-lg transition-colors" :style="mobileNavLinkStyle">Account</router-link>
+            <div class="pt-3 border-t space-y-2" :style="{ borderColor: theme?.colors?.border || '#E5E7EB' }">
+              <router-link :to="{ path: '/wishlist' }" class="block py-2 px-3 rounded-lg transition-colors" :style="mobileNavLinkStyle">Wishlist</router-link>
+              <router-link :to="{ path: '/cart' }" class="block py-2 px-3 rounded-lg transition-colors" :style="mobileNavLinkStyle">Cart</router-link>
+              <router-link :to="{ path: '/account' }" class="block py-2 px-3 rounded-lg transition-colors" :style="mobileNavLinkStyle">Account</router-link>
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </Transition>
   </header>
 </template>
 
@@ -203,6 +190,9 @@ import { ref, computed, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCartStore } from '@/stores/cart'
 import type { ShopInfo, DynamicTheme, NavigationConfig, ComponentConfig } from '@/services/dynamic-theme'
+
+// The script block remains unchanged as it already handles the logic correctly.
+// Its responsiveness is in the computed properties which return dynamic Tailwind classes and styles.
 
 // =============== Props ===============
 
@@ -272,8 +262,8 @@ const headerClasses = computed(() => {
 })
 
 const containerClasses = computed(() => {
-  const classes = ['mx-auto', 'px-4', 'sm:px-6']
-  
+  const classes = ['w-full', 'mx-auto', 'px-4', 'sm:px-6', 'max-w-[var(--container-width)]']
+
   if (props.theme?.layout?.containerWidth === 'full') {
     classes.push('max-w-none')
   } else if (props.theme?.layout?.containerWidth === 'wide') {
@@ -281,7 +271,7 @@ const containerClasses = computed(() => {
   } else {
     classes.push('max-w-6xl')
   }
-  
+
   return classes
 })
 
@@ -361,10 +351,10 @@ const iconButtonStyle = computed(() => {
 
 // Cart badge styling
 const badgeStyle = computed(() => {
-  if (!props.theme) return { backgroundColor: '#10B981', color: 'white' }
-  
+  if (!props.theme) return { backgroundColor: '#6366F1', color: 'white' }
+
   return {
-    backgroundColor: props.theme.colors?.primary || '#10B981',
+    backgroundColor: props.theme.colors?.primary || '#6366F1',
     color: props.theme.colors?.background || 'white'
   }
 })
@@ -444,7 +434,7 @@ function clearSearch() {
 // Close mobile menu when clicking outside
 function handleClickOutside(event: Event) {
   const target = event.target as Element
-  if (!target.closest('.mobile-menu-container')) {
+  if (showMobileMenu.value && !target.closest('.mobile-menu-container')) {
     showMobileMenu.value = false
   }
 }
@@ -467,24 +457,37 @@ watch(showMobileMenu, (isOpen) => {
 </script>
 
 <style scoped>
-/* Custom hover effects */
-.hover\:opacity-80:hover {
-  opacity: 0.8;
+/* Mobile menu slide-down animation */
+.mobile-menu-slide-enter-active, .mobile-menu-slide-leave-active {
+  transition: all 0.3s ease-in-out;
+  max-height: 500px; /* Adjust as needed for content height */
+  overflow: hidden;
 }
 
-/* Dynamic focus rings */
+.mobile-menu-slide-enter-from, .mobile-menu-slide-leave-to {
+  max-height: 0;
+  opacity: 0;
+}
+
+/* Custom focus rings and hover effects */
 input:focus {
   ring-width: 2px;
   ring-color: var(--tw-ring-color);
 }
-
-/* Mobile menu animations */
-.mobile-menu-enter-active, .mobile-menu-leave-active {
-  transition: all 0.3s ease;
+.hover\:opacity-80:hover {
+  opacity: 0.8;
+}
+.hover\:scale-110:hover {
+  transform: scale(1.1);
+}
+.hover\:bg-transparent\:hover {
+  background-color: transparent;
 }
 
-.mobile-menu-enter-from, .mobile-menu-leave-to {
-  opacity: 0;
-  transform: translateY(-10px);
+/* Custom focus rings */
+input:focus, select:focus {
+  ring-width: 2px;
+  ring-color: var(--tw-ring-color);
+  outline: none;
 }
 </style>

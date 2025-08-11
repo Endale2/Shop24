@@ -1,6 +1,6 @@
 <template>
-  <div class="space-y-8">
-    
+  <div class="w-full mx-auto max-w-[var(--container-width)] px-4 sm:px-6 lg:px-8 space-y-8">
+
     <!-- Dynamic Breadcrumbs -->
     <nav class="flex items-center space-x-2 text-sm" :style="breadcrumbStyle">
       <router-link 

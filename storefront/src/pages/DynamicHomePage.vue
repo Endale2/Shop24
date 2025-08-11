@@ -1,6 +1,6 @@
 <template>
-  <div class="space-y-12">
-    
+  <div class="w-full mx-auto max-w-[var(--container-width)] px-4 sm:px-6 lg:px-8 space-y-12">
+
     <!-- Dynamic Hero Section -->
     <DynamicHero 
       :shop="storefrontConfig?.shop"

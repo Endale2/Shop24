@@ -1,44 +1,45 @@
 <template>
   <router-link
     :to="`/products/${product.slug}`"
-    class="bg-white border border-gray-200 rounded-none p-4 group flex flex-col h-full transition-colors hover:border-black cursor-pointer focus:outline-none focus:ring-2 focus:ring-blue-200 relative"
+    class="group flex flex-col h-full bg-background border border-transparent hover:border-default rounded-[var(--border-radius)] p-4 transition-colors cursor-pointer focus:outline-none focus:ring-2 relative"
+    :style="focusStyle"
     @mouseenter="onHover"
     @mouseleave="onLeave"
   >
     <!-- Discount Badge at Top-Left -->
     <span
       v-if="product.discounts && product.discounts.length > 0"
-      class="absolute top-2 left-2 z-10 px-3 py-1 bg-gradient-to-r from-yellow-200 to-yellow-100 text-yellow-900 text-xs font-bold rounded-full shadow-sm border border-yellow-300 flex items-center gap-1"
-      style="min-width: 60px; justify-content: center; letter-spacing: 0.03em;"
+      class="absolute top-2 left-2 z-10 inline-block px-3 py-1 text-xs font-semibold rounded-full"
+      :style="badgeStyle"
     >
-      <svg class="w-4 h-4 mr-1 text-yellow-500" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M9 14l2-2 4 4m6-2a9 9 0 11-18 0 9 9 0 0118 0z"/>
-      </svg>
       {{ formatDiscount(product.discounts[0]) }}
     </span>
 
-    <!-- Product Image - Fixed Ratio, No Overlay Icons -->
-    <img
-      :src="currentImage"
-      :alt="product.name"
-      class="w-full h-56 object-contain mb-4 bg-gray-50 transition-all duration-200"
-      loading="lazy"
-    />
+    <!-- Product Image - Fixed Ratio, theme-friendly background -->
+    <div class="relative w-full overflow-hidden mb-4 aspect-square" :style="{ backgroundColor: 'rgba(0,0,0,0.03)' }">
+      <img
+        :src="currentImage"
+        :alt="product.name"
+        class="absolute inset-0 w-full h-full object-contain transition-all duration-200"
+        loading="lazy"
+        @error="onImageError"
+      />
+    </div>
 
     <!-- Product Name -->
-    <h2 class="font-semibold text-base mb-1 tracking-wide uppercase text-gray-900 leading-tight line-clamp-1">
+    <h2 class="font-heading text-heading font-semibold text-base mb-1 tracking-wide uppercase leading-tight line-clamp-1">
       {{ product.name }}
     </h2>
 
     <!-- Product Subtitle/Description -->
-    <div class="text-xs text-gray-500 mb-2 line-clamp-2">
+    <div class="text-xs text-body mb-2 line-clamp-2 font-body">
       {{ product.subtitle || product.description }}
     </div>
 
     <!-- Price Section -->
-    <p class="text-gray-900 font-bold text-lg mb-2">
+    <p class="text-heading font-bold text-lg mb-2">
       <template v-if="product.price && product.price > 0 && (!product.variants || product.variants.length === 0)">
-        <span v-if="product.display_price && product.display_price < product.price" class="line-through text-gray-400 mr-2">
+        <span v-if="product.display_price && product.display_price < product.price" class="line-through text-body mr-2">
           ${{ product.price.toFixed(2) }}
         </span>
         <span>
@@ -85,7 +86,43 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
+import { useCurrentTheme } from '@/services/dynamic-theme'
+
+const currentTheme = useCurrentTheme()
+
+// Reactive badge style that matches collection detail page
+const badgeStyle = computed(() => {
+  const theme = currentTheme.value
+
+  // Use theme colors if available, otherwise use collection detail page style
+  if (theme?.colors?.secondary || theme?.colors?.primary) {
+    const badgeColor = theme.colors.secondary || theme.colors.primary
+    const textColor = theme.colors.background || '#FFFFFF'
+
+    return {
+      backgroundColor: badgeColor,
+      color: textColor
+    }
+  }
+
+  // Fallback to collection detail page style (yellow badge)
+  return {
+    backgroundColor: '#FEF3C7', // bg-yellow-100
+    color: '#92400E' // text-yellow-800
+  }
+})
+
+// Watch for theme changes to ensure reactivity
+watch(currentTheme, (newTheme) => {
+  if (newTheme?.colors) {
+    console.log('🎨 Theme loaded, updating product card badge colors')
+  }
+}, { immediate: true })
+
+const focusStyle = computed(() => ({
+  '--tw-ring-color': currentTheme.value?.colors?.primary || '#6366F1'
+}))
 
 interface Product {
   id: string
@@ -117,6 +154,8 @@ interface Product {
   created_at?: string
 }
 
+
+
 interface Props {
   product: Product
 }
@@ -125,15 +164,35 @@ const props = defineProps<Props>()
 
 // =============== Image Management ===============
 const allImages = computed(() => {
-  const images = []
+  const images: string[] = []
   if (props.product.main_image) images.push(props.product.main_image)
-  if (props.product.images) images.push(...props.product.images)
+  if (Array.isArray(props.product.images)) {
+    images.push(...props.product.images)
+  }
+  if (Array.isArray(props.product.variants)) {
+    for (const v of props.product.variants) {
+      if (v?.image) images.push(v.image)
+    }
+  }
   return [...new Set(images)] // Remove duplicates
+})
+
+watch(allImages, (imgs: string[]) => {
+  currentImage.value = imgs[0] || ''
 })
 
 const currentImage = ref(allImages.value[0] || '')
 let hoverImageIndex = 0
 let cycleTimer: any = null
+
+function onImageError() {
+  if (allImages.value.length > 1) {
+    hoverImageIndex = (hoverImageIndex + 1) % allImages.value.length
+    currentImage.value = allImages.value[hoverImageIndex]
+  } else {
+    currentImage.value = '/placeholder-product.jpg'
+  }
+}
 
 // =============== Event Handlers ===============
 function onHover() {
@@ -179,13 +238,13 @@ function formatDiscount(discount: any): string {
 <style scoped>
 /* Enhanced animations */
 @keyframes fade-in {
-  from { 
-    opacity: 0; 
-    transform: translateY(-10px); 
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
   }
-  to { 
-    opacity: 1; 
-    transform: translateY(0); 
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
@@ -195,6 +254,7 @@ function formatDiscount(discount: any): string {
 
 /* Line clamp utilities */
 .line-clamp-1 {
+  line-clamp: 1;
   display: -webkit-box;
   -webkit-line-clamp: 1;
   -webkit-box-orient: vertical;
@@ -202,6 +262,7 @@ function formatDiscount(discount: any): string {
 }
 
 .line-clamp-2 {
+  line-clamp: 2;
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
@@ -213,5 +274,27 @@ button:focus,
 a:focus {
   outline: 2px solid var(--color-primary, #10B981);
   outline-offset: 2px;
+}
+
+/* --- Product card upgrade --- */
+.router-link {
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.router-link:hover {
+  border-color: #000;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+.router-link img {
+  background-color: #f9fafb;
+  transition: transform 0.3s ease;
+}
+
+.router-link:hover img {
+  transform: scale(1.03);
 }
 </style>

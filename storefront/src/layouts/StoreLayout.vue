@@ -1,6 +1,6 @@
 <template>
   <div class="min-h-screen flex flex-col" :style="backgroundStyle">
-    <Header :shop="shop" :theme="currentTheme" v-if="!themeLoading" />
+    <DynamicHeader :shop="shop as any" :theme="currentTheme" v-if="!themeLoading" />
     
     <!-- Loading State -->
     <div v-if="themeLoading" class="flex-1 flex items-center justify-center">
@@ -20,7 +20,7 @@
       <router-view v-else :theme="currentTheme" :storefront-config="storefrontConfig" />
     </main>
     
-    <Footer :shop="shop" :theme="currentTheme" v-if="!themeLoading" />
+    <DynamicFooter :shop="shop as any" :theme="currentTheme" :footer-config="storefrontConfig?.footer || null" v-if="!themeLoading" />
   </div>
 </template>
 
@@ -28,8 +28,8 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import type { Shop } from '@/services/shop'
 import { fetchShop, getCurrentShopSlug } from '@/services/shop'
-import Header from '@/components/Header.vue'
-import Footer from '@/components/Footer.vue'
+import DynamicHeader from '@/components/DynamicHeader.vue'
+import DynamicFooter from '@/components/DynamicFooter.vue'
 import { 
   fetchStorefrontConfig, 
   startThemeWatch, 
@@ -120,10 +120,10 @@ const textStyle = computed(() => {
 })
 
 const linkStyle = computed(() => {
-  if (!currentTheme.value) return { color: '#2563EB' }
-  
+  if (!currentTheme.value) return { color: '#6366F1' }
+
   return {
-    color: currentTheme.value.colors?.primary || '#2563EB'
+    color: currentTheme.value.colors?.primary || '#6366F1'
   }
 })
 

@@ -6,7 +6,7 @@
     { label: product?.name || 'Product Detail' }
   ]" />
   <Loader v-if="isLoading" text="Loading product..." />
-  <div v-else-if="product" class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
+  <div v-else-if="product" class="w-full mx-auto max-w-[var(--container-width)] px-4 sm:px-6 lg:px-8">
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
       <div class="flex flex-row lg:flex-col gap-4 overflow-x-auto lg:overflow-x-visible">
         <div

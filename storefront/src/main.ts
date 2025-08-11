@@ -4,6 +4,8 @@ import { router } from './router'
 import { createPinia } from 'pinia'
 import piniaPluginPersistedstate from 'pinia-plugin-persistedstate'
 import './index.css'
+import './styles/tailwind-enhancements.css'
+
 import { useAuthStore } from './stores/auth'
 
 const app = createApp(App)
