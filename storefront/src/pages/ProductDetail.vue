@@ -15,7 +15,7 @@
           @click="selectThumbnail(img)"
           :class="[
             'w-24 h-24 object-contain rounded-md border cursor-pointer flex-shrink-0',
-            currentImage === img ? 'border-black ring-2 ring-black' : 'border-gray-200'
+            currentImage === img ? 'border-primary ring-2 ring-primary' : 'border-default'
           ]"
           :style="{ background: '#f9fafb' }"
         >
@@ -28,7 +28,7 @@
           <img
             v-if="currentImage"
             :src="currentImage"
-            class="w-full h-auto max-h-[600px] object-contain rounded-lg bg-gray-50 border border-gray-200"
+            class="w-full h-auto max-h-[600px] object-contain rounded-lg bg-background border border-default"
             alt="Product image"
           />
           <div v-else class="w-full h-96 bg-gray-200 rounded-lg flex items-center justify-center">
@@ -39,7 +39,7 @@
 
       <div class="lg:col-span-1 flex flex-col gap-4">
         <div class="flex items-center justify-between">
-          <h1 class="text-3xl font-bold tracking-wide uppercase text-gray-900">{{ product?.name }}</h1>
+          <h1 class="text-3xl font-bold tracking-wide uppercase text-heading font-heading">{{ product?.name }}</h1>
           <button
             v-if="authStore.user"
             @click="toggleWishlist"
@@ -65,33 +65,33 @@
             <span class="hidden sm:inline">Add to Wishlist</span>
           </button>
         </div>
-        <p class="text-sm text-gray-500">{{ product.category }}</p>
-        <p class="text-gray-600 leading-relaxed">{{ product.description }}</p>
+        <p class="text-sm text-body font-body">{{ product.category }}</p>
+        <p class="text-body leading-relaxed font-body">{{ product.description }}</p>
         
         <!-- Discount Badge -->
         <div v-if="product.discounts && product.discounts.length > 0" class="my-2">
-          <span class="inline-block px-3 py-1 bg-yellow-100 text-yellow-800 text-sm font-semibold rounded-full">
+          <span class="inline-block px-3 py-1 text-sm font-semibold rounded-full" :style="discountBadgeStyle">
             {{ product.discounts[0].type === 'percentage' ? `${product.discounts[0].value}% OFF` : `$${product.discounts[0].value} OFF` }}
           </span>
         </div>
 
         <!-- Price Display -->
         <div class="space-y-2">
-          <p class="text-3xl font-bold text-gray-900">
+          <p class="text-3xl font-bold" :style="priceStyle">
             <template v-if="selectedVariant">
-              <span v-if="(selectedVariant?.discount_amount ?? 0) > 0" class="text-lg text-gray-400 line-through mr-2">
+              <span v-if="(selectedVariant?.discount_amount ?? 0) > 0" class="text-lg text-body line-through mr-2">
                 ${{ (selectedVariant.price * quantity).toFixed(2) }}
               </span>
               ${{ currentPrice.toFixed(2) }}
             </template>
             <template v-else-if="product.price != null && (!product.variants || product.variants.length === 0)">
-              <span v-if="product.discounts && product.discounts.length > 0" class="text-lg text-gray-400 line-through mr-2">
+              <span v-if="product.discounts && product.discounts.length > 0" class="text-lg text-body line-through mr-2">
                 ${{ (product.price * quantity).toFixed(2) }}
               </span>
               ${{ currentPrice.toFixed(2) }}
             </template>
             <template v-else-if="product.starting_price != null">
-              <span class="text-xl italic text-gray-700">from</span> ${{ product.starting_price.toFixed(2) }}
+              <span class="text-xl italic text-body">from</span> ${{ product.starting_price.toFixed(2) }}
             </template>
             <template v-else>
               N/A
@@ -99,7 +99,7 @@
           </p>
           
           <!-- Discount badge -->
-          <div v-if="hasDiscount" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-green-100 text-green-800">
+          <div v-if="hasDiscount" class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium" :style="discountBadgeStyle">
             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
@@ -107,13 +107,13 @@
           </div>
           
           <!-- Savings info -->
-          <div v-if="hasDiscount && savings > 0" class="text-sm text-green-600">
+          <div v-if="hasDiscount && savings > 0" class="text-sm text-secondary">
             <div class="flex items-center gap-2">
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span>Save ${{ savings.toFixed(2) }}</span>
-              <span class="text-xs text-gray-500">
+              <span class="text-xs text-body">
                 ({{ getDiscountTypeDescription() }})
               </span>
             </div>
@@ -121,44 +121,45 @@
         </div>
 
         <div v-if="product.variants && product.variants.length > 0" class="space-y-3">
-          <p class="font-semibold text-sm uppercase text-gray-700">Options:</p>
+          <p class="font-semibold text-sm uppercase text-heading font-body">Options:</p>
           <div class="flex flex-wrap gap-2">
             <button
               v-for="v in product.variants"
               :key="v.id"
               @click="selectVariant(v)"
-              class="px-5 py-2 border-2 rounded-lg font-medium transition-colors focus:outline-none text-xs uppercase"
-              :class="selectedVariant?.id === v.id ? 'bg-black text-white border-black' : 'bg-white text-gray-800 border-gray-300 hover:bg-gray-100'"
+              class="px-5 py-2 border-2 rounded-lg font-medium transition-colors focus:outline-none text-xs uppercase variant-button"
+              :class="selectedVariant?.id === v.id ? 'variant-selected' : 'variant-unselected'"
+              :style="variantButtonStyle"
             >
               {{ v.options.map(opt => opt.value).join(' / ') }}
             </button>
           </div>
         </div>
 
-        <div class="mt-2 text-sm font-medium text-gray-900">
+        <div class="mt-2 text-sm font-medium text-heading font-body">
           <template v-if="selectedVariant">
-            <span v-if="selectedVariant.stock === 0" class="text-red-600 font-bold">Out of stock</span>
-            <span v-else>In Stock: <span class="text-green-600">{{ selectedVariant.stock }}</span></span>
+            <span v-if="selectedVariant.stock === 0" class="text-red-500 font-bold">Out of stock</span>
+            <span v-else>In Stock: <span class="text-secondary">{{ selectedVariant.stock }}</span></span>
           </template>
           <template v-else-if="product.total_stock !== undefined">
-            <span v-if="product.total_stock === 0" class="text-red-600 font-bold">Out of stock</span>
-            <span v-else>Total Stock: <span class="text-green-600">{{ product.total_stock }}</span></span>
+            <span v-if="product.total_stock === 0" class="text-red-500 font-bold">Out of stock</span>
+            <span v-else>Total Stock: <span class="text-secondary">{{ product.total_stock }}</span></span>
           </template>
           <template v-else-if="product.stock !== undefined">
-            <span v-if="product.stock === 0" class="text-red-600 font-bold">Out of stock</span>
-            <span v-else>In Stock: <span class="text-green-600">{{ product.stock }}</span></span>
+            <span v-if="product.stock === 0" class="text-red-500 font-bold">Out of stock</span>
+            <span v-else>In Stock: <span class="text-secondary">{{ product.stock }}</span></span>
           </template>
         </div>
 
         <!-- Quantity Selector -->
         <div v-if="canAddToCart" class="space-y-3">
           <div class="flex items-center gap-4">
-            <label class="font-semibold text-sm uppercase text-gray-700">Quantity:</label>
-            <div class="flex items-center border border-gray-300 rounded-lg">
+            <label class="font-semibold text-sm uppercase text-heading font-body">Quantity:</label>
+            <div class="flex items-center border border-default rounded-lg">
               <button
                 @click="decreaseQuantity"
                 :disabled="quantity <= 1"
-                class="px-3 py-2 text-gray-600 hover:text-black disabled:text-gray-300 disabled:cursor-not-allowed"
+                class="px-3 py-2 text-body hover:text-primary disabled:text-body disabled:cursor-not-allowed"
               >
                 -
               </button>
@@ -174,12 +175,12 @@
               <button
                 @click="increaseQuantity"
                 :disabled="quantity >= maxQuantity"
-                class="px-3 py-2 text-gray-600 hover:text-black disabled:text-gray-300 disabled:cursor-not-allowed"
+                class="px-3 py-2 text-body hover:text-primary disabled:text-body disabled:cursor-not-allowed"
               >
                 +
               </button>
             </div>
-            <span class="text-sm text-gray-500">of {{ maxQuantity }} available</span>
+            <span class="text-sm text-body">of {{ maxQuantity }} available</span>
           </div>
         </div>
 
@@ -188,7 +189,8 @@
           <button
             v-if="!authStore.user"
             @click="goToLogin"
-            class="w-full py-3 bg-black text-white rounded text-base font-normal transition-transform transform hover:scale-105"
+            class="w-full py-3 rounded text-base font-normal transition-transform transform hover:scale-105"
+            :style="primaryButtonStyle"
           >
             Login to Add to Cart
           </button>
@@ -196,17 +198,18 @@
             v-else
             @click="addToCart"
             :disabled="!canAddToCart || cartStore.loading"
-            class="w-full py-3 bg-black text-white rounded text-base font-normal transition-transform transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            class="w-full py-3 rounded text-base font-normal transition-transform transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            :style="primaryButtonStyle"
           >
-            <span v-if="cartStore.loading" class="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></span>
+            <span v-if="cartStore.loading" class="animate-spin rounded-full h-5 w-5 border-b-2 border-background"></span>
             {{ cartStore.loading ? 'Adding...' : 'Add to Cart' }}
           </button>
           
-          <div v-if="cartStore.error" class="text-red-600 text-sm text-center">
+          <div v-if="cartStore.error" class="text-red-500 text-sm text-center">
             {{ cartStore.error }}
           </div>
           
-          <div v-if="addToCartSuccess" class="text-green-600 text-sm text-center">
+          <div v-if="addToCartSuccess" class="text-secondary text-sm text-center">
             Added to cart successfully!
           </div>
         </div>
@@ -223,6 +226,7 @@ import { fetchProductDetail } from '@/services/product'
 import { useCartStore } from '@/stores/cart'
 import { useAuthStore } from '@/stores/auth'
 import { useWishlistStore } from '@/stores/wishlist'
+import { useCurrentTheme } from '@/services/dynamic-theme'
 import type { Product } from '@/services/product'
 import Loader from '@/components/Loader.vue';
 import Breadcrumbs from '@/components/Breadcrumbs.vue';
@@ -258,6 +262,52 @@ const isLoading = ref(true)
 const cartStore = useCartStore()
 const authStore = useAuthStore()
 const wishlistStore = useWishlistStore()
+const currentTheme = useCurrentTheme()
+
+// =============== Theme-based Computed Styles ===============
+
+// Price styling with theme colors
+const priceStyle = computed(() => {
+  const theme = currentTheme.value
+  return {
+    color: theme?.colors?.heading || '#1F2937',
+    fontFamily: theme?.fonts?.heading ? `'${theme.fonts.heading}', sans-serif` : undefined
+  }
+})
+
+// Discount badge styling
+const discountBadgeStyle = computed(() => {
+  const theme = currentTheme.value
+  const badgeColor = theme?.colors?.secondary || theme?.colors?.primary || '#8B5CF6'
+  const textColor = theme?.colors?.background || '#FFFFFF'
+  return {
+    backgroundColor: badgeColor,
+    color: textColor
+  }
+})
+
+// Button styling with proper contrast
+const primaryButtonStyle = computed(() => {
+  const theme = currentTheme.value
+  const bgColor = theme?.colors?.primary || '#6366F1'
+  const textColor = theme?.colors?.background || '#FFFFFF'
+  return {
+    backgroundColor: bgColor,
+    color: textColor,
+    borderColor: bgColor
+  }
+})
+
+// Variant button styling
+const variantButtonStyle = computed(() => {
+  const theme = currentTheme.value
+  return {
+    '--primary-color': theme?.colors?.primary || '#6366F1',
+    '--background-color': theme?.colors?.background || '#FFFFFF',
+    '--heading-color': theme?.colors?.heading || '#1F2937',
+    '--border-color': theme?.colors?.border || '#E5E7EB'
+  }
+})
 
 onMounted(async () => {
   if (!shopSlug || !handle) return;
@@ -491,3 +541,34 @@ function getDiscountTypeDescription() {
   return '';
 }
 </script>
+
+<style scoped>
+/* Variant button styling with theme variables */
+.variant-button {
+  transition: all 0.2s ease;
+}
+
+.variant-selected {
+  background-color: var(--primary-color);
+  color: var(--background-color);
+  border-color: var(--primary-color);
+}
+
+.variant-unselected {
+  background-color: var(--background-color);
+  color: var(--heading-color);
+  border-color: var(--border-color);
+}
+
+.variant-unselected:hover {
+  background-color: var(--primary-color);
+  color: var(--background-color);
+  border-color: var(--primary-color);
+}
+
+/* Focus states for accessibility */
+.variant-button:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+</style>

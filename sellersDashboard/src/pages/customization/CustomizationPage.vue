@@ -205,15 +205,23 @@
         </div>
         <div class="p-6">
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button 
+            <button
               @click="previewShop"
-              class="flex items-center justify-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-150 ease-in-out"
+              class="flex flex-col items-center justify-center p-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition duration-150 ease-in-out group"
             >
-              <svg class="w-5 h-5 text-gray-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-              </svg>
-              <span class="text-sm font-medium text-gray-700">Preview Shop</span>
+              <div class="flex items-center mb-1">
+                <svg class="w-5 h-5 text-gray-500 mr-2 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                </svg>
+                <span class="text-sm font-medium text-gray-700 group-hover:text-blue-600 transition-colors">Preview Shop</span>
+                <svg class="w-4 h-4 text-gray-400 ml-1 group-hover:text-blue-600 transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                </svg>
+              </div>
+              <span class="text-xs text-gray-500 font-mono bg-gray-100 px-2 py-1 rounded group-hover:bg-blue-50 group-hover:text-blue-600 transition-colors">
+                {{ previewUrl }}
+              </span>
             </button>
             
             <button 
@@ -259,6 +267,22 @@ const error = ref('')
 // Get active shop ID
 const activeShop = computed(() => shopStore.active)
 const shopId = computed(() => activeShop.value?.id)
+
+// Compute preview URL based on environment and shop slug
+const previewUrl = computed(() => {
+  if (!activeShop.value?.slug) return 'No shop selected'
+
+  const host = window.location.hostname
+  const isLocalHost = host === 'localhost' || host === '127.0.0.1'
+
+  if (isLocalHost) {
+    // For localhost development: shopslug.localhost:5175
+    return `${activeShop.value.slug}.localhost:5175`
+  } else {
+    // For production: shopslug.shop24.sbs
+    return `${activeShop.value.slug}.shop24.sbs`
+  }
+})
 
 // Load customization data on mount
 onMounted(async () => {
@@ -312,12 +336,25 @@ function goToSEO() {
 
 // Quick action functions
 function previewShop() {
-  // Open shop preview in new tab
-  if (activeShop.value?.slug) {
-    window.open(`/storefront/${activeShop.value.slug}`, '_blank')
-  } else {
-    window.open('/storefront', '_blank')
+  if (!activeShop.value?.slug) {
+    console.warn('No shop slug available for preview')
+    return
   }
+
+  const host = window.location.hostname
+  const isLocalHost = host === 'localhost' || host === '127.0.0.1'
+
+  let previewUrl
+  if (isLocalHost) {
+    // For localhost development: http://shopslug.localhost:5175
+    previewUrl = `http://${activeShop.value.slug}.localhost:5175`
+  } else {
+    // For production: http://shopslug.shop24.sbs
+    previewUrl = `http://${activeShop.value.slug}.shop24.sbs`
+  }
+
+  console.log('Opening shop preview:', previewUrl)
+  window.open(previewUrl, '_blank')
 }
 
 async function resetCustomization() {
