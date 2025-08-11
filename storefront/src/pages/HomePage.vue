@@ -18,8 +18,8 @@
       <p class="text-gray-600">No products available at the moment.</p>
     </div>
   </section>
-  <div class="text-center mt-8">
-    <router-link :to="`/products`" class="inline-block bg-black text-white py-3 px-8 rounded font-semibold uppercase tracking-wide hover:bg-gray-800 transition-colors">
+  <div class="text-center mt-8  ">
+    <router-link :to="`/products`" class=".custom-button">
       See All Products
     </router-link>
   </div>

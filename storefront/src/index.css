@@ -2,3 +2,90 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Dynamic Theme CSS Variables - Default Values */
+:root {
+  --color-primary: #10B981;
+  --color-secondary: #F59E0B;
+  --color-background: #FFFFFF;
+  --color-heading: #1F2937;
+  --color-body-text: #6B7280;
+  --color-border: #E5E7EB;
+  --font-heading: 'Inter', sans-serif;
+  --font-body: 'Inter', sans-serif;
+  --container-width: 1200px;
+  --border-radius: 8px;
+  --grid-columns: 3;
+}
+
+/* Dynamic Component Styles */
+.btn-primary {
+  background-color: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  border-radius: var(--border-radius);
+  transition: all 0.2s ease;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.btn-secondary {
+  background-color: var(--color-secondary);
+  border: 1px solid var(--color-secondary);
+  border-radius: var(--border-radius);
+}
+
+.product-card {
+  background-color: var(--color-background);
+  border: 1px solid var(--color-border);
+  border-radius: var(--border-radius);
+  transition: all 0.2s ease;
+}
+
+.product-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.dynamic-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--grid-columns), 1fr);
+  gap: 2rem;
+}
+
+/* Theme-aware utilities */
+.text-primary {
+  color: var(--color-primary);
+}
+
+.bg-primary {
+  background-color: var(--color-primary);
+}
+
+.border-primary {
+  border-color: var(--color-primary);
+}
+
+/* Loading animation */
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.animate-spin {
+  animation: spin 1s linear infinite;
+}
+
+/* Responsive grid */
+@media (max-width: 768px) {
+  .dynamic-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 640px) {
+  .dynamic-grid {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,14 +1,25 @@
 <template>
-  <header class="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-    <div class="flex items-center justify-between max-w-7xl mx-auto px-4 sm:px-6 py-4">
-      <router-link :to="{ path: `/` }" class="flex items-center space-x-4" aria-label="Home">
+  <header 
+    class="sticky top-0 z-50 shadow-sm transition-all duration-300"
+    :style="headerStyle"
+    :class="headerClasses"
+  >
+    <div class="flex items-center justify-between mx-auto px-4 sm:px-6" :class="containerClasses" :style="{ height: headerHeight }">
+      <router-link :to="{ path: `/` }" class="flex items-center space-x-3 hover:opacity-80 transition-opacity" aria-label="Home">
         <img
           v-if="shop?.image"
           :src="shop.image"
           alt="Shop Logo"
-          class="h-8 w-8 object-contain"
+          class="object-contain transition-transform hover:scale-105"
+          :class="logoClasses"
         />
-        <span class="text-2xl font-light tracking-tight text-gray-900 uppercase">{{ shop?.name || 'Store' }}</span>
+        <span 
+          class="font-light tracking-tight uppercase transition-colors"
+          :style="shopNameStyle"
+          :class="shopNameClasses"
+        >
+          {{ shop?.name || 'Store' }}
+        </span>
       </router-link>
 
       <!-- Desktop Nav -->
@@ -21,7 +32,8 @@
             <input
               type="text"
               placeholder="Search products..."
-              class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-lg bg-gray-50 text-sm focus:outline-none focus:ring-2 focus:ring-black focus:border-black transition-all duration-300 ease-in-out"
+              class="w-full pl-10 pr-4 py-2 border rounded-lg text-sm focus:outline-none focus:ring-2 transition-all duration-300"
+              :style="searchInputStyle"
               v-model="searchInput"
               @input="onSearchInput"
             />
@@ -31,16 +43,18 @@
         <nav class="flex items-center space-x-4 lg:space-x-6 text-base font-light">
           <router-link
             :to="{ path: `/products` }"
-            class="text-gray-600 hover:text-black transition flex items-center"
-            :class="{ 'font-semibold text-black': isActive('/products') }"
+            class="hover:opacity-80 transition-colors flex items-center"
+            :style="navLinkStyle"
+            :class="navLinkClasses('/products')"
             aria-label="Products"
           >
             <span>Products</span>
           </router-link>
           <router-link
             :to="{ path: `/collections` }"
-            class="text-gray-600 hover:text-black transition flex items-center"
-            :class="{ 'font-semibold text-black': isActive('/collections') }"
+            class="hover:opacity-80 transition-colors flex items-center"
+            :style="navLinkStyle"
+            :class="navLinkClasses('/collections')"
             aria-label="Collections"
           >
             <span>Collections</span>
@@ -180,8 +194,9 @@ const vClickOutside = {
 
 interface Props {
   shop: { name: string; image?: string } | null;
+  theme?: any | null;
 }
-defineProps<Props>();
+const props = defineProps<Props>();
 
 const router = useRouter();
 const shopSlug = getCurrentShopSlug();
@@ -215,6 +230,109 @@ const wishlistCount = computed(() => {
   if (!authStore.user) return 0;
   return wishlistStore.productIds.length;
 });
+
+// =============== Dynamic Theme Styles ===============
+
+// Header style based on theme
+const headerStyle = computed(() => {
+  if (!props.theme) return { backgroundColor: '#ffffff', borderBottomColor: '#E5E7EB' }
+  
+  return {
+    backgroundColor: props.theme.colors?.background || '#ffffff',
+    borderBottomColor: props.theme.colors?.border || '#E5E7EB',
+  }
+})
+
+const headerHeight = computed(() => {
+  if (!props.theme?.layout) return '80px'
+  
+  switch (props.theme.layout.headerStyle) {
+    case 'compact': return '60px'
+    case 'large': return '100px'
+    default: return '80px'
+  }
+})
+
+const headerClasses = computed(() => {
+  return ['border-b']
+})
+
+const containerClasses = computed(() => {
+  const classes = []
+  
+  if (props.theme?.layout?.containerWidth === 'full') {
+    classes.push('max-w-none')
+  } else if (props.theme?.layout?.containerWidth === 'wide') {
+    classes.push('max-w-7xl')
+  } else {
+    classes.push('max-w-6xl')
+  }
+  
+  return classes
+})
+
+// Logo styling
+const logoClasses = computed(() => {
+  switch (props.theme?.layout?.headerStyle) {
+    case 'compact': return 'h-8 w-8'
+    case 'large': return 'h-12 w-12'
+    default: return 'h-10 w-10'
+  }
+})
+
+// Shop name styling
+const shopNameStyle = computed(() => {
+  if (!props.theme) return { color: '#1F2937' }
+  
+  return {
+    color: props.theme.colors?.heading || '#1F2937',
+    fontFamily: props.theme.fonts?.heading ? `'${props.theme.fonts.heading}', sans-serif` : undefined
+  }
+})
+
+const shopNameClasses = computed(() => {
+  switch (props.theme?.layout?.headerStyle) {
+    case 'compact': return 'text-lg'
+    case 'large': return 'text-3xl'
+    default: return 'text-2xl'
+  }
+})
+
+// Search input styling
+const searchInputStyle = computed(() => {
+  if (!props.theme) return {}
+  
+  return {
+    borderColor: props.theme.colors?.border || '#E5E7EB',
+    backgroundColor: `${props.theme.colors?.background || '#ffffff'}F0`,
+    color: props.theme.colors?.bodyText || '#6B7280',
+  }
+})
+
+// Navigation link styling
+const navLinkStyle = computed(() => {
+  if (!props.theme) return { color: '#6B7280' }
+  
+  return {
+    color: props.theme.colors?.bodyText || '#6B7280'
+  }
+})
+
+function navLinkClasses(path: string) {
+  const isActiveRoute = isActive(path)
+  const classes = []
+  
+  if (isActiveRoute) {
+    classes.push('font-semibold')
+    if (props.theme?.colors?.primary) {
+      classes.push('text-primary')
+    } else {
+      classes.push('text-black')
+    }
+  }
+  
+  return classes
+}
 
 // Ensure wishlist is fetched after login and on navigation
 onMounted(() => {

@@ -10,8 +10,14 @@ func StorefrontRoutes(r *gin.Engine) {
 	// All storefront endpoints begin with /shops/:shopSlug
 	shops := r.Group("/shops")
 	{
-		// GET /shops/:shopSlug → view shop details
+		// GET /shops/:shopSlug → view shop details (legacy)
 		shops.GET("/:shopSlug", controllers.GetStorefront)
+		
+		// GET /shops/:shopSlug/storefront → dynamic theme-driven storefront configuration
+		shops.GET("/:shopSlug/storefront", controllers.GetDynamicStorefront)
+		
+		// GET /shops/:shopSlug/theme → real-time theme updates
+		shops.GET("/:shopSlug/theme", controllers.GetStorefrontTheme)
 
 		// Collection endpoints nested under /shops/:shopSlug/collections
 		collections := shops.Group("/:shopSlug/collections")

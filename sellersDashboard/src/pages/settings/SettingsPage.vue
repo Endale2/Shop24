@@ -108,9 +108,9 @@
                 </p>
                 <p class="mt-1 text-sm text-gray-500">{{ form.description.length }}/200 characters</p>
               </div>
+              </div>
             </div>
           </div>
-        </div>
 
         <!-- Visual Assets Card -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -121,7 +121,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                 </svg>
               </div>
-              <div>
+          <div>
                 <h2 class="text-lg font-semibold text-gray-900">Visual Assets</h2>
                 <p class="text-sm text-gray-600">Upload your shop's logo and banner images</p>
               </div>
@@ -165,19 +165,19 @@
                 <div class="bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 p-4 hover:border-gray-400 transition-colors duration-200">
                   <div class="flex flex-col items-center space-y-3">
                     <div class="w-24 h-24 rounded-lg overflow-hidden bg-white shadow-sm border border-gray-200 flex items-center justify-center">
-                      <img
-                        v-if="form.logoUrl"
-                        :src="form.logoUrl"
-                        alt="Logo preview"
+                    <img
+                      v-if="form.logoUrl"
+                      :src="form.logoUrl"
+                      alt="Logo preview"
                         class="max-h-full max-w-full object-contain"
-                        @error="errors.logoUrl = 'Invalid image URL'"
-                        @load="errors.logoUrl = ''"
-                      />
-                      <div v-else class="text-gray-400 text-center">
+                      @error="errors.logoUrl = 'Invalid image URL'"
+                      @load="errors.logoUrl = ''"
+                    />
+                    <div v-else class="text-gray-400 text-center">
                         <svg class="h-8 w-8 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
                       </div>
                     </div>
                     <p class="text-xs text-gray-600 text-center">Logo Preview<br/>Recommended: 200x200px</p>
@@ -220,28 +220,28 @@
                 <div class="bg-gray-50 rounded-lg border-2 border-dashed border-gray-300 p-4 hover:border-gray-400 transition-colors duration-200">
                   <div class="flex flex-col items-center space-y-3">
                     <div class="w-full h-20 rounded-lg overflow-hidden bg-white shadow-sm border border-gray-200 flex items-center justify-center">
-                      <img
-                        v-if="form.bannerUrl"
-                        :src="form.bannerUrl"
-                        alt="Banner preview"
+                    <img
+                      v-if="form.bannerUrl"
+                      :src="form.bannerUrl"
+                      alt="Banner preview"
                         class="max-h-full max-w-full object-cover rounded-md"
-                        @error="errors.bannerUrl = 'Invalid image URL'"
-                        @load="errors.bannerUrl = ''"
-                      />
-                      <div v-else class="text-gray-400 text-center">
-                        <svg class="h-6 w-6 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
-                            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                        </svg>
+                      @error="errors.bannerUrl = 'Invalid image URL'"
+                      @load="errors.bannerUrl = ''"
+                    />
+                    <div v-else class="text-gray-400 text-center">
+                      <svg class="h-6 w-6 mx-auto mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                          d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
                       </div>
                     </div>
                     <p class="text-xs text-gray-600 text-center">Banner Preview<br/>Recommended: 1200x300px</p>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
 
         <!-- Theme Customization Card -->
         <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
@@ -252,7 +252,7 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z" />
                 </svg>
               </div>
-              <div>
+          <div>
                 <h2 class="text-lg font-semibold text-gray-900">Theme Customization</h2>
                 <p class="text-sm text-gray-600">Customize your shop's appearance and settings</p>
               </div>
@@ -272,12 +272,12 @@
                 </div>
                 
                 <div class="bg-gray-50 rounded-lg p-4 border border-gray-200">
-                  <div class="flex items-center space-x-4">
+              <div class="flex items-center space-x-4">
                     <div class="relative">
-                      <input
-                        id="themeColor"
-                        v-model="form.themeColor"
-                        type="color"
+                  <input
+                    id="themeColor"
+                    v-model="form.themeColor"
+                    type="color"
                         class="h-16 w-16 border-2 border-white rounded-xl cursor-pointer shadow-lg hover:scale-105 transition-transform duration-200"
                       />
                       <div class="absolute -bottom-1 -right-1 w-5 h-5 bg-white rounded-full border border-gray-200 flex items-center justify-center">
@@ -297,7 +297,7 @@
                       </div>
                       <p class="text-xs text-gray-500">This color will be used for buttons, links, and highlights</p>
                     </div>
-                  </div>
+                </div>
                 </div>
               </div>
 
@@ -315,9 +315,9 @@
                 <div class="space-y-3">
                   <label for="currency" class="block text-sm font-medium text-gray-700">Shop Currency</label>
                   <div class="relative">
-                    <select
-                      id="currency"
-                      v-model="form.currency"
+                <select
+                  id="currency"
+                  v-model="form.currency"
                       class="block w-full border-gray-300 rounded-lg shadow-sm focus:ring-green-500 focus:border-green-500 transition duration-150 ease-in-out appearance-none pl-3 pr-10 py-2.5"
                     >
                       <option value="USD">🇺🇸 USD - US Dollar</option>
@@ -325,7 +325,7 @@
                       <option value="GBP">🇬🇧 GBP - British Pound</option>
                       <option value="CAD">🇨🇦 CAD - Canadian Dollar</option>
                       <option value="AUD">🇦🇺 AUD - Australian Dollar</option>
-                    </select>
+                </select>
                     <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
                       <svg class="w-4 h-4 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
@@ -335,12 +335,12 @@
                   <p class="text-sm text-gray-500">Choose the currency for your shop's pricing</p>
                 </div>
               </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
 
-      <!-- Action Buttons -->
+        <!-- Action Buttons -->
       <div class="mt-8 bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
         <div class="px-6 py-4 bg-gray-50 flex flex-col sm:flex-row justify-between items-center gap-3">
           <div class="flex items-center space-x-2">
@@ -348,8 +348,8 @@
               <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
             </svg>
             <p v-if="lastSaved" class="text-sm text-gray-600">
-              Last saved: {{ lastSaved }}
-            </p>
+            Last saved: {{ lastSaved }}
+          </p>
             <p v-else class="text-sm text-gray-500">
               No recent saves
             </p>
