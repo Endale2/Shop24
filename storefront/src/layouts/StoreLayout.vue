@@ -25,7 +25,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
+import { ref, computed, onMounted, onUnmounted } from 'vue'
 import type { Shop } from '@/services/shop'
 import { fetchShop, getCurrentShopSlug } from '@/services/shop'
 import Header from '@/components/Header.vue'
@@ -38,7 +38,7 @@ import {
   useCurrentTheme,
   useThemeLoading
 } from '@/services/dynamic-theme'
-import type { StorefrontConfig, DynamicTheme } from '@/services/dynamic-theme'
+import type { DynamicTheme } from '@/services/dynamic-theme'
 
 const shop = ref<Shop|null>(null)
 const error = ref(false)
@@ -150,7 +150,7 @@ onMounted(async () => {
     startThemeWatch(shopSlug, 30000) // Check every 30 seconds
     
     // Listen for manual theme updates
-    window.addEventListener('theme-updated', handleThemeUpdate)
+    window.addEventListener('theme-updated', handleThemeUpdate as EventListener)
     
   } catch (err) {
     console.error('Error fetching shop:', err)
@@ -160,7 +160,7 @@ onMounted(async () => {
 
 onUnmounted(() => {
   stopThemeWatch()
-  window.removeEventListener('theme-updated', handleThemeUpdate)
+  window.removeEventListener('theme-updated', handleThemeUpdate as EventListener)
 })
 
 // =============== Methods ===============

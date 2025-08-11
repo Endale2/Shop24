@@ -243,12 +243,11 @@ const headerStyle = computed(() => {
   if (!props.theme) return { backgroundColor: '#ffffff', borderBottomColor: '#E5E7EB' }
   
   return {
-    backgroundColor: props.theme.colors?.background || '#ffffff',
+    backgroundColor: props.components?.navigation?.transparent
+      ? `${props.theme.colors?.background || '#ffffff'}CC`
+      : props.theme.colors?.background || '#ffffff',
     borderBottomColor: props.theme.colors?.border || '#E5E7EB',
-    backdropFilter: props.components?.navigation?.transparent ? 'blur(10px)' : 'none',
-    backgroundColor: props.components?.navigation?.transparent 
-      ? `${props.theme.colors?.background || '#ffffff'}CC` 
-      : props.theme.colors?.background || '#ffffff'
+    backdropFilter: props.components?.navigation?.transparent ? 'blur(10px)' : 'none'
   }
 })
 

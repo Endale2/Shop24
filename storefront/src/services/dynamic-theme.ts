@@ -12,12 +12,18 @@ export interface DynamicTheme {
   fonts: ThemeFonts
   layout: ThemeLayout
   customCSS: string
+  dynamicCSS?: string  // Backend compiled CSS with variables
   seo: ThemeSEO
   mobile: ThemeMobile
-  dynamicCSS: string
   performance?: ThemePerformance
   lastModified: string
   cacheKey?: string
+  // Enhanced styling options
+  gradients?: ThemeGradients
+  shadows?: ThemeShadows
+  animations?: ThemeAnimations
+  spacing?: ThemeSpacing
+  components?: ThemeComponents
 }
 
 export interface ThemeColors {
@@ -58,6 +64,59 @@ export interface ThemeMobile {
   enabled: string
   responsive: string
   touchOptimized: string
+  menuStyle?: string
+  stickyHeader?: string
+}
+
+export interface ThemeGradients {
+  hero: string
+  button: string
+  card: string
+  background: string
+}
+
+export interface ThemeShadows {
+  card: string
+  button: string
+  image: string
+  hover: string
+}
+
+export interface ThemeAnimations {
+  transition: string
+  hover: string
+  loading: string
+  fadeIn: string
+}
+
+export interface ThemeSpacing {
+  xs: string
+  sm: string
+  md: string
+  lg: string
+  xl: string
+  '2xl': string
+}
+
+export interface ThemeComponents {
+  productCard?: {
+    style: string
+    hoverEffect: string
+    imageRatio: string
+    showBadges: boolean
+    showRating: boolean
+  }
+  buttons?: {
+    style: string
+    size: string
+    animation: string
+  }
+  navigation?: {
+    style: string
+    position: string
+    transparent: boolean
+    sticky: boolean
+  }
 }
 
 export interface ThemePerformance {
@@ -253,10 +312,15 @@ export async function applyDynamicTheme(theme: DynamicTheme) {
   // Create new style element
   const styleElement = document.createElement('style')
   styleElement.id = 'dynamic-theme-style'
-  styleElement.textContent = theme.dynamicCSS + (theme.customCSS || '')
-  
+
+  // Combine dynamicCSS (backend compiled) and customCSS (user custom)
+  const combinedCSS = (theme.dynamicCSS || '') + (theme.customCSS || '')
+  styleElement.textContent = combinedCSS
+
   // Add to document head
   document.head.appendChild(styleElement)
+
+  console.log('📝 Applied CSS:', combinedCSS.length, 'characters')
   
   // Update CSS custom properties for immediate updates
   const root = document.documentElement
@@ -283,7 +347,51 @@ export async function applyDynamicTheme(theme: DynamicTheme) {
     root.style.setProperty('--container-width', getContainerWidth(theme.layout.containerWidth))
     root.style.setProperty('--border-radius', getBorderRadius(theme.layout.borderStyle))
   }
-  
+
+  // Enhanced styling options
+  if (theme.gradients) {
+    root.style.setProperty('--gradient-hero', theme.gradients.hero)
+    root.style.setProperty('--gradient-button', theme.gradients.button)
+    root.style.setProperty('--gradient-card', theme.gradients.card)
+    root.style.setProperty('--gradient-background', theme.gradients.background)
+  }
+
+  if (theme.shadows) {
+    root.style.setProperty('--shadow-card', theme.shadows.card)
+    root.style.setProperty('--shadow-button', theme.shadows.button)
+    root.style.setProperty('--shadow-image', theme.shadows.image)
+    root.style.setProperty('--shadow-hover', theme.shadows.hover)
+  }
+
+  if (theme.animations) {
+    root.style.setProperty('--transition-default', theme.animations.transition)
+    root.style.setProperty('--transition-hover', theme.animations.hover)
+    root.style.setProperty('--transition-loading', theme.animations.loading)
+    root.style.setProperty('--transition-fade-in', theme.animations.fadeIn)
+  }
+
+  if (theme.spacing) {
+    root.style.setProperty('--spacing-xs', theme.spacing.xs)
+    root.style.setProperty('--spacing-sm', theme.spacing.sm)
+    root.style.setProperty('--spacing-md', theme.spacing.md)
+    root.style.setProperty('--spacing-lg', theme.spacing.lg)
+    root.style.setProperty('--spacing-xl', theme.spacing.xl)
+    root.style.setProperty('--spacing-2xl', theme.spacing['2xl'])
+  }
+
+  // Component-specific styling
+  if (theme.components?.productCard) {
+    root.style.setProperty('--product-card-style', theme.components.productCard.style)
+    root.style.setProperty('--product-card-hover', theme.components.productCard.hoverEffect)
+    root.style.setProperty('--product-card-ratio', theme.components.productCard.imageRatio)
+  }
+
+  if (theme.components?.buttons) {
+    root.style.setProperty('--button-style', theme.components.buttons.style)
+    root.style.setProperty('--button-size', theme.components.buttons.size)
+    root.style.setProperty('--button-animation', theme.components.buttons.animation)
+  }
+
   console.log('✅ Dynamic theme applied:', theme.name, 'v' + theme.version)
 }
 

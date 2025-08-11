@@ -10,22 +10,22 @@ import (
 
 // SectionConfig defines a single theme section (hero, product-list, footer, etc.)
 type SectionConfig struct {
-	ID       string            `bson:"id" json:"id"`                                     // unique section identifier (e.g., "hero", "product-grid")
-	Type     string            `bson:"type" json:"type"`                                 // section type (hero, product-list, banner, etc.)
-	Settings map[string]string `bson:"settings,omitempty" json:"settings,omitempty"`   // key-value pairs for section-specific settings
+	ID       string            `bson:"id" json:"id"`                                 // unique section identifier (e.g., "hero", "product-grid")
+	Type     string            `bson:"type" json:"type"`                             // section type (hero, product-list, banner, etc.)
+	Settings map[string]string `bson:"settings,omitempty" json:"settings,omitempty"` // key-value pairs for section-specific settings
 }
 
 // ThemeConfig contains the customizable theme configuration (legacy compatibility)
 type ThemeConfig struct {
 	// Color scheme settings
 	Colors map[string]string `bson:"colors,omitempty" json:"colors,omitempty"` // e.g., {"primary": "#007bff", "secondary": "#6c757d"}
-	
+
 	// Typography settings
 	Fonts map[string]string `bson:"fonts,omitempty" json:"fonts,omitempty"` // e.g., {"heading": "Inter", "body": "Open Sans"}
-	
+
 	// Layout configurations
 	Layouts map[string]string `bson:"layouts,omitempty" json:"layouts,omitempty"` // e.g., {"header_style": "minimal"}
-	
+
 	// Section configurations
 	Sections []SectionConfig `bson:"sections,omitempty" json:"sections,omitempty"` // array of configured sections
 }
@@ -33,24 +33,24 @@ type ThemeConfig struct {
 // Theme represents a base theme definition that can be prebuilt or custom (marketplace themes)
 type Theme struct {
 	ID      primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	Name    string             `bson:"name" json:"name"`                           // theme display name
-	Author  string             `bson:"author" json:"author"`                       // theme creator/author
-	Version string             `bson:"version" json:"version"`                     // semantic version (e.g., "1.0.0")
-	
+	Name    string             `bson:"name" json:"name"`       // theme display name
+	Author  string             `bson:"author" json:"author"`   // theme creator/author
+	Version string             `bson:"version" json:"version"` // semantic version (e.g., "1.0.0")
+
 	// Theme availability
 	IsPublic bool `bson:"isPublic" json:"isPublic"` // true for marketplace themes, false for custom/private themes
-	
+
 	// Theme configuration
 	Config ThemeConfig `bson:"config" json:"config"` // default theme configuration
-	
+
 	// Optional metadata
 	Description string   `bson:"description,omitempty" json:"description,omitempty"` // theme description
 	Tags        []string `bson:"tags,omitempty" json:"tags,omitempty"`               // theme tags for categorization
 	PreviewURL  string   `bson:"previewUrl,omitempty" json:"previewUrl,omitempty"`   // preview image/demo URL
-	
+
 	// Creator information (for custom themes)
 	CreatedBy primitive.ObjectID `bson:"createdBy,omitempty" json:"createdBy,omitempty"` // seller who created this theme
-	
+
 	// Timestamps
 	CreatedAt time.Time `bson:"createdAt" json:"createdAt"`
 	UpdatedAt time.Time `bson:"updatedAt" json:"updatedAt"`
@@ -59,18 +59,18 @@ type Theme struct {
 // ThemePreset represents predefined theme configurations for quick setup
 type ThemePreset struct {
 	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	ThemeID     primitive.ObjectID `bson:"themeId" json:"themeId"`         // base theme this preset belongs to
-	Name        string             `bson:"name" json:"name"`               // preset name (e.g., "Dark Mode", "Minimalist", "Bold Colors")
+	ThemeID     primitive.ObjectID `bson:"themeId" json:"themeId"` // base theme this preset belongs to
+	Name        string             `bson:"name" json:"name"`       // preset name (e.g., "Dark Mode", "Minimalist", "Bold Colors")
 	Description string             `bson:"description,omitempty" json:"description,omitempty"`
-	
+
 	// Preset configuration
 	Config ThemeConfig `bson:"config" json:"config"` // preconfigured settings
-	
+
 	// Preset metadata
-	IsDefault   bool     `bson:"isDefault,omitempty" json:"isDefault,omitempty"`     // whether this is the default preset for the theme
-	Tags        []string `bson:"tags,omitempty" json:"tags,omitempty"`               // preset tags
-	PreviewURL  string   `bson:"previewUrl,omitempty" json:"previewUrl,omitempty"`   // preview image
-	
+	IsDefault  bool     `bson:"isDefault,omitempty" json:"isDefault,omitempty"`   // whether this is the default preset for the theme
+	Tags       []string `bson:"tags,omitempty" json:"tags,omitempty"`             // preset tags
+	PreviewURL string   `bson:"previewUrl,omitempty" json:"previewUrl,omitempty"` // preview image
+
 	// Timestamps
 	CreatedAt time.Time `bson:"createdAt" json:"createdAt"`
 	UpdatedAt time.Time `bson:"updatedAt" json:"updatedAt"`
@@ -92,6 +92,15 @@ type ShopTheme struct {
 	SEO       map[string]string `bson:"seo,omitempty" json:"seo,omitempty"`             // SEO settings
 	Mobile    map[string]string `bson:"mobile,omitempty" json:"mobile,omitempty"`       // Mobile-specific settings
 
+	// Advanced Styling Options
+	Gradients  map[string]string `bson:"gradients,omitempty" json:"gradients,omitempty"`   // Gradient definitions (hero, button, card backgrounds)
+	Shadows    map[string]string `bson:"shadows,omitempty" json:"shadows,omitempty"`       // Shadow configurations (card, button, image shadows)
+	Animations map[string]string `bson:"animations,omitempty" json:"animations,omitempty"` // Animation settings (hover, transition, loading)
+	Spacing    map[string]string `bson:"spacing,omitempty" json:"spacing,omitempty"`       // Spacing configurations (padding, margin, gaps)
+
+	// Component-Specific Styling
+	Components map[string]interface{} `bson:"components,omitempty" json:"components,omitempty"` // Component variants and styling options
+
 	// Theme Metadata
 	Name        string `bson:"name,omitempty" json:"name,omitempty"`               // Theme name/label
 	Description string `bson:"description,omitempty" json:"description,omitempty"` // Theme description
@@ -105,19 +114,19 @@ type ShopTheme struct {
 	Backup        *ThemeBackup       `bson:"backup,omitempty" json:"backup,omitempty"`               // Previous version backup
 
 	// Performance & Caching
-	CompiledCSS    string            `bson:"compiledCSS,omitempty" json:"compiledCSS,omitempty"`       // Pre-compiled CSS for performance
-	PreviewImage   string            `bson:"previewImage,omitempty" json:"previewImage,omitempty"`     // Theme preview image URL
-	CacheKey       string            `bson:"cacheKey,omitempty" json:"cacheKey,omitempty"`             // Cache invalidation key
-	LastCompiled   time.Time         `bson:"lastCompiled,omitempty" json:"lastCompiled,omitempty"`     // When CSS was last compiled
-	ConfigChecksum string            `bson:"configChecksum,omitempty" json:"configChecksum,omitempty"` // Checksum for change detection
+	CompiledCSS    string    `bson:"compiledCSS,omitempty" json:"compiledCSS,omitempty"`       // Pre-compiled CSS for performance
+	PreviewImage   string    `bson:"previewImage,omitempty" json:"previewImage,omitempty"`     // Theme preview image URL
+	CacheKey       string    `bson:"cacheKey,omitempty" json:"cacheKey,omitempty"`             // Cache invalidation key
+	LastCompiled   time.Time `bson:"lastCompiled,omitempty" json:"lastCompiled,omitempty"`     // When CSS was last compiled
+	ConfigChecksum string    `bson:"configChecksum,omitempty" json:"configChecksum,omitempty"` // Checksum for change detection
 
 	// Audit & Tracking
-	CreatedBy   primitive.ObjectID `bson:"createdBy" json:"createdBy"`     // Seller who created this theme
-	CreatedAt   time.Time          `bson:"createdAt" json:"createdAt"`     // Creation timestamp
-	UpdatedAt   time.Time          `bson:"updatedAt" json:"updatedAt"`     // Last update timestamp
-	LastUsedAt  time.Time          `bson:"lastUsedAt,omitempty" json:"lastUsedAt,omitempty"` // When theme was last applied
-	UsageCount  int                `bson:"usageCount,omitempty" json:"usageCount,omitempty"` // How many times theme was applied
-	
+	CreatedBy  primitive.ObjectID `bson:"createdBy" json:"createdBy"`                       // Seller who created this theme
+	CreatedAt  time.Time          `bson:"createdAt" json:"createdAt"`                       // Creation timestamp
+	UpdatedAt  time.Time          `bson:"updatedAt" json:"updatedAt"`                       // Last update timestamp
+	LastUsedAt time.Time          `bson:"lastUsedAt,omitempty" json:"lastUsedAt,omitempty"` // When theme was last applied
+	UsageCount int                `bson:"usageCount,omitempty" json:"usageCount,omitempty"` // How many times theme was applied
+
 	// Analytics & Performance Metrics
 	LoadTime    float64 `bson:"loadTime,omitempty" json:"loadTime,omitempty"`       // Average page load time with this theme
 	Conversions int     `bson:"conversions,omitempty" json:"conversions,omitempty"` // Sales conversions with this theme
@@ -136,13 +145,18 @@ type ThemeBackup struct {
 
 // ShopThemeConfig represents the aggregated theme configuration for API responses
 type ShopThemeConfig struct {
-	Colors    map[string]string `json:"colors"`
-	Fonts     map[string]string `json:"fonts"`
-	Layout    map[string]string `json:"layout"`
-	CustomCSS string            `json:"customCSS"`
-	SEO       map[string]string `json:"seo"`
-	Mobile    map[string]string `json:"mobile"`
-	Metadata  ThemeMetadata     `json:"metadata"`
+	Colors     map[string]string      `json:"colors"`
+	Fonts      map[string]string      `json:"fonts"`
+	Layout     map[string]string      `json:"layout"`
+	CustomCSS  string                 `json:"customCSS"`
+	SEO        map[string]string      `json:"seo"`
+	Mobile     map[string]string      `json:"mobile"`
+	Gradients  map[string]string      `json:"gradients,omitempty"`
+	Shadows    map[string]string      `json:"shadows,omitempty"`
+	Animations map[string]string      `json:"animations,omitempty"`
+	Spacing    map[string]string      `json:"spacing,omitempty"`
+	Components map[string]interface{} `json:"components,omitempty"`
+	Metadata   ThemeMetadata          `json:"metadata"`
 }
 
 // ThemeMetadata contains theme information for frontend
@@ -169,11 +183,12 @@ func GetDefaultShopTheme(shopID primitive.ObjectID, createdBy primitive.ObjectID
 		IsActive:    true,
 		IsDefault:   true,
 		Colors: map[string]string{
-			"primary":     "#10B981",
-			"secondary":   "#F59E0B",
-			"background":  "#FFFFFF",
-			"heading":     "#1F2937",
-			"bodyText":    "#6B7280",
+			"primary":    "#10B981",
+			"secondary":  "#F59E0B",
+			"background": "#FFFFFF",
+			"heading":    "#1F2937",
+			"bodyText":   "#6B7280",
+			"border":     "#E5E7EB",
 		},
 		Fonts: map[string]string{
 			"heading": "Inter",
@@ -184,7 +199,62 @@ func GetDefaultShopTheme(shopID primitive.ObjectID, createdBy primitive.ObjectID
 			"containerWidth":  "boxed",
 			"sidebarPosition": "none",
 			"gridColumns":     "3",
+			"borderStyle":     "rounded",
+			"spacing":         "normal",
 		},
+
+		// Enhanced styling defaults
+		Gradients: map[string]string{
+			"hero":       "linear-gradient(135deg, #10B981 0%, #059669 100%)",
+			"button":     "linear-gradient(135deg, #10B981 0%, #047857 100%)",
+			"card":       "linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%)",
+			"background": "linear-gradient(135deg, #FFFFFF 0%, #F9FAFB 100%)",
+		},
+
+		Shadows: map[string]string{
+			"card":   "0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)",
+			"button": "0 2px 4px -1px rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.06)",
+			"image":  "0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05)",
+			"hover":  "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+		},
+
+		Animations: map[string]string{
+			"transition": "all 0.3s ease",
+			"hover":      "transform 0.2s ease, box-shadow 0.2s ease",
+			"loading":    "opacity 0.5s ease",
+			"fadeIn":     "opacity 0.3s ease-in-out",
+		},
+
+		Spacing: map[string]string{
+			"xs":  "0.25rem",
+			"sm":  "0.5rem",
+			"md":  "1rem",
+			"lg":  "1.5rem",
+			"xl":  "2rem",
+			"2xl": "3rem",
+		},
+
+		Components: map[string]interface{}{
+			"productCard": map[string]interface{}{
+				"style":       "modern",
+				"hoverEffect": "lift",
+				"imageRatio":  "square",
+				"showBadges":  true,
+				"showRating":  true,
+			},
+			"buttons": map[string]interface{}{
+				"style":     "rounded",
+				"size":      "medium",
+				"animation": "subtle",
+			},
+			"navigation": map[string]interface{}{
+				"style":       "horizontal",
+				"position":    "top",
+				"transparent": false,
+				"sticky":      true,
+			},
+		},
+
 		SEO: map[string]string{
 			"metaTitle":       "",
 			"metaDescription": "",
@@ -194,24 +264,31 @@ func GetDefaultShopTheme(shopID primitive.ObjectID, createdBy primitive.ObjectID
 			"enabled":        "true",
 			"responsive":     "true",
 			"touchOptimized": "true",
+			"menuStyle":      "hamburger",
+			"stickyHeader":   "true",
 		},
-		CustomCSS:    "",
-		Tags:         []string{"default", "modern", "responsive"},
-		UsageCount:   0,
-		CreatedAt:    time.Now(),
-		UpdatedAt:    time.Now(),
+		CustomCSS:  "",
+		Tags:       []string{"default", "modern", "responsive"},
+		UsageCount: 0,
+		CreatedAt:  time.Now(),
+		UpdatedAt:  time.Now(),
 	}
 }
 
 // ToConfig converts ShopTheme to ShopThemeConfig for API responses
 func (st *ShopTheme) ToConfig() ShopThemeConfig {
 	return ShopThemeConfig{
-		Colors:    st.Colors,
-		Fonts:     st.Fonts,
-		Layout:    st.Layout,
-		CustomCSS: st.CustomCSS,
-		SEO:       st.SEO,
-		Mobile:    st.Mobile,
+		Colors:     st.Colors,
+		Fonts:      st.Fonts,
+		Layout:     st.Layout,
+		CustomCSS:  st.CustomCSS,
+		SEO:        st.SEO,
+		Mobile:     st.Mobile,
+		Gradients:  st.Gradients,
+		Shadows:    st.Shadows,
+		Animations: st.Animations,
+		Spacing:    st.Spacing,
+		Components: st.Components,
 		Metadata: ThemeMetadata{
 			ID:           st.ID,
 			Name:         st.Name,
@@ -247,7 +324,7 @@ func (st *ShopTheme) RestoreFromBackup() bool {
 	st.Layout = st.Backup.Layout
 	st.CustomCSS = st.Backup.CustomCSS
 	st.UpdatedAt = time.Now()
-	
+
 	return true
 }
 

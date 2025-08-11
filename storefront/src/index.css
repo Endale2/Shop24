@@ -2,6 +2,9 @@
 @import "tailwindcss/preflight";
 @tailwind utilities;
 
+/* Import enhanced Tailwind utilities */
+@import "./styles/tailwind-enhancements.css";
+
 /* Dynamic Theme CSS Variables - Default Values */
 :root {
   /* Color Variables */
@@ -37,6 +40,42 @@
   --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
   --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
   --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+
+  /* =============== Enhanced Styling Variables =============== */
+
+  /* Enhanced Gradients */
+  --gradient-hero: linear-gradient(135deg, #10B981 0%, #059669 100%);
+  --gradient-button: linear-gradient(135deg, #10B981 0%, #047857 100%);
+  --gradient-card: linear-gradient(135deg, #F9FAFB 0%, #F3F4F6 100%);
+  --gradient-background: linear-gradient(135deg, #FFFFFF 0%, #F9FAFB 100%);
+
+  /* Enhanced Shadows */
+  --shadow-card: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-button: 0 2px 4px -1px rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.06);
+  --shadow-image: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-hover: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+
+  /* Enhanced Animations & Transitions */
+  --transition-default: all 0.3s ease;
+  --transition-hover: transform 0.2s ease, box-shadow 0.2s ease;
+  --transition-loading: opacity 0.5s ease;
+  --transition-fade-in: opacity 0.3s ease-in-out;
+
+  /* Enhanced Spacing */
+  --spacing-xs: 0.25rem;
+  --spacing-sm: 0.5rem;
+  --spacing-md: 1rem;
+  --spacing-lg: 1.5rem;
+  --spacing-xl: 2rem;
+  --spacing-2xl: 3rem;
+
+  /* Component Variables */
+  --product-card-style: modern;
+  --product-card-hover: lift;
+  --product-card-ratio: square;
+  --button-style: rounded;
+  --button-size: medium;
+  --button-animation: subtle;
 }
 
 /* Dynamic Component Styles */
@@ -126,6 +165,138 @@ h1, h2, h3, h4, h5, h6 {
 .collection-card:hover {
   transform: scale(1.02);
   box-shadow: var(--shadow-xl);
+}
+
+/* =============== Enhanced Component Styles =============== */
+
+/* Enhanced Product Cards */
+.product-card-modern {
+  background: var(--gradient-card);
+  border: 1px solid var(--color-border);
+  border-radius: calc(var(--border-radius) * 1.5);
+  transition: var(--transition-hover);
+  overflow: hidden;
+  position: relative;
+}
+
+.product-card-modern::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--gradient-background);
+  opacity: 0;
+  transition: var(--transition-fade-in);
+  z-index: 1;
+}
+
+.product-card-modern:hover::before {
+  opacity: 0.1;
+}
+
+.product-card-modern:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-hover);
+  border-color: var(--color-primary);
+}
+
+/* Product Card Hover Effects */
+.product-card-lift:hover {
+  transform: translateY(-6px) scale(1.02);
+  box-shadow: var(--shadow-hover);
+}
+
+.product-card-scale:hover {
+  transform: scale(1.05);
+  box-shadow: var(--shadow-image);
+}
+
+.product-card-zoom:hover .product-image {
+  transform: scale(1.1);
+}
+
+/* Enhanced Button Variants */
+.btn-gradient {
+  background: var(--gradient-button);
+  border: none;
+  color: white;
+  transition: var(--transition-hover);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-gradient::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.btn-gradient:hover::after {
+  width: 300px;
+  height: 300px;
+}
+
+.btn-gradient:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-hover);
+}
+
+/* Enhanced Hero Section */
+.hero-gradient {
+  background: var(--gradient-hero);
+  position: relative;
+  overflow: hidden;
+}
+
+.hero-gradient::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="50" cy="50" r="1" fill="rgba(255,255,255,0.1)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+  opacity: 0.1;
+}
+
+/* Enhanced Card Styles */
+.card-elevated {
+  background: var(--color-background);
+  border-radius: calc(var(--border-radius) * 1.5);
+  box-shadow: var(--shadow-card);
+  transition: var(--transition-hover);
+  position: relative;
+}
+
+.card-elevated:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-hover);
+}
+
+.card-elevated::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--gradient-button);
+  border-radius: var(--border-radius) var(--border-radius) 0 0;
+  opacity: 0;
+  transition: var(--transition-fade-in);
+}
+
+.card-elevated:hover::after {
+  opacity: 1;
 }
 
 /* Grid Layouts */
@@ -350,5 +521,150 @@ h1, h2, h3, h4, h5, h6 {
   .product-card,
   .collection-card {
     border-width: 2px;
+  }
+}
+
+/* =============== Enhanced Mobile Support =============== */
+
+/* Touch-Optimized Interactions */
+@media (hover: none) and (pointer: coarse) {
+  /* Disable hover effects on touch devices */
+  .product-card:hover,
+  .collection-card:hover,
+  .btn-primary:hover,
+  .btn-secondary:hover {
+    transform: none;
+    box-shadow: var(--shadow-md);
+  }
+
+  /* Larger touch targets */
+  button, .btn, a[role="button"] {
+    min-height: 44px;
+    min-width: 44px;
+    padding: 0.75rem 1rem;
+  }
+
+  /* Enhanced tap feedback */
+  button:active, .btn:active {
+    transform: scale(0.98);
+    transition: transform 0.1s ease;
+  }
+}
+
+/* Mobile-First Responsive Design */
+@media (max-width: 768px) {
+  :root {
+    --spacing-xs: 0.125rem;
+    --spacing-sm: 0.25rem;
+    --spacing-md: 0.5rem;
+    --spacing-lg: 1rem;
+    --spacing-xl: 1.5rem;
+    --spacing-2xl: 2rem;
+    --border-radius: 6px;
+  }
+
+  /* Mobile Navigation */
+  .mobile-menu {
+    position: fixed;
+    top: 0;
+    left: -100%;
+    width: 80%;
+    height: 100vh;
+    background: var(--color-background);
+    box-shadow: var(--shadow-xl);
+    transition: left 0.3s ease;
+    z-index: 1000;
+  }
+
+  .mobile-menu.open {
+    left: 0;
+  }
+
+  .mobile-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    background: rgba(0, 0, 0, 0.5);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+    z-index: 999;
+  }
+
+  .mobile-overlay.active {
+    opacity: 1;
+    visibility: visible;
+  }
+
+  /* Mobile Product Grid */
+  .dynamic-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--spacing-sm);
+  }
+
+  /* Mobile Cards */
+  .product-card-modern,
+  .card-elevated {
+    border-radius: var(--border-radius);
+  }
+
+  /* Mobile Typography */
+  h1 { font-size: 1.75rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.25rem; }
+
+  /* Mobile Buttons */
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+    padding: 1rem;
+    font-size: 1rem;
+  }
+
+  /* Mobile Hero */
+  .hero-gradient {
+    min-height: 60vh;
+    padding: var(--spacing-lg);
+  }
+}
+
+/* Tablet Responsive Design */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .dynamic-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--spacing-md);
+  }
+
+  /* Tablet touch optimizations */
+  button, .btn {
+    min-height: 40px;
+    padding: 0.625rem 1.25rem;
+  }
+}
+
+/* Large Screen Optimizations */
+@media (min-width: 1440px) {
+  :root {
+    --container-width: 1400px;
+    --spacing-2xl: 4rem;
+  }
+
+  .dynamic-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: var(--spacing-lg);
+  }
+}
+
+/* Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: #1F2937;
+    --color-heading: #F9FAFB;
+    --color-body-text: #D1D5DB;
+    --color-border: #374151;
+    --gradient-card: linear-gradient(135deg, #374151 0%, #4B5563 100%);
+    --gradient-background: linear-gradient(135deg, #1F2937 0%, #374151 100%);
   }
 }

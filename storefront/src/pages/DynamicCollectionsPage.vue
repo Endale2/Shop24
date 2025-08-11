@@ -40,10 +40,9 @@
     </div>
     
     <!-- Collections Grid -->
-    <div 
-      v-else-if="collections.length > 0" 
-      class="grid gap-8"
-      :class="collectionGridClasses"
+    <div
+      v-else-if="collections.length > 0"
+      class="grid grid-auto-fit gap-8 animate-fade-in-up"
     >
       <DynamicCollectionCard
         v-for="collection in collections"
@@ -135,7 +134,7 @@ const isLoading = ref(true)
 // =============== Computed Properties ===============
 
 const totalProducts = computed(() => {
-  return collections.value.reduce((total, collection) => total + (collection.product_count || 0), 0)
+  return collections.value.reduce((total, collection) => total + ((collection as any).product_count || 0), 0)
 })
 
 const averageProductsPerCollection = computed(() => {
@@ -143,16 +142,7 @@ const averageProductsPerCollection = computed(() => {
   return Math.round(totalProducts.value / collections.value.length)
 })
 
-// Grid classes based on theme configuration
-const collectionGridClasses = computed(() => {
-  const columns = props.layout?.gridColumns || '3'
-  
-  return [
-    'grid-cols-1',
-    'md:grid-cols-2',
-    `lg:grid-cols-${Math.min(parseInt(columns), 3)}` // Max 3 columns for collections
-  ]
-})
+// Removed unused collectionGridClasses - using grid-auto-fit instead
 
 // =============== Computed Styles ===============
 

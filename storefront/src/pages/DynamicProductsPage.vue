@@ -48,8 +48,8 @@
             class="w-5 h-5 object-cover rounded"
           />
           <span>{{ collection.title }}</span>
-          <span v-if="collection.product_count > 0" class="px-2 py-1 text-xs rounded-full" :style="countBadgeStyle">
-            {{ collection.product_count }}
+          <span v-if="(collection as any).product_count > 0" class="px-2 py-1 text-xs rounded-full" :style="countBadgeStyle">
+            {{ (collection as any).product_count }}
           </span>
         </button>
       </nav>
@@ -114,10 +114,9 @@
     </div>
     
     <!-- Products Grid -->
-    <div 
-      v-else-if="filteredProducts.length > 0" 
-      class="grid gap-6"
-      :class="productGridClasses"
+    <div
+      v-else-if="filteredProducts.length > 0"
+      class="grid grid-auto-fit gap-6 animate-fade-in-up"
       :style="gridStyle"
     >
       <DynamicProductCard
@@ -233,7 +232,7 @@ const pageTitle = computed(() => {
 const pageDescription = computed(() => {
   if (selectedCollection.value) {
     const collection = collections.value.find(c => c.id === selectedCollection.value)
-    return collection?.description
+    return (collection as any)?.description
   }
   return 'Discover our complete collection of premium products'
 })
@@ -279,7 +278,7 @@ const filteredProducts = computed(() => {
       case 'price-high':
         return (b.display_price || b.price || 0) - (a.display_price || a.price || 0)
       case 'newest':
-        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime()
+        return new Date((b as any).created_at || 0).getTime() - new Date((a as any).created_at || 0).getTime()
       case 'name':
       default:
         return a.name.localeCompare(b.name)
@@ -289,17 +288,7 @@ const filteredProducts = computed(() => {
   return filtered
 })
 
-// Product grid classes based on theme configuration
-const productGridClasses = computed(() => {
-  const columns = props.layout?.gridColumns || '3'
-  
-  return [
-    'grid-cols-1',
-    'sm:grid-cols-2',
-    `lg:grid-cols-${columns}`,
-    'xl:grid-cols-4'
-  ]
-})
+// Removed unused productGridClasses - using grid-auto-fit instead
 
 const gridStyle = computed(() => {
   return {

@@ -22,15 +22,15 @@ func SellerRoute(r *gin.Engine) {
 	// Base theme operations
 	themeGroup := sellerGroup.Group("/themes")
 	{
-		themeGroup.POST("", controllers.CreateTheme)                        // Create custom theme
-		themeGroup.GET("/marketplace", controllers.GetPublicThemes)         // List marketplace themes
-		themeGroup.GET("/my-themes", controllers.GetMyThemes)               // List seller's custom themes
-		themeGroup.GET("/search", controllers.SearchThemes)                 // Search themes
-		themeGroup.GET("/:themeId", controllers.GetTheme)                   // Get specific theme
-		themeGroup.PATCH("/:themeId", controllers.UpdateTheme)              // Update theme
-		themeGroup.DELETE("/:themeId", controllers.DeleteTheme)             // Delete theme
-		themeGroup.GET("/:themeId/presets", controllers.GetThemePresets)    // Get theme presets
-		themeGroup.POST("/seed", controllers.SeedDefaultThemes)             // Seed default themes (dev/admin)
+		themeGroup.POST("", controllers.CreateTheme)                     // Create custom theme
+		themeGroup.GET("/marketplace", controllers.GetPublicThemes)      // List marketplace themes
+		themeGroup.GET("/my-themes", controllers.GetMyThemes)            // List seller's custom themes
+		themeGroup.GET("/search", controllers.SearchThemes)              // Search themes
+		themeGroup.GET("/:themeId", controllers.GetTheme)                // Get specific theme
+		themeGroup.PATCH("/:themeId", controllers.UpdateTheme)           // Update theme
+		themeGroup.DELETE("/:themeId", controllers.DeleteTheme)          // Delete theme
+		themeGroup.GET("/:themeId/presets", controllers.GetThemePresets) // Get theme presets
+		themeGroup.POST("/seed", controllers.SeedDefaultThemes)          // Seed default themes (dev/admin)
 	}
 
 	// 3) /seller/shops/:shopId
@@ -148,26 +148,32 @@ func SellerRoute(r *gin.Engine) {
 		// ═════════  Shop Theme & Customization Routes ═════════
 		shopThemeGroup := shopGroup.Group("/themes")
 		{
-			shopThemeGroup.POST("", controllers.CreateShopTheme)                                           // Create shop theme config
-			shopThemeGroup.GET("", controllers.GetShopThemes)                                              // List shop theme configs
-			shopThemeGroup.GET("/active", controllers.GetShopActiveTheme)                                  // Get active theme
-			shopThemeGroup.PATCH("/:shopThemeId", controllers.UpdateShopTheme)                            // Update shop theme
-			shopThemeGroup.POST("/:shopThemeId/publish", controllers.PublishShopTheme)                    // Publish/activate theme
-			shopThemeGroup.DELETE("/:shopThemeId", controllers.DeleteShopTheme)                           // Delete shop theme config
-			shopThemeGroup.POST("/:shopThemeId/presets/:presetId/apply", controllers.ApplyThemePreset)    // Apply preset
+			shopThemeGroup.POST("", controllers.CreateShopTheme)                                       // Create shop theme config
+			shopThemeGroup.GET("", controllers.GetShopThemes)                                          // List shop theme configs
+			shopThemeGroup.GET("/active", controllers.GetShopActiveTheme)                              // Get active theme
+			shopThemeGroup.PATCH("/:shopThemeId", controllers.UpdateShopTheme)                         // Update shop theme
+			shopThemeGroup.POST("/:shopThemeId/publish", controllers.PublishShopTheme)                 // Publish/activate theme
+			shopThemeGroup.DELETE("/:shopThemeId", controllers.DeleteShopTheme)                        // Delete shop theme config
+			shopThemeGroup.POST("/:shopThemeId/presets/:presetId/apply", controllers.ApplyThemePreset) // Apply preset
 		}
 
 		// ─────  Customization API endpoints ─────
 		customizationGroup := shopGroup.Group("/customization")
 		{
-			customizationGroup.GET("", controllers.GetCustomizationData)         // Get current customization
-			customizationGroup.PATCH("", controllers.UpdateCustomization)        // Update customization (full)
-			
+			customizationGroup.GET("", controllers.GetCustomizationData)  // Get current customization
+			customizationGroup.PATCH("", controllers.UpdateCustomization) // Update customization (full)
+
 			// Granular theme updates (matching frontend API calls)
-			customizationGroup.PATCH("/colors", controllers.SaveThemeColors)     // Save colors only
-			customizationGroup.PATCH("/fonts", controllers.SaveTypography)       // Save fonts only  
-			customizationGroup.PATCH("/layout", controllers.SaveLayout)          // Save layout only
-			customizationGroup.POST("/reset", controllers.ResetCustomization)    // Reset to defaults
+			customizationGroup.PATCH("/colors", controllers.SaveThemeColors)  // Save colors only
+			customizationGroup.PATCH("/fonts", controllers.SaveTypography)    // Save fonts only
+			customizationGroup.PATCH("/layout", controllers.SaveLayout)       // Save layout only
+			customizationGroup.POST("/reset", controllers.ResetCustomization) // Reset to defaults
+
+			// Enhanced styling endpoints
+			customizationGroup.PATCH("/gradients", controllers.SaveGradients)   // Save gradients
+			customizationGroup.PATCH("/shadows", controllers.SaveShadows)       // Save shadows
+			customizationGroup.PATCH("/animations", controllers.SaveAnimations) // Save animations
+			customizationGroup.PATCH("/components", controllers.SaveComponents) // Save component configs
 		}
 
 	}

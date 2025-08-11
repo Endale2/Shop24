@@ -24,7 +24,7 @@
 
       <!-- Product Count Badge -->
       <div
-        v-if="collection.product_count > 0"
+        v-if="collection.product_count && collection.product_count > 0"
         class="absolute top-3 right-3 px-2 py-1 text-xs font-bold rounded-full"
         :style="badgeStyle"
       >
@@ -40,7 +40,7 @@
           :style="collectionNameStyle"
           :class="collectionNameClasses"
         >
-          {{ collection.name }}
+          {{ collection.name || collection.title }}
         </h3>
 
         <p
@@ -76,12 +76,13 @@ import type { DynamicTheme } from '@/services/dynamic-theme'
 
 interface Collection {
   id: string
-  name: string
+  name?: string
+  title?: string
   handle: string
   description?: string
   image?: string
   featured_image?: string
-  product_count: number
+  product_count?: number
 }
 
 interface Props {
@@ -107,6 +108,7 @@ const cardStyle = computed(() => {
   }
 })
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const cardClasses = computed(() => {
   const classes = ['block']
 
@@ -118,6 +120,40 @@ const cardClasses = computed(() => {
     classes.push('rounded-3xl')
   } else {
     classes.push('rounded-lg')
+  }
+
+  // Enhanced styling variants
+  const style = props.theme?.components?.productCard?.style || 'default'
+  const hoverEffect = props.theme?.components?.productCard?.hoverEffect || 'scale'
+
+  // Style variants
+  switch (style) {
+    case 'modern':
+      classes.push('card-elevated', 'shadow-lg')
+      break
+    case 'minimal':
+      classes.push('shadow-none', 'hover:shadow-md')
+      break
+    case 'bold':
+      classes.push('shadow-xl', 'border-2', 'border-primary')
+      break
+    default:
+      classes.push('shadow-md')
+  }
+
+  // Hover effects
+  switch (hoverEffect) {
+    case 'lift':
+      classes.push('hover:translate-y-[-8px]', 'hover:shadow-2xl')
+      break
+    case 'scale':
+      classes.push('hover:scale-105', 'hover:shadow-xl')
+      break
+    case 'glow':
+      classes.push('hover-glow')
+      break
+    default:
+      classes.push('hover:scale-102', 'hover:shadow-lg')
   }
 
   return classes

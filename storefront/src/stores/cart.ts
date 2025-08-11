@@ -16,13 +16,13 @@ export const useCartStore = defineStore('cart', {
       return state.cart?.items?.reduce((total, item) => total + item.quantity, 0) || 0;
     },
     totalPrice: (state) => {
-      return state.cart?.total_price || 0;
+      return state.cart?.grand_total || 0;
     },
     subtotal: (state) => {
       return state.cart?.subtotal || 0;
     },
     totalDiscount: (state) => {
-      return state.cart?.total_discount || 0;
+      return state.cart?.total_discounts || 0;
     },
     hasItems: (state) => {
       return (state.cart?.items?.length || 0) > 0;

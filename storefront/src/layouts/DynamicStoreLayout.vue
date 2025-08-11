@@ -85,7 +85,7 @@
 
 <script setup lang="ts">
 import { ref, computed, onMounted, onUnmounted, watch } from 'vue'
-import { useRoute } from 'vue-router'
+// import { useRoute } from 'vue-router' // Unused for now
 import DynamicHeader from '@/components/DynamicHeader.vue'
 import DynamicFooter from '@/components/DynamicFooter.vue'
 import { getCurrentShopSlug } from '@/services/shop'
@@ -97,11 +97,11 @@ import {
   useCurrentTheme,
   useThemeLoading
 } from '@/services/dynamic-theme'
-import type { StorefrontConfig, DynamicTheme } from '@/services/dynamic-theme'
+import type { DynamicTheme } from '@/services/dynamic-theme'
 
 // =============== Reactive State ===============
 
-const route = useRoute()
+// const route = useRoute() // Unused for now
 const shopSlug = computed(() => getCurrentShopSlug())
 
 // Global theme state
@@ -245,12 +245,12 @@ onMounted(async () => {
   }
 
   // Listen for manual theme updates
-  window.addEventListener('theme-updated', handleThemeUpdate)
+  window.addEventListener('theme-updated', handleThemeUpdate as EventListener)
 })
 
 onUnmounted(() => {
   stopThemeWatch()
-  window.removeEventListener('theme-updated', handleThemeUpdate)
+  window.removeEventListener('theme-updated', handleThemeUpdate as EventListener)
 })
 
 // Watch for route changes (different shops)
@@ -329,7 +329,7 @@ async function retryLoad() {
 function handleThemeUpdate(event: CustomEvent) {
   console.log('🎨 Theme updated in real-time:', event.detail)
 
-  const { theme, previousVersion } = event.detail
+  const { theme } = event.detail
   themeUpdateMessage.value = `✨ Theme updated to ${theme.name} v${theme.version}`
   showThemeUpdateNotification.value = true
 

@@ -211,6 +211,86 @@
             </div>
           </div>
 
+          <!-- Enhanced Styling Options -->
+          <div class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+            <div class="px-4 py-3 border-b border-gray-100 bg-gray-50">
+              <h2 class="text-lg font-semibold text-gray-900">Enhanced Styling</h2>
+              <p class="text-sm text-gray-600">Advanced visual effects and animations</p>
+            </div>
+            <div class="p-6 space-y-6">
+
+              <!-- Component Style -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Component Style</label>
+                <select v-model="componentStyle" class="block w-full border-gray-300 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500">
+                  <option value="default">Default</option>
+                  <option value="modern">Modern</option>
+                  <option value="minimal">Minimal</option>
+                  <option value="bold">Bold</option>
+                </select>
+                <p class="text-xs text-gray-500 mt-1">Overall styling approach for cards and components</p>
+              </div>
+
+              <!-- Hover Effects -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Hover Effects</label>
+                <select v-model="hoverEffect" class="block w-full border-gray-300 rounded-lg shadow-sm focus:ring-purple-500 focus:border-purple-500">
+                  <option value="lift">Lift</option>
+                  <option value="scale">Scale</option>
+                  <option value="zoom">Zoom</option>
+                  <option value="glow">Glow</option>
+                </select>
+                <p class="text-xs text-gray-500 mt-1">Animation when hovering over products and cards</p>
+              </div>
+
+              <!-- Animation Speed -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Animation Speed</label>
+                <div class="flex items-center space-x-3">
+                  <input
+                    v-model="animationSpeed"
+                    type="range"
+                    min="0.1"
+                    max="1"
+                    step="0.1"
+                    class="flex-1"
+                  />
+                  <span class="text-sm font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded">{{ animationSpeed }}s</span>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">Speed of hover and transition animations</p>
+              </div>
+
+              <!-- Shadow Intensity -->
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Shadow Intensity</label>
+                <div class="flex items-center space-x-3">
+                  <input
+                    v-model="shadowIntensity"
+                    type="range"
+                    min="0"
+                    max="100"
+                    class="flex-1"
+                  />
+                  <span class="text-sm font-mono text-gray-600 bg-gray-100 px-2 py-1 rounded">{{ shadowIntensity }}%</span>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">Intensity of card and button shadows</p>
+              </div>
+
+              <!-- Gradient Effects -->
+              <div class="flex items-center justify-between">
+                <div>
+                  <label class="text-sm font-medium text-gray-700">Gradient Effects</label>
+                  <p class="text-xs text-gray-500">Enable gradient backgrounds and buttons</p>
+                </div>
+                <label class="relative inline-flex items-center cursor-pointer">
+                  <input v-model="gradientEffects" type="checkbox" class="sr-only peer">
+                  <div class="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-purple-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-purple-600"></div>
+                </label>
+              </div>
+
+            </div>
+          </div>
+
         </div>
 
         <!-- Preview Section -->
@@ -372,6 +452,13 @@ const theme = reactive({
   headingColor: '#1F2937',
   bodyTextColor: '#6B7280'
 })
+
+// Enhanced styling options
+const componentStyle = ref('modern')
+const hoverEffect = ref('lift')
+const animationSpeed = ref(0.3)
+const shadowIntensity = ref(50)
+const gradientEffects = ref(true)
 
 // Theme presets
 const themePresets = [

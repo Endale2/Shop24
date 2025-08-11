@@ -5,9 +5,9 @@ import (
 	"net/http"
 	"time"
 
+	sharedRepositories "github.com/Endale2/DRPS/shared/repositories"
 	shopServices "github.com/Endale2/DRPS/shared/services"
 	themeServices "github.com/Endale2/DRPS/shared/services"
-	sharedRepositories "github.com/Endale2/DRPS/shared/repositories"
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
@@ -46,7 +46,7 @@ func GetCustomizationData(c *gin.Context) {
 	// Get shop analytics for context
 	shopObjectID, _ := primitive.ObjectIDFromHex(shopID)
 	customers, _ := sharedRepositories.GetShopCustomerLinks(shopObjectID)
-	
+
 	// Get or create theme from separate collection (scalable approach)
 	theme, err := themeServices.GetOrCreateShopTheme(shopObjectID, sellerID)
 	if err != nil {
@@ -100,15 +100,15 @@ func GetCustomizationData(c *gin.Context) {
 			"themeUpdated":   shop.ThemeLastModified,
 		},
 		"theme": gin.H{
-			"id":               theme.ID,
-			"name":             theme.Name,
-			"version":          theme.Version,
-			"isActive":         theme.IsActive,
-			"usageCount":       theme.UsageCount,
-			"lastUsed":         theme.LastUsedAt,
-			"performance":      themeMetrics,
-			"hasBackup":        theme.Backup != nil,
-			"tags":             theme.Tags,
+			"id":          theme.ID,
+			"name":        theme.Name,
+			"version":     theme.Version,
+			"isActive":    theme.IsActive,
+			"usageCount":  theme.UsageCount,
+			"lastUsed":    theme.LastUsedAt,
+			"performance": themeMetrics,
+			"hasBackup":   theme.Backup != nil,
+			"tags":        theme.Tags,
 		},
 	}
 
@@ -169,7 +169,7 @@ func UpdateCustomization(c *gin.Context) {
 	// Update theme using scalable theme collection
 	shopObjectID, _ := primitive.ObjectIDFromHex(shopID)
 	updateData := make(map[string]interface{})
-	
+
 	if customizationData.Colors != nil {
 		updateData["colors"] = customizationData.Colors
 	}
@@ -197,7 +197,7 @@ func UpdateCustomization(c *gin.Context) {
 
 	// Get updated customer count for response
 	customers, _ := sharedRepositories.GetShopCustomerLinks(shopObjectID)
-	
+
 	// Prepare response matching frontend expectations
 	response := gin.H{
 		"message": "customization saved successfully",
@@ -228,7 +228,7 @@ func UpdateCustomization(c *gin.Context) {
 // PATCH /seller/shops/:shopId/customization/colors
 func SaveThemeColors(c *gin.Context) {
 	shopID := c.Param("shopId")
-	
+
 	// Get seller ID from context
 	sellerHex, ok := c.Get("user_id")
 	if !ok {
@@ -236,7 +236,7 @@ func SaveThemeColors(c *gin.Context) {
 		return
 	}
 	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
-	
+
 	var colors map[string]string
 	if err := c.ShouldBindJSON(&colors); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid colors data"})
@@ -271,11 +271,11 @@ func SaveThemeColors(c *gin.Context) {
 	}
 
 	c.JSON(http.StatusOK, gin.H{
-		"message":     "colors saved successfully",
-		"colors":      colors,
-		"theme":       theme.ToConfig().Metadata,
-		"success":     true,
-		"scalable":    true,
+		"message":  "colors saved successfully",
+		"colors":   colors,
+		"theme":    theme.ToConfig().Metadata,
+		"success":  true,
+		"scalable": true,
 	})
 }
 
@@ -283,7 +283,7 @@ func SaveThemeColors(c *gin.Context) {
 // PATCH /seller/shops/:shopId/customization/fonts
 func SaveTypography(c *gin.Context) {
 	shopID := c.Param("shopId")
-	
+
 	// Get seller ID from context and verify ownership
 	sellerHex, ok := c.Get("user_id")
 	if !ok {
@@ -291,7 +291,7 @@ func SaveTypography(c *gin.Context) {
 		return
 	}
 	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
-	
+
 	var fonts map[string]string
 	if err := c.ShouldBindJSON(&fonts); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid fonts data"})
@@ -330,7 +330,7 @@ func SaveTypography(c *gin.Context) {
 // PATCH /seller/shops/:shopId/customization/layout
 func SaveLayout(c *gin.Context) {
 	shopID := c.Param("shopId")
-	
+
 	// Get seller ID from context and verify ownership
 	sellerHex, ok := c.Get("user_id")
 	if !ok {
@@ -338,7 +338,7 @@ func SaveLayout(c *gin.Context) {
 		return
 	}
 	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
-	
+
 	var layout map[string]string
 	if err := c.ShouldBindJSON(&layout); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid layout data"})
@@ -501,9 +501,208 @@ func ApplyThemePreset(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "using scalable theme collection"})
 }
 
-// SeedDefaultThemes placeholder for theme seeding
-func SeedDefaultThemes(c *gin.Context) {
-	c.JSON(http.StatusOK, gin.H{"message": "using scalable theme collection"})
+// Note: SeedDefaultThemes is implemented in theme_seed_controller.go
+
+// =============== Enhanced Styling API Endpoints ===============
+
+// SaveGradients saves gradient configurations
+// PATCH /seller/shops/:shopId/customization/gradients
+func SaveGradients(c *gin.Context) {
+	shopID := c.Param("shopId")
+
+	// Get seller ID from context and verify ownership
+	sellerHex, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
+
+	var gradients map[string]string
+	if err := c.ShouldBindJSON(&gradients); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid gradients data"})
+		return
+	}
+
+	// Verify shop ownership
+	shop, err := shopServices.GetShopByIDService(shopID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "shop not found"})
+		return
+	}
+	if shop.OwnerID != sellerID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: you don't own this shop"})
+		return
+	}
+
+	shopObjectID, _ := primitive.ObjectIDFromHex(shopID)
+
+	// Update gradients in theme
+	updateData := map[string]interface{}{
+		"gradients": gradients,
+		"updatedAt": time.Now(),
+	}
+
+	theme, err := themeServices.UpdateShopThemeComplete(shopObjectID, updateData)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save gradients"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":   "gradients saved successfully",
+		"gradients": theme.Gradients,
+	})
+}
+
+// SaveShadows saves shadow configurations
+// PATCH /seller/shops/:shopId/customization/shadows
+func SaveShadows(c *gin.Context) {
+	shopID := c.Param("shopId")
+
+	// Get seller ID from context and verify ownership
+	sellerHex, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
+
+	var shadows map[string]string
+	if err := c.ShouldBindJSON(&shadows); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid shadows data"})
+		return
+	}
+
+	// Verify shop ownership
+	shop, err := shopServices.GetShopByIDService(shopID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "shop not found"})
+		return
+	}
+	if shop.OwnerID != sellerID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: you don't own this shop"})
+		return
+	}
+
+	shopObjectID, _ := primitive.ObjectIDFromHex(shopID)
+
+	// Update shadows in theme
+	updateData := map[string]interface{}{
+		"shadows":   shadows,
+		"updatedAt": time.Now(),
+	}
+
+	theme, err := themeServices.UpdateShopThemeComplete(shopObjectID, updateData)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save shadows"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "shadows saved successfully",
+		"shadows": theme.Shadows,
+	})
+}
+
+// SaveAnimations saves animation configurations
+// PATCH /seller/shops/:shopId/customization/animations
+func SaveAnimations(c *gin.Context) {
+	shopID := c.Param("shopId")
+
+	// Get seller ID from context and verify ownership
+	sellerHex, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
+
+	var animations map[string]string
+	if err := c.ShouldBindJSON(&animations); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid animations data"})
+		return
+	}
+
+	// Verify shop ownership
+	shop, err := shopServices.GetShopByIDService(shopID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "shop not found"})
+		return
+	}
+	if shop.OwnerID != sellerID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: you don't own this shop"})
+		return
+	}
+
+	shopObjectID, _ := primitive.ObjectIDFromHex(shopID)
+
+	// Update animations in theme
+	updateData := map[string]interface{}{
+		"animations": animations,
+		"updatedAt":  time.Now(),
+	}
+
+	theme, err := themeServices.UpdateShopThemeComplete(shopObjectID, updateData)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save animations"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":    "animations saved successfully",
+		"animations": theme.Animations,
+	})
+}
+
+// SaveComponents saves component configurations
+// PATCH /seller/shops/:shopId/customization/components
+func SaveComponents(c *gin.Context) {
+	shopID := c.Param("shopId")
+
+	// Get seller ID from context and verify ownership
+	sellerHex, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
+
+	var components map[string]interface{}
+	if err := c.ShouldBindJSON(&components); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid components data"})
+		return
+	}
+
+	// Verify shop ownership
+	shop, err := shopServices.GetShopByIDService(shopID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "shop not found"})
+		return
+	}
+	if shop.OwnerID != sellerID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: you don't own this shop"})
+		return
+	}
+
+	shopObjectID, _ := primitive.ObjectIDFromHex(shopID)
+
+	// Update components in theme
+	updateData := map[string]interface{}{
+		"components": components,
+		"updatedAt":  time.Now(),
+	}
+
+	theme, err := themeServices.UpdateShopThemeComplete(shopObjectID, updateData)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save components"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":    "components saved successfully",
+		"components": theme.Components,
+	})
 }
 
 // =============== Helper Functions ===============
