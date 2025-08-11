@@ -327,8 +327,7 @@ async function resetCustomization() {
   error.value = ''
   
   try {
-    const defaultConfig = themeService.getDefaultThemeConfig()
-    await themeService.updateCustomization(shopId.value, defaultConfig)
+    await themeService.resetToDefaults(shopId.value)
     await loadCustomizationData() // Reload data
     console.log('Customization reset to default')
   } catch (err) {

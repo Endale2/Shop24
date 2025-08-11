@@ -27,9 +27,11 @@ type Shop struct {
 	Status     string `bson:"status,omitempty" json:"status,omitempty"`         // Shop status (active, inactive, suspended)
 	IsVerified bool   `bson:"isVerified,omitempty" json:"isVerified,omitempty"` // Shop verification status
 
-	// Theme Configuration
-	ThemeColor  string `bson:"themeColor,omitempty" json:"themeColor,omitempty"`   // Primary theme color
-	ThemeConfig string `bson:"themeConfig,omitempty" json:"themeConfig,omitempty"` // JSON string of theme configuration
+	// Theme Configuration - Reference to separate theme collection (scalable)
+	ActiveThemeID     primitive.ObjectID `bson:"activeThemeId,omitempty" json:"activeThemeId,omitempty"`         // Reference to active theme in shop_themes collection
+	ThemeColor        string             `bson:"themeColor,omitempty" json:"themeColor,omitempty"`               // Quick access primary color (cached from theme)
+	ThemeVersion      string             `bson:"themeVersion,omitempty" json:"themeVersion,omitempty"`           // Current theme version (cached)
+	ThemeLastModified time.Time          `bson:"themeLastModified,omitempty" json:"themeLastModified,omitempty"` // Last theme update time (cached)
 
 	// Analytics & Metrics
 	CustomerCount int     `bson:"customerCount,omitempty" json:"customerCount,omitempty"` // Number of customers

@@ -1,400 +1,23 @@
 package controllers
 
 import (
+	"errors"
 	"net/http"
-	"strconv"
+	"time"
 
-	"github.com/Endale2/DRPS/sellers/services"
-	"github.com/Endale2/DRPS/shared/models"
+	shopServices "github.com/Endale2/DRPS/shared/services"
+	themeServices "github.com/Endale2/DRPS/shared/services"
+	sharedRepositories "github.com/Endale2/DRPS/shared/repositories"
 	"github.com/gin-gonic/gin"
-	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
-// =============== Theme Base Controllers ===============
-
-// CreateTheme creates a new theme
-// POST /seller/themes
-func CreateTheme(c *gin.Context) {
-	// Get seller ID from context
-	sellerHex, ok := c.Get("user_id")
-	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
-
-	// Bind request data
-	var theme models.Theme
-	if err := c.ShouldBindJSON(&theme); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
-		return
-	}
-
-	// Create theme
-	result, err := services.CreateThemeService(&theme, sellerID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusCreated, gin.H{
-		"message":  "theme created successfully",
-		"theme_id": result.InsertedID,
-	})
-}
-
-// GetTheme retrieves a specific theme
-// GET /seller/themes/:themeId
-func GetTheme(c *gin.Context) {
-	themeID := c.Param("themeId")
-
-	theme, err := services.GetThemeByIDService(themeID)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"theme": theme})
-}
-
-// GetPublicThemes retrieves all marketplace themes
-// GET /seller/themes/marketplace
-func GetPublicThemes(c *gin.Context) {
-	themes, err := services.GetPublicThemesService()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch themes"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"themes": themes})
-}
-
-// GetMyThemes retrieves themes created by the current seller
-// GET /seller/themes/my-themes
-func GetMyThemes(c *gin.Context) {
-	// Get seller ID from context
-	sellerHex, ok := c.Get("user_id")
-	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-
-	themes, err := services.GetThemesByCreatorService(sellerHex.(string))
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to fetch themes"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"themes": themes})
-}
-
-// UpdateTheme updates a theme
-// PATCH /seller/themes/:themeId
-func UpdateTheme(c *gin.Context) {
-	themeID := c.Param("themeId")
-
-	// Get seller ID from context
-	sellerHex, ok := c.Get("user_id")
-	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
-
-	// Bind update data
-	var updateData bson.M
-	if err := c.ShouldBindJSON(&updateData); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
-		return
-	}
-
-	// Update theme
-	result, err := services.UpdateThemeService(themeID, updateData, sellerID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	if result.ModifiedCount == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "theme not found or no changes made"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "theme updated successfully"})
-}
-
-// DeleteTheme deletes a theme
-// DELETE /seller/themes/:themeId
-func DeleteTheme(c *gin.Context) {
-	themeID := c.Param("themeId")
-
-	// Get seller ID from context
-	sellerHex, ok := c.Get("user_id")
-	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
-
-	// Delete theme
-	result, err := services.DeleteThemeService(themeID, sellerID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	if result.DeletedCount == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "theme not found"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "theme deleted successfully"})
-}
-
-// SearchThemes searches themes by query
-// GET /seller/themes/search?q=query&public=true
-func SearchThemes(c *gin.Context) {
-	query := c.Query("q")
-	publicStr := c.DefaultQuery("public", "true")
-	isPublic, _ := strconv.ParseBool(publicStr)
-
-	themes, err := services.SearchThemesService(query, isPublic)
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to search themes"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"themes": themes})
-}
-
-// =============== Shop Theme Controllers ===============
-
-// CreateShopTheme creates a new shop theme configuration
-// POST /seller/shops/:shopId/themes
-func CreateShopTheme(c *gin.Context) {
-	shopID := c.Param("shopId")
-
-	// Get seller ID from context
-	sellerHex, ok := c.Get("user_id")
-	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
-
-	// Bind request data
-	var shopTheme models.ShopTheme
-	if err := c.ShouldBindJSON(&shopTheme); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
-		return
-	}
-
-	// Set shop ID
-	shopObjectID, err := primitive.ObjectIDFromHex(shopID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid shop ID"})
-		return
-	}
-	shopTheme.ShopID = shopObjectID
-
-	// Create shop theme
-	result, err := services.CreateShopThemeService(&shopTheme, sellerID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusCreated, gin.H{
-		"message":        "shop theme created successfully",
-		"shop_theme_id": result.InsertedID,
-	})
-}
-
-// GetShopActiveTheme retrieves the active theme for a shop
-// GET /seller/shops/:shopId/themes/active
-func GetShopActiveTheme(c *gin.Context) {
-	shopID := c.Param("shopId")
-
-	// Get seller ID from context
-	sellerHex, ok := c.Get("user_id")
-	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
-
-	// Get active theme
-	shopTheme, theme, err := services.GetShopActiveThemeService(shopID, sellerID)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{
-		"shop_theme": shopTheme,
-		"theme":      theme,
-	})
-}
-
-// GetShopThemes retrieves all theme configurations for a shop
-// GET /seller/shops/:shopId/themes
-func GetShopThemes(c *gin.Context) {
-	shopID := c.Param("shopId")
-
-	// Get seller ID from context
-	sellerHex, ok := c.Get("user_id")
-	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
-
-	// Get shop themes
-	shopThemes, err := services.GetShopThemesService(shopID, sellerID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"shop_themes": shopThemes})
-}
-
-// UpdateShopTheme updates a shop theme configuration
-// PATCH /seller/shops/:shopId/themes/:shopThemeId
-func UpdateShopTheme(c *gin.Context) {
-	shopThemeID := c.Param("shopThemeId")
-
-	// Get seller ID from context
-	sellerHex, ok := c.Get("user_id")
-	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
-
-	// Bind update data
-	var updateData bson.M
-	if err := c.ShouldBindJSON(&updateData); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
-		return
-	}
-
-	// Update shop theme
-	result, err := services.UpdateShopThemeService(shopThemeID, updateData, sellerID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	if result.ModifiedCount == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "shop theme not found or no changes made"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "shop theme updated successfully"})
-}
-
-// PublishShopTheme activates a theme for a shop
-// POST /seller/shops/:shopId/themes/:shopThemeId/publish
-func PublishShopTheme(c *gin.Context) {
-	shopID := c.Param("shopId")
-	shopThemeID := c.Param("shopThemeId")
-
-	// Get seller ID from context
-	sellerHex, ok := c.Get("user_id")
-	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
-
-	// Publish theme
-	err := services.PublishShopThemeService(shopID, shopThemeID, sellerID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "theme published successfully"})
-}
-
-// DeleteShopTheme deletes a shop theme configuration
-// DELETE /seller/shops/:shopId/themes/:shopThemeId
-func DeleteShopTheme(c *gin.Context) {
-	shopThemeID := c.Param("shopThemeId")
-
-	// Get seller ID from context
-	sellerHex, ok := c.Get("user_id")
-	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
-
-	// Delete shop theme
-	result, err := services.DeleteShopThemeService(shopThemeID, sellerID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	if result.DeletedCount == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "shop theme not found"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "shop theme deleted successfully"})
-}
-
-// =============== Theme Preset Controllers ===============
-
-// GetThemePresets retrieves presets for a theme
-// GET /seller/themes/:themeId/presets
-func GetThemePresets(c *gin.Context) {
-	themeID := c.Param("themeId")
-
-	presets, err := services.GetThemePresetsService(themeID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"presets": presets})
-}
-
-// ApplyThemePreset applies a preset to a shop theme
-// POST /seller/shops/:shopId/themes/:shopThemeId/presets/:presetId/apply
-func ApplyThemePreset(c *gin.Context) {
-	shopThemeID := c.Param("shopThemeId")
-	presetID := c.Param("presetId")
-
-	// Get seller ID from context
-	sellerHex, ok := c.Get("user_id")
-	if !ok {
-		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
-		return
-	}
-	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
-
-	// Apply preset
-	result, err := services.ApplyThemePresetService(shopThemeID, presetID, sellerID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-		return
-	}
-
-	if result.ModifiedCount == 0 {
-		c.JSON(http.StatusNotFound, gin.H{"error": "preset not applied"})
-		return
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "preset applied successfully"})
-}
+// =============== Scalable Theme Controllers ===============
+// This file implements the new scalable theme architecture using separate collections
 
 // =============== Customization API Controllers ===============
 
-// GetCustomizationData returns all customization data for a shop
+// GetCustomizationData returns all customization data for a shop using scalable theme collection
 // GET /seller/shops/:shopId/customization
 func GetCustomizationData(c *gin.Context) {
 	shopID := c.Param("shopId")
@@ -407,46 +30,99 @@ func GetCustomizationData(c *gin.Context) {
 	}
 	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
 
-	// Get active theme
-	shopTheme, theme, err := services.GetShopActiveThemeService(shopID, sellerID)
+	// Get shop details using existing shop service
+	shop, err := shopServices.GetShopByIDService(shopID)
 	if err != nil {
-		// If no active theme, return default data
-		c.JSON(http.StatusOK, gin.H{
-			"customization": gin.H{
-				"colors": gin.H{
-					"primary":     "#10B981",
-					"secondary":   "#F59E0B",
-					"background":  "#FFFFFF",
-					"heading":     "#1F2937",
-					"bodyText":    "#6B7280",
-				},
-				"fonts": gin.H{
-					"heading": "Inter",
-					"body":    "Inter",
-				},
-				"layout": gin.H{
-					"headerStyle":      "classic",
-					"containerWidth":   "boxed",
-					"sidebarPosition":  "none",
-					"gridColumns":      "3",
-				},
-			},
-			"message": "using default theme",
-		})
+		c.JSON(http.StatusNotFound, gin.H{"error": "shop not found"})
 		return
 	}
 
-	// Merge base theme config with shop overrides
-	customization := mergeThemeConfig(theme.Config, shopTheme.Overrides)
+	// Verify shop ownership
+	if shop.OwnerID != sellerID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: you don't own this shop"})
+		return
+	}
 
-	c.JSON(http.StatusOK, gin.H{
+	// Get shop analytics for context
+	shopObjectID, _ := primitive.ObjectIDFromHex(shopID)
+	customers, _ := sharedRepositories.GetShopCustomerLinks(shopObjectID)
+	
+	// Get or create theme from separate collection (scalable approach)
+	theme, err := themeServices.GetOrCreateShopTheme(shopObjectID, sellerID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to load theme configuration"})
+		return
+	}
+
+	// Get theme performance metrics
+	themeMetrics, _ := themeServices.GetThemePerformanceMetrics(shopObjectID)
+
+	// Prepare theme customization response matching frontend expectations
+	customization := gin.H{
+		"colors":    theme.Colors,
+		"fonts":     theme.Fonts,
+		"layout":    theme.Layout,
+		"customCSS": theme.CustomCSS,
+		"seo":       theme.SEO,
+		"mobile":    theme.Mobile,
+	}
+
+	// Prepare enhanced shop context data with theme analytics
+	shopContext := gin.H{
+		"shop": gin.H{
+			"id":                shop.ID,
+			"name":              shop.Name,
+			"slug":              shop.Slug,
+			"image":             shop.Image,
+			"banner":            shop.Banner,
+			"description":       shop.Description,
+			"email":             shop.Email,
+			"phone":             shop.Phone,
+			"address":           shop.Address,
+			"currency":          shop.Currency,
+			"status":            shop.Status,
+			"isVerified":        shop.IsVerified,
+			"themeColor":        shop.ThemeColor,
+			"themeVersion":      shop.ThemeVersion,
+			"themeLastModified": shop.ThemeLastModified,
+			"activeThemeId":     shop.ActiveThemeID,
+			"customerCount":     len(customers),
+			"productCount":      shop.ProductCount,
+			"revenue":           shop.Revenue,
+			"rating":            shop.Rating,
+			"reviewCount":       shop.ReviewCount,
+		},
+		"analytics": gin.H{
+			"totalCustomers": len(customers),
+			"hasProducts":    shop.ProductCount > 0,
+			"hasOrders":      shop.Revenue > 0,
+			"shopAge":        shop.CreatedAt,
+			"themeUpdated":   shop.ThemeLastModified,
+		},
+		"theme": gin.H{
+			"id":               theme.ID,
+			"name":             theme.Name,
+			"version":          theme.Version,
+			"isActive":         theme.IsActive,
+			"usageCount":       theme.UsageCount,
+			"lastUsed":         theme.LastUsedAt,
+			"performance":      themeMetrics,
+			"hasBackup":        theme.Backup != nil,
+			"tags":             theme.Tags,
+		},
+	}
+
+	response := gin.H{
 		"customization": customization,
-		"shop_theme":    shopTheme,
-		"base_theme":    theme,
-	})
+		"shop_context":  shopContext,
+		"success":       true,
+		"scalable":      true, // Indicates using scalable theme collection
+	}
+
+	c.JSON(http.StatusOK, response)
 }
 
-// UpdateCustomization updates theme customization for a shop
+// UpdateCustomization updates theme customization for a shop using scalable theme collection
 // PATCH /seller/shops/:shopId/customization
 func UpdateCustomization(c *gin.Context) {
 	shopID := c.Param("shopId")
@@ -459,101 +135,437 @@ func UpdateCustomization(c *gin.Context) {
 	}
 	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
 
-	// Bind customization data
+	// Verify shop ownership first
+	shop, err := shopServices.GetShopByIDService(shopID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "shop not found"})
+		return
+	}
+	if shop.OwnerID != sellerID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: you don't own this shop"})
+		return
+	}
+
+	// Bind customization data - support all theme sections
 	var customizationData struct {
-		Colors map[string]string `json:"colors,omitempty"`
-		Fonts  map[string]string `json:"fonts,omitempty"`
-		Layout map[string]string `json:"layout,omitempty"`
+		Colors    map[string]string `json:"colors,omitempty"`
+		Fonts     map[string]string `json:"fonts,omitempty"`
+		Layout    map[string]string `json:"layout,omitempty"`
+		CustomCSS string            `json:"customCSS,omitempty"`
+		SEO       map[string]string `json:"seo,omitempty"`
+		Mobile    map[string]string `json:"mobile,omitempty"`
 	}
 	if err := c.ShouldBindJSON(&customizationData); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid payload"})
 		return
 	}
 
-	// Get or create shop theme
-	shopObjectID, err := primitive.ObjectIDFromHex(shopID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid shop ID"})
-		return
-	}
-
-	shopTheme, _, err := services.GetShopActiveThemeService(shopID, sellerID)
-	if err != nil {
-		// Create default shop theme if none exists
-		defaultTheme := &models.ShopTheme{
-			ShopID:  shopObjectID,
-			ThemeID: primitive.NewObjectID(), // Default theme ID
-			Overrides: models.ThemeConfig{
-				Colors: customizationData.Colors,
-				Fonts:  customizationData.Fonts,
-				Layouts: customizationData.Layout,
-			},
-			Published: true,
-		}
-
-		_, err := services.CreateShopThemeService(defaultTheme, sellerID)
-		if err != nil {
-			c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to create theme configuration"})
-			return
-		}
-
-		c.JSON(http.StatusOK, gin.H{"message": "customization saved successfully"})
-		return
-	}
-
-	// Update existing shop theme
-	updateData := bson.M{
-		"overrides": models.ThemeConfig{
-			Colors:  customizationData.Colors,
-			Fonts:   customizationData.Fonts,
-			Layouts: customizationData.Layout,
-		},
-	}
-
-	_, err = services.UpdateShopThemeService(shopTheme.ID.Hex(), updateData, sellerID)
-	if err != nil {
+	// Validate customization data
+	if err := validateEnhancedCustomizationData(customizationData); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "customization updated successfully"})
+	// Update theme using scalable theme collection
+	shopObjectID, _ := primitive.ObjectIDFromHex(shopID)
+	updateData := make(map[string]interface{})
+	
+	if customizationData.Colors != nil {
+		updateData["colors"] = customizationData.Colors
+	}
+	if customizationData.Fonts != nil {
+		updateData["fonts"] = customizationData.Fonts
+	}
+	if customizationData.Layout != nil {
+		updateData["layout"] = customizationData.Layout
+	}
+	if customizationData.CustomCSS != "" {
+		updateData["customCSS"] = customizationData.CustomCSS
+	}
+	if customizationData.SEO != nil {
+		updateData["seo"] = customizationData.SEO
+	}
+	if customizationData.Mobile != nil {
+		updateData["mobile"] = customizationData.Mobile
+	}
+
+	theme, err := themeServices.UpdateShopThemeComplete(shopObjectID, updateData)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save customization"})
+		return
+	}
+
+	// Get updated customer count for response
+	customers, _ := sharedRepositories.GetShopCustomerLinks(shopObjectID)
+	
+	// Prepare response matching frontend expectations
+	response := gin.H{
+		"message": "customization saved successfully",
+		"success": true,
+		"customization": gin.H{
+			"colors":    theme.Colors,
+			"fonts":     theme.Fonts,
+			"layout":    theme.Layout,
+			"customCSS": theme.CustomCSS,
+			"seo":       theme.SEO,
+			"mobile":    theme.Mobile,
+		},
+		"theme": theme.ToConfig().Metadata,
+		"shop_context": gin.H{
+			"updated_at":     time.Now(),
+			"customer_count": len(customers),
+			"theme_modified": true,
+		},
+		"scalable": true,
+	}
+
+	c.JSON(http.StatusOK, response)
+}
+
+// =============== Granular Theme API Endpoints ===============
+
+// SaveThemeColors saves only the color configuration using scalable theme collection
+// PATCH /seller/shops/:shopId/customization/colors
+func SaveThemeColors(c *gin.Context) {
+	shopID := c.Param("shopId")
+	
+	// Get seller ID from context
+	sellerHex, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
+	
+	var colors map[string]string
+	if err := c.ShouldBindJSON(&colors); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid colors data"})
+		return
+	}
+
+	// Validate colors
+	for _, value := range colors {
+		if !isValidHexColor(value) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "invalid color format: " + value})
+			return
+		}
+	}
+
+	// Verify shop ownership
+	shop, err := shopServices.GetShopByIDService(shopID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "shop not found"})
+		return
+	}
+	if shop.OwnerID != sellerID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: you don't own this shop"})
+		return
+	}
+
+	// Update colors in theme collection (scalable)
+	shopObjectID, _ := primitive.ObjectIDFromHex(shopID)
+	theme, err := themeServices.UpdateShopThemeColors(shopObjectID, colors)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save colors"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":     "colors saved successfully",
+		"colors":      colors,
+		"theme":       theme.ToConfig().Metadata,
+		"success":     true,
+		"scalable":    true,
+	})
+}
+
+// SaveTypography saves only the font configuration using scalable theme collection
+// PATCH /seller/shops/:shopId/customization/fonts
+func SaveTypography(c *gin.Context) {
+	shopID := c.Param("shopId")
+	
+	// Get seller ID from context and verify ownership
+	sellerHex, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
+	
+	var fonts map[string]string
+	if err := c.ShouldBindJSON(&fonts); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid fonts data"})
+		return
+	}
+
+	// Verify shop ownership
+	shop, err := shopServices.GetShopByIDService(shopID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "shop not found"})
+		return
+	}
+	if shop.OwnerID != sellerID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: you don't own this shop"})
+		return
+	}
+
+	// Update fonts in theme collection (scalable)
+	shopObjectID, _ := primitive.ObjectIDFromHex(shopID)
+	theme, err := themeServices.UpdateShopThemeFonts(shopObjectID, fonts)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save fonts"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":  "typography saved successfully",
+		"fonts":    fonts,
+		"theme":    theme.ToConfig().Metadata,
+		"success":  true,
+		"scalable": true,
+	})
+}
+
+// SaveLayout saves only the layout configuration using scalable theme collection
+// PATCH /seller/shops/:shopId/customization/layout
+func SaveLayout(c *gin.Context) {
+	shopID := c.Param("shopId")
+	
+	// Get seller ID from context and verify ownership
+	sellerHex, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
+	
+	var layout map[string]string
+	if err := c.ShouldBindJSON(&layout); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid layout data"})
+		return
+	}
+
+	// Verify shop ownership
+	shop, err := shopServices.GetShopByIDService(shopID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "shop not found"})
+		return
+	}
+	if shop.OwnerID != sellerID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: you don't own this shop"})
+		return
+	}
+
+	// Update layout in theme collection (scalable)
+	shopObjectID, _ := primitive.ObjectIDFromHex(shopID)
+	theme, err := themeServices.UpdateShopThemeLayout(shopObjectID, layout)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to save layout"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":  "layout saved successfully",
+		"layout":   layout,
+		"theme":    theme.ToConfig().Metadata,
+		"success":  true,
+		"scalable": true,
+	})
+}
+
+// ResetCustomization resets all theme settings to default using scalable theme collection
+// POST /seller/shops/:shopId/customization/reset
+func ResetCustomization(c *gin.Context) {
+	shopID := c.Param("shopId")
+
+	// Get seller ID from context and verify ownership
+	sellerHex, ok := c.Get("user_id")
+	if !ok {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "unauthorized"})
+		return
+	}
+	sellerID, _ := primitive.ObjectIDFromHex(sellerHex.(string))
+
+	// Verify shop ownership
+	shop, err := shopServices.GetShopByIDService(shopID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "shop not found"})
+		return
+	}
+	if shop.OwnerID != sellerID {
+		c.JSON(http.StatusForbidden, gin.H{"error": "unauthorized: you don't own this shop"})
+		return
+	}
+
+	// Reset theme in theme collection (scalable)
+	shopObjectID, _ := primitive.ObjectIDFromHex(shopID)
+	theme, err := themeServices.ResetShopTheme(shopObjectID, sellerID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to reset customization"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "customization reset to default",
+		"customization": gin.H{
+			"colors":    theme.Colors,
+			"fonts":     theme.Fonts,
+			"layout":    theme.Layout,
+			"customCSS": theme.CustomCSS,
+			"seo":       theme.SEO,
+			"mobile":    theme.Mobile,
+		},
+		"theme":    theme.ToConfig().Metadata,
+		"success":  true,
+		"scalable": true,
+	})
+}
+
+// =============== Legacy Theme Controllers (Placeholders) ===============
+
+// CreateTheme placeholder for marketplace theme creation
+func CreateTheme(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{
+		"message": "marketplace theme creation disabled in scalable architecture",
+		"note":    "focus on shop-specific themes for better performance",
+	})
+}
+
+// GetPublicThemes placeholder for marketplace themes
+func GetPublicThemes(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"themes": []interface{}{}, "scalable": true})
+}
+
+// GetMyThemes placeholder for user themes
+func GetMyThemes(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"themes": []interface{}{}, "scalable": true})
+}
+
+// SearchThemes placeholder for theme search
+func SearchThemes(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"themes": []interface{}{}, "scalable": true})
+}
+
+// GetTheme placeholder for theme details
+func GetTheme(c *gin.Context) {
+	c.JSON(http.StatusNotFound, gin.H{"error": "theme not found in scalable architecture"})
+}
+
+// UpdateTheme placeholder for theme updates
+func UpdateTheme(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "theme update disabled in scalable architecture"})
+}
+
+// DeleteTheme placeholder for theme deletion
+func DeleteTheme(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "theme deletion disabled in scalable architecture"})
+}
+
+// GetThemePresets placeholder for theme presets
+func GetThemePresets(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"presets": []interface{}{}, "scalable": true})
+}
+
+// CreateShopTheme placeholder for shop theme creation
+func CreateShopTheme(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "using scalable theme collection"})
+}
+
+// GetShopThemes placeholder for shop themes
+func GetShopThemes(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"shop_themes": []interface{}{}, "scalable": true})
+}
+
+// GetShopActiveTheme placeholder for active shop theme
+func GetShopActiveTheme(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "using scalable theme collection"})
+}
+
+// UpdateShopTheme placeholder for shop theme updates
+func UpdateShopTheme(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "using scalable theme collection"})
+}
+
+// PublishShopTheme placeholder for theme publishing
+func PublishShopTheme(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "using scalable theme collection"})
+}
+
+// DeleteShopTheme placeholder for shop theme deletion
+func DeleteShopTheme(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "using scalable theme collection"})
+}
+
+// ApplyThemePreset placeholder for applying presets
+func ApplyThemePreset(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "using scalable theme collection"})
+}
+
+// SeedDefaultThemes placeholder for theme seeding
+func SeedDefaultThemes(c *gin.Context) {
+	c.JSON(http.StatusOK, gin.H{"message": "using scalable theme collection"})
 }
 
 // =============== Helper Functions ===============
 
-// mergeThemeConfig merges base theme config with overrides
-func mergeThemeConfig(base, overrides models.ThemeConfig) map[string]interface{} {
-	result := make(map[string]interface{})
+// validateEnhancedCustomizationData validates the enhanced customization input
+func validateEnhancedCustomizationData(data struct {
+	Colors    map[string]string `json:"colors,omitempty"`
+	Fonts     map[string]string `json:"fonts,omitempty"`
+	Layout    map[string]string `json:"layout,omitempty"`
+	CustomCSS string            `json:"customCSS,omitempty"`
+	SEO       map[string]string `json:"seo,omitempty"`
+	Mobile    map[string]string `json:"mobile,omitempty"`
+}) error {
+	// Validate colors
+	if data.Colors != nil {
+		for key, value := range data.Colors {
+			if key == "" || value == "" {
+				return errors.New("color configuration cannot have empty keys or values")
+			}
+			// Basic hex color validation
+			if !isValidHexColor(value) {
+				return errors.New("invalid color format: " + value)
+			}
+		}
+	}
 
-	// Merge colors
-	colors := make(map[string]string)
-	for k, v := range base.Colors {
-		colors[k] = v
+	// Validate fonts
+	if data.Fonts != nil {
+		for key, value := range data.Fonts {
+			if key == "" || value == "" {
+				return errors.New("font configuration cannot have empty keys or values")
+			}
+		}
 	}
-	for k, v := range overrides.Colors {
-		colors[k] = v
-	}
-	result["colors"] = colors
 
-	// Merge fonts
-	fonts := make(map[string]string)
-	for k, v := range base.Fonts {
-		fonts[k] = v
+	// Validate layout
+	if data.Layout != nil {
+		for key, value := range data.Layout {
+			if key == "" || value == "" {
+				return errors.New("layout configuration cannot have empty keys or values")
+			}
+		}
 	}
-	for k, v := range overrides.Fonts {
-		fonts[k] = v
-	}
-	result["fonts"] = fonts
 
-	// Merge layouts
-	layouts := make(map[string]string)
-	for k, v := range base.Layouts {
-		layouts[k] = v
+	// Validate custom CSS length
+	if len(data.CustomCSS) > 100000 { // 100KB limit
+		return errors.New("custom CSS too large (max 100KB)")
 	}
-	for k, v := range overrides.Layouts {
-		layouts[k] = v
-	}
-	result["layout"] = layouts
 
-	return result
+	return nil
+}
+
+// isValidHexColor validates hex color format
+func isValidHexColor(color string) bool {
+	if len(color) != 7 || color[0] != '#' {
+		return false
+	}
+	for i := 1; i < len(color); i++ {
+		c := color[i]
+		if !((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F')) {
+			return false
+		}
+	}
+	return true
 }

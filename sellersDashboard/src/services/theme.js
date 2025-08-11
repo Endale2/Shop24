@@ -35,33 +35,66 @@ export const themeService = {
   },
 
   /**
-   * Save theme colors
+   * Save theme colors (optimized endpoint)
    * @param {string} shopId - Shop ID
    * @param {Object} colors - Colors object
    * @returns {Promise} Update result
    */
   async saveThemeColors(shopId, colors) {
-    return this.updateCustomization(shopId, { colors })
+    try {
+      const response = await api.patch(`/seller/shops/${shopId}/customization/colors`, colors)
+      return response.data
+    } catch (error) {
+      console.error('Error saving colors:', error)
+      throw error
+    }
   },
 
   /**
-   * Save typography settings
+   * Save typography settings (optimized endpoint)
    * @param {string} shopId - Shop ID
    * @param {Object} fonts - Fonts object
    * @returns {Promise} Update result
    */
   async saveTypography(shopId, fonts) {
-    return this.updateCustomization(shopId, { fonts })
+    try {
+      const response = await api.patch(`/seller/shops/${shopId}/customization/fonts`, fonts)
+      return response.data
+    } catch (error) {
+      console.error('Error saving typography:', error)
+      throw error
+    }
   },
 
   /**
-   * Save layout settings
+   * Save layout settings (optimized endpoint)
    * @param {string} shopId - Shop ID
    * @param {Object} layout - Layout configuration
    * @returns {Promise} Update result
    */
   async saveLayout(shopId, layout) {
-    return this.updateCustomization(shopId, { layout })
+    try {
+      const response = await api.patch(`/seller/shops/${shopId}/customization/layout`, layout)
+      return response.data
+    } catch (error) {
+      console.error('Error saving layout:', error)
+      throw error
+    }
+  },
+
+  /**
+   * Reset all customization to defaults
+   * @param {string} shopId - Shop ID
+   * @returns {Promise} Reset result
+   */
+  async resetToDefaults(shopId) {
+    try {
+      const response = await api.post(`/seller/shops/${shopId}/customization/reset`)
+      return response.data
+    } catch (error) {
+      console.error('Error resetting customization:', error)
+      throw error
+    }
   },
 
   // =============== Theme Management API ===============

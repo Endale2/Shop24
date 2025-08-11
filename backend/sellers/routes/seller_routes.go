@@ -161,7 +161,13 @@ func SellerRoute(r *gin.Engine) {
 		customizationGroup := shopGroup.Group("/customization")
 		{
 			customizationGroup.GET("", controllers.GetCustomizationData)         // Get current customization
-			customizationGroup.PATCH("", controllers.UpdateCustomization)        // Update customization
+			customizationGroup.PATCH("", controllers.UpdateCustomization)        // Update customization (full)
+			
+			// Granular theme updates (matching frontend API calls)
+			customizationGroup.PATCH("/colors", controllers.SaveThemeColors)     // Save colors only
+			customizationGroup.PATCH("/fonts", controllers.SaveTypography)       // Save fonts only  
+			customizationGroup.PATCH("/layout", controllers.SaveLayout)          // Save layout only
+			customizationGroup.POST("/reset", controllers.ResetCustomization)    // Reset to defaults
 		}
 
 	}
