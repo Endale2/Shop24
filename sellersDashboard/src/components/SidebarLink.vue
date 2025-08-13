@@ -44,6 +44,9 @@ const props = defineProps({
   small: { type: Boolean, default: false }
 })
 
+// Define emits
+const emit = defineEmits(['click'])
+
 const route = useRoute()
 const navigationStore = useNavigationStore()
 
@@ -60,6 +63,8 @@ watch(() => route.path, (newPath) => {
 // Handle click to immediately update active state
 const handleClick = () => {
   navigationStore.setActiveNavItem(props.to)
+  // Emit click event for parent components (like closing mobile sidebar)
+  emit('click')
 }
 
 // Check if this nav item is active - use navigation store for immediate feedback

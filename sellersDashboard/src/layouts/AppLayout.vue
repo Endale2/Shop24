@@ -19,7 +19,7 @@
         'md:static md:translate-x-0 md:shadow-none'
       ]"
     >
-      <Sidebar />
+      <Sidebar @close-mobile-sidebar="closeMobileSidebar" />
     </aside>
 
     <!-- Main content area -->
@@ -43,6 +43,11 @@ import Sidebar from '@/components/Sidebar.vue'
 import Navbar  from '@/components/Navbar.vue'
 
 const showSidebar = ref(false)
+
+// Function to close mobile sidebar
+const closeMobileSidebar = () => {
+  showSidebar.value = false
+}
 </script>
 
 <style scoped>

@@ -47,6 +47,7 @@
             :badge="item.badge"
             compact
             large-icon
+            @click="handleNavClick"
           />
         </div>
       </div>
@@ -68,6 +69,7 @@
             :label="col.title"
             compact
             variant="info"
+            @click="handleNavClick"
           />
           <SidebarLink
             v-if="collections.length > 3"
@@ -76,6 +78,7 @@
             :label="`View All (${collections.length})`"
             compact
             variant="secondary"
+            @click="handleNavClick"
           />
         </div>
       </div>
@@ -95,6 +98,7 @@
             label="Online Store"
             compact
             variant="primary"
+            @click="handleNavClick"
           />
         </div>
       </div>
@@ -106,6 +110,9 @@
 import { computed, ref } from 'vue'
 import { useShopStore } from '@/store/shops'
 import SidebarLink from './SidebarLink.vue'
+
+// Define emits
+const emit = defineEmits(['close-mobile-sidebar'])
 
 import {
   HomeIcon,
@@ -130,6 +137,14 @@ const collections = computed(() => activeShop.value?.collections || [])
 function truncateDescription(description) {
   if (!description) return 'No description'
   return description.length > 25 ? description.substring(0, 25) + '...' : description
+}
+
+// Handle navigation click - close mobile sidebar (only on mobile screens)
+function handleNavClick() {
+  // Check if we're on mobile screen size (< 768px)
+  if (window.innerWidth < 768) {
+    emit('close-mobile-sidebar')
+  }
 }
 
 // Primary navigation items with badges - routes match router configuration
