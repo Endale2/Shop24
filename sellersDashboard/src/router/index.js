@@ -2,6 +2,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useAuthStore } from '@/store/auth'
 import { useShopStore } from '@/store/shops'
+import { useNavigationStore } from '@/store/navigation'
 
 import LandingPage        from '@/pages/LandingPage.vue'
 import ProfileCompletion  from '@/pages/ProfileCompletion.vue'
@@ -81,57 +82,83 @@ const router = createRouter({
 })
 
 router.beforeEach(async (to, from, next) => {
-  const auth  = useAuthStore()
+  const auth = useAuthStore()
   const shops = useShopStore()
 
-  // 1) Ensure we have the user loaded if they're authenticated
-  if (!auth.user && auth.$state.user === null && !to.meta.public) {
-    try { await auth.fetchMe() }
-    catch { /* ignore—will be redirected below if not authed */ }
+  console.log(`[Router] Navigating from ${from.path} to ${to.path}`)
+
+  // Skip auth checks for public routes unless we're already authenticated
+  const isPublic = Boolean(to.meta.public)
+  const requiresAuth = Boolean(to.meta.requiresAuth || to.meta.requiresShop)
+
+  // 1) For non-public routes, ensure we have valid auth state
+  if (!isPublic && requiresAuth) {
+    // If we don't have a user or session is loading, try to fetch
+    if (!auth.user && !auth.sessionLoading) {
+      try {
+        console.log('[Router] No user found, attempting to fetch...')
+        await auth.fetchMe()
+      } catch (error) {
+        console.log('[Router] Auth fetch failed, redirecting to landing:', error.message)
+        return next({ name: 'Landing' })
+      }
+    }
+
+    // If still no user after fetch attempt, redirect to landing
+    if (!auth.user) {
+      console.log('[Router] No authenticated user, redirecting to landing')
+      return next({ name: 'Landing' })
+    }
   }
 
-  const isPublic      = Boolean(to.meta.public)
-  const requiresAuth  = Boolean(to.meta.requiresAuth || to.meta.requiresShop)
-  const isLoggedIn    = auth.isAuthenticated
-  const profileReady  = Boolean(auth.user?.first_name && auth.user?.last_name)
-  const hasShop       = Boolean(shops.active)
+  // Get current state
+  const isLoggedIn = auth.isAuthenticated
+  const profileReady = Boolean(auth.user?.first_name && auth.user?.last_name)
+  const hasShop = Boolean(shops.active)
 
-  // 2) Unauthenticated => only public
-  if (requiresAuth && !isLoggedIn) {
-    return next({ name: 'Landing' })
-  }
+  console.log(`[Router] Auth state - logged in: ${isLoggedIn}, profile ready: ${profileReady}, has shop: ${hasShop}`)
 
-  // 3) Logged in users should not hit public routes
+  // 2) Redirect authenticated users away from public routes
   if (isLoggedIn && isPublic) {
-    // incomplete profile?
     if (!profileReady) {
+      console.log('[Router] Authenticated but profile incomplete, redirecting to profile completion')
       return next({ name: 'CompleteProfile' })
     }
-    // complete profile but no shop yet?
     if (!hasShop) {
+      console.log('[Router] Profile complete but no shop, redirecting to shop selection')
       return next({ name: 'ShopSelection' })
     }
-    // fully set up => dashboard
+    console.log('[Router] Fully authenticated, redirecting to dashboard')
     return next({ name: 'Dashboard' })
   }
 
-  // 4) If logged in but profile incomplete, lock them to CompleteProfile
+  // 3) Profile completion flow
   if (isLoggedIn && !profileReady && to.name !== 'CompleteProfile') {
+    console.log('[Router] Profile incomplete, redirecting to profile completion')
     return next({ name: 'CompleteProfile' })
   }
 
-  // If profile just completed, redirect off of the completion page
+  // 4) Redirect away from profile completion if already complete
   if (isLoggedIn && profileReady && to.name === 'CompleteProfile') {
+    console.log('[Router] Profile already complete, redirecting to shop selection')
     return next({ name: 'ShopSelection' })
   }
 
-  // 5) If profile ready but no shop, and they're trying dashboard routes, force ShopSelection
+  // 5) Shop selection flow
   if (isLoggedIn && profileReady && !hasShop && to.meta.requiresShop) {
+    console.log('[Router] No shop selected, redirecting to shop selection')
     return next({ name: 'ShopSelection' })
   }
 
-  // otherwise allow
+  // 6) All checks passed, allow navigation
+  console.log('[Router] Navigation allowed')
   next()
+})
+
+// After navigation is complete, update navigation store
+router.afterEach((to) => {
+  const navigationStore = useNavigationStore()
+  navigationStore.initializeFromRoute(to.path)
 })
 
 export default router

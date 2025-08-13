@@ -2,7 +2,7 @@
   <header class="bg-white shadow-sm border-b border-gray-200 px-6 py-3 flex items-center justify-between text-gray-800 z-20 sticky top-0 backdrop-blur-sm bg-white/95">
     <div class="flex items-center space-x-4">
       <button
-        class="md:hidden p-2 rounded-lg hover:bg-gray-100 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-green-300 focus:ring-offset-2"
+        class="md:hidden p-2 hover:bg-gray-100 transition-all duration-200 focus:outline-none"
         @click="$emit('toggle-sidebar')"
         aria-label="Toggle menu"
       >
@@ -12,7 +12,7 @@
       <div v-if="shops.length" class="relative" ref="shopDropdownRef">
         <button
           @click="showShopMenu = !showShopMenu"
-          class="inline-flex items-center bg-gradient-to-r from-green-50 to-emerald-50 border border-green-200 hover:from-green-100 hover:to-emerald-100 px-4 py-2 rounded-lg text-gray-700 font-medium shadow-sm transition-all duration-200 hover:shadow-md group"
+          class="inline-flex items-center bg-gradient-to-r from-green-50 to-emerald-50 hover:from-green-100 hover:to-emerald-100 px-4 py-2 text-gray-700 font-medium shadow-sm transition-all duration-200 hover:shadow-md group focus:outline-none"
         >
           <template v-if="activeShop?.image">
             <img

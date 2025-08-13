@@ -33,20 +33,20 @@
       <div v-else class="space-y-6">
         
         <!-- Stat Cards Grid -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+        <div class="stats-grid">
           <!-- Total Products Card -->
-          <div class="bg-white rounded-lg shadow-sm border border-gray-200 p-4 transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 group">
+          <div class="stat-card">
             <div class="flex items-center justify-between">
               <div class="flex-1">
-                <p class="text-xs font-medium text-gray-500 uppercase tracking-wide mb-1">Total Products</p>
-                <p class="text-2xl font-bold text-gray-900 mb-1">{{ stats.products }}</p>
-                <div class="flex items-center text-xs text-blue-600 font-medium">
-                  <CubeIcon class="w-3 h-3 mr-1" />
+                <p class="stat-label">Total Products</p>
+                <p class="stat-value">{{ stats.products }}</p>
+                <div class="stat-meta">
+                  <CubeIcon class="w-3 h-3" />
                   {{ stats.lowStockProducts }} low stock
                 </div>
               </div>
-              <div class="w-10 h-10 bg-blue-50 rounded-lg flex items-center justify-center group-hover:scale-105 transition-transform duration-200">
-                <CubeIcon class="w-5 h-5 text-blue-600" />
+              <div class="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center group-hover:bg-primary-200 transition-colors duration-200">
+                <CubeIcon class="w-5 h-5 text-primary" />
               </div>
             </div>
           </div>

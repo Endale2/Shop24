@@ -55,23 +55,23 @@
         </div>
 
         <!-- Form Card -->
-        <div class="bg-white rounded-2xl shadow-lg border border-gray-200 p-8">
+        <div class="card">
           <form @submit.prevent="submit" class="space-y-6">
             <!-- Name Fields -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <label class="block text-sm font-semibold text-gray-700 mb-2">
-                  First Name <span class="text-red-500">*</span>
+                <label class="form-label">
+                  First Name <span class="text-error">*</span>
                 </label>
                 <input
                   v-model="firstName"
                   type="text"
                   required
                   placeholder="Enter your first name"
-                  class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-transparent transition-all duration-200 text-base"
-                  :class="{ 'border-red-300 focus:ring-red-400': errors.firstName }"
+                  class="form-input"
+                  :class="{ 'border-error': errors.firstName }"
                 />
-                <p v-if="errors.firstName" class="mt-1 text-sm text-red-600">{{ errors.firstName }}</p>
+                <p v-if="errors.firstName" class="form-error">{{ errors.firstName }}</p>
               </div>
 
               <div>

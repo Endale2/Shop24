@@ -1,15 +1,16 @@
 <template>
   <router-link
     :to="to"
-    class="group flex items-center transition ease-in-out duration-200 rounded-lg font-medium whitespace-nowrap relative"
+    @click="handleClick"
+    class="group flex items-center transition ease-in-out duration-200 font-medium whitespace-nowrap relative"
     :class="[
       // Standard padding and spacing
       'px-3 py-2.5 text-sm space-x-3',
 
       // Active vs inactive styling
       isActive
-        ? 'bg-green-50 text-green-700 font-semibold'
-        : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900',
+        ? 'text-green-700 font-semibold'
+        : 'text-gray-600 hover:text-gray-900',
     ]"
   >
     <div
@@ -33,7 +34,8 @@
 
 <script setup>
 import { useRoute } from 'vue-router'
-import { computed } from 'vue'
+import { computed, onMounted, watch } from 'vue'
+import { useNavigationStore } from '@/store/navigation'
 
 const props = defineProps({
   to: { type: String, required: true },
@@ -43,9 +45,36 @@ const props = defineProps({
 })
 
 const route = useRoute()
+const navigationStore = useNavigationStore()
 
-// exact match for Home, prefix match for everything else
+// Initialize navigation store with current route on mount
+onMounted(() => {
+  navigationStore.initializeFromRoute(route.path)
+})
+
+// Watch for route changes and update navigation store
+watch(() => route.path, (newPath) => {
+  navigationStore.initializeFromRoute(newPath)
+})
+
+// Handle click to immediately update active state
+const handleClick = () => {
+  navigationStore.setActiveNavItem(props.to)
+}
+
+// Check if this nav item is active - use navigation store for immediate feedback
 const isActive = computed(() => {
+  const activeNavItem = navigationStore.getActiveNavItem
+
+  // If navigation store has an active item, use that for immediate feedback
+  if (activeNavItem) {
+    if (props.to === '/dashboard') {
+      return activeNavItem === props.to
+    }
+    return activeNavItem === props.to || activeNavItem.startsWith(props.to + '/')
+  }
+
+  // Fallback to route-based detection
   if (props.to === '/dashboard') {
     return route.path === props.to
   }
