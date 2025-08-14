@@ -486,10 +486,19 @@ async function refreshDiscounts() {
   await loadDiscounts();
 }
 
-// Lifecycle
-onMounted(() => {
-  if (shopId.value) {
-    loadDiscounts();
+// Lifecycle (align with OrdersPage pattern)
+onMounted(async () => {
+  try {
+    if (!shopId.value) {
+      const ensured = await shopStore.ensureActiveShop()
+      if (!ensured?.id) {
+        router.replace({ name: 'ShopSelection' })
+        return
+      }
+    }
+    await loadDiscounts()
+  } catch (e) {
+    console.error('[DiscountsPage] Initialization failed:', e)
   }
 });
 </script>

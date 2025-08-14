@@ -284,10 +284,19 @@ const previewUrl = computed(() => {
   }
 })
 
-// Load customization data on mount
+// Load customization data on mount (align with OrdersPage pattern)
 onMounted(async () => {
-  if (shopId.value) {
+  try {
+    if (!shopId.value) {
+      const ensured = await shopStore.ensureActiveShop()
+      if (!ensured?.id) {
+        router.replace({ name: 'ShopSelection' })
+        return
+      }
+    }
     await loadCustomizationData()
+  } catch (e) {
+    console.error('[CustomizationPage] Initialization failed:', e)
   }
 })
 

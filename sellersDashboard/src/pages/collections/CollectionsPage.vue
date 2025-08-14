@@ -293,9 +293,20 @@ function formatDate(dt) {
     : '—'
 }
 
-// Initial data fetch on component mount
-onMounted(() => {
-  fetchCollections()
+// Initial data fetch on component mount (align with OrdersPage pattern)
+onMounted(async () => {
+  try {
+    if (!activeShop.value?.id) {
+      const ensured = await shopStore.ensureActiveShop()
+      if (!ensured?.id) {
+        router.replace({ name: 'ShopSelection' })
+        return
+      }
+    }
+    await fetchCollections()
+  } catch (e) {
+    console.error('[CollectionsPage] Initialization failed:', e)
+  }
 })
 
 // Watch for changes in activeShop to refetch collections if the shop changes

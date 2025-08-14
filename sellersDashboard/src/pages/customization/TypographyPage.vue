@@ -384,10 +384,19 @@ const typography = reactive({
   fontWeight: '400'
 })
 
-// Load typography data on mount
+// Load typography data on mount (align with OrdersPage pattern)
 onMounted(async () => {
-  if (shopId.value) {
+  try {
+    if (!shopId.value) {
+      const ensured = await shopStore.ensureActiveShop()
+      if (!ensured?.id) {
+        router.replace({ name: 'ShopSelection' })
+        return
+      }
+    }
     await loadTypographyData()
+  } catch (e) {
+    console.error('[TypographyPage] Initialization failed:', e)
   }
 })
 

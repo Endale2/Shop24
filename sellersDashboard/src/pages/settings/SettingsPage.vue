@@ -550,7 +550,23 @@ async function save() {
   }
 }
 
-onMounted(loadCurrent)
+onMounted(async () => {
+  try {
+    if (!shopStore.active?.id) {
+      const ensured = await shopStore.ensureActiveShop()
+      if (!ensured?.id) {
+        // Redirect to shop selection if no shop available
+        const { useRouter } = await import('vue-router')
+        const router = useRouter()
+        router.replace({ name: 'ShopSelection' })
+        return
+      }
+    }
+    loadCurrent()
+  } catch (e) {
+    console.error('[SettingsPage] Initialization failed:', e)
+  }
+})
 </script>
 
 <style scoped>

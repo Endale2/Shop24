@@ -446,13 +446,20 @@ const customerSegmentsMap = computed(() => {
 
 
 
-// Fetch data
+// Fetch data (align with OrdersPage pattern)
 onMounted(async () => {
-  if (!activeShop.value?.id) {
-    router.replace({ name: 'ShopSelection' })
-    return
+  try {
+    if (!activeShop.value?.id) {
+      const ensured = await shopStore.ensureActiveShop()
+      if (!ensured?.id) {
+        router.replace({ name: 'ShopSelection' })
+        return
+      }
+    }
+    await refreshAll()
+  } catch (e) {
+    console.error('[CustomersPage] Initialization failed:', e)
   }
-  await refreshAll()
 })
 
 watch(activeShop, (newShop, oldShop) => {

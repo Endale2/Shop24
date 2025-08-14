@@ -487,30 +487,27 @@ async function fetchCollections() {
   }
 }
 
-// Initial data fetch on component mount
+// Initial data fetch on component mount (OrdersPage pattern)
 onMounted(async () => {
   console.log('[ProductsPage] Component mounted, initializing...')
-
-  // Wait for shop state to be ready or ensure it's available
   try {
-    // First try to wait for existing shop state
-    let shop = await waitForShopState(3000) // Wait up to 3 seconds
-
-    // If no shop state after waiting, try to ensure it
-    if (!shop) {
-      shop = await ensureValidShopState()
+    // Ensure we have an active shop; if not, try to set one or redirect
+    if (!activeShop.value?.id) {
+      console.log('[ProductsPage] No active shop found, ensuring...')
+      const ensured = await shopStore.ensureActiveShop()
+      if (!ensured?.id) {
+        console.warn('[ProductsPage] No shop available, redirecting to ShopSelection')
+        router.replace({ name: 'ShopSelection' })
+        return
+      }
     }
 
-    if (shop) {
-      console.log('[ProductsPage] Shop state ready, loading data...')
-      await Promise.all([
-        fetchProducts(),
-        fetchTabCounts(),
-        fetchCollections()
-      ])
-    } else {
-      console.warn('[ProductsPage] Failed to initialize shop state')
-    }
+    console.log('[ProductsPage] Shop state ready, loading data...')
+    await Promise.all([
+      fetchProducts(),
+      fetchTabCounts(),
+      fetchCollections()
+    ])
   } catch (error) {
     console.error('[ProductsPage] Failed to initialize:', error)
   }

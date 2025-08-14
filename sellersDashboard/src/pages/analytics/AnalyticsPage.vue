@@ -763,9 +763,18 @@ watch(() => shopStore.activeShop, (newShop) => {
   }
 })
 
-onMounted(() => {
-  if (shopId.value) {
-    loadAnalyticsData()
+onMounted(async () => {
+  try {
+    if (!shopId.value) {
+      const ensured = await shopStore.ensureActiveShop()
+      if (!ensured?.id) {
+        router.replace({ name: 'ShopSelection' })
+        return
+      }
+    }
+    await loadAnalyticsData()
+  } catch (e) {
+    console.error('[AnalyticsPage] Initialization failed:', e)
   }
 })
 </script>
