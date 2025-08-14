@@ -150,7 +150,30 @@ router.beforeEach(async (to, from, next) => {
     return next({ name: 'ShopSelection' })
   }
 
-  // 6) All checks passed, allow navigation
+  // 6) Enhanced shop state validation for shop-dependent routes
+  if (isLoggedIn && profileReady && hasShop && to.meta.requiresShop) {
+    // Validate that the active shop is still valid
+    if (!shops.isActiveShopValid) {
+      console.warn('[Router] Active shop is invalid, attempting recovery...')
+
+      try {
+        // Try to set a valid shop if available
+        if (shops.list.length > 0) {
+          const firstValidShop = shops.list[0]
+          shops.setActiveShop(firstValidShop)
+          console.log('[Router] Set new active shop:', firstValidShop.name)
+        } else {
+          console.warn('[Router] No valid shops available, redirecting to shop selection')
+          return next({ name: 'ShopSelection' })
+        }
+      } catch (error) {
+        console.error('[Router] Failed to recover shop state:', error)
+        return next({ name: 'ShopSelection' })
+      }
+    }
+  }
+
+  // 7) All checks passed, allow navigation
   console.log('[Router] Navigation allowed')
   next()
 })

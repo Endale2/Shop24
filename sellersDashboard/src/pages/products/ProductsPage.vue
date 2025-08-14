@@ -225,6 +225,7 @@
 import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useShopStore } from '@/store/shops'
+import { useShopState } from '@/composables/useShopState'
 import { productService } from '@/services/product'
 import { collectionService } from '@/services/collection'
 import {
@@ -236,6 +237,14 @@ import {
 
 const router = useRouter()
 const shopStore = useShopStore()
+const {
+  activeShop,
+  isShopStateReady,
+  ensureValidShopState,
+  waitForShopState,
+  isInitializing,
+  initializationError
+} = useShopState()
 
 // Reactive state
 const allProducts = ref([]) // not used anymore, but kept for compatibility
@@ -255,8 +264,7 @@ const itemsPerPage = 10
 const pagination = ref({ page: 1, limit: 10, total: 0, total_pages: 1 })
 const stats = ref({ total_products: 0, in_stock: 0, out_of_stock: 0 })
 
-// Computed property for the active shop
-const activeShop = computed(() => shopStore.activeShop)
+// Shop state is now managed by the composable
 
 // Computed properties for pagination
 const totalPages = computed(() => pagination.value.total_pages || 1)
@@ -286,18 +294,22 @@ function getProductStock(product) {
 }
 
 /**
- * Fetches products from the service.
+ * Fetches products from the service with enhanced shop state validation.
  */
 async function fetchProducts() {
-  if (!activeShop.value?.id) {
-    router.replace({ name: 'ShopSelection' })
+  // Ensure we have a valid active shop
+  const shop = await ensureValidShopState()
+  if (!shop) {
     return
   }
+
   loading.value = true
   error.value = null
+
   try {
+    console.log('[ProductsPage] Fetching products for shop:', shop.name)
     const { products: fetched, pagination: pag, stats: st } = await productService.fetchAllByShopPaginated(
-      activeShop.value.id,
+      shop.id,
       {
         page: currentPage.value,
         limit: itemsPerPage,
@@ -309,13 +321,27 @@ async function fetchProducts() {
     products.value = fetched
     pagination.value = pag || { page: 1, limit: itemsPerPage, total: fetched.length, total_pages: 1 }
     stats.value = st || { total_products: fetched.length, in_stock: 0, out_of_stock: 0 }
+
+    console.log('[ProductsPage] Products loaded successfully:', {
+      count: fetched.length,
+      page: currentPage.value,
+      total: pag?.total || 0
+    })
   } catch (e) {
-    console.error('Failed to load products:', e)
+    console.error('[ProductsPage] Failed to load products:', e)
     error.value = 'Failed to load products. Please try again.'
+
+    // If error is related to shop not found, redirect to shop selection
+    if (e.response?.status === 404 || e.message?.includes('shop')) {
+      console.warn('[ProductsPage] Shop-related error, redirecting to shop selection')
+      router.replace({ name: 'ShopSelection' })
+    }
   } finally {
     loading.value = false
   }
 }
+
+// ensureValidShopState is now provided by the useShopState composable
 
 /**
  * Applies the search filter to the products.
@@ -391,16 +417,25 @@ const stockTabs = [
 const tabCounts = ref({ all: 0, in_stock: 0, out_of_stock: 0 })
 
 async function fetchTabCounts() {
-  if (!activeShop.value?.id) return
-  // Fetch counts for all tabs in parallel
-  const [allRes, inStockRes, outStockRes] = await Promise.all([
-    productService.fetchAllByShopPaginated(activeShop.value.id, { page: 1, limit: 1, stockStatus: '' }),
-    productService.fetchAllByShopPaginated(activeShop.value.id, { page: 1, limit: 1, stockStatus: 'in_stock' }),
-    productService.fetchAllByShopPaginated(activeShop.value.id, { page: 1, limit: 1, stockStatus: 'out_of_stock' })
-  ])
-  tabCounts.value.all = allRes.pagination ? allRes.pagination.total : (allRes.products?.length || 0)
-  tabCounts.value.in_stock = inStockRes.pagination ? inStockRes.pagination.total : (inStockRes.products?.length || 0)
-  tabCounts.value.out_of_stock = outStockRes.pagination ? outStockRes.pagination.total : (outStockRes.products?.length || 0)
+  const shop = await ensureValidShopState()
+  if (!shop) return
+
+  try {
+    // Fetch counts for all tabs in parallel
+    const [allRes, inStockRes, outStockRes] = await Promise.all([
+      productService.fetchAllByShopPaginated(shop.id, { page: 1, limit: 1, stockStatus: '' }),
+      productService.fetchAllByShopPaginated(shop.id, { page: 1, limit: 1, stockStatus: 'in_stock' }),
+      productService.fetchAllByShopPaginated(shop.id, { page: 1, limit: 1, stockStatus: 'out_of_stock' })
+    ])
+
+    tabCounts.value.all = allRes.pagination ? allRes.pagination.total : (allRes.products?.length || 0)
+    tabCounts.value.in_stock = inStockRes.pagination ? inStockRes.pagination.total : (inStockRes.products?.length || 0)
+    tabCounts.value.out_of_stock = outStockRes.pagination ? outStockRes.pagination.total : (outStockRes.products?.length || 0)
+  } catch (error) {
+    console.error('[ProductsPage] Failed to fetch tab counts:', error)
+    // Set default values on error
+    tabCounts.value = { all: 0, in_stock: 0, out_of_stock: 0 }
+  }
 }
 
 function getStockTabCount(val) {
@@ -440,24 +475,75 @@ const collectionMap = computed(() => {
 })
 
 async function fetchCollections() {
-  if (!activeShop.value?.id) return
-  collections.value = await collectionService.fetchAllByShop(activeShop.value.id)
+  const shop = await ensureValidShopState()
+  if (!shop) return
+
+  try {
+    collections.value = await collectionService.fetchAllByShop(shop.id)
+  } catch (error) {
+    console.error('[ProductsPage] Failed to fetch collections:', error)
+    // Don't fail the entire page if collections fail to load
+    collections.value = []
+  }
 }
 
 // Initial data fetch on component mount
-onMounted(() => {
-  fetchProducts()
-  fetchTabCounts()
-  fetchCollections()
+onMounted(async () => {
+  console.log('[ProductsPage] Component mounted, initializing...')
+
+  // Wait for shop state to be ready or ensure it's available
+  try {
+    // First try to wait for existing shop state
+    let shop = await waitForShopState(3000) // Wait up to 3 seconds
+
+    // If no shop state after waiting, try to ensure it
+    if (!shop) {
+      shop = await ensureValidShopState()
+    }
+
+    if (shop) {
+      console.log('[ProductsPage] Shop state ready, loading data...')
+      await Promise.all([
+        fetchProducts(),
+        fetchTabCounts(),
+        fetchCollections()
+      ])
+    } else {
+      console.warn('[ProductsPage] Failed to initialize shop state')
+    }
+  } catch (error) {
+    console.error('[ProductsPage] Failed to initialize:', error)
+  }
 })
 
 // Watch for changes in activeShop to refetch products if the shop changes
-watch(activeShop, (newShop, oldShop) => {
+watch(activeShop, async (newShop, oldShop) => {
   if (newShop?.id !== oldShop?.id) {
-    currentPage.value = 1
-    fetchProducts()
-    fetchTabCounts()
-    fetchCollections()
+    console.log('[ProductsPage] Active shop changed:', {
+      from: oldShop?.name,
+      to: newShop?.name
+    })
+
+    if (newShop?.id) {
+      currentPage.value = 1
+      await Promise.all([
+        fetchProducts(),
+        fetchTabCounts(),
+        fetchCollections()
+      ])
+    }
+  }
+})
+
+// Watch for shop state readiness
+watch(isShopStateReady, async (isReady) => {
+  if (isReady && activeShop.value && !products.value.length) {
+    console.log('[ProductsPage] Shop state became ready, loading data...')
+    await Promise.all([
+      fetchProducts(),
+      fetchTabCounts(),
+      fetchCollections()
+    ])
   }
 })
 </script>

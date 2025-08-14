@@ -36,6 +36,18 @@ async function initializeApp() {
         // Only load shops if auth is valid
         try {
           await shops.fetchShops()
+
+          // Ensure we have an active shop
+          if (shops.list.length > 0 && !shops.active) {
+            console.log('[App] No active shop set, setting first shop as active')
+            shops.setActiveShop(shops.list[0])
+          }
+
+          console.log('[App] Shop initialization complete:', {
+            totalShops: shops.list.length,
+            activeShop: shops.active?.name,
+            shopStateReady: shops.isShopStateReady
+          })
         } catch (shopError) {
           console.warn('[App] Failed to load shops, but auth is valid:', shopError)
           // Don't fail the entire initialization if shops fail to load

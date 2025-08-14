@@ -234,9 +234,26 @@ async function handleLogout() {
 }
 
 function selectShop(shop) {
-  shopStore.setActiveShop(shop)
-  showShopMenu.value = false
-  router.push({ name: 'Dashboard' })
+  console.log('[Navbar] Selecting shop:', shop.name)
+
+  try {
+    shopStore.setActiveShop(shop)
+    showShopMenu.value = false
+
+    // Verify the shop was set correctly
+    if (shopStore.activeShop?.id === shop.id) {
+      console.log('[Navbar] Shop selected successfully')
+      // Only navigate if we're not already on the dashboard
+      if (router.currentRoute.value.name !== 'Dashboard') {
+        router.push({ name: 'Dashboard' })
+      }
+    } else {
+      console.error('[Navbar] Failed to select shop')
+    }
+  } catch (error) {
+    console.error('[Navbar] Error selecting shop:', error)
+    showShopMenu.value = false
+  }
 }
 
 function goToShopSelection() {

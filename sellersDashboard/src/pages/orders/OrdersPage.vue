@@ -114,7 +114,7 @@
 
       <!-- Orders Content -->
       <div v-else>
-        <div v-if="filteredOrders.length">
+        <div v-if="orders.length">
           <div v-if="currentView === 'list'" class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
             <div class="overflow-x-auto">
               <table class="min-w-full divide-y divide-gray-200">
@@ -130,7 +130,7 @@
                 </thead>
                 <tbody class="divide-y divide-gray-200">
                   <tr
-                    v-for="(order, i) in filteredOrders"
+                    v-for="(order, i) in orders"
                     :key="order.id"
                     @click="goToDetail(order.id)"
                     class="cursor-pointer transition duration-150 ease-in-out transform hover:scale-[1.005] hover:bg-green-50"
@@ -182,7 +182,7 @@
 
           <div v-else class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             <div
-              v-for="order in filteredOrders"
+              v-for="order in orders"
               :key="order.id"
               @click="goToDetail(order.id)"
               class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden cursor-pointer transform hover:scale-105 hover:shadow-md transition duration-200 ease-in-out flex flex-col group"
@@ -304,8 +304,7 @@ const router = useRouter()
 const shopStore = useShopStore()
 
 // Reactive state
-const allOrders = ref([]) // Holds all orders from server
-const filteredOrders = ref([]) // Holds filtered orders for display
+const orders = ref([]) // Holds current page orders from server
 const loading = ref(false)
 const error = ref(null)
 const currentView = ref('list')
@@ -323,6 +322,16 @@ const totalPages = ref(0)
 // Status filter state
 const statusFilter = ref('all')
 
+// Order statistics
+const orderStats = ref({
+  total: 0,
+  pending: 0,
+  processing: 0,
+  shipped: 0,
+  delivered: 0,
+  cancelled: 0
+})
+
 // Status filter tabs
 const statusTabs = [
   { label: 'All', value: 'all' },
@@ -336,17 +345,12 @@ const statusTabs = [
 function onTabClick(val) {
   if (statusFilter.value !== val) {
     statusFilter.value = val
-    applyStatusFilter() // Use client-side filtering for status changes
+    currentPage.value = 1 // Reset to first page when changing status
+    fetchOrders() // Use server-side filtering for better performance
   }
 }
 
-// Backend stats state
-const orderStats = ref({
-  total_orders: 0,
-  total_revenue: 0,
-  pending_orders: 0,
-  delivered_orders: 0
-})
+
 
 // Computed property for the active shop
 const activeShop = computed(() => shopStore.activeShop)
@@ -359,11 +363,17 @@ const activeShop = computed(() => shopStore.activeShop)
 function getStatusCount(status) {
   switch (status) {
     case 'pending':
-      return orderStats.value.pending_orders || 0
+      return orderStats.value.pending || 0
+    case 'processing':
+      return orderStats.value.processing || 0
+    case 'shipped':
+      return orderStats.value.shipped || 0
     case 'delivered':
-      return orderStats.value.delivered_orders || 0
+      return orderStats.value.delivered || 0
+    case 'cancelled':
+      return orderStats.value.cancelled || 0
     default:
-      return 0
+      return orderStats.value.total || 0
   }
 }
 
@@ -372,7 +382,7 @@ function getStatusCount(status) {
  * @returns {number} The total revenue.
  */
 function getTotalRevenue() {
-  return orderStats.value.total_revenue || 0
+  return orderStats.value.total_revenue || orderStats.value.revenue || 0
 }
 
 /**
@@ -398,40 +408,50 @@ async function fetchOrders() {
   loading.value = true
   error.value = null
   try {
-    // Fetch orders using the shop ID with pagination and search (no status filter on server)
+    console.log('[OrdersPage] Fetching orders with server-side filtering:', {
+      shopId: activeShop.value.id,
+      page: currentPage.value,
+      limit: itemsPerPage.value,
+      search: searchQuery.value,
+      status: statusFilter.value
+    })
+
+    // Use server-side filtering for optimal performance
     const response = await orderService.fetchAllByShop(
       activeShop.value.id,
       currentPage.value,
       itemsPerPage.value,
       searchQuery.value,
-      'all' // Always fetch all statuses, filter client-side
+      statusFilter.value // Pass status filter to server for better performance
     )
     
     console.log('Fetched orders response:', response) // Debug log
     
     if (response.pagination) {
-      // New paginated format
-      allOrders.value = response.orders
+      // New paginated format with server-side filtering
+      orders.value = response.orders
       totalOrders.value = response.pagination.total
       totalPages.value = response.pagination.total_pages
       currentPage.value = response.pagination.page
       itemsPerPage.value = response.pagination.limit
-      
+
       // Update stats if available
       if (response.stats) {
         orderStats.value = response.stats
       }
     } else {
       // Fallback to old format
-      allOrders.value = response.orders || response
-      totalOrders.value = allOrders.value.length
+      orders.value = response.orders || response
+      totalOrders.value = orders.value.length
       totalPages.value = 1
     }
 
-    // Apply client-side filtering after fetching
-    applyStatusFilter()
-
-    console.log('Processed orders:', allOrders.value) // Debug log
+    console.log('[OrdersPage] Orders processed successfully:', {
+      count: orders.value.length,
+      total: totalOrders.value,
+      page: currentPage.value,
+      status: statusFilter.value
+    })
   } catch (e) {
     console.error('Failed to load orders:', e)
     error.value = 'Failed to load orders. Please try again.'
@@ -441,40 +461,8 @@ async function fetchOrders() {
 }
 
 /**
- * Applies client-side status filtering without server request
- */
-function applyStatusFilter() {
-  let filtered = [...allOrders.value]
-
-  // Apply status filter
-  if (statusFilter.value !== 'all') {
-    filtered = filtered.filter(order =>
-      order.status?.toLowerCase() === statusFilter.value.toLowerCase()
-    )
-  }
-
-  // Apply search filter if there's a search query
-  if (searchQuery.value.trim()) {
-    const query = searchQuery.value.toLowerCase().trim()
-    filtered = filtered.filter(order => {
-      const orderId = order.id?.toString().toLowerCase() || ''
-      const orderNumber = order.orderNumber?.toString().toLowerCase() || ''
-      const customerName = `${order.customerFirstName || ''} ${order.customerLastName || ''}`.toLowerCase()
-      const customerEmail = order.customerEmail?.toLowerCase() || ''
-
-      return orderId.includes(query) ||
-             orderNumber.includes(query) ||
-             customerName.includes(query) ||
-             customerEmail.includes(query)
-    })
-  }
-
-  filteredOrders.value = filtered
-}
-
-/**
- * Applies search filter to the orders.
- * For search, we still use server-side filtering for better performance
+ * Applies filters by fetching from server with current filter state.
+ * This ensures optimal performance by using server-side filtering.
  */
 function applyFilters() {
   currentPage.value = 1 // Reset to first page when applying filters
@@ -482,14 +470,14 @@ function applyFilters() {
 }
 
 /**
- * Debounces the search input to avoid excessive filtering.
+ * Debounces the search input to avoid excessive server requests.
  */
 function debouncedSearch() {
   clearTimeout(searchTimeout)
   searchTimeout = setTimeout(() => {
-    // For search, use client-side filtering for better UX
-    applyStatusFilter()
-  }, 300) // Reduced debounce time for client-side filtering
+    // Use server-side filtering for optimal performance
+    applyFilters()
+  }, 500) // Appropriate debounce time for server requests
 }
 
 /**

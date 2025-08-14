@@ -218,8 +218,23 @@ async function fetchShops() {
 }
 
 function enterShop(shop) {
-  shopStore.setActiveShop(shop)
-  router.push({ name: 'Dashboard' })
+  console.log('[ShopSelection] Entering shop:', shop.name)
+
+  try {
+    shopStore.setActiveShop(shop)
+
+    // Verify the shop was set correctly
+    if (shopStore.activeShop?.id === shop.id) {
+      console.log('[ShopSelection] Shop set successfully, navigating to dashboard')
+      router.push({ name: 'Dashboard' })
+    } else {
+      console.error('[ShopSelection] Failed to set active shop')
+      // Could show an error message to user here
+    }
+  } catch (error) {
+    console.error('[ShopSelection] Error setting active shop:', error)
+    // Could show an error message to user here
+  }
 }
 
 onMounted(() => {
