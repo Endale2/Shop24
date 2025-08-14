@@ -24,18 +24,18 @@ function processQueue(error: any) {
 }
 
 api.interceptors.response.use(
-  response => response,
-  async error => {
-    const originalRequest = error.config
-    
+  (response) => response,
+  async (error: any) => {
+    const originalRequest = error.config as any
+
     // Handle 401 errors
     if (error.response && error.response.status === 401 && !originalRequest._retry) {
       console.log('[API Interceptor] 401 error detected, attempting refresh...')
-      
+
       // Don't retry auth endpoints to avoid infinite loops
       if (originalRequest.url && (
-        originalRequest.url.includes('/auth/customer/me') ||
-        originalRequest.url.includes('/auth/customer/refresh')
+        String(originalRequest.url).includes('/auth/customer/me') ||
+        String(originalRequest.url).includes('/auth/customer/refresh')
       )) {
         console.log('[API Interceptor] Auth endpoint failed, not retrying')
         const authStore = useAuthStore()
@@ -43,19 +43,19 @@ api.interceptors.response.use(
         authStore.sessionLoading = false
         return Promise.reject(error)
       }
-      
+
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject })
         })
           .then(() => api(originalRequest))
-          .catch(err => Promise.reject(err))
+          .catch((err) => Promise.reject(err))
       }
-      
-      originalRequest._retry = true
+
+      ;(originalRequest as any)._retry = true
       isRefreshing = true
       const authStore = useAuthStore()
-      
+
       try {
         await authStore.refreshSession()
         processQueue(null)
@@ -69,7 +69,7 @@ api.interceptors.response.use(
         authStore.sessionLoading = false
         processQueue(refreshError)
         isRefreshing = false
-        
+
         // Redirect to login if on protected route
         const protectedRoutes = ['/account', '/orders', '/checkout', '/cart', '/wishlist']
         const currentPath = router.currentRoute.value.path

@@ -58,7 +58,7 @@ export function fetchProductDetail(shopSlug: string, handle: string): Promise<Pr
   if (!slug) return Promise.reject('No shop slug');
   return api
     .get(getShopUrl(slug, `/products/${encodeURIComponent(handle)}`))
-    .then(r => r.data)
+    .then((r: any) => r.data as Product)
 }
 
 export async function fetchProductDetailById(shopSlug: string, productId: string) {
