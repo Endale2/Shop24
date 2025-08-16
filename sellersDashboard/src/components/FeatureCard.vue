@@ -1,14 +1,21 @@
 <template>
-  <div :class="[bgColor, borderColor]"
-       class="relative p-8 rounded-2xl shadow-xl border text-center animate-fade-in transition-all duration-300 hover:scale-105 hover:shadow-2xl group"
+  <div class="group relative p-8 rounded-2xl bg-white/80 backdrop-blur-sm border border-white/50 text-center hover:shadow-2xl hover:shadow-emerald-500/10 transition-all duration-500 hover:scale-105 hover:bg-white animate-fade-in-up overflow-hidden"
        :style="{ animationDelay: `${delay}ms` }">
-    <div :class="[iconBgColor]" class="w-16 h-16 flex items-center justify-center rounded-full mx-auto mb-6 shadow-lg group-hover:scale-110 transition-transform duration-300">
-      <svg class="h-8 w-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="icon"></path>
-      </svg>
+    <!-- Gradient overlay on hover -->
+    <div class="absolute inset-0 bg-gradient-to-br from-emerald-50/0 to-green-50/0 group-hover:from-emerald-50/50 group-hover:to-green-50/30 rounded-2xl transition-all duration-500"></div>
+
+    <!-- Glow effect -->
+    <div class="absolute -inset-0.5 bg-gradient-to-r from-emerald-500 to-green-500 rounded-2xl blur opacity-0 group-hover:opacity-20 transition duration-500"></div>
+
+    <div class="relative z-10">
+      <div :class="[iconBgColor]" class="w-16 h-16 flex items-center justify-center rounded-2xl mx-auto mb-6 shadow-lg shadow-emerald-500/20 group-hover:shadow-emerald-500/40 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+        <svg class="h-8 w-8 text-white group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" :d="icon"></path>
+        </svg>
+      </div>
+      <h3 class="text-2xl font-bold mb-4 text-gray-900 group-hover:text-emerald-700 transition-colors duration-300">{{ title }}</h3>
+      <p class="text-gray-600 leading-relaxed group-hover:text-gray-700 transition-colors duration-300">{{ text }}</p>
     </div>
-    <h3 :class="[titleColor]" class="text-2xl font-bold mb-4 group-hover:text-white transition-colors duration-300">{{ title }}</h3>
-    <p :class="[textColor]" class="leading-relaxed">{{ text }}</p>
   </div>
 </template>
 
@@ -23,24 +30,12 @@ const props = defineProps({
   delay: Number,
 });
 
-// Computed properties for dynamic styling based on the 'color' prop with Vue green/amber theme
-const bgColor = computed(() => `bg-gradient-to-br from-gray-800/60 to-gray-700/60 backdrop-blur-sm`);
-const borderColor = computed(() => {
-  if (props.color === 'green') return 'border-emerald-400/30'
-  if (props.color === 'amber') return 'border-amber-400/30'
-  return `border-${props.color}-400/30`
-});
+// Computed properties for dynamic styling based on the 'color' prop with modern light theme
 const iconBgColor = computed(() => {
-  if (props.color === 'green') return 'bg-gradient-to-br from-emerald-500 to-green-600'
-  if (props.color === 'amber') return 'bg-gradient-to-br from-amber-500 to-yellow-600'
+  if (props.color === 'green') return 'bg-gradient-to-br from-emerald-500 to-green-600 shadow-emerald-500/25'
+  if (props.color === 'amber') return 'bg-gradient-to-br from-amber-500 to-yellow-600 shadow-amber-500/25'
   return `bg-gradient-to-br from-${props.color}-500 to-${props.color}-600`
 });
-const titleColor = computed(() => {
-  if (props.color === 'green') return 'text-emerald-300'
-  if (props.color === 'amber') return 'text-amber-300'
-  return `text-${props.color}-300`
-});
-const textColor = computed(() => `text-gray-300`);
 
 </script>
 

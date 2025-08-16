@@ -1,361 +1,464 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-gray-900 via-emerald-900 to-gray-900 text-white antialiased font-inter overflow-hidden">
-    <!-- Optimized Animated Background -->
-    <div class="absolute inset-0 overflow-hidden will-change-transform">
-      <!-- Vue Green & Amber gradient mesh -->
-      <div class="absolute inset-0 bg-gradient-to-br from-emerald-900/30 via-green-800/20 to-amber-900/25"></div>
-
-      <!-- Optimized animated orbs -->
-      <div class="absolute -top-32 -right-32 w-64 h-64 md:w-80 md:h-80 bg-gradient-to-br from-emerald-400/20 to-green-400/15 rounded-full blur-2xl animate-pulse-slow will-change-transform"></div>
-      <div class="absolute -bottom-32 -left-32 w-72 h-72 md:w-96 md:h-96 bg-gradient-to-tr from-amber-400/15 to-yellow-400/10 rounded-full blur-2xl animate-pulse-slow animation-delay-1000 will-change-transform"></div>
-      <div class="absolute top-1/4 left-1/2 w-48 h-48 md:w-64 md:h-64 bg-gradient-to-br from-green-400/20 to-emerald-400/15 rounded-full blur-2xl animate-pulse-slow animation-delay-2000 will-change-transform"></div>
-
-      <!-- Optimized floating particles -->
-      <div class="absolute top-20 left-20 w-1.5 h-1.5 md:w-2 md:h-2 bg-emerald-400 rounded-full animate-float-particle will-change-transform"></div>
-      <div class="absolute top-40 right-32 w-1 h-1 bg-amber-400 rounded-full animate-float-particle animation-delay-500 will-change-transform"></div>
-      <div class="absolute bottom-32 left-1/4 w-1 h-1 md:w-1.5 md:h-1.5 bg-green-400 rounded-full animate-float-particle animation-delay-1000 will-change-transform"></div>
-      <div class="absolute top-1/3 right-1/4 w-1 h-1 bg-yellow-400 rounded-full animate-float-particle animation-delay-1500 will-change-transform"></div>
+  <div class="min-h-screen bg-gradient-to-br from-white via-emerald-50/30 to-green-50/20 text-gray-800 font-sans antialiased overflow-x-hidden">
+    <!-- Cool animated background -->
+    <div class="absolute inset-0 z-0">
+      <!-- Animated gradient mesh -->
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_25%_25%,rgba(16,185,129,0.15)_0%,transparent_50%),radial-gradient(circle_at_75%_75%,rgba(34,197,94,0.1)_0%,transparent_50%)]"></div>
+      <!-- Moving dot pattern -->
+      <div class="absolute inset-0 bg-[radial-gradient(#10b981_1px,transparent_1px)] [background-size:32px_32px] opacity-20 animate-pulse"></div>
+      <!-- Floating gradient orbs -->
+      <div class="absolute top-20 left-10 w-64 h-64 bg-gradient-to-br from-emerald-200/60 to-green-300/40 rounded-full filter blur-3xl opacity-70 animate-float"></div>
+      <div class="absolute top-40 right-20 w-48 h-48 bg-gradient-to-bl from-green-200/50 to-emerald-400/30 rounded-full filter blur-2xl opacity-60 animate-float-delayed"></div>
+      <div class="absolute bottom-32 left-1/3 w-56 h-56 bg-gradient-to-tr from-emerald-300/40 to-green-200/50 rounded-full filter blur-3xl opacity-50 animate-float-slow"></div>
     </div>
 
-    <!-- Responsive Navigation -->
-    <nav class="relative z-50 px-4 sm:px-6 py-4 sm:py-6">
-      <div class="max-w-7xl mx-auto flex items-center justify-between">
-        <div class="flex items-center space-x-2 sm:space-x-3">
-          <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg transform hover:scale-105 transition-transform duration-200">
-            <svg class="w-4 h-4 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-            </svg>
-          </div>
-          <span class="text-xl sm:text-2xl font-black bg-gradient-to-r from-emerald-400 via-green-400 to-amber-400 bg-clip-text text-transparent">Sho24</span>
-        </div>
-
-        <div class="hidden md:flex items-center space-x-6 lg:space-x-8">
-          <a href="#features" class="text-gray-300 hover:text-emerald-400 transition-colors duration-200 font-medium text-sm lg:text-base">Features</a>
-          <a href="#testimonials" class="text-gray-300 hover:text-emerald-400 transition-colors duration-200 font-medium text-sm lg:text-base">Reviews</a>
-          <a href="#pricing" class="text-gray-300 hover:text-emerald-400 transition-colors duration-200 font-medium text-sm lg:text-base">Pricing</a>
-        </div>
-
-        <!-- Mobile menu button -->
-        <button class="md:hidden p-2 text-gray-300 hover:text-emerald-400 transition-colors duration-200">
-          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16" />
-          </svg>
-        </button>
-      </div>
-    </nav>
-
-    <!-- Responsive Hero Section -->
-    <section class="relative z-10 flex-grow flex items-center justify-center px-4 sm:px-6 py-12 sm:py-20">
-      <div class="max-w-6xl mx-auto text-center space-y-8 sm:space-y-12">
-        <!-- Hero Title -->
-        <div class="animate-fade-in-up">
-          <div class="inline-flex items-center px-3 sm:px-4 py-2 bg-emerald-500/20 backdrop-blur-sm border border-emerald-400/30 rounded-full text-emerald-300 text-xs sm:text-sm font-semibold mb-6 sm:mb-8 shadow-lg">
-            <svg class="w-3 h-3 sm:w-4 sm:h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
-            </svg>
-            Trusted by 10,000+ sellers worldwide
+    <!-- Main Content -->
+    <div class="relative z-10 flex flex-col min-h-screen">
+      <!-- Seamless Navigation integrated with Hero -->
+      <nav class="px-4 sm:px-6 py-8 relative z-50">
+        <div class="max-w-6xl mx-auto flex items-center justify-between">
+          <div class="flex items-center space-x-3 group">
+            <div class="w-12 h-12 bg-gradient-to-br from-emerald-500 via-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:shadow-emerald-500/50 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3">
+              <svg class="w-7 h-7 text-white group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
+              </svg>
+            </div>
+            <span class="text-2xl font-bold bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 bg-clip-text text-transparent hover:from-emerald-600 hover:via-green-600 hover:to-emerald-700 transition-all duration-300 animate-gradient-x">Shop24</span>
           </div>
 
-          <h1 class="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black leading-tight mb-6 sm:mb-8">
-            <span class="block text-white drop-shadow-2xl">Launch Your</span>
-            <span class="block text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-green-400 to-amber-400 animate-gradient-x">
-              Dream Shop
-            </span>
-          </h1>
-
-          <p class="text-lg sm:text-xl lg:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed font-light px-4">
-            The fastest e-commerce platform built for modern entrepreneurs.
-            <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-amber-400 font-semibold">Start selling in seconds, scale to success.</span>
-          </p>
-        </div>
-
-        <!-- Responsive Google Login CTA -->
-        <div class="animate-fade-in-up animation-delay-400">
-          <div class="max-w-sm sm:max-w-lg mx-auto bg-white/10 backdrop-blur-lg rounded-2xl sm:rounded-3xl p-6 sm:p-8 border border-emerald-400/20 shadow-2xl">
-            <h3 class="text-2xl sm:text-3xl font-bold mb-3 sm:mb-4 text-white">Start Your Journey</h3>
-            <p class="text-gray-300 mb-6 sm:mb-8 text-base sm:text-lg">Join thousands of successful entrepreneurs building their empire</p>
-
+          <div class="hidden md:flex items-center space-x-8">
+            <a href="#features" class="relative text-gray-700 hover:text-emerald-600 transition-all duration-300 font-medium group">
+              Features
+              <span class="absolute -bottom-1 left-0 w-0 h-0.5 bg-gradient-to-r from-emerald-500 to-green-500 transition-all duration-300 group-hover:w-full rounded-full"></span>
+            </a>
             <button
               @click="loginWithGoogle"
-              :disabled="loading"
-              class="w-full flex justify-center items-center space-x-3 sm:space-x-4 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white rounded-xl sm:rounded-2xl py-4 sm:py-5 px-6 sm:px-8 transition-all duration-300 shadow-xl hover:shadow-2xl disabled:opacity-60 disabled:cursor-not-allowed group transform hover:scale-105 font-semibold text-base sm:text-xl"
+              class="relative px-6 py-3 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white rounded-xl font-medium transition-all duration-300 shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:-translate-y-1 group overflow-hidden"
             >
-              <svg v-if="loading" class="animate-spin h-6 w-6 sm:h-7 sm:w-7" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-              </svg>
-              <img v-else src="https://www.svgrepo.com/show/355037/google.svg" alt="Google icon" class="h-6 w-6 sm:h-7 sm:w-7 group-hover:scale-110 transition-transform duration-200" />
-              <span>
-                {{ loading ? 'Setting up your shop...' : 'Start with Google' }}
-              </span>
+              <!-- Shimmer effect -->
+              <div class="absolute inset-0 -top-1 -left-1 bg-gradient-to-r from-transparent via-white/20 to-transparent skew-x-12 transform -translate-x-full group-hover:translate-x-full transition-transform duration-700"></div>
+              <span class="relative">Get Started</span>
             </button>
+          </div>
 
-            <!-- Responsive Trust badges -->
-            <div class="flex flex-wrap items-center justify-center gap-4 sm:gap-8 mt-4 sm:mt-6 text-xs sm:text-sm text-gray-400">
-              <div class="flex items-center">
-                <svg class="w-3 h-3 sm:w-4 sm:h-4 text-emerald-400 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
-                </svg>
-                <span>Secure</span>
+          <!-- Mobile menu button -->
+          <button
+            @click="toggleMobileMenu"
+            class="md:hidden p-3 text-gray-700 hover:text-emerald-600 hover:bg-white/20 rounded-xl transition-all duration-200 backdrop-blur-sm"
+          >
+            <svg class="w-6 h-6 transition-transform duration-300" :class="{ 'rotate-90': mobileMenuOpen }" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" :d="mobileMenuOpen ? 'M6 18L18 6M6 6l12 12' : 'M4 6h16M4 12h16M4 18h16'" />
+            </svg>
+          </button>
+        </div>
+
+        <!-- Mobile Menu with slide animation -->
+        <div v-if="mobileMenuOpen" class="md:hidden mt-6 pb-4 animate-slide-down">
+          <div class="flex flex-col space-y-4 bg-white/80 backdrop-blur-md rounded-2xl p-6 border border-white/30 shadow-xl">
+            <a href="#features" @click="closeMobileMenu" class="text-gray-700 hover:text-emerald-600 py-3 px-4 rounded-lg hover:bg-emerald-50 transition-all duration-200">Features</a>
+            <button
+              @click="loginWithGoogle"
+              class="w-full px-6 py-3 bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white rounded-xl font-medium transition-all duration-300 shadow-lg"
+            >
+              Get Started
+            </button>
+          </div>
+        </div>
+      </nav>
+
+      <!-- Enhanced Hero Section with Seamless Flow -->
+      <section class="flex-grow flex items-center px-4 sm:px-6 pt-8 pb-20 sm:pb-32">
+        <div class="max-w-6xl mx-auto">
+          <div class="grid lg:grid-cols-2 gap-16 items-center">
+            <!-- Hero Content -->
+            <div class="text-center lg:text-left space-y-8">
+              <!-- Animated badge -->
+              <div class="inline-flex items-center space-x-2 bg-gradient-to-r from-emerald-50 to-green-50 border border-emerald-200/50 text-emerald-700 px-4 py-2 rounded-full text-sm font-medium animate-bounce-gentle">
+                <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                <span>✨ Now in Beta - Free Forever!</span>
               </div>
-              <div class="flex items-center">
-                <svg class="w-3 h-3 sm:w-4 sm:h-4 text-amber-400 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                <span>Lightning Fast</span>
+
+              <div class="animate-fade-in-up">
+                <h1 class="text-4xl sm:text-5xl lg:text-6xl xl:text-7xl font-extrabold text-gray-900 leading-tight tracking-tight">
+                  Launch Your
+                  <span class="block bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 bg-clip-text text-transparent animate-gradient-x">
+                    Dream Shop
+                  </span>
+                  <span class="block text-3xl sm:text-4xl lg:text-5xl xl:text-6xl text-gray-600 font-normal mt-2">
+                    in just minutes ⚡
+                  </span>
+                </h1>
+
+                <p class="text-xl text-gray-600 max-w-xl mx-auto lg:mx-0 leading-relaxed mt-6">
+                  The simplest way to start selling online. Beautiful designs, powerful features, and
+                  <span class="font-semibold text-emerald-600">zero coding required</span>.
+                </p>
               </div>
-              <div class="flex items-center">
-                <svg class="w-3 h-3 sm:w-4 sm:h-4 text-green-400 mr-1 sm:mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-                </svg>
-                <span>Free Forever</span>
+
+              <!-- Enhanced CTA Section -->
+              <div class="animate-fade-in-up animation-delay-300 space-y-6">
+                <button
+                  @click="loginWithGoogle"
+                  :disabled="loading"
+                  class="group relative w-full sm:w-auto bg-gradient-to-r from-emerald-500 via-green-500 to-emerald-600 hover:from-emerald-600 hover:via-green-600 hover:to-emerald-700 text-white rounded-2xl py-5 px-10 font-bold text-lg transition-all duration-300 shadow-xl shadow-emerald-500/30 hover:shadow-2xl hover:shadow-emerald-500/40 hover:-translate-y-2 disabled:opacity-60 flex items-center justify-center space-x-3 overflow-hidden"
+                >
+                  <!-- Animated background -->
+                  <div class="absolute inset-0 bg-gradient-to-r from-emerald-400 to-green-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                  <!-- Shimmer effect -->
+                  <div class="absolute inset-0 -top-1 -left-1 bg-gradient-to-r from-transparent via-white/30 to-transparent skew-x-12 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
+
+                  <svg v-if="loading" class="animate-spin h-7 w-7 relative z-10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+                  </svg>
+                  <img v-else src="https://www.svgrepo.com/show/355037/google.svg" alt="Google icon" class="h-7 w-7 group-hover:scale-110 transition-transform duration-200 relative z-10" />
+                  <span class="relative z-10">{{ loading ? 'Creating your shop...' : 'Start Building for Free' }}</span>
+                </button>
+
+                <!-- Trust indicators -->
+                <div class="flex flex-col sm:flex-row items-center justify-center lg:justify-start space-y-2 sm:space-y-0 sm:space-x-6 text-sm text-gray-500">
+                  <div class="flex items-center space-x-2">
+                    <svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                    <span>No credit card required</span>
+                  </div>
+                  <div class="flex items-center space-x-2">
+                    <svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                    <span>5-minute setup</span>
+                  </div>
+                  <div class="flex items-center space-x-2">
+                    <svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20">
+                      <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+                    </svg>
+                    <span>Free forever</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Error State -->
+              <div v-if="error" class="animate-fade-in-up">
+                <div class="bg-red-50 border border-red-200 rounded-xl p-4 shadow-sm">
+                  <div class="flex items-center">
+                    <svg class="w-5 h-5 text-red-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
+                    </svg>
+                    <p class="text-red-700 font-medium">{{ error }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Enhanced Live Store Mockup - Desktop Only -->
+            <div class="hidden lg:block lg:order-last animate-fade-in-up animation-delay-500">
+              <div class="relative group">
+                <!-- Glow effect -->
+                <div class="absolute -inset-1 bg-gradient-to-r from-emerald-500 to-green-500 rounded-3xl blur opacity-25 group-hover:opacity-40 transition duration-1000 group-hover:duration-200 animate-pulse"></div>
+
+                <!-- Main mockup container -->
+                <div class="relative bg-white/90 backdrop-blur-sm rounded-2xl shadow-2xl shadow-emerald-500/10 p-8 border border-white/50 hover:shadow-3xl hover:shadow-emerald-500/20 transition-all duration-500 group-hover:scale-105">
+                  <!-- Browser header -->
+                  <div class="flex items-center space-x-3 mb-6 pb-4 border-b border-gray-200/50">
+                    <div class="flex space-x-2">
+                      <div class="w-3 h-3 bg-red-400 rounded-full animate-pulse"></div>
+                      <div class="w-3 h-3 bg-yellow-400 rounded-full animate-pulse" style="animation-delay: 0.2s"></div>
+                      <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse" style="animation-delay: 0.4s"></div>
+                    </div>
+                    <div class="flex-1 bg-gradient-to-r from-gray-100 to-gray-50 rounded-lg px-4 py-2 text-xs text-gray-500 text-center font-mono border">
+                      <span class="text-emerald-600 font-semibold">yourstore</span>.shop24.sbs
+                    </div>
+                  </div>
+
+                  <!-- Store preview -->
+                  <div class="space-y-4">
+                    <!-- Dynamic Store Header -->
+                    <div :class="currentTheme.headerBg" class="h-20 rounded-xl flex items-center justify-center relative overflow-hidden transition-all duration-500">
+                      <!-- Animated background pattern -->
+                      <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.1)_0%,transparent_50%)] animate-pulse"></div>
+                      <div class="text-center relative z-10">
+                        <div class="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-lg mx-auto mb-1 flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:scale-110 transition-transform duration-300">
+                          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                          </svg>
+                        </div>
+                        <div class="text-xs font-bold text-emerald-700">{{ currentTheme.name }} Store</div>
+                      </div>
+                    </div>
+
+                    <!-- Dynamic Product Grid -->
+                    <div class="grid grid-cols-2 gap-2">
+                      <!-- Product 1 -->
+                      <div class="bg-white rounded-lg border border-gray-200/50 p-2 hover:shadow-md transition-all duration-500 group cursor-pointer">
+                        <div :class="currentTheme.productBg1" class="h-10 rounded mb-1 flex items-center justify-center transition-all duration-500">
+                          <span :class="currentTheme.productIcon1" class="text-xs transition-all duration-500">{{ currentTheme.icon1 }}</span>
+                        </div>
+                        <div class="text-xs font-medium text-gray-700 truncate mb-1">{{ currentTheme.product1 }}</div>
+                        <div class="flex items-center justify-between">
+                          <div class="text-xs text-emerald-600 font-semibold">${{ currentTheme.price1 }}</div>
+                          <button class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-2 py-0.5 rounded transition-colors duration-200">
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      <!-- Product 2 -->
+                      <div class="bg-white rounded-lg border border-gray-200/50 p-2 hover:shadow-md transition-all duration-500 group cursor-pointer">
+                        <div :class="currentTheme.productBg2" class="h-10 rounded mb-1 flex items-center justify-center transition-all duration-500">
+                          <span :class="currentTheme.productIcon2" class="text-xs transition-all duration-500">{{ currentTheme.icon2 }}</span>
+                        </div>
+                        <div class="text-xs font-medium text-gray-700 truncate mb-1">{{ currentTheme.product2 }}</div>
+                        <div class="flex items-center justify-between">
+                          <div class="text-xs text-emerald-600 font-semibold">${{ currentTheme.price2 }}</div>
+                          <button class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-2 py-0.5 rounded transition-colors duration-200">
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      <!-- Product 3 -->
+                      <div class="bg-white rounded-lg border border-gray-200/50 p-2 hover:shadow-md transition-all duration-500 group cursor-pointer">
+                        <div :class="currentTheme.productBg3" class="h-10 rounded mb-1 flex items-center justify-center transition-all duration-500">
+                          <span :class="currentTheme.productIcon3" class="text-xs transition-all duration-500">{{ currentTheme.icon3 }}</span>
+                        </div>
+                        <div class="text-xs font-medium text-gray-700 truncate mb-1">{{ currentTheme.product3 }}</div>
+                        <div class="flex items-center justify-between">
+                          <div class="text-xs text-emerald-600 font-semibold">${{ currentTheme.price3 }}</div>
+                          <button class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-2 py-0.5 rounded transition-colors duration-200">
+                            +
+                          </button>
+                        </div>
+                      </div>
+
+                      <!-- Product 4 -->
+                      <div class="bg-white rounded-lg border border-gray-200/50 p-2 hover:shadow-md transition-all duration-500 group cursor-pointer">
+                        <div :class="currentTheme.productBg4" class="h-10 rounded mb-1 flex items-center justify-center transition-all duration-500">
+                          <span :class="currentTheme.productIcon4" class="text-xs transition-all duration-500">{{ currentTheme.icon4 }}</span>
+                        </div>
+                        <div class="text-xs font-medium text-gray-700 truncate mb-1">{{ currentTheme.product4 }}</div>
+                        <div class="flex items-center justify-between">
+                          <div class="text-xs text-emerald-600 font-semibold">${{ currentTheme.price4 }}</div>
+                          <button class="bg-emerald-500 hover:bg-emerald-600 text-white text-xs px-2 py-0.5 rounded transition-colors duration-200">
+                            +
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+
+                    <!-- Theme indicator -->
+                    <div class="text-center">
+                      <div class="inline-flex items-center space-x-2 bg-white/80 backdrop-blur-sm px-3 py-1 rounded-full border border-gray-200/50">
+                        <div class="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                        <span class="text-xs text-gray-600 font-medium">{{ currentTheme.name }} Store</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Enhanced floating badges -->
+                <div class="absolute -top-4 -right-4 bg-gradient-to-r from-green-500 to-emerald-500 text-white px-3 py-2 rounded-full text-xs font-bold animate-bounce shadow-lg">
+                  ✨ Live!
+                </div>
+                <div class="absolute -bottom-4 -left-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white px-3 py-2 rounded-full text-xs font-bold animate-pulse shadow-lg">
+                  💰 Free
+                </div>
+                <div class="absolute top-1/2 -left-6 bg-gradient-to-r from-blue-500 to-purple-500 text-white px-2 py-1 rounded-full text-xs font-bold animate-bounce-slow shadow-lg">
+                  🚀 Fast
+                </div>
+              </div>
+            </div>
+
+            <!-- Mobile Simple Visual -->
+            <div class="lg:hidden flex justify-center mt-8">
+              <div class="relative">
+                <div class="w-64 h-40 bg-gradient-to-br from-emerald-100 to-green-100 rounded-2xl flex items-center justify-center shadow-xl border border-emerald-200/50">
+                  <div class="text-center">
+                    <div class="w-16 h-16 bg-gradient-to-br from-emerald-500 to-green-600 rounded-2xl mx-auto mb-3 flex items-center justify-center shadow-lg">
+                      <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 11V7a4 4 0 00-8 0v4M5 9h14l1 12H4L5 9z" />
+                      </svg>
+                    </div>
+                    <div class="text-lg font-bold text-emerald-700">Your Store</div>
+                    <div class="text-sm text-emerald-600">Ready in minutes!</div>
+                  </div>
+                </div>
+
+                <!-- Simple floating badges for mobile -->
+                <div class="absolute -top-2 -right-2 bg-green-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+                  ✨ Live
+                </div>
+                <div class="absolute -bottom-2 -left-2 bg-amber-500 text-white px-2 py-1 rounded-full text-xs font-bold">
+                  Free
+                </div>
               </div>
             </div>
           </div>
         </div>
+      </section>
+    </div>
 
-        <!-- Responsive Error/Loading States -->
-        <div v-if="error" class="animate-fade-in-up max-w-sm sm:max-w-md mx-auto px-4">
-          <div class="bg-red-500/20 backdrop-blur-sm border border-red-400/30 rounded-xl sm:rounded-2xl p-3 sm:p-4 shadow-lg">
-            <div class="flex items-center justify-center">
-              <svg class="w-4 h-4 sm:w-5 sm:h-5 text-red-400 mr-2 sm:mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-              </svg>
-              <p class="text-red-300 font-medium text-sm sm:text-base">{{ error }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+    <!-- Enhanced Features Section -->
+    <section id="features" class="py-20 sm:py-28 px-4 sm:px-6 bg-gradient-to-br from-gray-50 via-white to-emerald-50/30 relative overflow-hidden">
+      <!-- Background decoration -->
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_70%_30%,rgba(16,185,129,0.1)_0%,transparent_50%)]"></div>
 
-    <!-- Responsive Features Section -->
-    <section id="features" class="relative py-16 sm:py-24 px-4 sm:px-6 bg-gradient-to-b from-gray-900 to-gray-800">
-      <div class="max-w-7xl mx-auto">
-        <div class="text-center mb-12 sm:mb-20 animate-fade-in">
-          <h2 class="text-3xl sm:text-5xl lg:text-6xl font-black text-white mb-6 sm:mb-8">
-            Everything You Need to <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-amber-400">Succeed</span>
+      <div class="max-w-6xl mx-auto relative z-10">
+        <div class="text-center mb-16 animate-fade-in-up">
+          <h2 class="text-4xl sm:text-5xl font-extrabold text-gray-900 mb-6 tracking-tight">
+            Everything you need to
+            <span class="bg-gradient-to-r from-emerald-500 to-green-600 bg-clip-text text-transparent">succeed</span>
           </h2>
-          <p class="text-lg sm:text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed px-4">
-            From lightning-fast storefronts to powerful analytics, we've built the ultimate toolkit for modern entrepreneurs ready to scale their business.
+          <p class="text-xl text-gray-600 max-w-3xl mx-auto leading-relaxed">
+            Powerful tools designed to help you build, launch, and grow your online business with ease.
           </p>
         </div>
-        
-        <div class="grid gap-10 md:grid-cols-2 lg:grid-cols-3">
+
+        <div class="grid gap-8 md:grid-cols-3">
           <FeatureCard
             icon="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"
-            title="Stunning Storefronts"
-            text="Design a captivating online presence with fully customizable themes that truly represent your brand's unique identity and drive conversions."
+            title="🎨 Beautiful Stores"
+            text="Create stunning, mobile-responsive storefronts with our intuitive drag-and-drop designer. No coding skills required!"
             color="green"
             :delay="0"
           />
           <FeatureCard
-            icon="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"
-            title="Seamless Payments"
-            text="Effortlessly accept secure payments worldwide, supporting all major credit cards, digital wallets, and popular payment methods."
+            icon="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+            title="� Cash on Delivery"
+            text="Simple and trusted payment method. Your customers pay when they receive their orders. No online payment hassles!"
             color="amber"
             :delay="200"
           />
           <FeatureCard
             icon="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-            title="Actionable Analytics"
-            text="Unlock powerful insights into your sales, customer behavior, and traffic patterns to make data-driven decisions that fuel growth."
+            title="📊 Smart Analytics"
+            text="Track sales, monitor customer behavior, and get actionable insights to grow your business with real-time dashboards."
             color="green"
             :delay="400"
           />
-          <FeatureCard
-            icon="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1"
-            title="Smart Inventory"
-            text="Keep track of your products with intelligent inventory management, low stock alerts, and automated reorder suggestions."
-            color="blue"
-            :delay="600"
-          />
-          <FeatureCard
-            icon="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-            title="Customer Management"
-            text="Build lasting relationships with your customers through comprehensive profiles, purchase history, and personalized marketing tools."
-            color="purple"
-            :delay="800"
-          />
-          <FeatureCard
-            icon="M13 10V3L4 14h7v7l9-11h-7z"
-            title="Lightning Fast"
-            text="Experience blazing-fast performance with our optimized platform that ensures your store loads quickly and keeps customers engaged."
-            color="red"
-            :delay="1000"
-          />
         </div>
 
+        <!-- Additional features grid -->
+        <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mt-16">
+          <div class="text-center p-6 rounded-xl bg-white/60 backdrop-blur-sm border border-white/50 hover:shadow-lg transition-all duration-300 group">
+            <div class="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <span class="text-white text-xl">⚡</span>
+            </div>
+            <h4 class="font-bold text-gray-900 mb-2">Lightning Fast</h4>
+            <p class="text-sm text-gray-600">Sub-second loading times</p>
+          </div>
+
+          <div class="text-center p-6 rounded-xl bg-white/60 backdrop-blur-sm border border-white/50 hover:shadow-lg transition-all duration-300 group">
+            <div class="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <span class="text-white text-xl">📱</span>
+            </div>
+            <h4 class="font-bold text-gray-900 mb-2">Mobile First</h4>
+            <p class="text-sm text-gray-600">Perfect on every device</p>
+          </div>
+
+          <div class="text-center p-6 rounded-xl bg-white/60 backdrop-blur-sm border border-white/50 hover:shadow-lg transition-all duration-300 group">
+            <div class="w-12 h-12 bg-gradient-to-br from-pink-500 to-pink-600 rounded-lg mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <span class="text-white text-xl">🛡️</span>
+            </div>
+            <h4 class="font-bold text-gray-900 mb-2">Secure & Reliable</h4>
+            <p class="text-sm text-gray-600">Safe data & order management</p>
+          </div>
+
+          <div class="text-center p-6 rounded-xl bg-white/60 backdrop-blur-sm border border-white/50 hover:shadow-lg transition-all duration-300 group">
+            <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg mx-auto mb-4 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+              <span class="text-white text-xl">🎯</span>
+            </div>
+            <h4 class="font-bold text-gray-900 mb-2">SEO Ready</h4>
+            <p class="text-sm text-gray-600">Built for search engines</p>
+          </div>
+        </div>
       </div>
     </section>
 
-    <!-- Responsive Testimonials Section -->
-    <section id="testimonials" class="py-16 sm:py-24 bg-gradient-to-b from-gray-800 to-gray-900">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6">
-        <div class="text-center mb-12 sm:mb-20">
-          <h3 class="text-3xl sm:text-5xl font-black text-white mb-4 sm:mb-6">
-            Loved by <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-amber-400">Entrepreneurs</span>
+
+    <!-- Enhanced Final CTA Section -->
+    <section class="py-20 sm:py-28 bg-gradient-to-br from-emerald-600 via-green-600 to-emerald-700 relative overflow-hidden">
+      <!-- Animated background -->
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_30%_20%,rgba(255,255,255,0.1)_0%,transparent_50%),radial-gradient(circle_at_70%_80%,rgba(255,255,255,0.1)_0%,transparent_50%)]"></div>
+      <div class="absolute inset-0 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:32px_32px] opacity-10 animate-pulse"></div>
+
+      <div class="max-w-4xl mx-auto text-center px-4 sm:px-6 relative z-10">
+        <div class="animate-fade-in-up">
+          <h3 class="text-4xl sm:text-5xl lg:text-6xl font-extrabold text-white mb-6 tracking-tight">
+            Ready to launch your
+            <span class="block bg-gradient-to-r from-yellow-300 to-orange-300 bg-clip-text text-transparent animate-gradient-x">
+              success story?
+            </span>
           </h3>
-          <p class="text-lg sm:text-xl text-gray-300 max-w-2xl mx-auto px-4">Real stories from real sellers who transformed their business with Sho24</p>
-        </div>
+          <p class="text-xl text-emerald-100 mb-10 max-w-2xl mx-auto leading-relaxed">
+            Join the next generation of entrepreneurs building amazing online stores.
+            Your journey starts with a single click! 🚀
+          </p>
 
-        <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8 mb-12 sm:mb-20">
-          <!-- Testimonial 1 -->
-          <div class="bg-gray-700/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-emerald-600/20 shadow-2xl transform hover:scale-105 transition-all duration-300 group">
-            <div class="flex items-center mb-4 sm:mb-6">
-              <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-emerald-500 to-green-500 rounded-full flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-lg">
-                S
-              </div>
-              <div class="ml-3 sm:ml-4">
-                <h4 class="font-bold text-white text-base sm:text-lg">Sarah Chen</h4>
-                <p class="text-emerald-300 text-xs sm:text-sm">Fashion Boutique Owner</p>
-              </div>
-            </div>
-            <p class="text-gray-300 text-base sm:text-lg leading-relaxed mb-4 sm:mb-6">"Sho24 transformed my business. Sales increased 300% in just 3 months!"</p>
-            <div class="flex space-x-1">
-              <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-              </svg>
-              <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-              </svg>
-              <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-              </svg>
-              <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-              </svg>
-              <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-              </svg>
-            </div>
-          </div>
+          <button
+            @click="loginWithGoogle"
+            :disabled="loading"
+            class="group relative bg-white text-emerald-600 hover:text-emerald-700 rounded-2xl py-5 px-12 font-bold text-xl transition-all duration-300 shadow-2xl hover:shadow-3xl hover:-translate-y-2 disabled:opacity-60 flex items-center justify-center space-x-4 mx-auto overflow-hidden"
+          >
+            <!-- Animated background -->
+            <div class="absolute inset-0 bg-gradient-to-r from-emerald-50 to-green-50 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+            <!-- Shimmer effect -->
+            <div class="absolute inset-0 -top-1 -left-1 bg-gradient-to-r from-transparent via-emerald-200/30 to-transparent skew-x-12 transform -translate-x-full group-hover:translate-x-full transition-transform duration-1000"></div>
 
-          <!-- Testimonial 2 -->
-          <div class="bg-gray-700/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-amber-600/20 shadow-2xl transform hover:scale-105 transition-all duration-300 group">
-            <div class="flex items-center mb-4 sm:mb-6">
-              <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-amber-500 to-yellow-500 rounded-full flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-lg">
-                M
-              </div>
-              <div class="ml-3 sm:ml-4">
-                <h4 class="font-bold text-white text-base sm:text-lg">Marcus Johnson</h4>
-                <p class="text-amber-300 text-xs sm:text-sm">Electronics Store</p>
-              </div>
-            </div>
-            <p class="text-gray-300 text-base sm:text-lg leading-relaxed mb-4 sm:mb-6">"The speed is incredible. My store loads instantly and customers love the experience."</p>
-            <div class="flex space-x-1">
-              <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-              </svg>
-              <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-              </svg>
-              <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-              </svg>
-              <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-              </svg>
-              <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-              </svg>
-            </div>
-          </div>
+            <svg v-if="loading" class="animate-spin h-7 w-7 relative z-10" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
+            </svg>
+            <img v-else src="https://www.svgrepo.com/show/355037/google.svg" alt="Google icon" class="h-7 w-7 group-hover:scale-110 transition-transform duration-200 relative z-10" />
+            <span class="relative z-10">{{ loading ? 'Creating magic...' : 'Start Your Journey - Free!' }}</span>
+          </button>
 
-          <!-- Testimonial 3 -->
-          <div class="bg-gray-700/50 backdrop-blur-sm rounded-xl sm:rounded-2xl p-6 sm:p-8 border border-green-600/20 shadow-2xl transform hover:scale-105 transition-all duration-300 group sm:col-span-2 lg:col-span-1">
-            <div class="flex items-center mb-4 sm:mb-6">
-              <div class="w-12 h-12 sm:w-14 sm:h-14 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center text-white font-bold text-lg sm:text-xl shadow-lg">
-                A
-              </div>
-              <div class="ml-3 sm:ml-4">
-                <h4 class="font-bold text-white text-base sm:text-lg">Alex Rivera</h4>
-                <p class="text-green-300 text-xs sm:text-sm">Handmade Crafts</p>
-              </div>
+          <!-- Trust indicators -->
+          <div class="flex flex-wrap items-center justify-center gap-6 mt-8 text-emerald-100 text-sm">
+            <div class="flex items-center space-x-2">
+              <span class="text-yellow-300">⭐</span>
+              <span>No credit card required</span>
             </div>
-            <p class="text-gray-300 text-base sm:text-lg leading-relaxed mb-4 sm:mb-6">"The analytics helped me understand my customers better. Revenue doubled with Sho24!"</p>
-            <div class="flex space-x-1">
-              <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-              </svg>
-              <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-              </svg>
-              <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-              </svg>
-              <svg class="w-5 h-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/>
-              </svg>
+            <div class="flex items-center space-x-2">
+              <span class="text-yellow-300">⚡</span>
+              <span>Setup in minutes</span>
             </div>
-          </div>
-        </div>
-
-        <!-- Responsive Stats Section -->
-        <div class="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 text-center">
-          <div class="animate-fade-in-up">
-            <div class="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-green-400 mb-2">10,000+</div>
-            <div class="text-gray-300 font-medium text-sm sm:text-base">Active Sellers</div>
-          </div>
-          <div class="animate-fade-in-up animation-delay-200">
-            <div class="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-amber-400 to-yellow-400 mb-2">$2.5M+</div>
-            <div class="text-gray-300 font-medium text-sm sm:text-base">Revenue Generated</div>
-          </div>
-          <div class="animate-fade-in-up animation-delay-400">
-            <div class="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-emerald-500 mb-2">99.9%</div>
-            <div class="text-gray-300 font-medium text-sm sm:text-base">Uptime</div>
-          </div>
-          <div class="animate-fade-in-up animation-delay-600">
-            <div class="text-3xl sm:text-4xl font-black text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-amber-500 mb-2">24/7</div>
-            <div class="text-gray-300 font-medium text-sm sm:text-base">Support</div>
+            <div class="flex items-center space-x-2">
+              <span class="text-yellow-300">💎</span>
+              <span>Free forever plan</span>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- Responsive Final CTA Section -->
-    <section class="py-16 sm:py-24 bg-gradient-to-t from-gray-900 to-gray-800 border-t border-emerald-700/30">
-      <div class="max-w-4xl mx-auto text-center px-4 sm:px-6">
-        <h3 class="text-3xl sm:text-5xl font-black text-white mb-6 sm:mb-8">
-          Ready to <span class="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-amber-400">Launch</span> Your Shop?
-        </h3>
-        <p class="text-lg sm:text-xl text-gray-300 mb-8 sm:mb-12 leading-relaxed">
-          Join the revolution of successful entrepreneurs who chose to build their empire with Shop24.
-        </p>
+    <!-- Enhanced Footer -->
+    <footer class="bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 text-gray-300 py-12 relative overflow-hidden">
+      <!-- Background decoration -->
+      <div class="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(16,185,129,0.1)_0%,transparent_50%)]"></div>
 
-        <button
-          @click="loginWithGoogle"
-          :disabled="loading"
-          class="inline-flex items-center space-x-3 sm:space-x-4 bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-700 hover:to-green-700 text-white rounded-xl sm:rounded-2xl py-4 sm:py-6 px-8 sm:px-12 transition-all duration-300 shadow-2xl hover:shadow-emerald-500/25 disabled:opacity-60 disabled:cursor-not-allowed group transform hover:scale-105 text-lg sm:text-xl font-bold"
-        >
-          <svg v-if="loading" class="animate-spin h-6 w-6 sm:h-8 sm:w-8" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"/>
-            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
-          </svg>
-          <img v-else src="https://www.svgrepo.com/show/355037/google.svg" alt="Google icon" class="h-6 w-6 sm:h-8 sm:w-8 group-hover:scale-110 transition-transform duration-200" />
-          <span>{{ loading ? 'Building Your Shop...' : 'Launch Your Shop Now' }}</span>
-        </button>
-      </div>
-    </section>
-
-    <!-- Responsive Modern Footer -->
-    <footer class="bg-gray-900 border-t border-emerald-800/30 py-8 sm:py-12">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6">
-        <div class="flex flex-col sm:flex-row items-center justify-between space-y-4 sm:space-y-0">
-          <div class="flex items-center space-x-2 sm:space-x-3">
-            <div class="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
-              <svg class="w-4 h-4 sm:w-6 sm:h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
+        <div class="flex flex-col sm:flex-row items-center justify-between space-y-6 sm:space-y-0">
+          <div class="flex items-center space-x-4 group">
+            <div class="w-10 h-10 bg-gradient-to-br from-emerald-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300">
+               <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
               </svg>
             </div>
-            <span class="text-xl sm:text-2xl font-black bg-gradient-to-r from-emerald-400 via-green-400 to-amber-400 bg-clip-text text-transparent">Sho24</span>
+            <div>
+              <span class="text-2xl font-bold bg-gradient-to-r from-emerald-400 to-green-400 bg-clip-text text-transparent">Shop24</span>
+              <p class="text-xs text-gray-400">Building the future of e-commerce</p>
+            </div>
           </div>
 
-          <div class="flex flex-col sm:flex-row items-center space-y-2 sm:space-y-0 sm:space-x-6 lg:space-x-8 text-gray-400">
-            <span class="text-xs sm:text-sm text-center">© 2024 Shop24. Built for ambitious entrepreneurs.</span>
-            <div class="flex space-x-4 sm:space-x-6">
-              <a href="#" class="hover:text-emerald-400 transition-colors duration-200 text-xs sm:text-sm">Privacy</a>
-              <a href="#" class="hover:text-emerald-400 transition-colors duration-200 text-xs sm:text-sm">Terms</a>
-              <a href="#" class="hover:text-emerald-400 transition-colors duration-200 text-xs sm:text-sm">Support</a>
+          <div class="text-center sm:text-right">
+            <div class="text-sm text-gray-400 mb-2">
+              © 2024 Shop24. Made with <span class="text-red-400 animate-pulse">♡</span> for creators worldwide.
+            </div>
+            <div class="flex space-x-4 justify-center sm:justify-end text-xs text-gray-500">
+              <a href="#" class="hover:text-emerald-400 transition-colors duration-200">Privacy</a>
+              <a href="#" class="hover:text-emerald-400 transition-colors duration-200">Terms</a>
+              <a href="#" class="hover:text-emerald-400 transition-colors duration-200">Support</a>
             </div>
           </div>
         </div>
@@ -365,7 +468,7 @@
 </template>
 
 <script setup>
-import { ref, watch, onMounted } from 'vue'
+import { ref, watch, onMounted, onUnmounted, computed } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/store/auth'
 import FeatureCard from '@/components/FeatureCard.vue'
@@ -375,6 +478,74 @@ const route = useRoute()
 const auth = useAuthStore()
 const loading = ref(false)
 const error = ref(null)
+const mobileMenuOpen = ref(false)
+const currentThemeIndex = ref(0)
+
+// Different store themes that cycle automatically
+const storeThemes = [
+  {
+    name: "Fashion",
+    headerBg: "bg-gradient-to-br from-pink-100 via-purple-50 to-pink-100",
+    productBg1: "bg-gradient-to-br from-pink-100 to-pink-200",
+    productBg2: "bg-gradient-to-br from-purple-100 to-purple-200",
+    productBg3: "bg-gradient-to-br from-rose-100 to-rose-200",
+    productBg4: "bg-gradient-to-br from-indigo-100 to-indigo-200",
+    productIcon1: "text-pink-600",
+    productIcon2: "text-purple-600",
+    productIcon3: "text-rose-600",
+    productIcon4: "text-indigo-600",
+    icon1: "👗", icon2: "👠", icon3: "👜", icon4: "💄",
+    product1: "Dress", product2: "Heels", product3: "Handbag", product4: "Makeup",
+    price1: "45", price2: "65", price3: "35", price4: "25"
+  },
+  {
+    name: "Electronics",
+    headerBg: "bg-gradient-to-br from-blue-100 via-cyan-50 to-blue-100",
+    productBg1: "bg-gradient-to-br from-blue-100 to-blue-200",
+    productBg2: "bg-gradient-to-br from-cyan-100 to-cyan-200",
+    productBg3: "bg-gradient-to-br from-slate-100 to-slate-200",
+    productBg4: "bg-gradient-to-br from-gray-100 to-gray-200",
+    productIcon1: "text-blue-600",
+    productIcon2: "text-cyan-600",
+    productIcon3: "text-slate-600",
+    productIcon4: "text-gray-600",
+    icon1: "📱", icon2: "💻", icon3: "🎧", icon4: "⌚",
+    product1: "Phone", product2: "Laptop", product3: "Headphones", product4: "Watch",
+    price1: "299", price2: "899", price3: "89", price4: "199"
+  },
+  {
+    name: "Food & Drinks",
+    headerBg: "bg-gradient-to-br from-orange-100 via-yellow-50 to-orange-100",
+    productBg1: "bg-gradient-to-br from-orange-100 to-orange-200",
+    productBg2: "bg-gradient-to-br from-yellow-100 to-yellow-200",
+    productBg3: "bg-gradient-to-br from-red-100 to-red-200",
+    productBg4: "bg-gradient-to-br from-green-100 to-green-200",
+    productIcon1: "text-orange-600",
+    productIcon2: "text-yellow-600",
+    productIcon3: "text-red-600",
+    productIcon4: "text-green-600",
+    icon1: "🍕", icon2: "☕", icon3: "🍰", icon4: "🥗",
+    product1: "Pizza", product2: "Coffee", product3: "Cake", product4: "Salad",
+    price1: "12", price2: "5", price3: "8", price4: "10"
+  },
+  {
+    name: "Home & Garden",
+    headerBg: "bg-gradient-to-br from-green-100 via-emerald-50 to-green-100",
+    productBg1: "bg-gradient-to-br from-green-100 to-green-200",
+    productBg2: "bg-gradient-to-br from-emerald-100 to-emerald-200",
+    productBg3: "bg-gradient-to-br from-teal-100 to-teal-200",
+    productBg4: "bg-gradient-to-br from-lime-100 to-lime-200",
+    productIcon1: "text-green-600",
+    productIcon2: "text-emerald-600",
+    productIcon3: "text-teal-600",
+    productIcon4: "text-lime-600",
+    icon1: "🪴", icon2: "🛋️", icon3: "💡", icon4: "🌸",
+    product1: "Plant", product2: "Sofa", product3: "Lamp", product4: "Flowers",
+    price1: "25", price2: "450", price3: "35", price4: "15"
+  }
+]
+
+const currentTheme = computed(() => storeThemes[currentThemeIndex.value])
 
 // Helper function to determine where to redirect after authentication
 function determineRedirect() {
@@ -387,6 +558,15 @@ function determineRedirect() {
 
   // If user has complete profile, redirect to shop selection
   return { name: 'ShopSelection' }
+}
+
+// Mobile menu functions
+function toggleMobileMenu() {
+  mobileMenuOpen.value = !mobileMenuOpen.value
+}
+
+function closeMobileMenu() {
+  mobileMenuOpen.value = false
 }
 
 // Google OAuth login
@@ -418,12 +598,32 @@ async function handleOAuthCallback() {
   }
 }
 
+// Theme cycling function
+function cycleTheme() {
+  currentThemeIndex.value = (currentThemeIndex.value + 1) % storeThemes.length
+}
+
 onMounted(() => {
   // If user is already authenticated, redirect appropriately
   if (auth.isAuthenticated) {
     const redirect = determineRedirect()
     router.replace(redirect)
   }
+
+  // Start theme cycling animation only on desktop (lg and above)
+  const isDesktop = window.innerWidth >= 1024 // lg breakpoint
+  let themeInterval = null
+
+  if (isDesktop) {
+    themeInterval = setInterval(cycleTheme, 4000) // Change theme every 4 seconds
+  }
+
+  // Cleanup interval on unmount
+  onUnmounted(() => {
+    if (themeInterval) {
+      clearInterval(themeInterval)
+    }
+  })
 })
 
 // Watch for OAuth callback parameters
@@ -440,201 +640,90 @@ watch(() => route.query, async (query) => {
 </script>
 
 <style>
-/* Added 'Inter' font for better typography */
+/* Modern fonts with better weights */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
 body {
   font-family: 'Inter', sans-serif;
 }
 
-/* Keyframe animations for subtle visual effects */
-@keyframes fadeIn {
-  from { 
-    opacity: 0; 
-    transform: translateY(30px); 
-  }
-  to { 
-    opacity: 1; 
-    transform: translateY(0); 
-  }
-}
-
+/* Enhanced animations */
 @keyframes fadeInUp {
-  from { 
-    opacity: 0; 
-    transform: translateY(50px); 
+  from {
+    opacity: 0;
+    transform: translateY(30px);
   }
-  to { 
-    opacity: 1; 
-    transform: translateY(0); 
-  }
-}
-
-.animate-fade-in {
-  animation: fadeIn 0.8s ease-out forwards;
-}
-
-.animate-fade-in-up {
-  animation: fadeInUp 0.8s ease-out forwards;
-}
-
-.animation-delay-200 { animation-delay: 0.2s; }
-.animation-delay-400 { animation-delay: 0.4s; }
-.animation-delay-600 { animation-delay: 0.6s; }
-.animation-delay-800 { animation-delay: 0.8s; }
-.animation-delay-1000 { animation-delay: 1s; }
-
-/* Blob animation for dynamic background elements */
-@keyframes blob {
-  0%, 100% { 
-    transform: scale(1) translate(0,0); 
-  }
-  33% { 
-    transform: scale(1.2) translate(30px,-20px); 
-  }
-  66% { 
-    transform: scale(0.8) translate(-20px,30px); 
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-.animate-blob {
-  animation: blob 8s infinite ease-in-out;
-}
-
-/* Custom utility for inner shadow effect */
-.shadow-inner-top {
-  box-shadow: inset 0 8px 10px -6px rgba(0, 0, 0, 0.1);
-}
-
-/* Enhanced glassmorphism effect */
-.backdrop-blur-sm {
-  backdrop-filter: blur(8px);
-}
-
-/* Pulse animation for decorative elements */
-@keyframes pulse {
-  0%, 100% {
-    opacity: 0.15;
-    transform: scale(1);
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
   }
-  50% {
-    opacity: 0.25;
-    transform: scale(1.05);
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-.animate-pulse {
-  animation: pulse 3s ease-in-out infinite;
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-/* Enhanced hover effects for buttons */
-.group:hover .group-hover\:scale-110 {
-  transform: scale(1.1);
-}
-
-/* Smooth gradient transitions */
-.bg-gradient-to-r {
-  background-size: 200% 200%;
-  animation: gradient-shift 6s ease infinite;
-}
-
-@keyframes gradient-shift {
-  0% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-/* Floating animation for decorative elements */
 @keyframes float {
   0%, 100% {
-    transform: translateY(0px) rotate(0deg);
-  }
-  33% {
-    transform: translateY(-10px) rotate(120deg);
-  }
-  66% {
-    transform: translateY(5px) rotate(240deg);
-  }
-}
-
-.animate-float {
-  animation: float 6s ease-in-out infinite;
-}
-
-.animation-delay-800 { animation-delay: 0.8s; }
-.animation-delay-1200 { animation-delay: 1.2s; }
-
-/* Additional responsive enhancements */
-@media (max-width: 640px) {
-  .text-5xl { font-size: 2.5rem; }
-  .text-6xl { font-size: 3rem; }
-  .text-7xl { font-size: 3.5rem; }
-}
-
-/* Enhanced button hover effects */
-button:hover {
-  transform: translateY(-2px);
-}
-
-/* Smooth scroll behavior */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Additional responsive enhancements */
-@media (max-width: 640px) {
-  .text-5xl { font-size: 2.5rem; }
-  .text-6xl { font-size: 3rem; }
-  .text-7xl { font-size: 3.5rem; }
-}
-
-/* Enhanced button hover effects */
-button:hover {
-  transform: translateY(-2px);
-}
-
-/* Smooth scroll behavior */
-html {
-  scroll-behavior: smooth;
-}
-
-/* Optimized animations for Vue green/amber theme with performance improvements */
-@keyframes pulse-slow {
-  0%, 100% {
-    opacity: 0.15;
-    transform: scale(1) translateZ(0);
+    transform: translateY(0px);
   }
   50% {
-    opacity: 0.25;
-    transform: scale(1.05) translateZ(0);
+    transform: translateY(-20px);
   }
 }
 
-.animate-pulse-slow {
-  animation: pulse-slow 6s ease-in-out infinite;
-  will-change: transform, opacity;
-}
-
-@keyframes float-particle {
+@keyframes float-delayed {
   0%, 100% {
-    transform: translate3d(0, 0, 0) rotate(0deg);
-    opacity: 0.4;
-  }
-  25% {
-    transform: translate3d(10px, -15px, 0) rotate(90deg);
-    opacity: 0.8;
+    transform: translateY(0px);
   }
   50% {
-    transform: translate3d(-8px, -8px, 0) rotate(180deg);
-    opacity: 0.6;
-  }
-  75% {
-    transform: translate3d(5px, -20px, 0) rotate(270deg);
-    opacity: 0.3;
+    transform: translateY(-15px);
   }
 }
 
-.animate-float-particle {
-  animation: float-particle 12s ease-in-out infinite;
-  will-change: transform, opacity;
+@keyframes float-slow {
+  0%, 100% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+@keyframes bounce-gentle {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes bounce-slow {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-8px);
+  }
 }
 
 @keyframes gradient-x {
@@ -648,27 +737,119 @@ html {
   }
 }
 
-.animate-gradient-x {
-  animation: gradient-x 4s ease infinite;
-  will-change: background-position;
-}
-
-/* Performance optimizations */
-.will-change-transform {
-  will-change: transform;
-}
-
-/* Reduced motion for accessibility */
-@media (prefers-reduced-motion: reduce) {
-  .animate-pulse-slow,
-  .animate-float-particle,
-  .animate-gradient-x {
-    animation: none;
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(16, 185, 129, 0.6);
   }
 }
 
-/* Additional animation delays */
+/* Animation classes */
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-fade-in-down {
+  animation: fadeInDown 0.5s ease-out forwards;
+  opacity: 0;
+}
+
+.animate-slide-down {
+  animation: slideDown 0.3s ease-out forwards;
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-delayed {
+  animation: float-delayed 6s ease-in-out infinite;
+  animation-delay: 2s;
+}
+
+.animate-float-slow {
+  animation: float-slow 8s ease-in-out infinite;
+  animation-delay: 4s;
+}
+
+.animate-bounce-gentle {
+  animation: bounce-gentle 2s ease-in-out infinite;
+}
+
+.animate-bounce-slow {
+  animation: bounce-slow 3s ease-in-out infinite;
+}
+
+.animate-gradient-x {
+  animation: gradient-x 3s ease infinite;
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Staggered animation delays */
+.animation-delay-100 { animation-delay: 0.1s; }
+.animation-delay-200 { animation-delay: 0.2s; }
+.animation-delay-300 { animation-delay: 0.3s; }
+.animation-delay-400 { animation-delay: 0.4s; }
 .animation-delay-500 { animation-delay: 0.5s; }
-.animation-delay-1500 { animation-delay: 1.5s; }
-.animation-delay-2000 { animation-delay: 2s; }
+
+/* Custom shadows */
+.shadow-3xl {
+  box-shadow: 0 35px 60px -12px rgba(0, 0, 0, 0.25);
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(to bottom, #10b981, #059669);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(to bottom, #059669, #047857);
+}
+
+/* Focus styles for accessibility */
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #10b981;
+  outline-offset: 2px;
+}
+
+/* Accessibility improvements */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Mobile optimizations */
+@media (max-width: 768px) {
+  .animate-fade-in-up {
+    animation-duration: 0.6s;
+  }
+
+  .animate-slide-down {
+    animation-duration: 0.2s;
+  }
+}
 </style>
