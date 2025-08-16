@@ -5,14 +5,13 @@
       <!-- Header Section -->
       <div class="mb-6 sm:mb-8">
         <div class="flex items-center mb-3">
-          <button 
-            @click="goBack"
-            class="mr-3 p-2 text-gray-500 hover:text-gray-700 hover:bg-gray-100 rounded-lg transition duration-150 ease-in-out"
-          >
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
-            </svg>
-          </button>
+          <BackButton
+            :to="'/dashboard/customization'"
+            variant="rounded"
+            :show-text="false"
+            size="sm"
+            class="mr-3"
+          />
           <div class="w-10 h-10 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg flex items-center justify-center mr-3 shadow-sm">
             <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z" />
@@ -429,6 +428,7 @@ import { ref, reactive, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { useShopStore } from '@/store/shops'
 import themeService from '@/services/theme'
+import BackButton from '@/components/BackButton.vue'
 
 const router = useRouter()
 const shopStore = useShopStore()
@@ -545,9 +545,6 @@ async function loadThemeData() {
 }
 
 // Functions
-function goBack() {
-  router.push('/dashboard/customization')
-}
 
 function applyPreset(preset) {
   theme.primaryColor = preset.primary

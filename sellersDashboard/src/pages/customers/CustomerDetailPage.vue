@@ -1,12 +1,11 @@
 <template>
   <div class="p-4 sm:p-6 max-w-6xl mx-auto space-y-8 font-sans">
-    <button
-      @click="$router.back()"
-      class="inline-flex items-center text-gray-600 hover:text-green-700 transition duration-200 ease-in-out mb-6 group rounded-full px-3 py-1.5 -ml-3"
-    >
-      <ChevronLeftIcon class="h-5 w-5 mr-1 text-gray-500 group-hover:text-green-600 transition-colors duration-200" />
-      <span class="text-sm font-medium group-hover:text-green-700 transition-colors duration-200">Back to Customers</span>
-    </button>
+    <BackButton
+      :to="{ name: 'Customers' }"
+      text="Back to Customers"
+      variant="rounded"
+      class="mb-6 -ml-3"
+    />
 
     <div v-if="loading" class="flex flex-col items-center justify-center text-gray-600 py-12">
       <RefreshIcon class="animate-spin h-8 w-8 text-green-500 mb-3" />
@@ -275,11 +274,21 @@
         </div>
         <p class="text-lg font-medium mb-2">Customer not found</p>
         <p class="text-sm">The customer ID might be invalid or the customer does not exist for the active shop.</p>
-        <button 
-          @click="$router.back()" 
+        <button
+          @click="() => $router.push({ name: 'Customers' })"
           class="mt-4 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
         >
-          <ChevronLeftIcon class="w-4 h-4 mr-2" />
+          <svg
+            class="w-4 h-4 mr-2"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2.5"
+            viewBox="0 0 24 24"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
           Back to Customers
         </button>
       </div>
@@ -345,7 +354,6 @@ import { useShopStore } from '@/store/shops'
 import { customerService } from '@/services/customer'
 import { customerSegmentService } from '@/services/customerSegment'
 import {
-  ChevronLeftIcon,
   RefreshIcon,
   ExclamationCircleIcon,
   FolderAddIcon,
@@ -358,6 +366,7 @@ import {
   FolderIcon,
   XIcon
 } from '@heroicons/vue/outline'
+import BackButton from '@/components/BackButton.vue'
 
 const route = useRoute()
 const router = useRouter()

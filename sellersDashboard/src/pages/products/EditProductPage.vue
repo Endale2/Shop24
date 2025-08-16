@@ -6,11 +6,20 @@
       <div class="mb-6 sm:mb-8">
         <div class="flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0">
           <div class="flex items-center mb-3 md:mb-0">
-            <button @click="goBack" class="inline-flex items-center text-gray-600 hover:text-green-700 transition duration-200 ease-in-out mr-4 group">
-              <ChevronLeftIcon class="h-5 w-5 mr-1 text-gray-500 group-hover:text-green-600 transition-colors duration-200" />
-              <span class="text-sm font-medium group-hover:text-green-700 transition-colors duration-200">Back to Product Details</span>
+            <button @click="goBack" class="inline-flex items-center text-gray-600 hover:text-green-600 transition-all duration-200 ease-in-out mr-4 group">
+              <svg
+                class="w-5 h-5 mr-2 transition-all duration-200 group-hover:scale-110 group-hover:-translate-x-0.5"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                viewBox="0 0 24 24"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
+              <span class="text-sm font-medium transition-colors duration-200">Back to Product Details</span>
             </button>
-            
           </div>
         </div>
       </div>
@@ -317,14 +326,14 @@ import { useShopStore } from '@/store/shops';
 import { productService } from '@/services/product';
 import { collectionService } from '@/services/collection'
 import {
-  ChevronLeftIcon,
   RefreshIcon as SpinnerIcon,
   PlusCircleIcon,
   MinusCircleIcon,
   XIcon,
   PlusIcon,
   ExclamationCircleIcon
-} from '@heroicons/vue/outline';
+} from '@heroicons/vue/outline'
+import BackButton from '@/components/BackButton.vue';
 
 const router = useRouter();
 const route = useRoute();

@@ -14,13 +14,12 @@
               <p class="text-sm text-gray-600 mt-1">Update your promotional offer settings</p>
             </div>
           </div>
-          <router-link
-            to="/dashboard/discounts"
-            class="inline-flex items-center px-3 py-2 bg-gray-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-150 ease-in-out"
-          >
-            <ArrowLeftIcon class="w-4 h-4 mr-2" />
-            Back to Discounts
-          </router-link>
+          <BackButton
+            :to="'/dashboard/discounts'"
+            text="Back to Discounts"
+            variant="default"
+            class="bg-gray-600 text-white hover:bg-gray-700 px-3 py-2 rounded-lg shadow-sm"
+          />
         </div>
       </div>
 
@@ -40,11 +39,21 @@
           <p class="text-base mb-4 max-w-md">
             The discount you're looking for doesn't exist or you don't have permission to access it.
           </p>
-          <button 
+          <button
             @click="() => router.push({ name: 'Discounts' })"
             class="inline-flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 transition duration-150 ease-in-out"
           >
-            <ArrowLeftIcon class="w-4 h-4 mr-2" />
+            <svg
+              class="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2.5"
+              viewBox="0 0 24 24"
+              stroke-linecap="round"
+              stroke-linejoin="round"
+            >
+              <path d="M15 18l-6-6 6-6" />
+            </svg>
             Back to Discounts
           </button>
         </div>
@@ -338,8 +347,7 @@ import { ref, computed, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useShopStore } from '@/store/shops'
 import { discountService } from '@/services/discount'
-import { 
-  ArrowLeftIcon,
+import {
   TagIcon,
   CurrencyDollarIcon,
   ChartBarIcon,
@@ -349,6 +357,7 @@ import {
   CheckCircleIcon,
   XCircleIcon
 } from '@heroicons/vue/outline'
+import BackButton from '@/components/BackButton.vue'
 
 const route = useRoute()
 const router = useRouter()

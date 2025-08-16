@@ -1,12 +1,11 @@
 <template>
   <div class="p-4 sm:p-6 max-w-7xl mx-auto space-y-8 font-sans">
-    <button
-      @click="$router.back()"
-      class="inline-flex items-center text-gray-600 hover:text-green-700 transition duration-200 ease-in-out mb-6 group rounded-full px-3 py-1.5 -ml-3"
-    >
-      <ArrowLeftIcon class="h-5 w-5 mr-1 text-gray-500 group-hover:text-green-600 transition-colors duration-200" />
-      <span class="text-sm font-medium group-hover:text-green-700 transition-colors duration-200">Back to Collections</span>
-    </button>
+    <BackButton
+      :to="{ name: 'Collections' }"
+      text="Back to Collections"
+      variant="rounded"
+      class="mb-6 -ml-3"
+    />
     <div v-if="loading" class="flex flex-col items-center justify-center text-gray-600 py-20 bg-white rounded-2xl shadow-lg">
       <SpinnerIcon class="animate-spin h-10 w-10 text-green-500 mb-4" />
       <p class="mt-3 text-lg font-semibold text-gray-700">Preparing the form...</p>
@@ -126,7 +125,7 @@
         <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
           <button
             type="button"
-            @click="$router.back()"
+            @click="() => $router.push({ name: 'Collections' })"
             class="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-150 ease-in-out"
           >
             Cancel
@@ -152,11 +151,11 @@ import { useRouter } from 'vue-router'
 import { useShopStore } from '@/store/shops'
 import { collectionService } from '@/services/collection'
 import {
-  ArrowLeftIcon,
   PlusIcon,
   RefreshIcon as SpinnerIcon,
   PhotographIcon
 } from '@heroicons/vue/outline'
+import BackButton from '@/components/BackButton.vue'
 
 const router = useRouter()
 const shopStore = useShopStore()

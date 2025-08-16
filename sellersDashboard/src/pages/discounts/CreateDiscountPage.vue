@@ -14,13 +14,12 @@
               <p class="text-sm text-gray-600 mt-1">Set up product-level promotional offers to boost your sales</p>
             </div>
           </div>
-          <router-link
-            to="/dashboard/discounts"
-            class="inline-flex items-center px-3 py-2 bg-gray-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-150 ease-in-out"
-          >
-            <ArrowLeftIcon class="w-4 h-4 mr-2" />
-            Back to Discounts
-          </router-link>
+          <BackButton
+            :to="'/dashboard/discounts'"
+            text="Back to Discounts"
+            variant="default"
+            class="bg-gray-600 text-white hover:bg-gray-700 px-3 py-2 rounded-lg shadow-sm"
+          />
         </div>
       </div>
 
@@ -450,8 +449,7 @@ import { useShopStore } from '@/store/shops'
 import { discountService } from '@/services/discount'
 import { customerService } from '@/services/customer'
 import { customerSegmentService } from '@/services/customerSegment'
-import { 
-  ArrowLeftIcon,
+import {
   TagIcon,
   CurrencyDollarIcon,
   UsersIcon,
@@ -462,6 +460,7 @@ import {
   ExclamationIcon,
   XCircleIcon
 } from '@heroicons/vue/outline'
+import BackButton from '@/components/BackButton.vue'
 
 const router = useRouter()
 const shopStore = useShopStore()

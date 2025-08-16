@@ -1,12 +1,11 @@
 <template>
   <div class="p-4 sm:p-6 max-w-6xl mx-auto space-y-8 font-sans">
-    <button
-      @click="goBack"
-      class="inline-flex items-center text-gray-600 hover:text-green-700 transition duration-200 ease-in-out mb-6 group rounded-full px-3 py-1.5 -ml-3"
-    >
-      <ChevronLeftIcon class="h-5 w-5 mr-1 text-gray-500 group-hover:text-green-600 transition-colors duration-200" />
-      <span class="text-sm font-medium group-hover:text-green-700 transition-colors duration-200">Back to Products</span>
-    </button>
+    <BackButton
+      :to="{ name: 'Products' }"
+      text="Back to Products"
+      variant="rounded"
+      class="mb-6 -ml-3"
+    />
 
     <div v-if="loading" class="flex flex-col items-center justify-center text-gray-600 py-20 bg-white rounded-2xl shadow-lg">
       <SpinnerIcon class="animate-spin h-10 w-10 text-green-500 mb-4" />
@@ -359,7 +358,7 @@
         <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200">
           <button
             type="button"
-            @click="goBack"
+            @click="() => $router.push({ name: 'Products' })"
             class="px-6 py-3 border border-gray-300 rounded-lg text-gray-700 font-medium hover:bg-gray-100 transition-colors duration-200 shadow-sm"
           >
             Cancel
@@ -385,7 +384,6 @@ import { useShopStore } from '@/store/shops'
 import { productService } from '@/services/product'
 import { collectionService } from '@/services/collection'
 import {
-  ChevronLeftIcon,
   RefreshIcon as SpinnerIcon,
   PlusCircleIcon,
   MinusCircleIcon,
@@ -394,6 +392,7 @@ import {
   ExclamationCircleIcon,
   InformationCircleIcon
 } from '@heroicons/vue/outline'
+import BackButton from '@/components/BackButton.vue'
 
 const router = useRouter()
 const shopStore = useShopStore()
@@ -429,9 +428,7 @@ form.meta_description = ''
 
 const collections = ref([])
 
-function goBack() {
-  router.push({ name: 'Products' })
-}
+
 
 onMounted(async () => {
   collections.value = await collectionService.fetchAllByShop(shopStore.activeShop.id)

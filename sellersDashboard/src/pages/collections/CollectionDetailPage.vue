@@ -6,15 +6,12 @@
       <div class="mb-6 sm:mb-8">
         <div class="flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0">
           <div class="flex items-center mb-3 md:mb-0">
-            <button
-              @click="$router.back()"
-              class="inline-flex items-center text-gray-600 hover:text-green-700 transition duration-200 ease-in-out mr-4 group"
-            >
-              <ArrowLeftIcon class="h-5 w-5 mr-1 text-gray-500 group-hover:text-green-600 transition-colors duration-200" />
-              <span class="text-sm font-medium group-hover:text-green-700 transition-colors duration-200">Back to Collections</span>
-            </button>
-            
-            
+            <BackButton
+              :to="{ name: 'Collections' }"
+              text="Back to Collections"
+              variant="minimal"
+              class="mr-4"
+            />
           </div>
           <div class="flex flex-col sm:flex-row gap-3">
             <button
@@ -264,7 +261,6 @@ import { useShopStore } from '@/store/shops'
 import { collectionService } from '@/services/collection'
 import { productService } from '@/services/product'
 import {
-  ArrowLeftIcon,
   RefreshIcon as SpinnerIcon,
   PhotographIcon as PlaceholderIcon,
   PencilIcon,
@@ -278,6 +274,7 @@ import {
   ExclamationCircleIcon,
   CollectionIcon
 } from '@heroicons/vue/outline'
+import BackButton from '@/components/BackButton.vue'
 
 const route = useRoute()
 const router = useRouter()

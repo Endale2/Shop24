@@ -6,14 +6,12 @@
       <div class="mb-6 sm:mb-8">
         <div class="flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0">
           <div class="flex items-center mb-3 md:mb-0">
-            <button
-              @click="goBack"
-              class="inline-flex items-center text-gray-600 hover:text-green-700 transition duration-200 ease-in-out mr-4 group"
-            >
-              <ArrowLeftIcon class="h-5 w-5 mr-1 text-gray-500 group-hover:text-green-600 transition-colors duration-200" />
-              <span class="text-sm font-medium group-hover:text-green-700 transition-colors duration-200">Back to Orders</span>
-            </button>
-      
+            <BackButton
+              :to="{ name: 'Orders' }"
+              text="Back to Orders"
+              variant="minimal"
+              class="mr-4"
+            />
           </div>
           
           <div class="flex items-center space-x-3">
@@ -192,7 +190,7 @@
           </div>
           <p class="text-sm font-medium text-gray-600 mb-1">Order Not Found</p>
           <p class="text-xs">We couldn't find the order you're looking for.</p>
-          <button @click="goBack" class="mt-4 text-sm font-medium text-green-600 hover:text-green-500">Go back to orders</button>
+          <button @click="() => $router.push({ name: 'Orders' })" class="mt-4 text-sm font-medium text-green-600 hover:text-green-500">Go back to orders</button>
         </div>
       </div>
     </div>
@@ -245,11 +243,11 @@ import { useRouter, useRoute } from 'vue-router'
 import { useShopStore } from '@/store/shops'
 import { orderService } from '@/services/order'
 import {
-  ArrowLeftIcon,
   PencilIcon,
   CheckIcon,
   ExclamationCircleIcon
 } from '@heroicons/vue/outline'
+import BackButton from '@/components/BackButton.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -306,12 +304,7 @@ async function fetchOrder() {
   }
 }
 
-/**
- * Navigates back to the orders list.
- */
-function goBack() {
-  router.push({ name: 'Orders' })
-}
+
 
 /**
  * Opens the status update modal.

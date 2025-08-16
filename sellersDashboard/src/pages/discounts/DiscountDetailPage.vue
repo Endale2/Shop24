@@ -33,7 +33,17 @@
               @click="goBack"
               class="inline-flex items-center px-3 py-2 bg-gray-600 text-white text-sm font-medium rounded-lg shadow-sm hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 transition duration-150 ease-in-out"
             >
-              <ArrowLeftIcon class="w-4 h-4 mr-2" />
+              <svg
+                class="w-4 h-4 mr-2"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2.5"
+                viewBox="0 0 24 24"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <path d="M15 18l-6-6 6-6" />
+              </svg>
               Back
             </button>
           </div>
@@ -802,7 +812,6 @@ import {
   XIcon,
   PlusIcon,
   RefreshIcon,
-  ArrowLeftIcon,
   TagIcon,
   CodeIcon,
   UsersIcon,

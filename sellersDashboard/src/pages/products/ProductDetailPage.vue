@@ -6,14 +6,12 @@
       <div class="mb-6 sm:mb-8">
         <div class="flex flex-col md:flex-row items-start md:items-center justify-between space-y-4 md:space-y-0">
           <div class="flex items-center mb-3 md:mb-0">
-            <button
-              @click="goBack"
-              class="inline-flex items-center text-gray-600 hover:text-green-700 transition duration-200 ease-in-out mr-4 group"
-            >
-              <ChevronLeftIcon class="h-5 w-5 mr-1 text-gray-500 group-hover:text-green-600 transition-colors duration-200" />
-              <span class="text-sm font-medium group-hover:text-green-700 transition-colors duration-200">Back to Products</span>
-            </button>
-            
+            <BackButton
+              :to="{ name: 'Products' }"
+              text="Back to Products"
+              variant="minimal"
+              class="mr-4"
+            />
           </div>
         </div>
       </div>
@@ -255,13 +253,13 @@ import { useShopStore } from '@/store/shops'
 import { productService } from '@/services/product'
 import { collectionService } from '@/services/collection'
 import {
-  ChevronLeftIcon,
   RefreshIcon as SpinnerIcon,
   PhotographIcon as PlaceholderIcon,
   PencilIcon,
   TrashIcon,
   ExclamationCircleIcon
 } from '@heroicons/vue/outline'
+import BackButton from '@/components/BackButton.vue'
 
 const router = useRouter()
 const route = useRoute()
@@ -307,9 +305,7 @@ const allImages = computed(() => {
   return imgs
 })
 
-function goBack() {
-  router.push({ name: 'Products' })
-}
+
 
 function goToEditProduct(productId) {
   router.push({ name: 'EditProduct', params: { productId } })

@@ -2,10 +2,20 @@
   <div class="p-4 sm:p-6 max-w-3xl mx-auto space-y-8 font-sans">
     <button
       @click="goBack"
-      class="inline-flex items-center text-gray-600 hover:text-green-700 transition duration-200 ease-in-out mb-6 group rounded-full px-3 py-1.5 -ml-3"
+      class="inline-flex items-center text-gray-600 hover:text-green-600 transition-all duration-200 ease-in-out group mb-6 rounded-full px-3 py-1.5 -ml-3 bg-gray-100/50 hover:bg-green-50"
     >
-      <ArrowLeftIcon class="h-5 w-5 mr-1 text-gray-500 group-hover:text-green-600 transition-colors duration-200" />
-      <span class="text-sm font-medium group-hover:text-green-700 transition-colors duration-200">Back to Collection</span>
+      <svg
+        class="w-5 h-5 mr-2 transition-all duration-200 group-hover:scale-110 group-hover:-translate-x-0.5"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="2.5"
+        viewBox="0 0 24 24"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+      >
+        <path d="M15 18l-6-6 6-6" />
+      </svg>
+      <span class="text-sm font-medium transition-colors duration-200">Back to Collection</span>
     </button>
     <div v-if="loading" class="flex flex-col items-center justify-center text-gray-600 py-20 bg-white rounded-2xl shadow-lg">
       <SpinnerIcon class="animate-spin h-10 w-10 text-green-500 mb-4" />
@@ -108,7 +118,6 @@ import { useRoute, useRouter } from 'vue-router'
 import { useShopStore } from '@/store/shops'
 import { collectionService } from '@/services/collection'
 import {
-  ArrowLeftIcon,
   RefreshIcon as SpinnerIcon,
   CheckIcon
 } from '@heroicons/vue/outline'

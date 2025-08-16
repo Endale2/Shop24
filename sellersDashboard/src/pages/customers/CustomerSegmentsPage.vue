@@ -10,13 +10,12 @@
       </div>
 
       <div class="flex flex-col sm:flex-row gap-3 mt-4 sm:mt-0">
-        <button 
-          @click="goToCustomers" 
-          class="inline-flex items-center px-4 py-2.5 bg-gray-100 text-green-700 text-sm font-medium rounded-lg shadow-sm hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition duration-150 ease-in-out"
-        >
-          <ChevronLeftIcon class="w-5 h-5 mr-2 -ml-1" />
-          Back to Customers
-        </button>
+        <BackButton
+          :to="{ name: 'Customers' }"
+          text="Back to Customers"
+          variant="default"
+          class="bg-gray-100 text-green-700 hover:bg-green-100 px-4 py-2.5 rounded-lg shadow-sm"
+        />
 
         <button 
           @click="showCreateModal = true" 
@@ -236,7 +235,6 @@ import { useRouter } from 'vue-router'
 import { useShopStore } from '@/store/shops'
 import { customerSegmentService } from '@/services/customerSegment'
 import {
-  ChevronLeftIcon,
   RefreshIcon,
   ExclamationCircleIcon,
   PlusIcon,
@@ -244,6 +242,7 @@ import {
   PencilIcon,
   TrashIcon
 } from '@heroicons/vue/outline'
+import BackButton from '@/components/BackButton.vue'
 
 const router = useRouter()
 const shopStore = useShopStore()
