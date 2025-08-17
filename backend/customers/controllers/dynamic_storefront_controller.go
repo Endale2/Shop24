@@ -1,14 +1,14 @@
 package controllers
 
 import (
-	"net/http"
 	"fmt"
+	"net/http"
 
-	shopServices "github.com/Endale2/DRPS/shared/services"
-	themeServices "github.com/Endale2/DRPS/shared/services"
-	sharedRepositories "github.com/Endale2/DRPS/shared/repositories"
 	"github.com/Endale2/DRPS/shared/models"
+	sharedRepositories "github.com/Endale2/DRPS/shared/repositories"
+	shopServices "github.com/Endale2/DRPS/shared/services"
 	"github.com/gin-gonic/gin"
+	"go.mongodb.org/mongo-driver/bson/primitive"
 )
 
 // GetDynamicStorefront serves the complete theme-driven storefront configuration
@@ -28,7 +28,7 @@ func GetDynamicStorefront(c *gin.Context) {
 	}
 
 	// Get shop theme configuration from scalable theme collection
-	theme, err := themeServices.GetOrCreateShopTheme(shop.ID, shop.OwnerID)
+	theme, err := shopServices.GetOrCreateShopTheme(shop.ID, shop.OwnerID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to load theme configuration"})
 		return
@@ -40,8 +40,8 @@ func GetDynamicStorefront(c *gin.Context) {
 	// Generate dynamic CSS from theme
 	dynamicCSS := generateStorefrontCSS(theme)
 
-	// Get theme performance metrics
-	themeMetrics, _ := themeServices.GetThemePerformanceMetrics(shop.ID)
+	// Get theme performance metrics (placeholder for future implementation)
+	var themeMetrics map[string]interface{}
 
 	// Prepare complete storefront configuration
 	storefrontConfig := gin.H{
@@ -62,26 +62,26 @@ func GetDynamicStorefront(c *gin.Context) {
 			"reviewCount": shop.ReviewCount,
 		},
 		"theme": gin.H{
-			"id":               theme.ID,
-			"name":             theme.Name,
-			"version":          theme.Version,
-			"colors":           theme.Colors,
-			"fonts":            theme.Fonts,
-			"layout":           theme.Layout,
-			"customCSS":        theme.CustomCSS,
-			"seo":              theme.SEO,
-			"mobile":           theme.Mobile,
-			"dynamicCSS":       dynamicCSS,
-			"performance":      themeMetrics,
-			"lastModified":     theme.UpdatedAt,
-			"previewImage":     theme.PreviewImage,
-			"compiledCSS":      theme.CompiledCSS,
+			"id":           theme.ID,
+			"name":         theme.Name,
+			"version":      theme.Version,
+			"colors":       theme.Colors,
+			"fonts":        theme.Fonts,
+			"layout":       theme.Layout,
+			"customCSS":    theme.CustomCSS,
+			"seo":          theme.SEO,
+			"mobile":       theme.Mobile,
+			"dynamicCSS":   dynamicCSS,
+			"performance":  themeMetrics,
+			"lastModified": theme.UpdatedAt,
+			"previewImage": theme.PreviewImage,
+			"compiledCSS":  theme.CompiledCSS,
 		},
-		"layout": generateLayoutConfig(theme),
+		"layout":     generateLayoutConfig(theme),
 		"components": generateComponentConfig(theme),
 		"navigation": generateNavigationConfig(theme),
-		"footer": generateFooterConfig(theme),
-		"seo": generateSEOConfig(shop, theme),
+		"footer":     generateFooterConfig(theme),
+		"seo":        generateSEOConfig(shop, theme),
 		"analytics": gin.H{
 			"customerCount": len(customers),
 			"productCount":  shop.ProductCount,
@@ -112,7 +112,7 @@ func GetStorefrontTheme(c *gin.Context) {
 	}
 
 	// Get theme configuration
-	theme, err := themeServices.GetOrCreateShopTheme(shop.ID, shop.OwnerID)
+	theme, err := shopServices.GetOrCreateShopTheme(shop.ID, shop.OwnerID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to load theme"})
 		return
@@ -122,19 +122,86 @@ func GetStorefrontTheme(c *gin.Context) {
 	dynamicCSS := generateStorefrontCSS(theme)
 
 	themeResponse := gin.H{
-		"colors":      theme.Colors,
-		"fonts":       theme.Fonts,
-		"layout":      theme.Layout,
-		"customCSS":   theme.CustomCSS,
-		"seo":         theme.SEO,
-		"mobile":      theme.Mobile,
-		"dynamicCSS":  dynamicCSS,
-		"version":     theme.Version,
+		"colors":       theme.Colors,
+		"fonts":        theme.Fonts,
+		"layout":       theme.Layout,
+		"customCSS":    theme.GetCustomCSSCompiled(),
+		"seo":          theme.SEO,
+		"mobile":       theme.Mobile,
+		"gradients":    theme.Gradients,
+		"shadows":      theme.Shadows,
+		"animations":   theme.Animations,
+		"spacing":      theme.Spacing,
+		"dynamicCSS":   dynamicCSS,
+		"version":      theme.Version,
 		"lastModified": theme.UpdatedAt,
-		"cacheKey":    theme.CacheKey,
+		"cacheKey":     theme.CacheKey,
 	}
 
 	c.JSON(http.StatusOK, themeResponse)
+}
+
+// GetShopComponents returns component data for a specific shop
+// GET /shops/:shopSlug/components/:componentType
+func GetShopComponents(c *gin.Context) {
+	shopSlug := c.Param("shopSlug")
+	componentType := c.Param("componentType")
+
+	// Get shop by slug
+	shop, err := sharedRepositories.GetShopBySlug(shopSlug)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "shop not found"})
+		return
+	}
+
+	// Get shop theme
+	theme, err := shopServices.GetOrCreateShopTheme(shop.ID, shop.OwnerID)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "theme not found"})
+		return
+	}
+
+	// Get component instances for this shop and component type
+	components, err := getComponentsByType(shop.ID, componentType)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to load components"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success":    true,
+		"components": components,
+		"theme": gin.H{
+			"colors": theme.Colors,
+			"fonts":  theme.Fonts,
+		},
+	})
+}
+
+// GetShopPageLayout returns layout configuration for a specific page
+// GET /shops/:shopSlug/pages/:pageType
+func GetShopPageLayout(c *gin.Context) {
+	shopSlug := c.Param("shopSlug")
+	pageType := c.Param("pageType")
+
+	// Get shop by slug
+	shop, err := sharedRepositories.GetShopBySlug(shopSlug)
+	if err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "shop not found"})
+		return
+	}
+
+	// Get page layout
+	layout, err := getPageLayout(shop.ID, pageType)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "failed to load page layout"})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"layout":  layout,
+	})
 }
 
 // =============== Theme Configuration Generators ===============
@@ -173,10 +240,10 @@ func generateStorefrontCSS(theme *models.ShopTheme) string {
 		getColorValue(theme.Colors, "border", "#E5E7EB"),
 		getFontValue(theme.Fonts, "heading", "Inter"),
 		getFontValue(theme.Fonts, "body", "Inter"),
-		getLayoutWidth(getLayoutValue(theme.Layout, "containerWidth", "boxed")),
-		getHeaderHeight(getLayoutValue(theme.Layout, "headerStyle", "classic")),
-		getLayoutValue(theme.Layout, "gridColumns", "3"),
-		getBorderRadius(getLayoutValue(theme.Layout, "borderStyle", "rounded")),
+		getLayoutWidth(theme.GetLayoutValue("containerWidth", "boxed")),
+		getHeaderHeight(theme.GetLayoutValue("headerStyle", "classic")),
+		theme.GetLayoutValue("gridColumns", "3"),
+		getBorderRadius(theme.GetLayoutValue("borderStyle", "rounded")),
 	)
 
 	// Add the CSS styles
@@ -260,9 +327,46 @@ func generateStorefrontCSS(theme *models.ShopTheme) string {
 	}
 	`
 
+	// Add gradients
+	if theme.Gradients != nil && len(theme.Gradients) > 0 {
+		css += "\n\n/* Gradients */\n"
+		for name, gradient := range theme.Gradients {
+			css += fmt.Sprintf(".gradient-%s { background: %s; }\n", name, gradient)
+		}
+	}
+
+	// Add shadows
+	if theme.Shadows != nil && len(theme.Shadows) > 0 {
+		css += "\n\n/* Shadows */\n"
+		for name, shadow := range theme.Shadows {
+			css += fmt.Sprintf(".shadow-%s { box-shadow: %s; }\n", name, shadow)
+		}
+	}
+
+	// Add animations
+	if theme.Animations != nil && len(theme.Animations) > 0 {
+		css += "\n\n/* Animations */\n"
+		for name, animation := range theme.Animations {
+			css += fmt.Sprintf(".animate-%s { animation: %s; }\n", name, animation)
+		}
+	}
+
+	// Add spacing utilities
+	if theme.Spacing != nil && len(theme.Spacing) > 0 {
+		css += "\n\n/* Spacing */\n"
+		for name, spacing := range theme.Spacing {
+			css += fmt.Sprintf(".spacing-%s { margin: %s; }\n", name, spacing)
+			css += fmt.Sprintf(".padding-%s { padding: %s; }\n", name, spacing)
+		}
+	}
+
 	// Add custom CSS if available
-	if theme.CustomCSS != "" {
-		css += "\n\n/* Custom CSS */\n" + theme.CustomCSS
+	customCSS := theme.GetCustomCSSCompiled()
+	if customCSS == "" {
+		customCSS = theme.GetCustomCSSRaw()
+	}
+	if customCSS != "" {
+		css += "\n\n/* Custom CSS */\n" + customCSS
 	}
 
 	return css
@@ -271,13 +375,13 @@ func generateStorefrontCSS(theme *models.ShopTheme) string {
 // generateLayoutConfig creates layout configuration based on theme
 func generateLayoutConfig(theme *models.ShopTheme) gin.H {
 	return gin.H{
-		"containerWidth":  getLayoutValue(theme.Layout, "containerWidth", "boxed"),
-		"headerStyle":     getLayoutValue(theme.Layout, "headerStyle", "classic"),
-		"footerStyle":     getLayoutValue(theme.Layout, "footerStyle", "minimal"),
-		"sidebarEnabled":  getLayoutValue(theme.Layout, "sidebarPosition", "none") != "none",
-		"gridColumns":     getLayoutValue(theme.Layout, "gridColumns", "3"),
-		"spacing":         getLayoutValue(theme.Layout, "spacing", "normal"),
-		"borderStyle":     getLayoutValue(theme.Layout, "borderStyle", "rounded"),
+		"containerWidth": theme.GetLayoutValue("containerWidth", "boxed"),
+		"headerStyle":    theme.GetLayoutValue("headerStyle", "classic"),
+		"footerStyle":    theme.GetLayoutValue("footerStyle", "minimal"),
+		"sidebarEnabled": theme.GetLayoutValue("sidebarPosition", "none") != "none",
+		"gridColumns":    theme.GetLayoutValue("gridColumns", "3"),
+		"spacing":        theme.GetLayoutValue("spacing", "normal"),
+		"borderStyle":    theme.GetLayoutValue("borderStyle", "rounded"),
 	}
 }
 
@@ -292,12 +396,12 @@ func generateComponentConfig(theme *models.ShopTheme) gin.H {
 			"hoverEffect": "lift",
 		},
 		"buttons": gin.H{
-			"style":       getLayoutValue(theme.Layout, "buttonStyle", "rounded"),
-			"size":        "medium",
-			"animation":   "subtle",
+			"style":     theme.GetLayoutValue("buttonStyle", "rounded"),
+			"size":      "medium",
+			"animation": "subtle",
 		},
 		"navigation": gin.H{
-			"style":       getLayoutValue(theme.Layout, "navStyle", "horizontal"),
+			"style":       theme.GetLayoutValue("navStyle", "horizontal"),
 			"position":    "top",
 			"transparent": false,
 		},
@@ -312,19 +416,19 @@ func generateNavigationConfig(theme *models.ShopTheme) gin.H {
 			{"label": "Products", "path": "/products", "icon": "shopping-bag"},
 			{"label": "Collections", "path": "/collections", "icon": "collection"},
 		},
-		"style": getLayoutValue(theme.Layout, "navStyle", "horizontal"),
+		"style":     getLayoutValue(theme.Layout, "navStyle", "horizontal"),
 		"showIcons": getLayoutValue(theme.Layout, "showNavIcons", "true") == "true",
-		"sticky": getLayoutValue(theme.Layout, "stickyHeader", "true") == "true",
+		"sticky":    getLayoutValue(theme.Layout, "stickyHeader", "true") == "true",
 	}
 }
 
 // generateFooterConfig creates footer configuration
 func generateFooterConfig(theme *models.ShopTheme) gin.H {
 	return gin.H{
-		"style": getLayoutValue(theme.Layout, "footerStyle", "minimal"),
-		"showSocial": true,
+		"style":          getLayoutValue(theme.Layout, "footerStyle", "minimal"),
+		"showSocial":     true,
 		"showNewsletter": true,
-		"columns": 3,
+		"columns":        3,
 	}
 }
 
@@ -363,25 +467,41 @@ func getFontValue(fonts map[string]string, key string, defaultValue string) stri
 	return defaultValue
 }
 
-// Layout helpers
-func getLayoutValue(layout map[string]string, key string, defaultValue string) string {
+// Layout helpers - updated to work with interface{} types
+func getLayoutValue(layout map[string]interface{}, key string, defaultValue string) string {
 	if layout == nil {
 		return defaultValue
 	}
-	if value, exists := layout[key]; exists && value != "" {
-		return value
+	if value, exists := layout[key]; exists {
+		if strValue, ok := value.(string); ok && strValue != "" {
+			return strValue
+		}
 	}
 	return defaultValue
 }
 
-// SEO helpers
-func getSEOValue(seo map[string]string, key string, defaultValue string) string {
+// SEO helpers - updated to work with interface{} types
+func getSEOValue(seo map[string]interface{}, key string, defaultValue string) string {
 	if seo == nil {
 		return defaultValue
 	}
-	if value, exists := seo[key]; exists && value != "" {
-		return value
+
+	// Handle nested structure for new SEO format
+	if meta, ok := seo["meta"].(map[string]interface{}); ok {
+		if value, exists := meta[key]; exists {
+			if strValue, ok := value.(string); ok && strValue != "" {
+				return strValue
+			}
+		}
 	}
+
+	// Fallback to direct key access for backward compatibility
+	if value, exists := seo[key]; exists {
+		if strValue, ok := value.(string); ok && strValue != "" {
+			return strValue
+		}
+	}
+
 	return defaultValue
 }
 
@@ -433,4 +553,24 @@ func getDefaultCSS() string {
 		--font-body: 'Inter', sans-serif;
 		--container-width: 1200px;
 	}`
+}
+
+// Helper functions for component and layout management
+
+// getComponentsByType retrieves component instances by type for a shop
+func getComponentsByType(shopID primitive.ObjectID, componentType string) ([]interface{}, error) {
+	// TODO: Implement component retrieval from database
+	// This would query the component_instances collection
+	return []interface{}{}, nil
+}
+
+// getPageLayout retrieves page layout configuration for a shop
+func getPageLayout(shopID primitive.ObjectID, pageType string) (interface{}, error) {
+	// TODO: Implement page layout retrieval from database
+	// This would query the page_layouts collection
+	return map[string]interface{}{
+		"pageType":   pageType,
+		"components": []interface{}{},
+		"settings":   map[string]interface{}{},
+	}, nil
 }

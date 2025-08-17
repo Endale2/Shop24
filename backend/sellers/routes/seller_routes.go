@@ -33,6 +33,25 @@ func SellerRoute(r *gin.Engine) {
 		themeGroup.POST("/seed", controllers.SeedDefaultThemes)          // Seed default themes (dev/admin)
 	}
 
+	// ═════════  Component Library Routes ═════════
+	componentGroup := sellerGroup.Group("/components")
+	{
+		componentGroup.GET("", controllers.GetComponents)                              // List components
+		componentGroup.GET("/categories", controllers.GetComponentCategories)          // Get categories
+		componentGroup.GET("/search", controllers.SearchComponents)                    // Search components
+		componentGroup.GET("/category/:category", controllers.GetComponentsByCategory) // Get by category
+		componentGroup.GET("/:id", controllers.GetComponent)                           // Get specific component
+		componentGroup.POST("", controllers.CreateComponent)                           // Create custom component
+		componentGroup.PUT("/:id", controllers.UpdateComponent)                        // Update component
+		componentGroup.DELETE("/:id", controllers.DeleteComponent)                     // Delete component
+	}
+
+	// ═════════  Layout Management Routes ═════════
+	layoutGroup := sellerGroup.Group("/layouts")
+	{
+		layoutGroup.GET("/page-types", controllers.GetPageTypes) // Get available page types
+	}
+
 	// 3) /seller/shops/:shopId
 	shopGroup := sellerGroup.Group("/shops/:shopId")
 	{
@@ -170,10 +189,28 @@ func SellerRoute(r *gin.Engine) {
 			customizationGroup.POST("/reset", controllers.ResetCustomization) // Reset to defaults
 
 			// Enhanced styling endpoints
-			customizationGroup.PATCH("/gradients", controllers.SaveGradients)   // Save gradients
-			customizationGroup.PATCH("/shadows", controllers.SaveShadows)       // Save shadows
-			customizationGroup.PATCH("/animations", controllers.SaveAnimations) // Save animations
-			customizationGroup.PATCH("/components", controllers.SaveComponents) // Save component configs
+			customizationGroup.PATCH("/gradients", controllers.UpdateGradients)   // Save gradients
+			customizationGroup.PATCH("/shadows", controllers.UpdateShadows)       // Save shadows
+			customizationGroup.PATCH("/animations", controllers.UpdateAnimations) // Save animations
+			customizationGroup.PATCH("/mobile", controllers.UpdateMobileConfig)   // Save mobile config
+			customizationGroup.PATCH("/seo", controllers.UpdateSEOConfig)         // Save SEO config
+
+			// CSS Management endpoints
+			customizationGroup.POST("/css/validate", controllers.ValidateCSS)     // Validate CSS
+			customizationGroup.POST("/css/compile", controllers.CompileCSS)       // Compile CSS
+			customizationGroup.GET("/css/variables", controllers.GetCSSVariables) // Get CSS variables
+		}
+
+		// ─────  Layout Management for specific shop ─────
+		layoutGroup := shopGroup.Group("/layouts")
+		{
+			layoutGroup.GET("", controllers.GetLayouts)                                 // Get shop layouts
+			layoutGroup.GET("/:layoutId", controllers.GetLayout)                        // Get specific layout
+			layoutGroup.POST("", controllers.CreateLayout)                              // Create layout
+			layoutGroup.PUT("/:layoutId", controllers.UpdateLayout)                     // Update layout
+			layoutGroup.DELETE("/:layoutId", controllers.DeleteLayout)                  // Delete layout
+			layoutGroup.POST("/:layoutId/components", controllers.SaveLayoutComponents) // Save component positions
+			layoutGroup.GET("/:layoutId/preview", controllers.PreviewLayout)            // Preview layout
 		}
 
 	}

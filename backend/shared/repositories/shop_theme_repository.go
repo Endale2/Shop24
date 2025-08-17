@@ -49,7 +49,7 @@ func GetActiveShopTheme(shopID primitive.ObjectID) (*models.ShopTheme, error) {
 		"shopId":   shopID,
 		"isActive": true,
 	}
-	
+
 	err := shopThemeCollection.FindOne(context.Background(), filter).Decode(&theme)
 	if err != nil {
 		if err == mongo.ErrNoDocuments {
@@ -85,7 +85,7 @@ func GetShopThemes(shopID primitive.ObjectID) ([]models.ShopTheme, error) {
 // UpdateShopTheme updates an existing shop theme
 func UpdateShopTheme(id primitive.ObjectID, updateData bson.M) (*mongo.UpdateResult, error) {
 	updateData["updatedAt"] = time.Now()
-	
+
 	return shopThemeCollection.UpdateOne(
 		context.Background(),
 		bson.M{"_id": id},
@@ -156,7 +156,7 @@ func UpdateThemeColors(shopID primitive.ObjectID, colors map[string]string) (*mo
 		update,
 		options.FindOneAndUpdate().SetReturnDocument(options.After),
 	).Decode(&theme)
-	
+
 	if err != nil {
 		return nil, err
 	}
@@ -180,7 +180,7 @@ func UpdateThemeFonts(shopID primitive.ObjectID, fonts map[string]string) (*mode
 		update,
 		options.FindOneAndUpdate().SetReturnDocument(options.After),
 	).Decode(&theme)
-	
+
 	if err != nil {
 		return nil, err
 	}
@@ -204,7 +204,7 @@ func UpdateThemeLayout(shopID primitive.ObjectID, layout map[string]string) (*mo
 		update,
 		options.FindOneAndUpdate().SetReturnDocument(options.After),
 	).Decode(&theme)
-	
+
 	if err != nil {
 		return nil, err
 	}
@@ -224,7 +224,7 @@ func CreateBackupAndUpdate(themeID primitive.ObjectID, updateData bson.M) error 
 
 	// Create backup
 	currentTheme.CreateBackup()
-	
+
 	// Include backup in update
 	updateData["backup"] = currentTheme.Backup
 	updateData["updatedAt"] = time.Now()
@@ -246,11 +246,11 @@ func ResetThemeToDefault(shopID primitive.ObjectID, createdBy primitive.ObjectID
 	}
 
 	var updateData bson.M
-	
+
 	if currentTheme != nil {
 		// Create backup of current theme
 		currentTheme.CreateBackup()
-		
+
 		// Reset to default values
 		defaultTheme := models.GetDefaultShopTheme(shopID, createdBy)
 		updateData = bson.M{
@@ -408,4 +408,108 @@ func CreateShopThemeIndexes() error {
 
 	_, err := shopThemeCollection.Indexes().CreateMany(context.Background(), indexes)
 	return err
+}
+
+// =============== Advanced Styling Repository Functions ===============
+
+// UpdateThemeGradients updates gradient configurations for a shop theme
+func UpdateThemeGradients(shopID primitive.ObjectID, gradients map[string]string) error {
+	update := bson.M{
+		"$set": bson.M{
+			"gradients": gradients,
+			"updatedAt": time.Now(),
+		},
+	}
+
+	_, err := shopThemeCollection.UpdateOne(context.Background(), bson.M{"shopId": shopID}, update)
+	if err != nil {
+		return errors.New("failed to update theme gradients")
+	}
+
+	return nil
+}
+
+// UpdateThemeShadows updates shadow configurations for a shop theme
+func UpdateThemeShadows(shopID primitive.ObjectID, shadows map[string]string) error {
+	update := bson.M{
+		"$set": bson.M{
+			"shadows":   shadows,
+			"updatedAt": time.Now(),
+		},
+	}
+
+	_, err := shopThemeCollection.UpdateOne(context.Background(), bson.M{"shopId": shopID}, update)
+	if err != nil {
+		return errors.New("failed to update theme shadows")
+	}
+
+	return nil
+}
+
+// UpdateThemeAnimations updates animation configurations for a shop theme
+func UpdateThemeAnimations(shopID primitive.ObjectID, animations map[string]string) error {
+	update := bson.M{
+		"$set": bson.M{
+			"animations": animations,
+			"updatedAt":  time.Now(),
+		},
+	}
+
+	_, err := shopThemeCollection.UpdateOne(context.Background(), bson.M{"shopId": shopID}, update)
+	if err != nil {
+		return errors.New("failed to update theme animations")
+	}
+
+	return nil
+}
+
+// UpdateThemeMobileConfig updates mobile configuration for a shop theme
+func UpdateThemeMobileConfig(shopID primitive.ObjectID, mobileConfig map[string]interface{}) error {
+	update := bson.M{
+		"$set": bson.M{
+			"mobile":    mobileConfig,
+			"updatedAt": time.Now(),
+		},
+	}
+
+	_, err := shopThemeCollection.UpdateOne(context.Background(), bson.M{"shopId": shopID}, update)
+	if err != nil {
+		return errors.New("failed to update theme mobile config")
+	}
+
+	return nil
+}
+
+// UpdateThemeSEOConfig updates SEO configuration for a shop theme
+func UpdateThemeSEOConfig(shopID primitive.ObjectID, seoConfig map[string]interface{}) error {
+	update := bson.M{
+		"$set": bson.M{
+			"seo":       seoConfig,
+			"updatedAt": time.Now(),
+		},
+	}
+
+	_, err := shopThemeCollection.UpdateOne(context.Background(), bson.M{"shopId": shopID}, update)
+	if err != nil {
+		return errors.New("failed to update theme SEO config")
+	}
+
+	return nil
+}
+
+// UpdateThemeCustomCSS updates custom CSS configuration for a shop theme
+func UpdateThemeCustomCSS(shopID primitive.ObjectID, customCSS map[string]interface{}) error {
+	update := bson.M{
+		"$set": bson.M{
+			"customCSS": customCSS,
+			"updatedAt": time.Now(),
+		},
+	}
+
+	_, err := shopThemeCollection.UpdateOne(context.Background(), bson.M{"shopId": shopID}, update)
+	if err != nil {
+		return errors.New("failed to update theme custom CSS")
+	}
+
+	return nil
 }

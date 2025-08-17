@@ -12,12 +12,18 @@ func StorefrontRoutes(r *gin.Engine) {
 	{
 		// GET /shops/:shopSlug → view shop details (legacy)
 		shops.GET("/:shopSlug", controllers.GetStorefront)
-		
+
 		// GET /shops/:shopSlug/storefront → dynamic theme-driven storefront configuration
 		shops.GET("/:shopSlug/storefront", controllers.GetDynamicStorefront)
-		
+
 		// GET /shops/:shopSlug/theme → real-time theme updates
 		shops.GET("/:shopSlug/theme", controllers.GetStorefrontTheme)
+
+		// GET /shops/:shopSlug/components/:componentType → component-specific data
+		shops.GET("/:shopSlug/components/:componentType", controllers.GetShopComponents)
+
+		// GET /shops/:shopSlug/pages/:pageType → page layout configuration
+		shops.GET("/:shopSlug/pages/:pageType", controllers.GetShopPageLayout)
 
 		// Collection endpoints nested under /shops/:shopSlug/collections
 		collections := shops.Group("/:shopSlug/collections")

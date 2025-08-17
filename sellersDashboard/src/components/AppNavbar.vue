@@ -5,20 +5,18 @@
       <!-- Logo Section -->
       <router-link to="/" class="flex items-center space-x-3 group outline-none focus:ring-2 focus:ring-green-400 focus:ring-offset-2 rounded-lg">
         <div class="relative">
-          <div class="p-2 bg-gradient-to-br from-green-500 to-green-700 rounded-full group-hover:rotate-12 transition-all duration-500 shadow-lg transform group-active:scale-95 group-hover:shadow-xl">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/>
+          <div class="w-12 h-12 bg-gradient-to-br from-emerald-500 via-green-500 to-emerald-600 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/30 group-hover:shadow-emerald-500/50 transition-all duration-300 group-hover:scale-110 group-hover:rotate-3">
+            <svg class="w-7 h-7 text-white group-hover:scale-110 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6" />
             </svg>
           </div>
-          <!-- Animated pulse effect -->
-          <div class="absolute inset-0 bg-green-400 rounded-full animate-ping opacity-20 group-hover:opacity-30"></div>
         </div>
         <div class="flex flex-col">
-          <span class="text-xl font-bold text-gray-800 tracking-tight group-hover:text-gray-900 transition-colors duration-200">
-            Seller's <span class="text-amber-600 group-hover:text-amber-700">Dash</span>
+          <span class="text-2xl font-bold text-gray-800 tracking-tight group-hover:text-gray-900 transition-colors duration-200">
+            Shop<span class="text-amber-600 group-hover:text-amber-700">24</span>
           </span>
           <span class="text-xs text-gray-500 font-medium -mt-1 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-            Power your business  - Ethiopia
+            Power your business
           </span>
         </div>
       </router-link>

@@ -186,6 +186,116 @@
           </div>
         </div>
 
+        <!-- Advanced Styling Cards -->
+
+        <!-- Gradients Card -->
+        <div
+          @click="goToGradients"
+          class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden cursor-pointer transform hover:scale-105 hover:shadow-md transition duration-200 ease-in-out group"
+        >
+          <div class="p-6">
+            <div class="flex items-center mb-4">
+              <div class="w-12 h-12 bg-gradient-to-br from-violet-500 to-purple-600 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-200">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 21a4 4 0 01-4-4V5a2 2 0 012-2h4a2 2 0 012 2v12a4 4 0 01-4 4zM21 5a2 2 0 00-2-2h-4a2 2 0 00-2 2v12a4 4 0 004 4h4a2 2 0 002-2V5z" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900 group-hover:text-violet-700 transition-colors duration-200">Gradients</h3>
+                <p class="text-sm text-gray-600">Color Transitions</p>
+              </div>
+            </div>
+            <p class="text-sm text-gray-700 mb-4">Create beautiful gradient backgrounds and color transitions for your shop elements.</p>
+            <div class="flex items-center text-sm text-violet-600 font-medium group-hover:text-violet-700">
+              <span>Design gradients</span>
+              <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Shadows Card -->
+        <div
+          @click="goToShadows"
+          class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden cursor-pointer transform hover:scale-105 hover:shadow-md transition duration-200 ease-in-out group"
+        >
+          <div class="p-6">
+            <div class="flex items-center mb-4">
+              <div class="w-12 h-12 bg-gradient-to-br from-slate-500 to-slate-600 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-200">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900 group-hover:text-slate-700 transition-colors duration-200">Shadows</h3>
+                <p class="text-sm text-gray-600">Depth & Elevation</p>
+              </div>
+            </div>
+            <p class="text-sm text-gray-700 mb-4">Add depth and visual hierarchy with customizable shadow effects for cards and elements.</p>
+            <div class="flex items-center text-sm text-slate-600 font-medium group-hover:text-slate-700">
+              <span>Configure shadows</span>
+              <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Animations Card -->
+        <div
+          @click="goToAnimations"
+          class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden cursor-pointer transform hover:scale-105 hover:shadow-md transition duration-200 ease-in-out group"
+        >
+          <div class="p-6">
+            <div class="flex items-center mb-4">
+              <div class="w-12 h-12 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-200">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900 group-hover:text-cyan-700 transition-colors duration-200">Animations</h3>
+                <p class="text-sm text-gray-600">Motion & Transitions</p>
+              </div>
+            </div>
+            <p class="text-sm text-gray-700 mb-4">Bring your shop to life with smooth animations and engaging micro-interactions.</p>
+            <div class="flex items-center text-sm text-cyan-600 font-medium group-hover:text-cyan-700">
+              <span>Add animations</span>
+              <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Component Library Card -->
+        <div
+          @click="goToComponents"
+          class="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden cursor-pointer transform hover:scale-105 hover:shadow-md transition duration-200 ease-in-out group"
+        >
+          <div class="p-6">
+            <div class="flex items-center mb-4">
+              <div class="w-12 h-12 bg-gradient-to-br from-teal-500 to-green-600 rounded-lg flex items-center justify-center mr-4 group-hover:scale-110 transition-transform duration-200">
+                <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-lg font-semibold text-gray-900 group-hover:text-teal-700 transition-colors duration-200">Components</h3>
+                <p class="text-sm text-gray-600">Drag & Drop Builder</p>
+              </div>
+            </div>
+            <p class="text-sm text-gray-700 mb-4">Build your pages with pre-designed components using our intuitive drag-and-drop interface.</p>
+            <div class="flex items-center text-sm text-teal-600 font-medium group-hover:text-teal-700">
+              <span>Build with components</span>
+              <svg class="w-4 h-4 ml-1 group-hover:translate-x-1 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <!-- Quick Actions Section -->

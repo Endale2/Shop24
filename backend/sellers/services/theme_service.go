@@ -3,6 +3,7 @@ package services
 import (
 	"errors"
 	"strings"
+	"time"
 
 	"github.com/Endale2/DRPS/sellers/repositories"
 	"github.com/Endale2/DRPS/shared/models"
@@ -310,7 +311,15 @@ func ApplyThemePresetService(shopThemeIDStr, presetIDStr string, sellerID primit
 
 	// Apply preset configuration
 	updatedData := bson.M{
-		"overrides": preset.Config,
+		"colors":     preset.Colors,
+		"fonts":      preset.Fonts,
+		"layout":     preset.Layout,
+		"gradients":  preset.Gradients,
+		"shadows":    preset.Shadows,
+		"animations": preset.Animations,
+		"spacing":    preset.Spacing,
+		"components": preset.Components,
+		"updatedAt":  time.Now(),
 	}
 
 	return repositories.UpdateShopTheme(shopThemeID, updatedData)

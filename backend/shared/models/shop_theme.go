@@ -56,25 +56,7 @@ type Theme struct {
 	UpdatedAt time.Time `bson:"updatedAt" json:"updatedAt"`
 }
 
-// ThemePreset represents predefined theme configurations for quick setup
-type ThemePreset struct {
-	ID          primitive.ObjectID `bson:"_id,omitempty" json:"id"`
-	ThemeID     primitive.ObjectID `bson:"themeId" json:"themeId"` // base theme this preset belongs to
-	Name        string             `bson:"name" json:"name"`       // preset name (e.g., "Dark Mode", "Minimalist", "Bold Colors")
-	Description string             `bson:"description,omitempty" json:"description,omitempty"`
-
-	// Preset configuration
-	Config ThemeConfig `bson:"config" json:"config"` // preconfigured settings
-
-	// Preset metadata
-	IsDefault  bool     `bson:"isDefault,omitempty" json:"isDefault,omitempty"`   // whether this is the default preset for the theme
-	Tags       []string `bson:"tags,omitempty" json:"tags,omitempty"`             // preset tags
-	PreviewURL string   `bson:"previewUrl,omitempty" json:"previewUrl,omitempty"` // preview image
-
-	// Timestamps
-	CreatedAt time.Time `bson:"createdAt" json:"createdAt"`
-	UpdatedAt time.Time `bson:"updatedAt" json:"updatedAt"`
-}
+// Note: ThemePreset is now defined in theme_preset.go to avoid duplication
 
 // =============== Scalable Shop Theme Models ===============
 
@@ -85,12 +67,12 @@ type ShopTheme struct {
 	ShopID primitive.ObjectID `bson:"shopId" json:"shopId"` // Reference to shop
 
 	// Theme Configuration - Optimized for frontend usage
-	Colors    map[string]string `bson:"colors,omitempty" json:"colors,omitempty"`       // Color palette (primary, secondary, background, etc.)
-	Fonts     map[string]string `bson:"fonts,omitempty" json:"fonts,omitempty"`         // Font configuration (heading, body)
-	Layout    map[string]string `bson:"layout,omitempty" json:"layout,omitempty"`       // Layout settings (containerWidth, headerStyle, etc.)
-	CustomCSS string            `bson:"customCSS,omitempty" json:"customCSS,omitempty"` // Custom CSS code
-	SEO       map[string]string `bson:"seo,omitempty" json:"seo,omitempty"`             // SEO settings
-	Mobile    map[string]string `bson:"mobile,omitempty" json:"mobile,omitempty"`       // Mobile-specific settings
+	Colors    map[string]string      `bson:"colors,omitempty" json:"colors,omitempty"`       // Color palette (primary, secondary, background, etc.)
+	Fonts     map[string]string      `bson:"fonts,omitempty" json:"fonts,omitempty"`         // Font configuration (heading, body)
+	Layout    map[string]interface{} `bson:"layout,omitempty" json:"layout,omitempty"`       // Enhanced layout settings with breakpoints and spacing
+	CustomCSS map[string]interface{} `bson:"customCSS,omitempty" json:"customCSS,omitempty"` // Enhanced CSS with validation and compilation
+	SEO       map[string]interface{} `bson:"seo,omitempty" json:"seo,omitempty"`             // Enhanced SEO with structured data
+	Mobile    map[string]interface{} `bson:"mobile,omitempty" json:"mobile,omitempty"`       // Enhanced mobile configuration
 
 	// Advanced Styling Options
 	Gradients  map[string]string `bson:"gradients,omitempty" json:"gradients,omitempty"`   // Gradient definitions (hero, button, card backgrounds)
@@ -135,22 +117,22 @@ type ShopTheme struct {
 
 // ThemeBackup stores previous theme configuration for rollback
 type ThemeBackup struct {
-	Version   string            `bson:"version" json:"version"`
-	Colors    map[string]string `bson:"colors,omitempty" json:"colors,omitempty"`
-	Fonts     map[string]string `bson:"fonts,omitempty" json:"fonts,omitempty"`
-	Layout    map[string]string `bson:"layout,omitempty" json:"layout,omitempty"`
-	CustomCSS string            `bson:"customCSS,omitempty" json:"customCSS,omitempty"`
-	BackupAt  time.Time         `bson:"backupAt" json:"backupAt"`
+	Version   string                 `bson:"version" json:"version"`
+	Colors    map[string]string      `bson:"colors,omitempty" json:"colors,omitempty"`
+	Fonts     map[string]string      `bson:"fonts,omitempty" json:"fonts,omitempty"`
+	Layout    map[string]interface{} `bson:"layout,omitempty" json:"layout,omitempty"`
+	CustomCSS map[string]interface{} `bson:"customCSS,omitempty" json:"customCSS,omitempty"`
+	BackupAt  time.Time              `bson:"backupAt" json:"backupAt"`
 }
 
 // ShopThemeConfig represents the aggregated theme configuration for API responses
 type ShopThemeConfig struct {
 	Colors     map[string]string      `json:"colors"`
 	Fonts      map[string]string      `json:"fonts"`
-	Layout     map[string]string      `json:"layout"`
-	CustomCSS  string                 `json:"customCSS"`
-	SEO        map[string]string      `json:"seo"`
-	Mobile     map[string]string      `json:"mobile"`
+	Layout     map[string]interface{} `json:"layout"`
+	CustomCSS  map[string]interface{} `json:"customCSS"`
+	SEO        map[string]interface{} `json:"seo"`
+	Mobile     map[string]interface{} `json:"mobile"`
 	Gradients  map[string]string      `json:"gradients,omitempty"`
 	Shadows    map[string]string      `json:"shadows,omitempty"`
 	Animations map[string]string      `json:"animations,omitempty"`
@@ -194,13 +176,36 @@ func GetDefaultShopTheme(shopID primitive.ObjectID, createdBy primitive.ObjectID
 			"heading": "Inter",
 			"body":    "Inter",
 		},
-		Layout: map[string]string{
+		Layout: map[string]interface{}{
 			"headerStyle":     "classic",
 			"containerWidth":  "boxed",
 			"sidebarPosition": "none",
 			"gridColumns":     "3",
 			"borderStyle":     "rounded",
 			"spacing":         "normal",
+			"breakpoints": map[string]interface{}{
+				"mobile": map[string]interface{}{
+					"gridColumns":    "1",
+					"containerWidth": "full",
+					"spacing":        "compact",
+				},
+				"tablet": map[string]interface{}{
+					"gridColumns":    "2",
+					"containerWidth": "boxed",
+					"spacing":        "normal",
+				},
+				"desktop": map[string]interface{}{
+					"gridColumns":    "3",
+					"containerWidth": "boxed",
+					"spacing":        "normal",
+				},
+			},
+			"spacingConfig": map[string]interface{}{
+				"containerPadding": "16px",
+				"sectionGap":       "32px",
+				"componentGap":     "16px",
+				"cardPadding":      "24px",
+			},
 		},
 
 		// Enhanced styling defaults
@@ -255,19 +260,52 @@ func GetDefaultShopTheme(shopID primitive.ObjectID, createdBy primitive.ObjectID
 			},
 		},
 
-		SEO: map[string]string{
-			"metaTitle":       "",
-			"metaDescription": "",
-			"keywords":        "",
+		SEO: map[string]interface{}{
+			"meta": map[string]interface{}{
+				"title":       "",
+				"description": "",
+				"keywords":    []string{},
+			},
+			"openGraph": map[string]interface{}{
+				"title":       "",
+				"description": "",
+				"image":       "",
+				"type":        "website",
+			},
+			"structuredData": map[string]interface{}{
+				"type":        "Store",
+				"name":        "",
+				"description": "",
+			},
 		},
-		Mobile: map[string]string{
-			"enabled":        "true",
-			"responsive":     "true",
-			"touchOptimized": "true",
-			"menuStyle":      "hamburger",
-			"stickyHeader":   "true",
+		Mobile: map[string]interface{}{
+			"navigation": map[string]interface{}{
+				"style":    "hamburger",
+				"position": "left",
+				"overlay":  true,
+			},
+			"performance": map[string]interface{}{
+				"imageQuality":    80,
+				"lazyLoading":     true,
+				"preloadCritical": true,
+			},
+			"interactions": map[string]interface{}{
+				"touchFeedback":   true,
+				"swipeNavigation": true,
+				"pullToRefresh":   false,
+				"stickyHeader":    true,
+			},
 		},
-		CustomCSS:  "",
+		CustomCSS: map[string]interface{}{
+			"raw":       "",
+			"compiled":  "",
+			"variables": map[string]interface{}{},
+			"validation": map[string]interface{}{
+				"isValid":  true,
+				"errors":   []string{},
+				"warnings": []string{},
+			},
+		},
 		Tags:       []string{"default", "modern", "responsive"},
 		UsageCount: 0,
 		CreatedAt:  time.Now(),
@@ -326,6 +364,63 @@ func (st *ShopTheme) RestoreFromBackup() bool {
 	st.UpdatedAt = time.Now()
 
 	return true
+}
+
+// =============== Helper Functions for Interface{} Types ===============
+
+// GetLayoutValue safely extracts string values from layout map
+func (st *ShopTheme) GetLayoutValue(key, defaultValue string) string {
+	if st.Layout == nil {
+		return defaultValue
+	}
+	if value, ok := st.Layout[key]; ok {
+		if strValue, ok := value.(string); ok {
+			return strValue
+		}
+	}
+	return defaultValue
+}
+
+// GetCustomCSSRaw safely extracts raw CSS string
+func (st *ShopTheme) GetCustomCSSRaw() string {
+	if st.CustomCSS == nil {
+		return ""
+	}
+	if raw, ok := st.CustomCSS["raw"]; ok {
+		if strValue, ok := raw.(string); ok {
+			return strValue
+		}
+	}
+	return ""
+}
+
+// GetCustomCSSCompiled safely extracts compiled CSS string
+func (st *ShopTheme) GetCustomCSSCompiled() string {
+	if st.CustomCSS == nil {
+		return ""
+	}
+	if compiled, ok := st.CustomCSS["compiled"]; ok {
+		if strValue, ok := compiled.(string); ok {
+			return strValue
+		}
+	}
+	return ""
+}
+
+// SetCustomCSSRaw safely sets raw CSS string
+func (st *ShopTheme) SetCustomCSSRaw(css string) {
+	if st.CustomCSS == nil {
+		st.CustomCSS = make(map[string]interface{})
+	}
+	st.CustomCSS["raw"] = css
+}
+
+// SetCustomCSSCompiled safely sets compiled CSS string
+func (st *ShopTheme) SetCustomCSSCompiled(css string) {
+	if st.CustomCSS == nil {
+		st.CustomCSS = make(map[string]interface{})
+	}
+	st.CustomCSS["compiled"] = css
 }
 
 // IncrementVersion increments the theme version
