@@ -102,6 +102,7 @@ function onLeave() {
   stopImageCycle()
 }
 
+
 let cycleTimer: any = null
 function startImageCycle() {
   stopImageCycle()
